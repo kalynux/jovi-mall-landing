@@ -1,26 +1,239 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+/* ─── Semantic CSS variables for theming ────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #ffffff;
+  --bg-subtle: #f9fafb;
+  --bg-muted: #f3f4f6;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-medium: rgba(0, 0, 0, 0.14);
+  --text-primary: #0a0a0f;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+  --surface-glass: rgba(255, 255, 255, 0.8);
+  --surface-glass-border: rgba(255, 255, 255, 0.6);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --accent: #7c3aed;
+  --accent-light: rgba(124, 58, 237, 0.09);
+  --accent-glow: rgba(124, 58, 237, 0.25);
+  /* Always-dark surface for CTA section (dark in both light & dark modes) */
+  --bg-invert: #050508;
+  --bg-invert-subtle: #0d0d14;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ─── Dark mode overrides ────────────────────────────────────────────────── */
+/* Correct selector: html.dark (not .dark { :root {} } which doesn't cascade) */
+html.dark {
+  --bg: #050508;
+  --bg-subtle: #0d0d14;
+  --bg-muted: #111119;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-medium: rgba(255, 255, 255, 0.12);
+  --text-primary: #f0f0ff;
+  --text-secondary: #9da0b0;
+  --text-muted: #60637a;
+  --surface-glass: rgba(20, 20, 35, 0.75);
+  --surface-glass-border: rgba(255, 255, 255, 0.08);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+  --accent-light: rgba(124, 58, 237, 0.14);
+  --accent-glow: rgba(124, 58, 237, 0.4);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ─── Arabic font fallback ───────────────────────────────────────────────── */
+/* Latin-first fonts (Outfit, Inter) render Arabic poorly. Override for RTL. */
+:lang(ar) {
+  font-family: "Segoe UI", Tahoma, "Arabic Typesetting", "Traditional Arabic",
+    system-ui, sans-serif;
+  line-height: 1.8;
+  letter-spacing: 0;
+}
+
+:lang(ar) .font-display,
+:lang(ar) .font-body {
+  font-family: "Segoe UI", Tahoma, "Arabic Typesetting", "Traditional Arabic",
+    system-ui, sans-serif;
+}
+
+/* ─── Base layer ─────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text-primary);
+    @apply font-body;
+    line-height: 1.65;
+    overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    color: var(--text-primary);
+  }
+
+  ::selection {
+    background: rgba(124, 58, 237, 0.18);
+    color: var(--text-primary);
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(124, 58, 237, 0.25);
+    border-radius: 99px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(124, 58, 237, 0.5);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ─── Component layer ────────────────────────────────────────────────────── */
+@layer components {
+
+  /* Layout helpers */
+  .section-padding {
+    @apply py-20 px-4 sm:px-6 lg:py-28 lg:px-8;
+  }
+
+  .container-xl {
+    @apply w-full max-w-7xl mx-auto;
+  }
+
+  /* Glass surface */
+  .glass {
+    background: var(--surface-glass);
+    border: 1px solid var(--surface-glass-border);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+  }
+
+  /* Cards */
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    @apply rounded-2xl;
+    box-shadow: var(--shadow-card);
+    @apply transition-all duration-300;
+  }
+
+  .card:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 16px 48px rgba(0, 0, 0, 0.12);
+    @apply -translate-y-0.5;
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #ec4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-wa {
+    background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply relative inline-flex items-center justify-center gap-2;
+    @apply font-display font-semibold text-white;
+    @apply px-6 py-3 rounded-xl;
+    background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%);
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.3), 0 2px 6px rgba(0, 0, 0, 0.15);
+    @apply border-none cursor-pointer;
+    @apply transition-all duration-200;
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 0 32px rgba(124, 58, 237, 0.5), 0 4px 12px rgba(0, 0, 0, 0.2);
+    @apply -translate-y-px scale-[1.015];
+  }
+
+  .btn-primary:active {
+    @apply scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply relative inline-flex items-center justify-center gap-2;
+    @apply font-display font-semibold text-[var(--text-primary)];
+    @apply px-6 py-3 rounded-xl;
+    @apply bg-transparent cursor-pointer;
+    border: 1.5px solid var(--border-medium);
+    @apply transition-all duration-200;
+  }
+
+  .btn-secondary:hover {
+    background: var(--accent-light);
+    border-color: rgba(164, 116, 255, 0.5);
+    @apply -translate-y-px scale-[1.015];
+  }
+
+  .btn-secondary:active {
+    @apply scale-[0.98];
+  }
+
+  /* Glows */
+  .shadow-glow-primary {
+    box-shadow: 0 0 40px rgba(124, 58, 237, 0.3);
+  }
+
+  .shadow-glow-wa {
+    box-shadow: 0 0 30px rgba(37, 211, 102, 0.25);
+  }
+
+  /* Hero glow overlay */
+  .bg-hero-glow {
+    background: radial-gradient(ellipse 80% 60% at 50% -5%,
+        rgba(124, 58, 237, 0.28) 0%,
+        transparent 70%);
+  }
+
+  /* Fallback for bg-radial-center */
+  .bg-radial-center {
+    background: radial-gradient(ellipse 80% 60% at 50% 50%,
+        rgba(124, 58, 237, 0.12) 0%,
+        transparent 70%);
+  }
+}
+
+/* ─── Utilities layer ────────────────────────────────────────────────────── */
+@layer utilities {
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }

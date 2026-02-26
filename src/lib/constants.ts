@@ -1,0 +1,167 @@
+// ─── Brand ──────────────────────────────────────────────────────────────────
+export const BRAND = {
+    name: "Jovi Mall",
+    tagline: "Commerce runs on conversation.",
+    description:
+        "AI-powered ecommerce infrastructure built for WhatsApp-first Africa. No storefront needed — just upload products and let AI sell for you.",
+    whatsappNumber: "+2340000000000", // Placeholder
+    email: "hello@jovimall.com",
+};
+
+// ─── Navigation ─────────────────────────────────────────────────────────────
+export const NAV_LINKS = [
+    { label: "How It Works", href: "#how-it-works" },
+    { label: "For Vendors", href: "#vendors" },
+    { label: "For Agencies", href: "#agencies" },
+    { label: "For Agents", href: "#agents" },
+];
+
+// ─── Section IDs (for progress indicator) ───────────────────────────────────
+export const SECTION_IDS = [
+    { id: "hero", label: "Home" },
+    { id: "how-it-works", label: "Platform" },
+    { id: "vendors", label: "Vendors" },
+    { id: "agencies", label: "Agencies" },
+    { id: "agents", label: "Agents" },
+    { id: "customers", label: "Customers" },
+    { id: "africa-first", label: "Africa-First" },
+    { id: "trust", label: "Trust" },
+    { id: "cta", label: "Get Started" },
+];
+
+// ─── Platform Flow Steps ─────────────────────────────────────────────────────
+export const FLOW_STEPS = [
+    {
+        step: 1,
+        icon: "MessageCircle",
+        title: "Customer chats on WhatsApp",
+        description: "No app download. No account creation. Just a chat.",
+        color: "wa",
+    },
+    {
+        step: 2,
+        icon: "Sparkles",
+        title: "AI recommends products",
+        description: "Our engine understands intent and suggests the perfect match.",
+        color: "primary",
+    },
+    {
+        step: 3,
+        icon: "ShoppingCart",
+        title: "Order is created",
+        description: "Customer confirms and pays — all within WhatsApp.",
+        color: "primary",
+    },
+    {
+        step: 4,
+        icon: "Building2",
+        title: "Agency assigns a delivery agent",
+        description: "Smart dispatch routes the order to the nearest agent.",
+        color: "primary",
+    },
+    {
+        step: 5,
+        icon: "Bike",
+        title: "Agent delivers",
+        description: "Real-time tracking. Confirmed delivery. Happy customer.",
+        color: "primary",
+    },
+    {
+        step: 6,
+        icon: "Banknote",
+        title: "Revenue flows to everyone",
+        description: "Vendor earns. Agency earns. Agent earns. Instantly.",
+        color: "wa",
+    },
+];
+
+// ─── Actor Roles ─────────────────────────────────────────────────────────────
+export const ROLES = [
+    {
+        id: "vendor",
+        label: "Vendor",
+        icon: "Store",
+        headline: "I want to sell products",
+        description: "Upload your catalog and let AI sell for you on WhatsApp",
+        href: "#vendors",
+        color: "primary",
+    },
+    {
+        id: "agency",
+        label: "Agency",
+        icon: "Building2",
+        headline: "I manage deliveries",
+        description: "Coordinate agents and earn commission on every delivery",
+        href: "#agencies",
+        color: "primary",
+    },
+    {
+        id: "agent",
+        label: "Agent",
+        icon: "Bike",
+        headline: "I deliver orders",
+        description: "Pick up assignments and earn per successful delivery",
+        href: "#agents",
+        color: "primary",
+    },
+    {
+        id: "customer",
+        label: "Customer",
+        icon: "MessageCircle",
+        headline: "I want to shop",
+        description: "Just WhatsApp us — browse, buy, and get it delivered",
+        href: "#customers",
+        color: "wa",
+    },
+] as const;
+
+export type RoleId = (typeof ROLES)[number]["id"];
+
+// ─── Trust stats ─────────────────────────────────────────────────────────────
+export const TRUST_STATS = [
+    { value: "10K+", label: "Active Vendors" },
+    { value: "500+", label: "Delivery Agencies" },
+    { value: "2M+", label: "Orders Delivered" },
+    { value: "15+", label: "African Cities" },
+];
+
+// ─── WhatsApp Simulation Messages ────────────────────────────────────────────
+export const CHAT_MESSAGES = [
+    { from: "customer", text: "Hi, I'm looking for wireless earbuds under ₦15,000" },
+    { from: "ai", text: "Great! 🎧 I found 3 options that match perfectly:", isTyping: false },
+    { from: "ai", text: "1. JoviBuds Pro – ₦12,500 ⭐ Best seller\n2. SoundX Lite – ₦9,999\n3. ClearTone W2 – ₦13,200", isTyping: false },
+    { from: "customer", text: "Tell me more about the JoviBuds Pro" },
+    { from: "ai", text: "JoviBuds Pro features:\n• 30hr battery life\n• Active noise cancellation\n• Same-day delivery available ✅\n\nWould you like to order now?" },
+    { from: "customer", text: "Yes, order the JoviBuds Pro please!" },
+    { from: "ai", text: "✅ Order placed! Your JoviBuds Pro will arrive today between 2–5 PM. Track your delivery in this chat 📦" },
+];
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+export const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8022";
+
+export const ROLE_SUBDOMAIN_MAP = {
+    vendor: "vendor.example.com",
+    agency: "agency.example.com",
+    agent: "agent.example.com",
+    customer: "example.com",
+    admin: "admin.example.com",
+} as const;
+
+/** Allowlist for ?return= URL validation. No open redirects beyond these hosts. */
+export const ALLOWED_RETURN_HOSTS: string[] = [
+    "example.com",
+    "vendor.example.com",
+    "agency.example.com",
+    "agent.example.com",
+    "admin.example.com",
+    "localhost",
+    "localhost:3000",
+    "localhost:3001",
+    "localhost:3002",
+    "localhost:3003",
+    "localhost:3004",
+];
+
+/** WhatsApp deep-link for the customer role registration callout */
+export const WHATSAPP_CUSTOMER_LINK = `https://wa.me/${BRAND.whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent("Hi, I want to shop on Jovi Mall!")}`;

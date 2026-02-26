@@ -1,0 +1,312 @@
+{
+  "meta": {
+    "langName": "Português",
+    "langCode": "pt"
+  },
+  "navbar": {
+    "howItWorks": "Como funciona",
+    "forVendors": "Para vendedores",
+    "forAgencies": "Para agências",
+    "forAgents": "Para entregadores",
+    "seeHowItWorks": "Ver como funciona",
+    "getStarted": "Começar",
+    "login": "Entrar",
+    "toggleDark": "Mudar para modo escuro",
+    "toggleLight": "Mudar para modo claro",
+    "openMenu": "Abrir menu",
+    "closeMenu": "Fechar menu",
+    "logoAriaLabel": "Início Jovi Mall",
+    "mainNavAriaLabel": "Navegação principal",
+    "languageSwitcher": "Selecionar idioma",
+    "dashboard": "Painel",
+    "switchRole": "Mudar papel",
+    "logout": "Sair",
+    "userMenuAriaLabel": "Abrir menu do usuário"
+  },
+  "hero": {
+    "badge": "A plataforma de comércio WhatsApp da África",
+    "title1": "O comércio",
+    "title2": "acontece pela",
+    "title3": "conversa.",
+    "subtitle": "Sem loja. Sem site. Sem aplicativo.",
+    "subtitleBold1": "Suba seus produtos",
+    "subtitleMid": "e nossa IA os vende diretamente pelo",
+    "subtitleBold2": "WhatsApp",
+    "subtitleEnd": "— chegando onde seus clientes já estão.",
+    "pillWhatsApp": "WhatsApp primeiro",
+    "pillAI": "Com IA",
+    "pillNoStorefront": "Sem loja virtual",
+    "ctaPrimary": "Começar",
+    "ctaSecondary": "Ver como funciona",
+    "socialProof": "Mais de 10.000 vendedores já ganhando",
+    "aiLabel": "IA ativa",
+    "orderConfirmed": "Pedido confirmado!",
+    "orderDetail": "₦ 12.500 · Chegando hoje 🚚",
+    "chatCustomer1": "Procuro fones de ouvido sem fio por menos de ₦15k 🎧",
+    "chatAI1": "Encontrei 3 opções perfeitas! JoviBuds Pro (₦12.500) é o mais vendido ⭐",
+    "chatCustomer2": "Sim! Comprar o JoviBuds Pro por favor",
+    "chatAI2": "✅ Pronto! Chegando às 15h de hoje 🚀",
+    "whatsAppOnline": "on-line",
+    "scroll": "Rolar"
+  },
+  "howItWorks": {
+    "sectionLabel": "O motor da plataforma",
+    "title1": "Uma plataforma.",
+    "title2": "Todos os papéis.",
+    "title3": "Conectados.",
+    "subtitle": "De uma mensagem no WhatsApp a um produto entregue — cada etapa funciona automaticamente no Jovi Mall.",
+    "stats": {
+      "aiResponse": "Tempo de resposta da IA",
+      "uptime": "Disponibilidade da plataforma",
+      "payments": "Métodos de pagamento",
+      "cities": "Cidades atendidas"
+    },
+    "flow": {
+      "step1Title": "Cliente conversa no WhatsApp",
+      "step1Desc": "Sem baixar app. Sem criar conta. Só conversar.",
+      "step2Title": "IA recomenda produtos",
+      "step2Desc": "Nosso motor entende a intenção e sugere a combinação perfeita.",
+      "step3Title": "Pedido criado",
+      "step3Desc": "Cliente confirma e paga — tudo dentro do WhatsApp.",
+      "step4Title": "Agência designa um entregador",
+      "step4Desc": "Despacho inteligente roteia o pedido ao agente mais próximo.",
+      "step5Title": "Entregador entrega",
+      "step5Desc": "Rastreamento em tempo real. Entrega confirmada. Cliente feliz.",
+      "step6Title": "Receita flui para todos",
+      "step6Desc": "Vendedor ganha. Agência ganha. Entregador ganha. Instantaneamente."
+    }
+  },
+  "vendor": {
+    "sectionLabel": "Para vendedores",
+    "title1": "Venda sem",
+    "title2": "um site.",
+    "subtitle": "Seu negócio não precisa de site, app ou time de TI. Suba seu catálogo e deixe nossa IA cuidar do resto — da descoberta à entrega.",
+    "ctaPrimary": "Começar a vender grátis",
+    "steps": {
+      "uploadTitle": "Suba seus produtos",
+      "uploadDesc": "Adicione fotos, preços e descrições. Pronto em minutos.",
+      "aiTitle": "A IA assume as vendas",
+      "aiDesc": "Nosso motor conecta seus produtos a clientes interessados no WhatsApp 24/7.",
+      "revenueTitle": "A receita vai para você",
+      "revenueDesc": "Receba por venda, automaticamente. Sem correr atrás de clientes."
+    }
+  },
+  "agency": {
+    "sectionLabel": "Para agências",
+    "title1": "Transforme logística",
+    "title2": "em receita.",
+    "subtitle": "Monte um negócio de entregas sobre o Jovi Mall. Receba pedidos, coordene sua rede e ganhe comissão em cada entrega bem-sucedida — com custo zero de aquisição de clientes.",
+    "ctaPrimary": "Entrar como agência",
+    "flow": {
+      "orderIn": "Pedido recebido",
+      "agentAssigned": "Entregador designado",
+      "earnCommission": "Comissão recebida"
+    },
+    "benefits": {
+      "dispatch": "Despacho inteligente para o entregador mais próximo",
+      "tracking": "Rastreamento em tempo real para cada entrega",
+      "payout": "Cálculo e pagamento automático de comissões"
+    },
+    "ariaLabel": "Fluxo de designação de entrega"
+  },
+  "agent": {
+    "sectionLabel": "Para entregadores",
+    "title1": "Entregue.",
+    "title2": "Ganhe.",
+    "title3": "Repita.",
+    "subtitle": "Entre na rede de entregas do Jovi Mall. Defina seus horários, aceite missões, entregue pedidos e receba por entrega — tudo pelo celular.",
+    "ctaPrimary": "Tornar-se entregador",
+    "steps": {
+      "stepLabel": "Passo",
+      "step01Title": "Receba a notificação",
+      "step01Desc": "O alerta do pedido chega no seu celular.",
+      "step02Title": "Retire e entregue",
+      "step02Desc": "Navegue até o ponto de retirada e entregue ao cliente.",
+      "step03Title": "Receba o pagamento",
+      "step03Desc": "Ganhos creditados instantaneamente na entrega."
+    }
+  },
+  "customer": {
+    "sectionLabel": "Para clientes",
+    "title1": "Compre",
+    "title2": "conversando.",
+    "subtitle": "Sem app para baixar. Sem conta para criar. Sem site para navegar. Abra o WhatsApp, nos diga o que precisa e nossa IA encontra os melhores produtos — e entrega na sua porta.",
+    "benefits": {
+      "chatTitle": "Navegue conversando",
+      "chatDesc": "Descreva o que quer em linguagem natural",
+      "instantTitle": "Resultados instantâneos",
+      "instantDesc": "A IA seleciona produtos correspondentes em segundos",
+      "deliveryTitle": "Entrega no mesmo dia",
+      "deliveryDesc": "Disponível nas principais cidades da África"
+    },
+    "whatsapp": {
+      "cta": "Comprar no WhatsApp",
+      "previewWelcome": "👋 Bem-vindo ao Jovi Mall!",
+      "previewMsg": "Nos diga o que procura e nossa IA encontrará as melhores ofertas. O que você precisa hoje?",
+      "previewTime": "Jovi IA · agora",
+      "previewUserMsg": "Olá Jovi Mall! Gostaria de começar a comprar.",
+      "trust": "Negócio verificado · Seguro",
+      "openWhatsApp": "Abrir WhatsApp",
+      "closePreview": "Fechar visualização",
+      "business": "WhatsApp Business"
+    }
+  },
+  "africaFirst": {
+    "sectionLabel": "África primeiro",
+    "title1": "Criado para como a",
+    "title2": "África",
+    "title3": "realmente compra.",
+    "subtitle": "Não copiamos um modelo ocidental de e-commerce. O Jovi Mall foi construído do zero para consumidores e empresas africanas: mobile, WhatsApp, conscientes dos dados.",
+    "ctaPrimary": "Nossa história africana",
+    "features": {
+      "mobileTitle": "Nativo para mobile",
+      "mobileDesc": "Cada pixel otimizado para os celulares que os africanos realmente usam — do Infinix básico ao Samsung topo de linha.",
+      "whatsappTitle": "Comércio WhatsApp-first",
+      "whatsappDesc": "Sem downloads, sem logins. Comércio onde 2+ bilhões de pessoas já passam o dia.",
+      "dataTitle": "Amigável com dados limitados",
+      "dataDesc": "Feito para funcionar em 2G, 3G e conexões instáveis. Comércio que não para quando o sinal cai."
+    },
+    "phone": {
+      "status": "9:41",
+      "assistantName": "Jovi Mall",
+      "assistantSub": "Assistente de compras com IA",
+      "onlineLabel": "on-line",
+      "chat1Customer": "Preciso de um presente de aniversário 🎁",
+      "chat1AI": "Ótimo! Qual o orçamento? 💜",
+      "chat2Customer": "₦5.000 - ₦15.000",
+      "chat2AI": "Aqui estão 5 presentes perfeitos por menos de ₦15k! 🎉",
+      "inputPlaceholder": "Mensagem...",
+      "earnedBadge": "+₦12.500 ganhos",
+      "aiActiveBadge": "IA ativa ✦"
+    }
+  },
+  "trust": {
+    "sectionLabel": "Inteligência & Escala",
+    "title1": "Inteligente.",
+    "title2": "Escalável.",
+    "title3": "Pronto para você.",
+    "subtitle": "Infraestrutura empresarial construída para a velocidade e escala do comércio africano — sem a complexidade corporativa.",
+    "backedBy": "Apoiado por & integrado com",
+    "features": {
+      "aiTitle": "Recomendações com IA",
+      "aiDesc": "Nosso motor de recomendações entende contexto, intenção e histórico de compras para apresentar o produto certo na hora certa.",
+      "zeroSetupTitle": "Zero configuração técnica",
+      "zeroSetupDesc": "Sem servidores. Sem APIs. Sem desenvolvedores. Abra uma conta, suba seu catálogo, comece a vender em minutos.",
+      "revenueTitle": "Receita multi-ator",
+      "revenueDesc": "Cada transação cria valor para vendedores, agências e entregadores simultaneamente — uma verdadeira economia compartilhada.",
+      "scaleTitle": "Feito para escala regional",
+      "scaleDesc": "Multi-cidade, multi-moeda e multi-idioma. Expanda de Lagos a Nairóbi a Acra sem reconstruir tudo."
+    },
+    "stats": {
+      "vendors": "Vendedores ativos",
+      "agencies": "Agências de entrega",
+      "orders": "Pedidos entregues",
+      "cities": "Cidades africanas"
+    },
+    "dashboard": {
+      "recentActivity1": "Novo pedido #4821 atribuído",
+      "recentActivity2": "Entregador Chidi confirmou coleta",
+      "recentActivity3": "₦ 12.500 creditados na carteira",
+      "performance": "Desempenho em 30 dias",
+      "stable": "Estável",
+      "up": "↑ +12%"
+    }
+  },
+  "finalCta": {
+    "badge": "✦ Junte-se a mais de 10.000 empresas já no Jovi Mall",
+    "title1": "Seu negócio,",
+    "title2": "impulsionado pela conversa.",
+    "subtitle": "Comece em minutos. Sem cartão de crédito. Sem equipe técnica. Seus primeiros 30 dias são completamente gratuitos.",
+    "ctaPrimary": "Começar grátis",
+    "finePrint": "Grátis para sempre nos primeiros 100 produtos · Sem taxas ocultas"
+  },
+  "modal": {
+    "title": "Como você está entrando?",
+    "subtitle": "Escolha seu papel para começar com o onboarding certo.",
+    "close": "Fechar",
+    "signIn": "Já tem uma conta?",
+    "signInLink": "Entrar",
+    "roles": {
+      "vendor": {
+        "label": "Vendedor",
+        "headline": "Quero vender produtos",
+        "description": "Suba seu catálogo e deixe a IA vender por você no WhatsApp"
+      },
+      "agency": {
+        "label": "Agência",
+        "headline": "Gerencio entregas",
+        "description": "Coordene entregadores e ganhe comissão em cada entrega"
+      },
+      "agent": {
+        "label": "Entregador",
+        "headline": "Faço entregas",
+        "description": "Aceite missões e ganhe por cada entrega bem-sucedida"
+      },
+      "customer": {
+        "label": "Cliente",
+        "headline": "Quero comprar",
+        "description": "Só mandar um WhatsApp — navegue, compre e receba em casa"
+      }
+    }
+  },
+  "footer": {
+    "platform": "Plataforma",
+    "company": "Empresa",
+    "legal": "Legal",
+    "about": "Sobre nós",
+    "blog": "Blog",
+    "careers": "Carreiras",
+    "contact": "Contato",
+    "privacy": "Política de Privacidade",
+    "terms": "Termos de Serviço",
+    "cookies": "Política de Cookies",
+    "copyright": "Todos os direitos reservados.",
+    "builtFor": "Feito para a África. Impulsionado por IA.",
+    "logoAriaLabel": "Início Jovi Mall",
+    "socialAriaLabel": "Link social"
+  },
+  "auth": {
+    "forgotPassword": "Esqueceu a senha?",
+    "customerWaTitle": "Clientes compram via WhatsApp",
+    "customerWaSubtitle": "Sem conta necessária — só começar uma conversa.",
+    "customerWaBody": "Os clientes não precisam criar uma conta. Continue no WhatsApp para acessar o seu perfil.",
+    "customerWaCta": "Continuar no WhatsApp",
+    "customerWaBack": "Escolher outro papel",
+    "backToHome": "Voltar ao início",
+    "loginTitle": "Entre no Jovi Mall",
+    "loginSubtitle": "Escolha o papel com que deseja entrar",
+    "loginSubtitleForm": "Insira suas credenciais para continuar",
+    "registerTitle": "Crie sua conta",
+    "registerSubtitle": "Selecione seu papel para começar",
+    "registerSubtitleForm": "Conclua seu cadastro",
+    "registeringAs": "Cadastrando como",
+    "signingInAs": "Entrando como",
+    "phoneLabelLogin": "Telefone ou e-mail",
+    "phoneLabel": "Número de telefone",
+    "emailLabel": "E-mail (opcional)",
+    "nameLabel": "Nome completo",
+    "businessNameLabel": "Nome do negócio",
+    "agencyNameLabel": "Nome da agência",
+    "passwordLabel": "Senha",
+    "phonePlaceholder": "+234... ou email@exemplo.com",
+    "phonePlaceholderRegister": "+234 800 000 0000",
+    "emailPlaceholder": "voce@exemplo.com",
+    "namePlaceholder": "Seu nome completo",
+    "businessNamePlaceholder": "Nome da sua loja",
+    "agencyNamePlaceholder": "Nome da sua agência de entrega",
+    "passwordPlaceholder": "",
+    "newPasswordPlaceholder": "Mín. 8 caracteres",
+    "forgotPasswordAria": "Senha esquecida — ainda não disponível",
+    "signIn": "Entrar",
+    "signingIn": "Entrando…",
+    "createAccount": "Criar conta",
+    "creatingAccount": "Criando conta",
+    "chooseDifferentRole": "Escolher outro papel",
+    "skipStep": "Se você tem apenas um papel, pode pular esta etapa.",
+    "noAccount": "Não tem uma conta?",
+    "createOne": "Crie uma",
+    "alreadyAccount": "Já tem uma conta?",
+    "signInLink": "Entrar",
+    "genericError": "Algo deu errado. Por favor, tente novamente."
+  }
+}
