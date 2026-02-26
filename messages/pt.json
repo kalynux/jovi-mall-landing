@@ -5,9 +5,10 @@
   },
   "navbar": {
     "howItWorks": "Como funciona",
-    "forVendors": "Para vendedores",
-    "forAgencies": "Para agências",
-    "forAgents": "Para entregadores",
+    "vendors": "Vendedores",
+    "agencies": "Agências",
+    "agents": "Entregadores",
+    "customers": "Clientes",
     "seeHowItWorks": "Ver como funciona",
     "getStarted": "Começar",
     "login": "Entrar",
@@ -20,8 +21,9 @@
     "languageSwitcher": "Selecionar idioma",
     "dashboard": "Painel",
     "switchRole": "Mudar papel",
+    "addRole": "Adicionar papel",
     "logout": "Sair",
-    "userMenuAriaLabel": "Abrir menu do usuário"
+    "userMenuAriaLabel": "Usuário"
   },
   "hero": {
     "badge": "A plataforma de comércio WhatsApp da África",
@@ -308,5 +310,49 @@
     "alreadyAccount": "Já tem uma conta?",
     "signInLink": "Entrar",
     "genericError": "Algo deu errado. Por favor, tente novamente."
+  },
+  "authMe": {
+    "title": "Mudar papel",
+    "subtitlePrefix": "Você está conectado como",
+    "currentBadge": "Atual",
+    "addRoleBtn": "Adicionar outro papel",
+    "switchError": "Falha ao mudar papel. Por favor, tente novamente.",
+    "roleLabels": {
+      "vendor": "Painel do Vendedor",
+      "agency": "Painel da Agência",
+      "agent": "App do Entregador",
+      "customer": "Portal do Cliente",
+      "admin": "Painel Admin"
+    },
+    "roleNames": {
+      "vendor": "Vendedor",
+      "agency": "Agência",
+      "agent": "Entregador",
+      "customer": "Cliente",
+      "admin": "Admin"
+    }
+  },
+  "addRole": {
+    "title": "Adicionar novo papel",
+    "subtitle": "Você atualmente tem: {roles}",
+    "subtitleEmpty": "Expanda o que você pode fazer no Jovi Mall",
+    "nameLabel": "Nome completo",
+    "namePlaceholder": "Seu nome completo",
+    "businessNameLabel": "Nome do negócio",
+    "businessNamePlaceholder": "Nome da sua loja",
+    "agencyNameLabel": "Nome da agência",
+    "agencyNamePlaceholder": "Nome da sua agência de entrega",
+    "submitBtn": "Adicionar papel de {role}",
+    "submitting": "Adicionando papel\u2026",
+    "customerCalloutTitle": "Clientes compram via WhatsApp",
+    "customerCalloutSubtitle": "O papel de cliente é automático \u2014 sem configuração necessária.",
+    "customerCalloutBody": "Sua conta já suporta compras via WhatsApp. Basta enviar uma mensagem para começar.",
+    "customerCalloutBack": "\u2190 Escolher outro papel",
+    "confirmTitle": "Papel adicionado!",
+    "confirmSubtitle": "Você agora tem o papel de {role}.",
+    "confirmBody": "Gostaria de mudar para seu novo papel de {role} agora e completar o onboarding?",
+    "confirmSwitch": "Mudar e completar onboarding",
+    "confirmStay": "Ficar com o papel atual",
+    "serverError": "Algo deu errado. Por favor, tente novamente."
   }
 }

@@ -1,9 +1,9 @@
-"use client";
+"use client"
 /**
  * UserMenuDropdown
  *
  * Renders the authenticated user's name as a trigger button.
- * On click, shows a dropdown with: Dashboard, Switch Role, Logout.
+ * On click, shows a dropdown with: Dashboard, Switch Role, Add Role, Logout.
  *
  * Accessibility:
  * - role="menu" / role="menuitem"
@@ -15,15 +15,15 @@
  * - Display name priority: user.name → user.email → "Account"
  */
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, LayoutDashboard, RefreshCw, LogOut } from "lucide-react";
+import { ChevronDown, LayoutDashboard, RefreshCw, LogOut, PlusCircle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
-import type { AuthUser } from "@/lib/auth/auth.types";
+import type { AuthRoleEntity } from "@/lib/auth/auth.types";
 import { getRoleUrl } from "@/lib/auth/auth.redirect";
 
 interface UserMenuDropdownProps {
-  user: AuthUser;
+  user: AuthRoleEntity;
   onLogout: () => Promise<void>;
   onSwitchRole: () => void;
 }
@@ -38,9 +38,9 @@ export default function UserMenuDropdown({
   const ref = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
 
-  // Display name: name is always present per AuthUser type.
+  // Display name: name is always present per AuthRoleEntity type.
   // Guard anyway for resilience.
-  const displayName = user.name || user.email || t("userMenuAriaLabel");
+  const displayName = user.name || user.display_name || user.email || t("userMenuAriaLabel");
 
   // Dashboard URL for current active role
   const dashboardUrl = getRoleUrl(user.activeRole);
@@ -125,7 +125,7 @@ export default function UserMenuDropdown({
             transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
             className="absolute right-0 mt-2 w-44 glass border border-[var(--border)] rounded-xl shadow-lg overflow-hidden z-50"
           >
-            {/* Dashboard */}
+            {/* 1. Dashboard */}
             <a
               href={dashboardUrl}
               role="menuitem"
@@ -136,20 +136,40 @@ export default function UserMenuDropdown({
               {t("dashboard")}
             </a>
 
-            {/* Switch Role */}
-            <button
+            {/* 2. Switch Role */}
+            {/* <button
               role="menuitem"
               onClick={handleSwitchRole}
               className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--accent-light)] transition-colors"
             >
               <RefreshCw className="w-4 h-4" aria-hidden="true" />
               {t("switchRole")}
-            </button>
+            </button> */}
+            <a
+              href="/auth-me"
+              role="menuitem"
+              className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--accent-light)] transition-colors"
+              onClick={() => setOpen(false)}
+            >
+              <RefreshCw className="w-4 h-4" aria-hidden="true" />
+              {t("switchRole")}
+            </a>
+
+            {/* 3. Add Role */}
+            <a
+              href="/add-role"
+              role="menuitem"
+              className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--accent-light)] transition-colors"
+              onClick={() => setOpen(false)}
+            >
+              <PlusCircle className="w-4 h-4" aria-hidden="true" />
+              {t("addRole")}
+            </a>
 
             {/* Divider */}
             <div className="h-px bg-[var(--border-medium)] mx-2 my-1" />
 
-            {/* Logout */}
+            {/* 4. Logout */}
             <button
               role="menuitem"
               onClick={handleLogout}

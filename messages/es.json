@@ -5,9 +5,10 @@
   },
   "navbar": {
     "howItWorks": "Cómo funciona",
-    "forVendors": "Para vendedores",
-    "forAgencies": "Para agencias",
-    "forAgents": "Para repartidores",
+    "vendors": "Vendedores",
+    "agencies": "Agencias",
+    "agents": "Repartidores",
+    "customers": "Clientes",
     "seeHowItWorks": "Ver cómo funciona",
     "getStarted": "Empezar",
     "login": "Iniciar sesión",
@@ -20,8 +21,9 @@
     "languageSwitcher": "Seleccionar idioma",
     "dashboard": "Panel de control",
     "switchRole": "Cambiar rol",
+    "addRole": "Añadir rol",
     "logout": "Cerrar sesión",
-    "userMenuAriaLabel": "Abrir menú de usuario"
+    "userMenuAriaLabel": "Usuario"
   },
   "hero": {
     "badge": "La plataforma de comercio WhatsApp para África",
@@ -308,5 +310,49 @@
     "alreadyAccount": "Ya tienes una cuenta?",
     "signInLink": "Iniciar sesión",
     "genericError": "Algo salió mal. Inténtalo de nuevo."
+  },
+  "authMe": {
+    "title": "Cambiar rol",
+    "subtitlePrefix": "Has iniciado sesión como",
+    "currentBadge": "Actual",
+    "addRoleBtn": "Añadir otro rol",
+    "switchError": "Error al cambiar de rol. Inténtalo de nuevo.",
+    "roleLabels": {
+      "vendor": "Panel de Vendedor",
+      "agency": "Panel de Agencia",
+      "agent": "App de Repartidor",
+      "customer": "Portal de Cliente",
+      "admin": "Panel Admin"
+    },
+    "roleNames": {
+      "vendor": "Vendedor",
+      "agency": "Agencia",
+      "agent": "Repartidor",
+      "customer": "Cliente",
+      "admin": "Admin"
+    }
+  },
+  "addRole": {
+    "title": "Añadir nuevo rol",
+    "subtitle": "Actualmente tienes: {roles}",
+    "subtitleEmpty": "Amplía lo que puedes hacer en Jovi Mall",
+    "nameLabel": "Nombre completo",
+    "namePlaceholder": "Tu nombre completo",
+    "businessNameLabel": "Nombre del negocio",
+    "businessNamePlaceholder": "Nombre de tu tienda",
+    "agencyNameLabel": "Nombre de la agencia",
+    "agencyNamePlaceholder": "Nombre de tu agencia de entrega",
+    "submitBtn": "Añadir rol {role}",
+    "submitting": "Añadiendo rol\u2026",
+    "customerCalloutTitle": "Los clientes compran vía WhatsApp",
+    "customerCalloutSubtitle": "El rol de cliente es automático \u2014 sin configuración necesaria.",
+    "customerCalloutBody": "Tu cuenta ya soporta compras vía WhatsApp. Solo envía un mensaje para comenzar.",
+    "customerCalloutBack": "\u2190 Elegir un rol diferente",
+    "confirmTitle": "¡Rol añadido!",
+    "confirmSubtitle": "Ahora tienes el rol de {role}.",
+    "confirmBody": "¿Te gustaría cambiar a tu nuevo rol {role} ahora y completar el onboarding?",
+    "confirmSwitch": "Cambiar y completar onboarding",
+    "confirmStay": "Quedarse con el rol actual",
+    "serverError": "Algo salió mal. Inténtalo de nuevo."
   }
 }

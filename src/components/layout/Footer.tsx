@@ -13,9 +13,10 @@ export default function Footer() {
       label: t("platform"),
       links: [
         { label: nav("howItWorks"), href: "#how-it-works" },
-        { label: nav("forVendors"), href: "#vendors" },
-        { label: nav("forAgencies"), href: "#agencies" },
-        { label: nav("forAgents"), href: "#agents" },
+        { label: nav("vendors"), href: "#vendors" },
+        { label: nav("agencies"), href: "#agencies" },
+        { label: nav("agents"), href: "#agents" },
+        { label: nav("customers"), href: "#customers" },
       ],
     },
     {

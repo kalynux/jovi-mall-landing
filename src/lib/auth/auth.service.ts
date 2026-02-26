@@ -23,15 +23,15 @@ import {
  */
 export async function restoreSession(): Promise<AuthState> {
     try {
-        const user = await api.getMe();
-        return { user, status: "authenticated" };
+        const { user, role, role_entity } = await api.getMe();
+        return { user, role, role_entity, status: "authenticated" };
     } catch (err) {
         if (err instanceof AuthError && err.statusCode === 401) {
-            return { user: null, status: "unauthenticated" };
+            return { user: null, role: null, role_entity: null, status: "unauthenticated" };
         }
         // Network errors, 5xx, etc. — treat as unauthenticated (fail safe)
         console.error("[auth.service] restoreSession failed:", err);
-        return { user: null, status: "unauthenticated" };
+        return { user: null, role: null, role_entity: null, status: "unauthenticated" };
     }
 }
 
@@ -46,8 +46,8 @@ export async function loginAndRedirect(
     payload: LoginPayload,
     returnParam?: string | null
 ): Promise<void> {
-    const { user } = await api.login(payload);
-    const role = payload.role ?? (user.roles[0] as Role);
+    const { user, role, role_entity } = await api.login(payload);
+    console.log(user, role, role_entity);
     const url = resolvePostLoginUrl(role, returnParam);
     window.location.href = url;
 }
@@ -77,8 +77,8 @@ export async function addRoleFlow(payload: AddRolePayload): Promise<{
     user: AuthUser;
     newRole: Role;
 }> {
-    const { user } = await api.addRole(payload);
-    return { user, newRole: payload.role };
+    const { user, role, role_entity } = await api.addRole(payload);
+    return { user, newRole: role };
 }
 
 /**

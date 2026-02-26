@@ -14,7 +14,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import type { AuthUser, AuthStatus } from "./auth.types";
+import type { AuthUser, AuthStatus, Role, AuthRoleEntity } from "./auth.types";
 import { restoreSession } from "./auth.service";
 import { logoutAndRedirect } from "./auth.service";
 
@@ -23,6 +23,8 @@ import { logoutAndRedirect } from "./auth.service";
 interface AuthContextValue {
   /** Null while loading or when unauthenticated. */
   user: AuthUser | null;
+  role: Role | null;
+  role_entity: AuthRoleEntity | null;
   status: AuthStatus;
   /**
    * Re-runs restoreSession() — call after login/register if you need the
@@ -38,6 +40,8 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue>({
   user: null,
+  role: null,
+  role_entity: null,
   status: "loading",
   refresh: async () => {},
   logout: async () => {},
@@ -47,11 +51,15 @@ const AuthContext = createContext<AuthContextValue>({
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [role, setRole] = useState<Role | null>(null);
+  const [role_entity, setRoleEntity] = useState<AuthRoleEntity | null>(null);
   const [status, setStatus] = useState<AuthStatus>("loading");
 
   const restore = useCallback(async () => {
     const state = await restoreSession();
     setUser(state.user);
+    setRole(state.role);
+    setRoleEntity(state.role_entity);
     setStatus(state.status);
   }, []);
 
@@ -63,12 +71,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     // Optimistically clear state so Navbar reverts immediately
     setUser(null);
+    setRole(null);
+    setRoleEntity(null);
     setStatus("unauthenticated");
     await logoutAndRedirect();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, status, refresh: restore, logout }}>
+    <AuthContext.Provider value={{ user, role, role_entity, status, refresh: restore, logout }}>
       {children}
     </AuthContext.Provider>
   );

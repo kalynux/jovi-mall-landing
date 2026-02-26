@@ -5,9 +5,10 @@
   },
   "navbar": {
     "howItWorks": "Comment ça marche",
-    "forVendors": "Pour les vendeurs",
-    "forAgencies": "Pour les agences",
-    "forAgents": "Pour les livreurs",
+    "vendors": "Vendeurs",
+    "agencies": "Agences",
+    "agents": "Livreurs",
+    "customers": "Clients",
     "seeHowItWorks": "Voir comment ça marche",
     "getStarted": "Commencer",
     "login": "Se connecter",
@@ -20,8 +21,9 @@
     "languageSwitcher": "Choisir la langue",
     "dashboard": "Tableau de bord",
     "switchRole": "Changer de rôle",
+    "addRole": "Ajouter un rôle",
     "logout": "Déconnexion",
-    "userMenuAriaLabel": "Ouvrir le menu utilisateur"
+    "userMenuAriaLabel": "Utilisateur"
   },
   "hero": {
     "badge": "La plateforme commerce WhatsApp pour l'Afrique",
@@ -308,5 +310,49 @@
     "alreadyAccount": "Vous avez déjà un compte ?",
     "signInLink": "Se connecter",
     "genericError": "Une erreur est survenue. Veuillez réessayer."
+  },
+  "authMe": {
+    "title": "Changer de rôle",
+    "subtitlePrefix": "Vous êtes connecté en tant que",
+    "currentBadge": "Actuel",
+    "addRoleBtn": "Ajouter un autre rôle",
+    "switchError": "Échec du changement de rôle. Veuillez réessayer.",
+    "roleLabels": {
+      "vendor": "Tableau de bord Vendeur",
+      "agency": "Tableau de bord Agence",
+      "agent": "App Livreur",
+      "customer": "Portail Client",
+      "admin": "Panneau Admin"
+    },
+    "roleNames": {
+      "vendor": "Vendeur",
+      "agency": "Agence",
+      "agent": "Livreur",
+      "customer": "Client",
+      "admin": "Admin"
+    }
+  },
+  "addRole": {
+    "title": "Ajouter un nouveau rôle",
+    "subtitle": "Vous avez actuellement : {roles}",
+    "subtitleEmpty": "Développez ce que vous pouvez faire sur Jovi Mall",
+    "nameLabel": "Nom complet",
+    "namePlaceholder": "Votre nom complet",
+    "businessNameLabel": "Nom de l'entreprise",
+    "businessNamePlaceholder": "Nom de votre boutique",
+    "agencyNameLabel": "Nom de l'agence",
+    "agencyNamePlaceholder": "Nom de votre agence de livraison",
+    "submitBtn": "Ajouter le rôle {role}",
+    "submitting": "Ajout en cours\u2026",
+    "customerCalloutTitle": "Les clients achètent via WhatsApp",
+    "customerCalloutSubtitle": "Le rôle client est automatique \u2014 aucune configuration nécessaire.",
+    "customerCalloutBody": "Votre compte prend déjà en charge les achats via WhatsApp. Envoyez simplement un message pour commencer.",
+    "customerCalloutBack": "\u2190 Choisir un rôle différent",
+    "confirmTitle": "Rôle ajouté !",
+    "confirmSubtitle": "Vous avez maintenant le rôle {role}.",
+    "confirmBody": "Souhaitez-vous passer à votre nouveau rôle {role} maintenant et compléter l'onboarding ?",
+    "confirmSwitch": "Changer et compléter l'onboarding",
+    "confirmStay": "Rester avec le rôle actuel",
+    "serverError": "Une erreur est survenue. Veuillez réessayer."
   }
 }

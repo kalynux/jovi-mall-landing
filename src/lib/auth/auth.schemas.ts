@@ -60,6 +60,15 @@ export const AddRoleSchema = z
         agency_name: z.string().optional(),
     })
     .superRefine((data, ctx) => {
+        // name is required for every non-customer role
+        if (data.role !== "customer" && !data.name?.trim()) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Name is required",
+                path: ["name"],
+            });
+        }
+        // vendor additionally requires business_name
         if (data.role === "vendor" && !data.business_name?.trim()) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
@@ -67,6 +76,7 @@ export const AddRoleSchema = z
                 path: ["business_name"],
             });
         }
+        // agency additionally requires agency_name
         if (data.role === "agency" && !data.agency_name?.trim()) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,

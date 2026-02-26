@@ -75,8 +75,8 @@ export async function addRole(
 }
 
 /** GET /api/auth/me — validates session using cookies; backend auto-refreshes if needed */
-export async function getMe(): Promise<AuthUser> {
-    return apiFetch<AuthUser>("/api/auth/me");
+export async function getMe(): Promise<AuthApiResponse> {
+    return apiFetch<AuthApiResponse>("/api/auth/me");
 }
 
 /**

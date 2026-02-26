@@ -5,9 +5,10 @@
     },
     "navbar": {
         "howItWorks": "How It Works",
-        "forVendors": "For Vendors",
-        "forAgencies": "For Agencies",
-        "forAgents": "For Agents",
+        "vendors": "Vendors",
+        "agencies": "Agencies",
+        "agents": "Agents",
+        "customers": "Customers",
         "seeHowItWorks": "See How It Works",
         "getStarted": "Get Started",
         "login": "Login",
@@ -20,8 +21,9 @@
         "languageSwitcher": "Select language",
         "dashboard": "Dashboard",
         "switchRole": "Switch Role",
+        "addRole": "Add role",
         "logout": "Logout",
-        "userMenuAriaLabel": "Open user menu"
+        "userMenuAriaLabel": "User"
     },
     "hero": {
         "badge": "Africa's WhatsApp Commerce Platform",
@@ -308,5 +310,49 @@
         "customerWaBody": "Customers don't need to create an account. Continue on WhatsApp to access your profile.",
         "customerWaCta": "Continue on WhatsApp",
         "customerWaBack": "Choose a different role"
+    },
+    "authMe": {
+        "title": "Switch Role",
+        "subtitlePrefix": "You are currently signed in as",
+        "currentBadge": "Current",
+        "addRoleBtn": "Add another role",
+        "switchError": "Failed to switch role. Please try again.",
+        "roleLabels": {
+            "vendor": "Vendor Dashboard",
+            "agency": "Agency Dashboard",
+            "agent": "Agent App",
+            "customer": "Customer Portal",
+            "admin": "Admin Panel"
+        },
+        "roleNames": {
+            "vendor": "Vendor",
+            "agency": "Agency",
+            "agent": "Agent",
+            "customer": "Customer",
+            "admin": "Admin"
+        }
+    },
+    "addRole": {
+        "title": "Add a new role",
+        "subtitle": "You currently have: {roles}",
+        "subtitleEmpty": "Expand what you can do on Jovi Mall",
+        "nameLabel": "Full Name",
+        "namePlaceholder": "Your full name",
+        "businessNameLabel": "Business Name",
+        "businessNamePlaceholder": "Your shop or brand name",
+        "agencyNameLabel": "Agency Name",
+        "agencyNamePlaceholder": "Your delivery agency name",
+        "submitBtn": "Add {role} role",
+        "submitting": "Adding role\u2026",
+        "customerCalloutTitle": "Customers shop via WhatsApp",
+        "customerCalloutSubtitle": "The customer role is automatic \u2014 no setup needed.",
+        "customerCalloutBody": "Your account already supports shopping via WhatsApp. Just send a message to start browsing products.",
+        "customerCalloutBack": "\u2190 Choose a different role",
+        "confirmTitle": "Role added!",
+        "confirmSubtitle": "You now have the {role} role.",
+        "confirmBody": "Would you like to switch to your new {role} role now and complete onboarding?",
+        "confirmSwitch": "Switch & complete onboarding",
+        "confirmStay": "Stay with current role",
+        "serverError": "Something went wrong. Please try again."
     }
 }

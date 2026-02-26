@@ -5,9 +5,10 @@
   },
   "navbar": {
     "howItWorks": "كيف يعمل",
-    "forVendors": "للبائعين",
-    "forAgencies": "للوكالات",
-    "forAgents": "للموصّلين",
+    "vendors": "البائعون",
+    "agencies": "الوكالات",
+    "agents": "للموصّلين",
+    "customers": "العملاء",
     "seeHowItWorks": "شاهد كيف يعمل",
     "getStarted": "ابدأ الآن",
     "login": "تسجيل الدخول",
@@ -20,8 +21,9 @@
     "languageSwitcher": "اختر اللغة",
     "dashboard": "لوحة التحكم",
     "switchRole": "تغيير الدور",
+    "addRole": "إضافة دور",
     "logout": "تسجيل الخروج",
-    "userMenuAriaLabel": "فتح قائمة المستخدم"
+    "userMenuAriaLabel": "مستخدم"
   },
   "hero": {
     "badge": "منصة التجارة عبر واتساب في أفريقيا",
@@ -308,5 +310,49 @@
     "alreadyAccount": "لديك حساب بالفعل",
     "signInLink": "تسجيل الدخول",
     "genericError": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+  },
+  "authMe": {
+    "title": "تغيير الدور",
+    "subtitlePrefix": "أنت مسجّل الدخول كـ",
+    "currentBadge": "الحالي",
+    "addRoleBtn": "إضافة دور آخر",
+    "switchError": "فشل تغيير الدور. يرجى المحاولة مرة أخرى.",
+    "roleLabels": {
+      "vendor": "لوحة تحكم البائع",
+      "agency": "لوحة تحكم الوكالة",
+      "agent": "تطبيق الموصِّل",
+      "customer": "بوابة العميل",
+      "admin": "لوحة الإدارة"
+    },
+    "roleNames": {
+      "vendor": "بائع",
+      "agency": "وكالة",
+      "agent": "موصِّل",
+      "customer": "عميل",
+      "admin": "مشرف"
+    }
+  },
+  "addRole": {
+    "title": "إضافة دور جديد",
+    "subtitle": "أدوارك الحالية: {roles}",
+    "subtitleEmpty": "وسِّع نطاق ما يمكنك فعله في جوفي مول",
+    "nameLabel": "الاسم الكامل",
+    "namePlaceholder": "اسمك الكامل",
+    "businessNameLabel": "اسم النشاط",
+    "businessNamePlaceholder": "اسم متجرك",
+    "agencyNameLabel": "اسم الوكالة",
+    "agencyNamePlaceholder": "اسم وكالة التوصيل",
+    "submitBtn": "إضافة دور {role}",
+    "submitting": "جاري الإضافة\u2026",
+    "customerCalloutTitle": "العملاء يتسوّقون عبر واتساب",
+    "customerCalloutSubtitle": "دور العميل تلقائي \u2014 لا يلزم أي إعداد.",
+    "customerCalloutBody": "حسابك يدعم بالفعل التسوق عبر واتساب. فقط أرسل رسالة للبدء.",
+    "customerCalloutBack": "\u2190 اختر دوراً مختلفاً",
+    "confirmTitle": "تمت إضافة الدور!",
+    "confirmSubtitle": "أصبح لديك الآن دور {role}.",
+    "confirmBody": "هل تريد التبديل إلى دورك الجديد {role} الآن وإكمال الإعداد؟",
+    "confirmSwitch": "التبديل وإكمال الإعداد",
+    "confirmStay": "البقاء في الدور الحالي",
+    "serverError": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
   }
 }

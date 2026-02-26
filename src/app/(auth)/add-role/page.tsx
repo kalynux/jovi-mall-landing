@@ -3,20 +3,25 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, CheckCircle2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { AddRoleSchema, type AddRoleFormValues } from "@/lib/auth/auth.schemas";
 import { addRoleFlow, redirectToOnboarding } from "@/lib/auth/auth.service";
 import { AuthError } from "@/lib/auth/auth.types";
-import type { UiRole, Role } from "@/lib/auth/auth.types";
+import type { UiRole } from "@/lib/auth/auth.types";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import AuthCard from "@/components/auth/AuthCard";
 import AuthFormField from "@/components/auth/AuthFormField";
 import RolePicker from "@/components/auth/RolePicker";
 import { AnimatePresence, motion } from "framer-motion";
 
-type ConfirmState = { newRole: Role } | null;
+type ConfirmState = { newRole: UiRole } | null;
 
 export default function AddRolePage() {
-  const { user, status } = useAuthGuard();
+  const t = useTranslations("addRole");
+  // Used only to get the shared "Current role" badge label
+  const tAuthMe = useTranslations("authMe");
+
+  const { user, role, role_entity, status } = useAuthGuard();
 
   const [selectedRole, setSelectedRole] = useState<UiRole | null>(null);
   const [showCustomerCallout, setShowCustomerCallout] = useState(false);
@@ -34,7 +39,7 @@ export default function AddRolePage() {
   // ── Loading / guard ────────────────────────────────────────────────────────
   if (status === "loading") {
     return (
-      <AuthCard title="Add a Role">
+      <AuthCard title={t("title")}>
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
         </div>
@@ -42,20 +47,28 @@ export default function AddRolePage() {
     );
   }
 
+  // Roles the user already holds (excluding admin — not shown in UI)
   const heldRoles: UiRole[] = (user?.roles ?? []).filter(
     (r): r is UiRole => r !== "admin"
   );
+
+  // The role this session is currently scoped to (source of truth: role_entity)
+  const activeRole = role as UiRole | undefined;
+
+  // Hide roles the user already holds — EXCEPT the active role,
+  // which should stay visible but greyed out (spec: "disabled, not hidden")
+  const excludedRoles = heldRoles.filter((r) => r !== activeRole);
 
   const onSubmit = async (data: AddRoleFormValues) => {
     setServerError(null);
     try {
       const { newRole } = await addRoleFlow({ ...data, role: selectedRole! });
-      setConfirmState({ newRole });
+      setConfirmState({ newRole: newRole as UiRole });
     } catch (err) {
       if (err instanceof AuthError) {
         setServerError(err.message);
       } else {
-        setServerError("Something went wrong. Please try again.");
+        setServerError(t("serverError"));
       }
     }
   };
@@ -64,19 +77,15 @@ export default function AddRolePage() {
   if (confirmState) {
     return (
       <AuthCard
-        title="Role added!"
-        subtitle={`You now have the ${confirmState.newRole} role.`}
+        title={t("confirmTitle")}
+        subtitle={t("confirmSubtitle", { role: confirmState.newRole })}
       >
         <div className="flex flex-col items-center gap-5 py-2 text-center">
           <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center">
             <CheckCircle2 className="w-7 h-7 text-green-500" />
           </div>
           <p className="text-sm text-[var(--text-secondary)]">
-            Would you like to switch to your new{" "}
-            <span className="font-semibold text-[var(--text-primary)] capitalize">
-              {confirmState.newRole}
-            </span>{" "}
-            role now and complete onboarding?
+            {t("confirmBody", { role: confirmState.newRole })}
           </p>
           <div className="flex flex-col gap-3 w-full">
             <button
@@ -84,14 +93,14 @@ export default function AddRolePage() {
               onClick={() => redirectToOnboarding(confirmState.newRole)}
               className="btn-primary w-full"
             >
-              Switch & complete onboarding
+              {t("confirmSwitch")}
             </button>
             <button
               type="button"
               onClick={() => window.history.back()}
               className="btn-secondary w-full"
             >
-              Stay with current role
+              {t("confirmStay")}
             </button>
           </div>
         </div>
@@ -103,20 +112,19 @@ export default function AddRolePage() {
   if (showCustomerCallout) {
     return (
       <AuthCard
-        title="Customers shop via WhatsApp"
-        subtitle="The customer role is automatic — no setup needed."
+        title={t("customerCalloutTitle")}
+        subtitle={t("customerCalloutSubtitle")}
       >
         <div className="flex flex-col items-center gap-4 py-2 text-center">
           <p className="text-sm text-[var(--text-secondary)]">
-            Your account already supports shopping via WhatsApp. Just send a
-            message to start browsing products.
+            {t("customerCalloutBody")}
           </p>
           <button
             type="button"
             onClick={() => setShowCustomerCallout(false)}
             className="btn-secondary w-full"
           >
-            ← Choose a different role
+            {t("customerCalloutBack")}
           </button>
         </div>
       </AuthCard>
@@ -125,18 +133,20 @@ export default function AddRolePage() {
 
   return (
     <AuthCard
-      title="Add a new role"
+      title={t("title")}
       subtitle={
         heldRoles.length > 0
-          ? `You currently have: ${heldRoles.join(", ")}`
-          : "Expand what you can do on Jovi Mall"
+          ? t("subtitle", { roles: heldRoles.join(", ") })
+          : t("subtitleEmpty")
       }
     >
       <div className="flex flex-col gap-5">
         <RolePicker
           selected={selectedRole}
           onSelect={setSelectedRole}
-          excluded={heldRoles}
+          ownedRoles={heldRoles}
+          disabledRole={activeRole}
+          disabledRoleLabel={tAuthMe("currentBadge")}
           customerCallout
           onCustomerCallout={() => setShowCustomerCallout(true)}
         />
@@ -159,24 +169,40 @@ export default function AddRolePage() {
                 {...register("role")}
               />
 
+              {/* name — required for vendor, agency, agent */}
+              <AuthFormField
+                label={t("nameLabel")}
+                type="text"
+                placeholder={t("namePlaceholder")}
+                required
+                {...register("name")}
+                error={errors.name?.message}
+                id={`add-role-name-${selectedRole}`}
+              />
+
+              {/* business_name — vendor only */}
               {selectedRole === "vendor" && (
                 <AuthFormField
-                  label="Business Name"
+                  label={t("businessNameLabel")}
                   type="text"
-                  placeholder="Your shop or brand name"
+                  placeholder={t("businessNamePlaceholder")}
                   required
                   {...register("business_name")}
                   error={errors.business_name?.message}
+                  id="add-role-business-name"
                 />
               )}
+
+              {/* agency_name — agency only */}
               {selectedRole === "agency" && (
                 <AuthFormField
-                  label="Agency Name"
+                  label={t("agencyNameLabel")}
                   type="text"
-                  placeholder="Your delivery agency name"
+                  placeholder={t("agencyNamePlaceholder")}
                   required
                   {...register("agency_name")}
                   error={errors.agency_name?.message}
+                  id="add-role-agency-name"
                 />
               )}
 
@@ -195,7 +221,9 @@ export default function AddRolePage() {
                 className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                {isSubmitting ? "Adding role…" : `Add ${selectedRole} role`}
+                {isSubmitting
+                  ? t("submitting")
+                  : t("submitBtn", { role: selectedRole })}
               </button>
             </motion.form>
           )}

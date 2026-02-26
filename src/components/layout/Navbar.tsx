@@ -28,7 +28,7 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
   const t = useTranslations("navbar");
 
   // Auth state — single source of truth from AuthProvider
-  const { user, status, logout } = useAuth();
+  const { user, role, role_entity, status, logout } = useAuth();
 
   useEffect(() => {
     const unsub = scrollY.onChange((v) => setScrolled(v > 60));
@@ -62,9 +62,10 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
   // Nav links from translations
   const NAV_LINKS = [
     // { label: t("howItWorks"), href: "#how-it-works" },
-    { label: t("forVendors"), href: "#vendors" },
-    { label: t("forAgencies"), href: "#agencies" },
-    { label: t("forAgents"), href: "#agents" },
+    { label: t("vendors"), href: "#vendors" },
+    { label: t("agencies"), href: "#agencies" },
+    { label: t("agents"), href: "#agents" },
+    { label: t("customers"), href: "#customers" },
   ];
 
   const currentLocaleConfig = LOCALES.find((l) => l.code === locale)!;
@@ -96,10 +97,10 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
       );
     }
 
-    if (status === "authenticated" && user) {
+    if (status === "authenticated" && user && role_entity) {
       return (
         <UserMenuDropdown
-          user={user}
+          user={role_entity}
           onLogout={logout}
           onSwitchRole={() => {
             setMenuOpen(false);

@@ -47,7 +47,16 @@ interface RolePickerProps {
   selected: UiRole | null;
   onSelect: (role: UiRole) => void;
   /** Roles to hide (e.g. already-held roles on the add-role page) */
-  excluded?: UiRole[];
+  ownedRoles?: UiRole[];
+  ownedRolesLabel?: string;
+  /**
+   * Role that is disabled (greyed-out, non-clickable).
+   * Typically the user's currently active role.
+   * Uses the shared "Current role" badge label from authMe.currentBadge.
+   */
+  disabledRole?: UiRole;
+  /** Label for the badge shown on the disabled card. Pass t("authMe.currentBadge"). */
+  disabledRoleLabel?: string;
   /** If set, renders a skip button with this message */
   skipMessage?: string;
   onSkip?: () => void;
@@ -61,27 +70,33 @@ interface RolePickerProps {
 export default function RolePicker({
   selected,
   onSelect,
-  excluded = [],
+  ownedRoles = [],
+  ownedRolesLabel = "Owned",
+  disabledRole,
+  disabledRoleLabel = "Current",
   skipMessage,
   onSkip,
   customerCallout = false,
   onCustomerCallout,
   className,
 }: RolePickerProps) {
-  const visibleRoles = (
-    Object.keys(ROLE_CONFIG) as UiRole[]
-  ).filter((r) => !excluded.includes(r));
+  // const visibleRoles = (
+  //   Object.keys(ROLE_CONFIG) as UiRole[]
+  // ).filter((r) => !ownedRoles.includes(r));
 
   return (
     <div className={cn("flex flex-col gap-3", className)}>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {visibleRoles.map((role, i) => {
+        {(Object.keys(ROLE_CONFIG) as UiRole[]).map((role, i) => {
           const config = ROLE_CONFIG[role];
           const Icon = config.icon;
           const isSelected = selected === role;
           const isWa = config.isWa;
+          const isDisabled = role === disabledRole;
+          const isOwned = ownedRoles.includes(role);
 
           const handleClick = () => {
+            if (isDisabled) return;
             if (role === "customer" && customerCallout && onCustomerCallout) {
               onCustomerCallout();
             } else {
@@ -94,6 +109,11 @@ export default function RolePicker({
               key={role}
               type="button"
               onClick={handleClick}
+              // Disabled role: not focusable, aria-disabled
+              tabIndex={isDisabled ? -1 : undefined}
+              aria-disabled={isDisabled ? "true" : undefined}
+              aria-pressed={isDisabled ? undefined : isSelected}
+              aria-label={isDisabled ? `${config.headline} (${disabledRoleLabel})` : config.headline}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{
@@ -101,30 +121,41 @@ export default function RolePicker({
                 duration: 0.3,
                 ease: [0.22, 1, 0.36, 1],
               }}
-              aria-pressed={isSelected}
-              aria-label={config.headline}
               className={cn(
                 "group relative p-4 rounded-2xl border text-left",
-                "transition-all duration-200 cursor-pointer",
-                isSelected
+                "transition-all duration-200",
+                isDisabled || isOwned
+                  ? "opacity-50 cursor-not-allowed border-[var(--border)] bg-[var(--bg-subtle)]"
+                  : isSelected
                   ? isWa
                     ? "border-wa bg-wa/10"
                     : "border-primary-500 bg-[var(--accent-light)]"
                   : "border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--bg-subtle)] hover:border-primary-400/40",
-                "hover:shadow-card-hover hover:-translate-y-0.5",
+                !isDisabled && !isOwned && "hover:shadow-card-hover hover:-translate-y-0.5",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               )}
             >
-              {/* Role badge */}
-              <div
-                className={cn(
-                  "absolute top-3 right-3 text-[9px] font-display font-bold px-2 py-0.5 rounded-full",
-                  isWa
-                    ? "bg-wa/10 text-wa-dark"
-                    : "bg-[var(--accent-light)] text-primary-600"
+              {/* Current role badge — replaces the normal role label badge */}
+              <div className="absolute top-3 right-3 flex flex-col items-end gap-1">
+                <div
+                  className={cn(
+                    "text-[9px] font-display font-bold px-2 py-0.5 rounded-full",
+                    isWa
+                      ? "bg-wa/10 text-wa-dark"
+                      : "bg-[var(--accent-light)] text-primary-600"
+                  )}
+                >
+                  {config.label}
+                </div>
+                {isDisabled ? (
+                  <div className="text-[9px] font-display font-bold px-2 py-0.5 rounded-full bg-[var(--border-medium)] text-[var(--text-muted)]">
+                    {disabledRoleLabel}
+                  </div>
+                ) : isOwned && (
+                  <div className="text-[9px] font-display font-bold px-2 py-0.5 rounded-full bg-[var(--border-medium)] text-[var(--text-muted)]">
+                    {ownedRolesLabel}
+                  </div>
                 )}
-              >
-                {config.label}
               </div>
 
               {/* Icon */}
@@ -137,7 +168,11 @@ export default function RolePicker({
                 <Icon
                   className={cn(
                     "w-5 h-5",
-                    isWa ? "text-wa-dark" : "text-primary-600"
+                    isDisabled
+                      ? "text-[var(--text-muted)]"
+                      : isWa
+                      ? "text-wa-dark"
+                      : "text-primary-600"
                   )}
                 />
               </div>
