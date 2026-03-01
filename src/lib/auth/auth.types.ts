@@ -115,7 +115,55 @@ export interface AuthApiResponse {
     message?: string;
 }
 
+// ─── Backend error contract (api-doc/errors/README.md) ───────────────────────
+
+/** Shape of a field entry inside VALIDATION_ERROR details.fields[] */
+export interface ValidationFieldError {
+    path: string;
+    message: string;
+    code: string;
+}
+
+/** Shape of the backend error envelope */
+export interface ApiErrorBody {
+    success: false;
+    requestId: string;
+    error: {
+        code: string;
+        message: string;
+        statusCode: number;
+        details?: {
+            // VALIDATION_ERROR
+            fields?: ValidationFieldError[];
+            // DATABASE_UNIQUE_CONSTRAINT_VIOLATION
+            keyValue?: Record<string, string>;
+            // other contextual detail shapes (catalog, analytics, etc.)
+            [key: string]: unknown;
+        };
+    };
+}
+
+// ─── Form Error Shape ───────────────────────────────────────────────────────
+
+/**
+ * Normalised form error structure used across all auth forms.
+ *
+ * - `global.message`   — translated global error text shown above the submit button
+ * - `global.requestId` — optional support trace ID sourced from the API response envelope;
+ *                        only present on non-field errors (per README best practice §3)
+ * - `fields`           — per-field translated error messages keyed by field path
+ */
+export type FormErrors = {
+    global?: {
+        message: string;
+        requestId?: string;
+    };
+    fields: Record<string, string | undefined>;
+};
+
 // ─── Errors ──────────────────────────────────────────────────────────────────
+
+/** Base error for any auth-related failure. Kept for backward compatibility. */
 export class AuthError extends Error {
     constructor(
         message: string,
@@ -124,5 +172,25 @@ export class AuthError extends Error {
     ) {
         super(message);
         this.name = "AuthError";
+    }
+}
+
+/**
+ * Structured error thrown by apiFetch on !res.ok.
+ * Carries the full backend error body so callers can map field/global errors
+ * without re-parsing.
+ * instanceof AuthError === true — all existing catch blocks remain valid.
+ */
+export class ApiError extends AuthError {
+    constructor(
+        message: string,
+        statusCode: number,
+        public readonly code: string,
+        public readonly details?: ApiErrorBody["error"]["details"],
+        /** Top-level requestId from the response envelope. Display to user for support tracing. */
+        public readonly requestId?: string
+    ) {
+        super(message, statusCode);
+        this.name = "ApiError";
     }
 }

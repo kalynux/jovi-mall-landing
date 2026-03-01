@@ -8,10 +8,12 @@ import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { RegisterSchema, type RegisterFormValues } from "@/lib/auth/auth.schemas";
 import { registerAndRedirect } from "@/lib/auth/auth.service";
-import { AuthError } from "@/lib/auth/auth.types";
 import type { UiRole } from "@/lib/auth/auth.types";
+import { mapApiErrors, parseRootType } from "@/lib/auth/form-errors";
+import { sanitizePayload } from "@/lib/form/sanitize-payload";
 import AuthCard from "@/components/auth/AuthCard";
 import AuthFormField from "@/components/auth/AuthFormField";
+import { GlobalError } from "@/components/auth/GlobalError";
 import RolePicker from "@/components/auth/RolePicker";
 import CustomerWhatsAppCta from "@/components/auth/CustomerWhatsAppCta";
 
@@ -19,6 +21,8 @@ type Step = "role" | "customer-wa" | "form";
 
 function RegisterFormContent() {
   const t = useTranslations("auth");
+  const tModal = useTranslations("modal");
+  const tErrors = useTranslations("errors");
   const searchParams = useSearchParams();
   const roleParam = searchParams.get("role");
 
@@ -34,11 +38,12 @@ function RegisterFormContent() {
 
   const [selectedRole, setSelectedRole] = useState<UiRole>(initialRole);
   const [step, setStep] = useState<Step>(initialStep);
-  const [serverError, setServerError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
+    setError,
+    clearErrors,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(RegisterSchema),
@@ -60,15 +65,20 @@ function RegisterFormContent() {
   };
 
   const onSubmit = async (data: RegisterFormValues) => {
-    setServerError(null);
+    // Clear any stale global error before each attempt
+    clearErrors("root");
+
     try {
-      await registerAndRedirect({ ...data, role: selectedRole });
+      // sanitizePayload trims strings and drops empty/null/undefined fields.
+      // Critically this removes email: "" when the optional field is left blank,
+      // preventing the backend from receiving an invalid empty-string email.
+      const payload = sanitizePayload({
+        ...data,
+        role: selectedRole,
+      });
+      await registerAndRedirect(payload as RegisterFormValues);
     } catch (err) {
-      if (err instanceof AuthError) {
-        setServerError(err.message);
-      } else {
-        setServerError(t("genericError"));
-      }
+      mapApiErrors(err, setError, tErrors);
     }
   };
 
@@ -77,15 +87,15 @@ function RegisterFormContent() {
     step === "role"
       ? t("registerTitle")
       : step === "customer-wa"
-      ? t("customerWaTitle")
-      : t("registerSubtitleForm");
+        ? t("customerWaTitle")
+        : t("registerSubtitleForm");
 
   const cardSubtitle =
     step === "role"
       ? t("registerSubtitle")
       : step === "customer-wa"
-      ? t("customerWaSubtitle")
-      : `${t("registeringAs")} ${selectedRole}`;
+        ? t("customerWaSubtitle")
+        : `${t("registeringAs")} ${selectedRole}`;
 
   return (
     <AuthCard title={cardTitle} subtitle={cardSubtitle}>
@@ -131,7 +141,7 @@ function RegisterFormContent() {
                 onClick={handleBackToRole}
                 className="text-xs font-display font-semibold px-2.5 py-1 rounded-full bg-[var(--accent-light)] text-primary-600 hover:bg-primary-100 transition-colors capitalize"
               >
-                {selectedRole} ↩
+                {tModal(`roles.${selectedRole}.label` as Parameters<typeof tModal>[0])} ↩
               </button>
             </div>
 
@@ -144,7 +154,9 @@ function RegisterFormContent() {
               autoComplete="name"
               placeholder={t("namePlaceholder")}
               required
-              {...register("name")}
+              {...register("name", {
+                onChange: () => clearErrors(["name", "root"] as any),
+              })}
               error={errors.name?.message}
             />
 
@@ -154,16 +166,26 @@ function RegisterFormContent() {
               autoComplete="tel"
               placeholder={t("phonePlaceholderRegister")}
               required
-              {...register("phone")}
+              {...register("phone", {
+                onChange: () => clearErrors(["phone", "root"] as any),
+              })}
               error={errors.phone?.message}
             />
 
+            {/*
+              Email is required for vendors, optional for agency and agent.
+              sanitizePayload still drops it if left empty (only reachable
+              for non-vendor roles where the field is truly optional).
+            */}
             <AuthFormField
               label={t("emailLabel")}
               type="email"
               autoComplete="email"
               placeholder={t("emailPlaceholder")}
-              {...register("email")}
+              required={selectedRole === "vendor"}
+              {...register("email", {
+                onChange: () => clearErrors(["email", "root"] as any),
+              })}
               error={errors.email?.message}
             />
 
@@ -174,7 +196,9 @@ function RegisterFormContent() {
                 type="text"
                 placeholder={t("businessNamePlaceholder")}
                 required
-                {...register("business_name")}
+                {...register("business_name", {
+                  onChange: () => clearErrors(["business_name", "root"] as any),
+                })}
                 error={errors.business_name?.message}
               />
             )}
@@ -186,7 +210,9 @@ function RegisterFormContent() {
                 type="text"
                 placeholder={t("agencyNamePlaceholder")}
                 required
-                {...register("agency_name")}
+                {...register("agency_name", {
+                  onChange: () => clearErrors(["agency_name", "root"] as any),
+                })}
                 error={errors.agency_name?.message}
               />
             )}
@@ -197,18 +223,24 @@ function RegisterFormContent() {
               autoComplete="new-password"
               placeholder={t("newPasswordPlaceholder")}
               required
-              {...register("password")}
+              {...register("password", {
+                onChange: () => clearErrors(["password", "root"] as any),
+              })}
               error={errors.password?.message}
             />
 
-            {serverError && (
-              <div
-                role="alert"
-                className="rounded-xl px-4 py-3 bg-red-500/10 border border-red-500/20 text-sm text-red-600 font-medium"
-              >
-                {serverError}
-              </div>
-            )}
+            {(() => {
+              const { errorCode, requestId } = parseRootType(
+                errors.root?.type as string | undefined
+              );
+              return (
+                <GlobalError
+                  message={errors.root?.message}
+                  requestId={requestId}
+                  errorCode={errorCode}
+                />
+              );
+            })()}
 
             <button
               type="submit"

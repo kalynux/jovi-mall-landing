@@ -5,8 +5,9 @@ import type {
     AuthApiResponse,
     AuthUser,
     Role,
+    ApiErrorBody,
 } from "./auth.types";
-import { AuthError } from "./auth.types";
+import { AuthError, ApiError } from "./auth.types";
 
 const API_BASE =
     process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8022";
@@ -29,10 +30,24 @@ async function apiFetch<T>(
     try {
         body = await res.json();
     } catch {
-        // empty body is fine for some responses
+        // empty body — fall through to generic error below
     }
 
     if (!res.ok) {
+        // Try to conform to the structured backend error contract first.
+        // See: api-doc/errors/README.md
+        const structured = body as Partial<ApiErrorBody>;
+        if (structured?.error?.code) {
+            throw new ApiError(
+                structured.error.message,
+                structured.error.statusCode ?? res.status,
+                structured.error.code,
+                structured.error.details,
+                structured.requestId  // propagate request trace ID for support display
+            );
+        }
+
+        // Fallback for non-structured responses (network layer, proxies, etc.)
         throw new AuthError(
             (body?.message as string) ||
             (body?.error as string) ||

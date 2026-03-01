@@ -33,12 +33,22 @@ export const RegisterSchema = z
         agency_name: z.string().optional(),
     })
     .superRefine((data, ctx) => {
-        if (data.role === "vendor" && !data.business_name?.trim()) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "Business name is required for vendors",
-                path: ["business_name"],
-            });
+        if (data.role === "vendor") {
+            // Email is required for vendors
+            if (!data.email?.trim()) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "Email is required for vendors",
+                    path: ["email"],
+                });
+            }
+            if (!data.business_name?.trim()) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "Business name is required for vendors",
+                    path: ["business_name"],
+                });
+            }
         }
         if (data.role === "agency" && !data.agency_name?.trim()) {
             ctx.addIssue({

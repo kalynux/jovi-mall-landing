@@ -110,8 +110,8 @@ const AuthFormField = forwardRef<HTMLInputElement, AuthFormFieldProps>(
         {error && (
           <p
             id={errorId}
-            role="alert"
-            className="text-xs text-red-500 font-medium"
+            aria-live="polite"
+            className="text-xs text-red-500 font-medium transition-opacity duration-150"
           >
             {error}
           </p>

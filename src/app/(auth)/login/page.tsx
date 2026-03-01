@@ -8,10 +8,12 @@ import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { LoginSchema, type LoginFormValues } from "@/lib/auth/auth.schemas";
 import { loginAndRedirect } from "@/lib/auth/auth.service";
-import { AuthError } from "@/lib/auth/auth.types";
 import type { UiRole } from "@/lib/auth/auth.types";
+import { mapApiErrors, parseRootType } from "@/lib/auth/form-errors";
+import { sanitizePayload } from "@/lib/form/sanitize-payload";
 import AuthCard from "@/components/auth/AuthCard";
 import AuthFormField from "@/components/auth/AuthFormField";
+import { GlobalError } from "@/components/auth/GlobalError";
 import RolePicker from "@/components/auth/RolePicker";
 import CustomerWhatsAppCta from "@/components/auth/CustomerWhatsAppCta";
 
@@ -19,16 +21,19 @@ type Step = "role" | "customer-wa" | "form";
 
 function LoginFormContent() {
   const t = useTranslations("auth");
+  const tModal = useTranslations("modal");
+  const tErrors = useTranslations("errors");
   const searchParams = useSearchParams();
   const returnParam = searchParams.get("return");
 
   const [selectedRole, setSelectedRole] = useState<UiRole | null>(null);
   const [step, setStep] = useState<Step>("role");
-  const [serverError, setServerError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
+    setError,
+    clearErrors,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(LoginSchema),
@@ -49,18 +54,20 @@ function LoginFormContent() {
   };
 
   const onSubmit = async (data: LoginFormValues) => {
-    setServerError(null);
+    // Clear any stale global error before each attempt
+    clearErrors("root");
+
     try {
+      const payload = sanitizePayload({
+        ...data,
+        role: selectedRole ?? undefined,
+      });
       await loginAndRedirect(
-        { ...data, role: selectedRole ?? undefined },
+        payload as typeof data & { role?: UiRole },
         returnParam
       );
     } catch (err) {
-      if (err instanceof AuthError) {
-        setServerError(err.message);
-      } else {
-        setServerError(t("genericError"));
-      }
+      mapApiErrors(err, setError, tErrors);
     }
   };
 
@@ -69,17 +76,17 @@ function LoginFormContent() {
     step === "role"
       ? t("loginTitle")
       : step === "customer-wa"
-      ? t("customerWaTitle")
-      : selectedRole
-      ? `${t("signIn")} — ${selectedRole}`
-      : t("signIn");
+        ? t("customerWaTitle")
+        : selectedRole
+          ? `${t("signIn")} — ${selectedRole}`
+          : t("signIn");
 
   const cardSubtitle =
     step === "role"
       ? t("loginSubtitle")
       : step === "customer-wa"
-      ? t("customerWaSubtitle")
-      : t("loginSubtitleForm");
+        ? t("customerWaSubtitle")
+        : t("loginSubtitleForm");
 
   return (
     <AuthCard title={cardTitle} subtitle={cardSubtitle}>
@@ -124,7 +131,7 @@ function LoginFormContent() {
                 }}
                 className="text-xs font-display font-semibold px-2.5 py-1 rounded-full bg-[var(--accent-light)] text-primary-600 hover:bg-primary-100 transition-colors capitalize"
               >
-                {selectedRole} ↩
+                {tModal(`roles.${selectedRole}.label` as Parameters<typeof tModal>[0])} ↩
               </button>
             </div>
           )}
@@ -135,7 +142,9 @@ function LoginFormContent() {
             autoComplete="username"
             placeholder={t("phonePlaceholder")}
             required
-            {...register("identifier")}
+            {...register("identifier", {
+              onChange: () => clearErrors(["identifier", "root"] as any),
+            })}
             error={errors.identifier?.message}
           />
 
@@ -146,7 +155,9 @@ function LoginFormContent() {
               autoComplete="current-password"
               placeholder={t("passwordPlaceholder")}
               required
-              {...register("password")}
+              {...register("password", {
+                onChange: () => clearErrors(["password", "root"] as any),
+              })}
               error={errors.password?.message}
             />
             {/* Forgot password — intentional UX scaffold, non-functional */}
@@ -160,15 +171,18 @@ function LoginFormContent() {
             </button>
           </div>
 
-          {/* Server error */}
-          {serverError && (
-            <div
-              role="alert"
-              className="rounded-xl px-4 py-3 bg-red-500/10 border border-red-500/20 text-sm text-red-600 font-medium"
-            >
-              {serverError}
-            </div>
-          )}
+          {(() => {
+            const { errorCode, requestId } = parseRootType(
+              errors.root?.type as string | undefined
+            );
+            return (
+              <GlobalError
+                message={errors.root?.message}
+                requestId={requestId}
+                errorCode={errorCode}
+              />
+            );
+          })()}
 
           <button
             type="submit"

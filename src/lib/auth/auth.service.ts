@@ -112,5 +112,5 @@ export async function logoutAndRedirect(): Promise<void> {
     } catch {
         // Even if logout API fails, clear local state and redirect
     }
-    window.location.href = "/login";
+    window.location.href = "/";
 }

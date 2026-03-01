@@ -6,11 +6,12 @@ import { Loader2, CheckCircle2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { AddRoleSchema, type AddRoleFormValues } from "@/lib/auth/auth.schemas";
 import { addRoleFlow, redirectToOnboarding } from "@/lib/auth/auth.service";
-import { AuthError } from "@/lib/auth/auth.types";
 import type { UiRole } from "@/lib/auth/auth.types";
+import { mapApiErrors, parseRootType } from "@/lib/auth/form-errors";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import AuthCard from "@/components/auth/AuthCard";
 import AuthFormField from "@/components/auth/AuthFormField";
+import { GlobalError } from "@/components/auth/GlobalError";
 import RolePicker from "@/components/auth/RolePicker";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -18,19 +19,21 @@ type ConfirmState = { newRole: UiRole } | null;
 
 export default function AddRolePage() {
   const t = useTranslations("addRole");
+  const tRoles = useTranslations("modal");
   // Used only to get the shared "Current role" badge label
   const tAuthMe = useTranslations("authMe");
+  const tErrors = useTranslations("errors");
 
   const { user, role, role_entity, status } = useAuthGuard();
 
   const [selectedRole, setSelectedRole] = useState<UiRole | null>(null);
   const [showCustomerCallout, setShowCustomerCallout] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
 
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<AddRoleFormValues>({
     resolver: zodResolver(AddRoleSchema),
@@ -60,16 +63,11 @@ export default function AddRolePage() {
   const excludedRoles = heldRoles.filter((r) => r !== activeRole);
 
   const onSubmit = async (data: AddRoleFormValues) => {
-    setServerError(null);
     try {
       const { newRole } = await addRoleFlow({ ...data, role: selectedRole! });
       setConfirmState({ newRole: newRole as UiRole });
     } catch (err) {
-      if (err instanceof AuthError) {
-        setServerError(err.message);
-      } else {
-        setServerError(t("serverError"));
-      }
+      mapApiErrors(err, setError, tErrors);
     }
   };
 
@@ -136,7 +134,7 @@ export default function AddRolePage() {
       title={t("title")}
       subtitle={
         heldRoles.length > 0
-          ? t("subtitle", { roles: heldRoles.join(", ") })
+          ? t("subtitle", { roles: heldRoles.map((r) => tRoles(`roles.${r}.label` as Parameters<typeof t>[0])).join(", ") })
           : t("subtitleEmpty")
       }
     >
@@ -147,6 +145,7 @@ export default function AddRolePage() {
           ownedRoles={heldRoles}
           disabledRole={activeRole}
           disabledRoleLabel={tAuthMe("currentBadge")}
+          ownedRolesLabel={tAuthMe("ownedBadge")}
           customerCallout
           onCustomerCallout={() => setShowCustomerCallout(true)}
         />
@@ -206,14 +205,18 @@ export default function AddRolePage() {
                 />
               )}
 
-              {serverError && (
-                <div
-                  role="alert"
-                  className="rounded-xl px-4 py-3 bg-red-500/10 border border-red-500/20 text-sm text-red-600 font-medium"
-                >
-                  {serverError}
-                </div>
-              )}
+              {(() => {
+                const { errorCode, requestId } = parseRootType(
+                  errors.root?.type as string | undefined
+                );
+                return (
+                  <GlobalError
+                    message={errors.root?.message}
+                    requestId={requestId}
+                    errorCode={errorCode}
+                  />
+                );
+              })()}
 
               <button
                 type="submit"

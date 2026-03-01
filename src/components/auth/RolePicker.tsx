@@ -3,6 +3,7 @@ import { Store, Building2, Bike, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { UiRole } from "@/lib/auth/auth.types";
+import { useTranslations } from "next-intl";
 
 // ─── Role Config ─────────────────────────────────────────────────────────────
 const ROLE_CONFIG: Record<
@@ -84,6 +85,8 @@ export default function RolePicker({
   //   Object.keys(ROLE_CONFIG) as UiRole[]
   // ).filter((r) => !ownedRoles.includes(r));
 
+  const t = useTranslations("modal");
+
   return (
     <div className={cn("flex flex-col gap-3", className)}>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -127,10 +130,10 @@ export default function RolePicker({
                 isDisabled || isOwned
                   ? "opacity-50 cursor-not-allowed border-[var(--border)] bg-[var(--bg-subtle)]"
                   : isSelected
-                  ? isWa
-                    ? "border-wa bg-wa/10"
-                    : "border-primary-500 bg-[var(--accent-light)]"
-                  : "border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--bg-subtle)] hover:border-primary-400/40",
+                    ? isWa
+                      ? "border-wa bg-wa/10"
+                      : "border-primary-500 bg-[var(--accent-light)]"
+                    : "border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--bg-subtle)] hover:border-primary-400/40",
                 !isDisabled && !isOwned && "hover:shadow-card-hover hover:-translate-y-0.5",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               )}
@@ -145,7 +148,7 @@ export default function RolePicker({
                       : "bg-[var(--accent-light)] text-primary-600"
                   )}
                 >
-                  {config.label}
+                  {t(`roles.${role}.label` as Parameters<typeof t>[0])}
                 </div>
                 {isDisabled ? (
                   <div className="text-[9px] font-display font-bold px-2 py-0.5 rounded-full bg-[var(--border-medium)] text-[var(--text-muted)]">
@@ -171,17 +174,17 @@ export default function RolePicker({
                     isDisabled
                       ? "text-[var(--text-muted)]"
                       : isWa
-                      ? "text-wa-dark"
-                      : "text-primary-600"
+                        ? "text-wa-dark"
+                        : "text-primary-600"
                   )}
                 />
               </div>
 
               <h3 className="font-display font-semibold text-sm text-[var(--text-primary)] mb-0.5">
-                {config.headline}
+                {t(`roles.${role}.headline` as Parameters<typeof t>[0])}
               </h3>
               <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                {config.description}
+                {t(`roles.${role}.description` as Parameters<typeof t>[0])}
               </p>
             </motion.button>
           );
@@ -197,7 +200,7 @@ export default function RolePicker({
             onClick={onSkip}
             className="text-xs text-primary-600 hover:underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
           >
-            Skip role selection
+            {t("skipRoleSelection")}
           </button>
         </div>
       )}

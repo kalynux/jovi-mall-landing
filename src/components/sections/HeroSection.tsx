@@ -113,7 +113,7 @@ export default function HeroSection({ onGetStarted }: HeroSectionProps) {
             transition={{ delay: 0.5, duration: 0.5 }}
           >
             {[
-              { icon: MessageCircle, tKey: "pillWhatsApp", color: "text-wa-dark bg-wa-light/50 border-wa/20" },
+              { icon: MessageCircle, tKey: "pillWhatsApp", color: "text-wa-dark dark:text-wa border-wa/20" },
               { icon: Bot, tKey: "pillAI", color: "text-primary-600 bg-[var(--accent-light)] border-primary-400/20" },
               { icon: Zap, tKey: "pillNoStorefront", color: "text-primary-600 bg-[var(--accent-light)] border-primary-400/20" },
             ].map(({ icon: Icon, tKey, color }) => (
