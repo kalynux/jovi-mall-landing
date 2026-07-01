@@ -5,6 +5,8 @@ import type {
     AddRolePayload,
     AuthUser,
     Role,
+    AuthRoleEntity,
+    PostAuthAction,
 } from "./auth.types";
 import { AuthError } from "./auth.types";
 import * as api from "./auth.api";
@@ -13,6 +15,7 @@ import {
     resolveOnboardingUrl,
     getRoleUrl,
 } from "./auth.redirect";
+import { requiresWaVerification } from "./wa-verification-gate";
 
 // ─── Session Restore ─────────────────────────────────────────────────────────
 
@@ -38,16 +41,35 @@ export async function restoreSession(): Promise<AuthState> {
 // ─── Login ───────────────────────────────────────────────────────────────────
 
 /**
- * Performs login, then redirects the browser to the appropriate URL.
- * Respects a validated ?return= param.
- * Throws AuthError on failure (to be handled by the calling form).
+ * Performs login and returns a `PostAuthAction`.
+ *
+ * - `{ type: "redirect", url }` → navigate immediately
+ * - `{ type: "wa_gate", roleEntity, redirectUrl }` → mount WA modal first
+ *
+ * Throws ApiError / AuthError on login failure (handled by the calling form).
+ */
+export async function loginAndGetAction(
+    payload: LoginPayload,
+    returnParam?: string | null
+): Promise<PostAuthAction> {
+    const { role, role_entity } = await api.login(payload);
+    const redirectUrl = resolvePostLoginUrl(role, returnParam);
+
+    if (requiresWaVerification(role_entity)) {
+        return { type: "wa_gate", roleEntity: role_entity, redirectUrl };
+    }
+    return { type: "redirect", url: redirectUrl };
+}
+
+/**
+ * @deprecated Use loginAndGetAction() — this wrapper exists for backward
+ * compatibility. It bypasses the WA gate and should not be used in new code.
  */
 export async function loginAndRedirect(
     payload: LoginPayload,
     returnParam?: string | null
 ): Promise<void> {
-    const { user, role, role_entity } = await api.login(payload);
-    console.log(user, role, role_entity);
+    const { role } = await api.login(payload);
     const url = resolvePostLoginUrl(role, returnParam);
     window.location.href = url;
 }
@@ -55,8 +77,28 @@ export async function loginAndRedirect(
 // ─── Register ────────────────────────────────────────────────────────────────
 
 /**
- * Registers a new user, then redirects to the role's /onboarding route.
- * Throws AuthError on failure.
+ * Registers a new user and returns a `PostAuthAction`.
+ *
+ * - `{ type: "redirect", url }` → navigate immediately to onboarding
+ * - `{ type: "wa_gate", roleEntity, redirectUrl }` → mount WA modal first
+ *
+ * Throws ApiError / AuthError on registration failure.
+ */
+export async function registerAndGetAction(
+    payload: RegisterPayload
+): Promise<PostAuthAction> {
+    const { role, role_entity } = await api.register(payload);
+    const redirectUrl = resolveOnboardingUrl(role as Exclude<Role, "admin">);
+
+    if (requiresWaVerification(role_entity)) {
+        return { type: "wa_gate", roleEntity: role_entity, redirectUrl };
+    }
+    return { type: "redirect", url: redirectUrl };
+}
+
+/**
+ * @deprecated Use registerAndGetAction() — this wrapper exists for backward
+ * compatibility. It bypasses the WA gate and should not be used in new code.
  */
 export async function registerAndRedirect(
     payload: RegisterPayload
@@ -69,15 +111,36 @@ export async function registerAndRedirect(
 // ─── Add Role ────────────────────────────────────────────────────────────────
 
 /**
- * Adds a new role to the currently authenticated user.
- * Returns the updated user + the new role for the UI to prompt the user.
- * Throws AuthError on failure.
+ * Adds a new role and returns:
+ * - the updated user
+ * - the new role
+ * - a `PostAuthAction` indicating whether to redirect or show the WA gate
+ *
+ * Throws ApiError / AuthError on failure.
+ */
+export async function addRoleAndGetAction(payload: AddRolePayload): Promise<{
+    user: AuthUser;
+    newRole: Role;
+    action: PostAuthAction;
+}> {
+    const { user, role, role_entity } = await api.addRole(payload);
+    const redirectUrl = resolveOnboardingUrl(role as Exclude<Role, "admin">);
+
+    const action: PostAuthAction = requiresWaVerification(role_entity)
+        ? { type: "wa_gate", roleEntity: role_entity, redirectUrl }
+        : { type: "redirect", url: redirectUrl };
+
+    return { user, newRole: role, action };
+}
+
+/**
+ * @deprecated Use addRoleAndGetAction() — kept for backward compatibility.
  */
 export async function addRoleFlow(payload: AddRolePayload): Promise<{
     user: AuthUser;
     newRole: Role;
 }> {
-    const { user, role, role_entity } = await api.addRole(payload);
+    const { user, role } = await api.addRole(payload);
     return { user, newRole: role };
 }
 
@@ -91,9 +154,25 @@ export function redirectToOnboarding(role: Role): void {
 // ─── Role Switch ─────────────────────────────────────────────────────────────
 
 /**
- * Switches the active session role and redirects to that role's subdomain.
- * Backend re-issues cookies scoped to the new role.
+ * Switches the active session role and returns a `PostAuthAction`.
+ *
+ * - `{ type: "redirect", url }` → navigate immediately
+ * - `{ type: "wa_gate", roleEntity, redirectUrl }` → mount WA modal first
+ *
  * Throws AuthError on failure.
+ */
+export async function switchRoleAndGetAction(role: Role): Promise<PostAuthAction> {
+    const { role_entity } = await api.switchRole(role);
+    const redirectUrl = getRoleUrl(role);
+
+    if (requiresWaVerification(role_entity)) {
+        return { type: "wa_gate", roleEntity: role_entity, redirectUrl };
+    }
+    return { type: "redirect", url: redirectUrl };
+}
+
+/**
+ * @deprecated Use switchRoleAndGetAction() — kept for backward compatibility.
  */
 export async function switchRoleAndRedirect(role: Role): Promise<void> {
     await api.switchRole(role);

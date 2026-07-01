@@ -5,10 +5,11 @@ import { Store, Building2, Bike, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
-import { switchRoleAndRedirect } from "@/lib/auth/auth.service";
+import { switchRoleAndGetAction, logoutAndRedirect } from "@/lib/auth/auth.service";
 import { AuthError } from "@/lib/auth/auth.types";
-import type { Role } from "@/lib/auth/auth.types";
+import type { Role, AuthRoleEntity } from "@/lib/auth/auth.types";
 import AuthCard from "@/components/auth/AuthCard";
+import { WhatsAppVerificationModal } from "@/components/auth/WhatsAppVerificationModal";
 import { cn } from "@/lib/utils";
 
 const ROLE_ICONS: Record<string, React.ElementType> = {
@@ -25,6 +26,25 @@ export default function AuthMePage() {
 
   const [switching, setSwitching] = useState<Role | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // WA gate state — set when switchRoleAndGetAction returns type === "wa_gate"
+  const [waGateData, setWaGateData] = useState<{
+    roleEntity: AuthRoleEntity;
+    redirectUrl: string;
+  } | null>(null);
+
+  // ── WA gate overlay ───────────────────────────────────────────────────────
+  if (waGateData) {
+    return (
+      <WhatsAppVerificationModal
+        roleEntity={waGateData.roleEntity}
+        onSuccess={() => {
+          window.location.href = waGateData.redirectUrl;
+        }}
+        onLogout={logoutAndRedirect}
+      />
+    );
+  }
 
   if (status === "loading") {
     return (
@@ -53,8 +73,17 @@ export default function AuthMePage() {
     setError(null);
     setSwitching(role);
     try {
-      // Calls GET /api/auth/auth-me/:role as required
-      await switchRoleAndRedirect(role);
+      const action = await switchRoleAndGetAction(role);
+      if (action.type === "redirect") {
+        window.location.href = action.url;
+      } else {
+        // WA gate triggered — show modal instead of redirecting
+        setSwitching(null);
+        setWaGateData({
+          roleEntity: action.roleEntity,
+          redirectUrl: action.redirectUrl,
+        });
+      }
     } catch (err) {
       setSwitching(null);
       if (err instanceof AuthError) {
@@ -120,8 +149,8 @@ export default function AuthMePage() {
                         isActive
                           ? "text-[var(--text-muted)]"
                           : isWa
-                          ? "text-wa-dark"
-                          : "text-primary-600"
+                            ? "text-wa-dark"
+                            : "text-primary-600"
                       )}
                     />
                   )}

@@ -100,7 +100,7 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
     if (status === "authenticated" && user && role_entity) {
       return (
         <UserMenuDropdown
-          user={role_entity}
+          user={{...role_entity, active_role: role}}
           onLogout={logout}
           onSwitchRole={() => {
             setMenuOpen(false);

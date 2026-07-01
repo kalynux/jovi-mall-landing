@@ -7,8 +7,8 @@ import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { LoginSchema, type LoginFormValues } from "@/lib/auth/auth.schemas";
-import { loginAndRedirect } from "@/lib/auth/auth.service";
-import type { UiRole } from "@/lib/auth/auth.types";
+import { loginAndGetAction, logoutAndRedirect } from "@/lib/auth/auth.service";
+import type { UiRole, AuthRoleEntity } from "@/lib/auth/auth.types";
 import { mapApiErrors, parseRootType } from "@/lib/auth/form-errors";
 import { sanitizePayload } from "@/lib/form/sanitize-payload";
 import AuthCard from "@/components/auth/AuthCard";
@@ -16,6 +16,7 @@ import AuthFormField from "@/components/auth/AuthFormField";
 import { GlobalError } from "@/components/auth/GlobalError";
 import RolePicker from "@/components/auth/RolePicker";
 import CustomerWhatsAppCta from "@/components/auth/CustomerWhatsAppCta";
+import { WhatsAppVerificationModal } from "@/components/auth/WhatsAppVerificationModal";
 
 type Step = "role" | "customer-wa" | "form";
 
@@ -28,6 +29,12 @@ function LoginFormContent() {
 
   const [selectedRole, setSelectedRole] = useState<UiRole | null>(null);
   const [step, setStep] = useState<Step>("role");
+
+  // WA gate state — set when loginAndGetAction returns type === "wa_gate"
+  const [waGateData, setWaGateData] = useState<{
+    roleEntity: AuthRoleEntity;
+    redirectUrl: string;
+  } | null>(null);
 
   const {
     register,
@@ -54,7 +61,6 @@ function LoginFormContent() {
   };
 
   const onSubmit = async (data: LoginFormValues) => {
-    // Clear any stale global error before each attempt
     clearErrors("root");
 
     try {
@@ -62,14 +68,38 @@ function LoginFormContent() {
         ...data,
         role: selectedRole ?? undefined,
       });
-      await loginAndRedirect(
+
+      const action = await loginAndGetAction(
         payload as typeof data & { role?: UiRole },
         returnParam
       );
+
+      if (action.type === "redirect") {
+        window.location.href = action.url;
+      } else {
+        // WA gate triggered — show modal instead of redirecting
+        setWaGateData({
+          roleEntity: action.roleEntity,
+          redirectUrl: action.redirectUrl,
+        });
+      }
     } catch (err) {
       mapApiErrors(err, setError, tErrors);
     }
   };
+
+  // ── WA verification gate overlay ─────────────────────────────────────────
+  if (waGateData) {
+    return (
+      <WhatsAppVerificationModal
+        roleEntity={waGateData.roleEntity}
+        onSuccess={() => {
+          window.location.href = waGateData.redirectUrl;
+        }}
+        onLogout={logoutAndRedirect}
+      />
+    );
+  }
 
   // ── Title / subtitle per step ──────────────────────────────────────────────
   const cardTitle =
@@ -160,7 +190,6 @@ function LoginFormContent() {
               })}
               error={errors.password?.message}
             />
-            {/* Forgot password — intentional UX scaffold, non-functional */}
             <button
               type="button"
               onClick={(e) => e.preventDefault()}

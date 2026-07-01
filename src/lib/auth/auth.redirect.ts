@@ -22,6 +22,7 @@ export const ALLOWED_RETURN_HOSTS: string[] = [
     "localhost",
     "localhost:3000",
     "localhost:3001",
+    "localhost:5173",
 ];
 
 // ─── URL Builders ───────────────────────────────────────────────────────────
@@ -31,6 +32,7 @@ export const ALLOWED_RETURN_HOSTS: string[] = [
  * Falls back to localhost for local development.
  */
 export function getRoleUrl(role: Role, path = ""): string {
+    console.log(role)
     const isDev =
         typeof window !== "undefined" && window.location.hostname === "localhost";
 
@@ -38,8 +40,8 @@ export function getRoleUrl(role: Role, path = ""): string {
         // In local dev, all subdomains collapse to localhost; use a port offset
         const DEV_PORT_MAP: Record<Role, number> = {
             customer: 3000,
-            vendor: 3001,
-            agency: 3002,
+            vendor: 5173,
+            agency: 5174,
             agent: 3003,
             admin: 3004,
         };

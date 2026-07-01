@@ -5,8 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { AddRoleSchema, type AddRoleFormValues } from "@/lib/auth/auth.schemas";
-import { addRoleFlow, redirectToOnboarding } from "@/lib/auth/auth.service";
-import type { UiRole } from "@/lib/auth/auth.types";
+import { addRoleAndGetAction, redirectToOnboarding, logoutAndRedirect } from "@/lib/auth/auth.service";
+import type { UiRole, AuthRoleEntity } from "@/lib/auth/auth.types";
 import { mapApiErrors, parseRootType } from "@/lib/auth/form-errors";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import AuthCard from "@/components/auth/AuthCard";
@@ -14,21 +14,27 @@ import AuthFormField from "@/components/auth/AuthFormField";
 import { GlobalError } from "@/components/auth/GlobalError";
 import RolePicker from "@/components/auth/RolePicker";
 import { AnimatePresence, motion } from "framer-motion";
+import { WhatsAppVerificationModal } from "@/components/auth/WhatsAppVerificationModal";
 
-type ConfirmState = { newRole: UiRole } | null;
+type ConfirmState = { newRole: UiRole; redirectUrl: string } | null;
 
 export default function AddRolePage() {
   const t = useTranslations("addRole");
   const tRoles = useTranslations("modal");
-  // Used only to get the shared "Current role" badge label
   const tAuthMe = useTranslations("authMe");
   const tErrors = useTranslations("errors");
 
-  const { user, role, role_entity, status } = useAuthGuard();
+  const { user, role, role_entity, status, waGateRequired } = useAuthGuard();
 
   const [selectedRole, setSelectedRole] = useState<UiRole | null>(null);
   const [showCustomerCallout, setShowCustomerCallout] = useState(false);
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
+
+  // WA gate state — set after addRoleAndGetAction returns type === "wa_gate"
+  const [waGateData, setWaGateData] = useState<{
+    roleEntity: AuthRoleEntity;
+    redirectUrl: string;
+  } | null>(null);
 
   const {
     register,
@@ -50,22 +56,65 @@ export default function AddRolePage() {
     );
   }
 
+  // ── WA gate (bypass-via-reload fix) ───────────────────────────────────────
+  // useAuthGuard computes waGateRequired from the restoreSession() response,
+  // so a direct navigation or hard reload still enforces the gate.
+  if (waGateRequired && role_entity) {
+    return (
+      <WhatsAppVerificationModal
+        roleEntity={role_entity}
+        onSuccess={() => {
+          // After WA verification, send them to their current role's dashboard
+          if (role) window.location.href = `/`;
+        }}
+        onLogout={logoutAndRedirect}
+      />
+    );
+  }
+
+  // ── WA gate from add-role action ───────────────────────────────────────────
+  if (waGateData) {
+    return (
+      <WhatsAppVerificationModal
+        roleEntity={waGateData.roleEntity}
+        onSuccess={() => {
+          window.location.href = waGateData.redirectUrl;
+        }}
+        onLogout={logoutAndRedirect}
+      />
+    );
+  }
+
   // Roles the user already holds (excluding admin — not shown in UI)
   const heldRoles: UiRole[] = (user?.roles ?? []).filter(
     (r): r is UiRole => r !== "admin"
   );
 
-  // The role this session is currently scoped to (source of truth: role_entity)
+  // The role this session is currently scoped to
   const activeRole = role as UiRole | undefined;
 
-  // Hide roles the user already holds — EXCEPT the active role,
-  // which should stay visible but greyed out (spec: "disabled, not hidden")
-  const excludedRoles = heldRoles.filter((r) => r !== activeRole);
+  // Hide roles the user already holds — EXCEPT the active role (shown disabled)
+  // const excludedRoles = heldRoles.filter((r) => r !== activeRole);
 
   const onSubmit = async (data: AddRoleFormValues) => {
     try {
-      const { newRole } = await addRoleFlow({ ...data, role: selectedRole! });
-      setConfirmState({ newRole: newRole as UiRole });
+      const { newRole, action } = await addRoleAndGetAction({
+        ...data,
+        role: selectedRole!,
+      });
+
+      if (action.type === "wa_gate") {
+        setWaGateData({
+          roleEntity: action.roleEntity,
+          redirectUrl: action.redirectUrl,
+        });
+      } else {
+        // No WA gate — go directly to confirm screen
+        setConfirmState({
+          newRole: newRole as UiRole,
+          redirectUrl: action.url,
+        });
+      }
     } catch (err) {
       mapApiErrors(err, setError, tErrors);
     }

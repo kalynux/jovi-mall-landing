@@ -7,8 +7,8 @@ import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { RegisterSchema, type RegisterFormValues } from "@/lib/auth/auth.schemas";
-import { registerAndRedirect } from "@/lib/auth/auth.service";
-import type { UiRole } from "@/lib/auth/auth.types";
+import { registerAndGetAction, logoutAndRedirect } from "@/lib/auth/auth.service";
+import type { UiRole, AuthRoleEntity } from "@/lib/auth/auth.types";
 import { mapApiErrors, parseRootType } from "@/lib/auth/form-errors";
 import { sanitizePayload } from "@/lib/form/sanitize-payload";
 import AuthCard from "@/components/auth/AuthCard";
@@ -16,6 +16,7 @@ import AuthFormField from "@/components/auth/AuthFormField";
 import { GlobalError } from "@/components/auth/GlobalError";
 import RolePicker from "@/components/auth/RolePicker";
 import CustomerWhatsAppCta from "@/components/auth/CustomerWhatsAppCta";
+import { WhatsAppVerificationModal } from "@/components/auth/WhatsAppVerificationModal";
 
 type Step = "role" | "customer-wa" | "form";
 
@@ -39,11 +40,18 @@ function RegisterFormContent() {
   const [selectedRole, setSelectedRole] = useState<UiRole>(initialRole);
   const [step, setStep] = useState<Step>(initialStep);
 
+  // WA gate state — set when registerAndGetAction returns type === "wa_gate"
+  const [waGateData, setWaGateData] = useState<{
+    roleEntity: AuthRoleEntity;
+    redirectUrl: string;
+  } | null>(null);
+
   const {
     register,
     handleSubmit,
     setError,
     clearErrors,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(RegisterSchema),
@@ -52,6 +60,7 @@ function RegisterFormContent() {
 
   const handleRoleSelect = (role: UiRole) => {
     setSelectedRole(role);
+    setValue("role", role); // keep RHF internal state in sync so Zod superRefine validates the correct role
     if (role === "customer") {
       setStep("customer-wa");
     } else {
@@ -76,11 +85,35 @@ function RegisterFormContent() {
         ...data,
         role: selectedRole,
       });
-      await registerAndRedirect(payload as RegisterFormValues);
+
+      const action = await registerAndGetAction(payload as RegisterFormValues);
+
+      if (action.type === "redirect") {
+        window.location.href = action.url;
+      } else {
+        // WA gate triggered — show modal instead of redirecting
+        setWaGateData({
+          roleEntity: action.roleEntity,
+          redirectUrl: action.redirectUrl,
+        });
+      }
     } catch (err) {
       mapApiErrors(err, setError, tErrors);
     }
   };
+
+  // ── WA verification gate overlay ─────────────────────────────────────────
+  if (waGateData) {
+    return (
+      <WhatsAppVerificationModal
+        roleEntity={waGateData.roleEntity}
+        onSuccess={() => {
+          window.location.href = waGateData.redirectUrl;
+        }}
+        onLogout={logoutAndRedirect}
+      />
+    );
+  }
 
   // ── Title / subtitle per step ──────────────────────────────────────────────
   const cardTitle =

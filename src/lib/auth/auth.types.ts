@@ -43,6 +43,8 @@ export interface AuthRoleEntity {
     payout_details?: any | null;
     wa?: {
         verified: boolean;
+        /** WhatsApp phone number ID — set once the number is linked */
+        wa_phone_id?: string;
     };
     notification_preferences?: {
         email: boolean;
@@ -114,6 +116,44 @@ export interface AuthApiResponse {
     role_entity: AuthRoleEntity;
     message?: string;
 }
+
+// ─── WhatsApp Verification ───────────────────────────────────────────────────
+
+/** Response from POST /auth/request-wa-verification */
+export interface WaVerificationCodeResponse {
+    /** Short numeric/alpha code the user must send */
+    code: string;
+    /** Full command string (e.g. "VERIFY abc123") */
+    command: string;
+    /** Direct WhatsApp deep-link including the pre-filled command */
+    wa_link: string;
+    /** Seconds until this code expires */
+    expires_in_seconds: number;
+    /** Human-readable instructions to display */
+    instructions: string;
+    /** Formatted WhatsApp bot number */
+    bot_number?: string;
+}
+
+/** Response from GET /api/whatsapp/link/status */
+export interface WaLinkStatusResponse {
+    linked: boolean;
+    /** Populated when linked — the linked phone number */
+    phone?: string;
+    /** Populated when linked — the WhatsApp phone ID */
+    wa_phone_id?: string;
+}
+
+// ─── Post-Auth Action ────────────────────────────────────────────────────────
+
+/**
+ * Discriminated union returned by loginAndGetAction / switchRoleAndGetAction
+ * / addRoleAndGetAction. The calling page uses it to decide whether to
+ * navigate immediately or mount the WA verification modal.
+ */
+export type PostAuthAction =
+    | { type: "redirect"; url: string }
+    | { type: "wa_gate"; roleEntity: AuthRoleEntity; redirectUrl: string };
 
 // ─── Backend error contract (api-doc/errors/README.md) ───────────────────────
 

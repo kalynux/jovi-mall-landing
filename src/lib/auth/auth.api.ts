@@ -6,6 +6,8 @@ import type {
     AuthUser,
     Role,
     ApiErrorBody,
+    WaVerificationCodeResponse,
+    WaLinkStatusResponse,
 } from "./auth.types";
 import { AuthError, ApiError } from "./auth.types";
 
@@ -109,4 +111,35 @@ export async function switchRole(role: Role): Promise<AuthApiResponse> {
  */
 export async function logout(): Promise<void> {
     await apiFetch<void>("/api/auth/logout", { method: "POST" });
+}
+
+// ─── WhatsApp Verification API ────────────────────────────────────────────────
+
+/**
+ * POST /api/auth/request-wa-verification
+ * Triggers the backend to send a verification command to the user's WhatsApp.
+ * Returns the code, command string, deep-link, expiry, and instructions.
+ *
+ * @param updateOtherRoles - If true, marks ALL unverified role entities verified
+ *                           once this number is successfully linked.
+ */
+export async function requestWaVerification(
+    updateOtherRoles: boolean
+): Promise<WaVerificationCodeResponse> {
+    return apiFetch<WaVerificationCodeResponse>(
+        "/api/auth/request-wa-verification",
+        {
+            method: "POST",
+            body: JSON.stringify({ update_other_roles: updateOtherRoles }),
+        }
+    );
+}
+
+/**
+ * GET /api/webhooks/whatsapp/link/status
+ * Polls whether the authenticated user's WhatsApp number has been linked.
+ * Returns { linked: boolean, phone?, wa_phone_id? }.
+ */
+export async function getWaLinkStatus(): Promise<WaLinkStatusResponse> {
+    return apiFetch<WaLinkStatusResponse>("/api/webhooks/whatsapp/link/status");
 }

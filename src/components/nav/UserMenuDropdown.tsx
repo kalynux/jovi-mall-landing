@@ -40,10 +40,10 @@ export default function UserMenuDropdown({
 
   // Display name: name is always present per AuthRoleEntity type.
   // Guard anyway for resilience.
-  const displayName = user.name || user.display_name || user.email || t("userMenuAriaLabel");
+  const displayName = user.name || user.display_name || user.agency_name || user.business_name || user.email || t("userMenuAriaLabel");
 
   // Dashboard URL for current active role
-  const dashboardUrl = getRoleUrl(user.activeRole);
+  const dashboardUrl = getRoleUrl(user.active_role);
 
   // Close on outside click
   useEffect(() => {

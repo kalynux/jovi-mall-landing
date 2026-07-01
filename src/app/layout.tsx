@@ -34,7 +34,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" dir="ltr" className="scroll-smooth">
+    <html lang="en" dir="ltr" className="scroll-smooth" suppressHydrationWarning>
       <head>
         {/* Prevent FOUC: apply stored theme class before first paint */}
         <script
