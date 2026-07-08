@@ -7,25 +7,25 @@ import { AuthProvider } from "@/lib/auth/useAuth";
 export const metadata: Metadata = {
   title: "Jovi Mall — Commerce Runs on Conversation",
   description:
-    "AI-powered ecommerce infrastructure built for WhatsApp-first Africa. Vendors sell without a website. Customers shop by chatting. Agencies and agents earn on every delivery.",
+    "AI-powered ecommerce infrastructure for WhatsApp-first businesses. Vendors sell without a website. Customers shop by chatting. Agencies and agents earn on every delivery.",
   keywords: [
     "WhatsApp ecommerce",
-    "AI commerce Africa",
+    "AI commerce",
     "sell on WhatsApp",
-    "mobile commerce Nigeria",
-    "ecommerce platform Africa",
+    "mobile commerce",
+    "ecommerce platform",
     "Jovi Mall",
   ],
   openGraph: {
     title: "Jovi Mall — Commerce Runs on Conversation",
-    description: "The WhatsApp-first AI ecommerce platform built for Africa.",
+    description: "The WhatsApp-first AI ecommerce platform for modern businesses.",
     type: "website",
     siteName: "Jovi Mall",
   },
   twitter: {
     card: "summary_large_image",
     title: "Jovi Mall — Commerce Runs on Conversation",
-    description: "The WhatsApp-first AI ecommerce platform built for Africa.",
+    description: "The WhatsApp-first AI ecommerce platform for modern businesses.",
   },
   robots: { index: true, follow: true },
 };
@@ -51,10 +51,10 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=JetBrains+Mono:wght@400;500;700&display=swap"
           rel="stylesheet"
         />
-        <meta name="theme-color" content="#7c3aed" />
+        <meta name="theme-color" content="#068554" />
       </head>
       <body className="antialiased">
         <ThemeProvider>

@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 
 export default function AuthPageControls() {
   const { theme, toggle } = useTheme();
-  const { locale, setLocale } = useLocale();
+  const { locale, setLocale, localeLabels } = useLocale();
   const t = useTranslations("navbar");
 
   const [langOpen, setLangOpen] = useState(false);
@@ -63,7 +63,7 @@ export default function AuthPageControls() {
           className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--accent-light)] transition-all duration-200 border border-[var(--border)] text-xs font-display font-medium"
         >
           <Globe className="w-3.5 h-3.5" aria-hidden="true" />
-          <span>{currentLocale.label}</span>
+          <span>{localeLabels[locale] ?? currentLocale.label}</span>
           <ChevronDown
             className={cn(
               "w-3 h-3 transition-transform duration-200",
@@ -100,7 +100,7 @@ export default function AuthPageControls() {
                   lang={l.code}
                   dir={l.dir}
                 >
-                  {l.label}
+                  {localeLabels[l.code] ?? l.label}
                 </button>
               ))}
             </motion.div>

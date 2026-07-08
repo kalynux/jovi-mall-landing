@@ -2,54 +2,257 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Semantic CSS variables for theming ────────────────────────────────── */
+/* ============================================================
+   Jovi Mall Design System — tokens (ported from JoviMallDesignSystem_cc21b6)
+   Warm-neutral base + emerald "Jovi" green primary + amber accent.
+   Light values on :root, dark values on html.dark.
+   ============================================================ */
 :root {
-  --bg: #ffffff;
-  --bg-subtle: #f9fafb;
-  --bg-muted: #f3f4f6;
-  --border: rgba(0, 0, 0, 0.08);
-  --border-medium: rgba(0, 0, 0, 0.14);
-  --text-primary: #0a0a0f;
-  --text-secondary: #4b5563;
-  --text-muted: #9ca3af;
-  --surface-glass: rgba(255, 255, 255, 0.8);
+  /* ---- Brand green (Jovi green — jade/emerald) ---- */
+  --green-50:  #E9FBF2;
+  --green-100: #C7F5DE;
+  --green-200: #93E9C1;
+  --green-300: #57D6A0;
+  --green-400: #22BD82;
+  --green-500: #0DA06B;
+  --green-600: #068554; /* primary */
+  --green-700: #066844;
+  --green-800: #075138;
+  --green-900: #06412E;
+
+  /* ---- Amber / gold accent (deals, ratings, highlights) ---- */
+  --amber-50:  #FFF8EB;
+  --amber-100: #FCEFC7;
+  --amber-200: #FCE18A;
+  --amber-300: #FBD34D;
+  --amber-400: #FBBF24;
+  --amber-500: #F59E0B;
+  --amber-600: #D97706;
+  --amber-700: #B45309;
+
+  /* ---- Warm neutrals ---- */
+  --gray-0:   #FFFFFF;
+  --gray-25:  #FCFCFB;
+  --gray-50:  #F8F8F6;
+  --gray-100: #F1F0EC;
+  --gray-200: #E6E4DE;
+  --gray-300: #D3D0C7;
+  --gray-400: #A8A499;
+  --gray-500: #7C7869;
+  --gray-600: #5A5648;
+  --gray-700: #413E33;
+  --gray-800: #2A2822;
+  --gray-900: #1A1915;
+  --black:    #0F0E0B;
+
+  /* ---- Semantic hues ---- */
+  --red-50:  #FEF2F2;  --red-100: #FEE2E2; --red-500: #EF4444; --red-600: #DC2626; --red-700: #B91C1C;
+  --blue-50: #EFF6FF;  --blue-100:#DBEAFE; --blue-500:#3B82F6; --blue-600:#2563EB;
+  --indigo-50:#EEF0FF; --indigo-100:#E0E3FF; --indigo-500:#6366F1; --indigo-600:#4F46E5;
+  --teal-50: #ECFDFA;  --teal-500:#14B8A6;
+
+  /* ---- Semantic aliases (light theme) ---- */
+  --brand:          var(--green-600);
+  --brand-hover:    var(--green-700);
+  --brand-press:    var(--green-800);
+  --brand-subtle:   var(--green-50);
+  --brand-subtle-2: var(--green-100);
+  --brand-on:       #FFFFFF;
+  --accent-gold:    var(--amber-500);
+  --accent-gold-subtle: var(--amber-50);
+
+  --bg-app:        var(--gray-50);
+  --bg-canvas:     var(--gray-100);
+  --surface:       var(--gray-0);
+  --surface-2:     var(--gray-25);
+  --surface-sunken:var(--gray-100);
+  --surface-inverse: var(--gray-900);
+  --scrim:         rgba(26, 25, 21, 0.55);
+
+  --text-strong:  var(--gray-900);
+  --text-body:    var(--gray-800);
+  --text-muted:   var(--gray-500);
+  --text-subtle:  var(--gray-400);
+  --text-on-brand:#FFFFFF;
+  --text-inverse: var(--gray-25);
+  --text-link:    var(--green-700);
+
+  --border:        var(--gray-200);
+  --border-strong: var(--gray-300);
+  --border-subtle: var(--gray-100);
+  --border-focus:  var(--green-500);
+  --ring:          rgba(13, 160, 107, 0.28);
+
+  --price:         var(--gray-900);
+  --price-sale:    var(--red-600);
+  --price-compare: var(--gray-400);
+
+  --success:     var(--green-600);   --success-bg: var(--green-50);   --success-border: var(--green-200);
+  --warning:     var(--amber-600);   --warning-bg: var(--amber-50);   --warning-border: var(--amber-200);
+  --danger:      var(--red-600);     --danger-bg:  var(--red-50);     --danger-border:  var(--red-100);
+  --info:        var(--blue-600);    --info-bg:    var(--blue-50);    --info-border:    var(--blue-100);
+
+  --star:        var(--amber-400);
+  --star-empty:  var(--gray-200);
+
+  --type-physical:     var(--green-700);  --type-physical-bg: var(--green-50);
+  --type-digital:      var(--indigo-600); --type-digital-bg:  var(--indigo-50);
+  --type-service:      var(--amber-700);  --type-service-bg:  var(--amber-50);
+
+  --whatsapp: #25D366;
+
+  /* ---- Typography ---- */
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --fw-regular: 400; --fw-medium: 500; --fw-semibold: 600; --fw-bold: 700; --fw-extrabold: 800;
+  --fs-price-lg: 26px;  --fs-price: 18px;  --fs-price-sm: 14px;
+
+  /* ---- Spacing / sizing ---- */
+  --pad-screen: 16px;   --pad-screen-lg: 24px;
+  --tap-min: 44px;      --control-sm: 34px; --control-md: 44px; --control-lg: 52px;
+  --topbar-h: 56px;     --content-max-w: 1200px;  --sheet-max-w: 480px;
+  --z-sticky: 100; --z-header: 200; --z-scrim: 390; --z-sheet: 400; --z-toast: 500;
+
+  /* ---- Radius ---- */
+  --radius-xs: 6px; --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px;
+  --radius-xl: 20px; --radius-2xl: 28px; --radius-pill: 999px; --radius-circle: 50%;
+  --radius-card: var(--radius-lg); --radius-button: var(--radius-md); --radius-input: var(--radius-md);
+  --radius-chip: var(--radius-pill); --radius-badge: var(--radius-sm); --radius-sheet: var(--radius-2xl);
+  --radius-image: var(--radius-md);
+
+  /* ---- Elevation ---- */
+  --shadow-xs:  0 1px 2px rgba(26, 25, 21, 0.06);
+  --shadow-sm:  0 1px 3px rgba(26, 25, 21, 0.08), 0 1px 2px rgba(26, 25, 21, 0.04);
+  --shadow-md:  0 4px 12px rgba(26, 25, 21, 0.08), 0 2px 4px rgba(26, 25, 21, 0.04);
+  --shadow-lg:  0 12px 28px rgba(26, 25, 21, 0.12), 0 4px 8px rgba(26, 25, 21, 0.05);
+  --shadow-xl:  0 24px 48px rgba(26, 25, 21, 0.18), 0 8px 16px rgba(26, 25, 21, 0.06);
+  --shadow-card:       var(--shadow-sm);
+  --shadow-card-hover: var(--shadow-md);
+  --shadow-bar: 0 -4px 16px rgba(26, 25, 21, 0.08);
+  --shadow-sheet: 0 -12px 40px rgba(26, 25, 21, 0.2);
+  --shadow-brand: 0 6px 16px rgba(6, 133, 84, 0.28);
+  --focus-ring: 0 0 0 3px var(--ring);
+
+  /* ---- Motion ---- */
+  --dur-instant: 90ms; --dur-fast: 150ms; --dur-base: 200ms; --dur-slow: 280ms; --dur-sheet: 320ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --press-scale: 0.97; --tap-scale: 0.94;
+  --transition-base: all var(--dur-base) var(--ease-out);
+  --transition-colors: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+
+  /* ============================================================
+     Compatibility aliases — keep existing marketing sections working
+     (they reference the older landing variable names).
+     ============================================================ */
+  --bg:            var(--surface);
+  --bg-subtle:     var(--surface-2);
+  --bg-muted:      var(--surface-sunken);
+  --border-medium: var(--border-strong);
+  --text-primary:   var(--text-strong);
+  --text-secondary: var(--text-body);
+  --surface-glass:        rgba(255, 255, 255, 0.8);
   --surface-glass-border: rgba(255, 255, 255, 0.6);
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.06);
-  --accent: #7c3aed;
-  --accent-light: rgba(124, 58, 237, 0.09);
-  --accent-glow: rgba(124, 58, 237, 0.25);
-  /* Always-dark surface for CTA section (dark in both light & dark modes) */
-  --bg-invert: #050508;
-  --bg-invert-subtle: #0d0d14;
+  --accent:       var(--brand);
+  --accent-light: var(--brand-subtle);
+  --accent-glow:  rgba(6, 133, 84, 0.25);
+  /* Always-dark surface for the CTA section (warm dark in both modes) */
+  --bg-invert:        var(--gray-900);
+  --bg-invert-subtle: var(--black);
+
+  /* Per-role accent tints (harmonised into the new palette) */
+  --accent-vendor:   var(--green-600);
+  --accent-agency:   var(--blue-600);
+  --accent-agent:    var(--amber-600);
+  --accent-customer: var(--green-500);
+
+  /* Aurora backdrop blobs — green / teal / amber family (light) */
+  --aurora-1: rgba(13, 160, 107, 0.24);
+  --aurora-2: rgba(20, 184, 166, 0.18);
+  --aurora-3: rgba(245, 158, 11, 0.16);
 }
 
-/* ─── Dark mode overrides ────────────────────────────────────────────────── */
-/* Correct selector: html.dark (not .dark { :root {} } which doesn't cascade) */
-html.dark {
-  --bg: #050508;
-  --bg-subtle: #0d0d14;
-  --bg-muted: #111119;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-medium: rgba(255, 255, 255, 0.12);
-  --text-primary: #f0f0ff;
-  --text-secondary: #9da0b0;
-  --text-muted: #60637a;
-  --surface-glass: rgba(20, 20, 35, 0.75);
+/* ─── Dark mode overrides (html.dark, also .dark on a container) ─────────── */
+html.dark,
+.dark {
+  --bg-app:        #14130F;
+  --bg-canvas:     #100F0C;
+  --surface:       #1C1B16;
+  --surface-2:     #232219;
+  --surface-sunken:#100F0C;
+  --surface-inverse: var(--gray-50);
+  --scrim:         rgba(0, 0, 0, 0.66);
+
+  --text-strong:  #F7F6F1;
+  --text-body:    #E4E2D9;
+  --text-muted:   #A8A499;
+  --text-subtle:  #7C7869;
+  --text-inverse: var(--gray-900);
+  --text-link:    var(--green-300);
+
+  --border:        #33322A;
+  --border-strong: #45443A;
+  --border-subtle: #26251E;
+  --border-focus:  var(--green-400);
+  --ring:          rgba(34, 189, 130, 0.34);
+
+  --brand:        var(--green-500);
+  --brand-hover:  var(--green-400);
+  --brand-press:  var(--green-300);
+  --brand-subtle: rgba(13, 160, 107, 0.14);
+  --brand-subtle-2: rgba(13, 160, 107, 0.22);
+  --accent-gold:  var(--amber-400);
+  --accent-gold-subtle: rgba(245, 158, 11, 0.14);
+
+  --price:        #F7F6F1;
+  --price-sale:   #FCA5A5;
+  --price-compare:var(--gray-500);
+
+  --success-bg: rgba(6, 133, 84, 0.16);  --success-border: rgba(13,160,107,0.34);
+  --warning-bg: rgba(245, 158, 11, 0.14);--warning-border: rgba(245,158,11,0.32);
+  --danger-bg:  rgba(239, 68, 68, 0.14); --danger-border:  rgba(239,68,68,0.32);
+  --info-bg:    rgba(59, 130, 246, 0.14);--info-border:    rgba(59,130,246,0.32);
+
+  --type-physical-bg: rgba(13,160,107,0.16);
+  --type-digital-bg:  rgba(99,102,241,0.18);
+  --type-service-bg:  rgba(245,158,11,0.16);
+  --star-empty: #33322A;
+
+  --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-lg:  0 12px 28px rgba(0, 0, 0, 0.6), 0 4px 8px rgba(0, 0, 0, 0.4);
+  --shadow-xl:  0 24px 48px rgba(0, 0, 0, 0.7);
+  --shadow-bar: 0 -4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-sheet: 0 -12px 40px rgba(0, 0, 0, 0.6);
+  --shadow-brand: 0 6px 16px rgba(13, 160, 107, 0.4);
+
+  /* Compat aliases (dark) */
+  --surface-glass:        rgba(28, 27, 22, 0.75);
   --surface-glass-border: rgba(255, 255, 255, 0.08);
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
-  --accent-light: rgba(124, 58, 237, 0.14);
-  --accent-glow: rgba(124, 58, 237, 0.4);
+  --accent-light: var(--brand-subtle);
+  --accent-glow:  rgba(13, 160, 107, 0.4);
+
+  --accent-vendor:   var(--green-400);
+  --accent-agency:   #60A5FA;
+  --accent-agent:    var(--amber-400);
+  --accent-customer: var(--green-300);
+
+  --aurora-1: rgba(13, 160, 107, 0.34);
+  --aurora-2: rgba(20, 184, 166, 0.26);
+  --aurora-3: rgba(245, 158, 11, 0.22);
 }
 
 /* ─── Arabic font fallback ───────────────────────────────────────────────── */
-/* Latin-first fonts (Outfit, Inter) render Arabic poorly. Override for RTL. */
+/* Latin-first fonts render Arabic poorly. Override for RTL. */
 :lang(ar) {
   font-family: "Segoe UI", Tahoma, "Arabic Typesetting", "Traditional Arabic",
     system-ui, sans-serif;
   line-height: 1.8;
   letter-spacing: 0;
 }
-
 :lang(ar) .font-display,
 :lang(ar) .font-body {
   font-family: "Segoe UI", Tahoma, "Arabic Typesetting", "Traditional Arabic",
@@ -59,7 +262,7 @@ html.dark {
 /* ─── Base layer ─────────────────────────────────────────────────────────── */
 @layer base {
   html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -73,12 +276,7 @@ html.dark {
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
+  h1, h2, h3, h4, h5, h6 {
     @apply font-display;
     font-weight: 700;
     line-height: 1.1;
@@ -87,39 +285,21 @@ html.dark {
   }
 
   ::selection {
-    background: rgba(124, 58, 237, 0.18);
+    background: rgba(13, 160, 107, 0.18);
     color: var(--text-primary);
   }
 
-  ::-webkit-scrollbar {
-    width: 5px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: rgba(124, 58, 237, 0.25);
-    border-radius: 99px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(124, 58, 237, 0.5);
-  }
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(13, 160, 107, 0.25); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(13, 160, 107, 0.5); }
 }
 
 /* ─── Component layer ────────────────────────────────────────────────────── */
 @layer components {
-
   /* Layout helpers */
-  .section-padding {
-    @apply py-20 px-4 sm:px-6 lg:py-28 lg:px-8;
-  }
-
-  .container-xl {
-    @apply w-full max-w-7xl mx-auto;
-  }
+  .section-padding { @apply py-20 px-4 sm:px-6 lg:py-28 lg:px-8; }
+  .container-xl { @apply w-full max-w-7xl mx-auto; }
 
   /* Glass surface */
   .glass {
@@ -128,108 +308,142 @@ html.dark {
     backdrop-filter: blur(16px) saturate(180%);
     -webkit-backdrop-filter: blur(16px) saturate(180%);
   }
+  .glass-strong {
+    background: var(--surface-glass);
+    border: 1px solid var(--surface-glass-border);
+    backdrop-filter: blur(22px) saturate(200%);
+    -webkit-backdrop-filter: blur(22px) saturate(200%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 32px rgba(0, 0, 0, 0.12);
+  }
+  html.dark .glass-strong {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
 
   /* Cards */
   .card {
-    background: var(--bg);
+    background: var(--surface);
     border: 1px solid var(--border);
     @apply rounded-2xl;
     box-shadow: var(--shadow-card);
     @apply transition-all duration-300;
   }
-
   .card:hover {
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 16px 48px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--shadow-card-hover);
     @apply -translate-y-0.5;
   }
 
-  /* Gradient text */
+  /* Gradient text (recoloured to brand green) */
   .text-gradient {
-    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #ec4899 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    background: linear-gradient(135deg, #068554 0%, #0DA06B 50%, #22BD82 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
-
   .text-gradient-wa {
     background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .text-gradient-shimmer {
+    background-image: linear-gradient(110deg,
+      #068554 0%, #0DA06B 22%, #C7F5DE 40%, #22BD82 52%, #0DA06B 70%, #068554 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
 
-  /* Buttons */
+  /* Buttons (recoloured to brand green) */
   .btn-primary {
     @apply relative inline-flex items-center justify-center gap-2;
     @apply font-display font-semibold text-white;
     @apply px-6 py-3 rounded-xl;
-    background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%);
-    box-shadow: 0 0 20px rgba(124, 58, 237, 0.3), 0 2px 6px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, var(--green-700) 0%, var(--green-600) 100%);
+    box-shadow: var(--shadow-brand);
     @apply border-none cursor-pointer;
     @apply transition-all duration-200;
   }
-
   .btn-primary:hover {
-    box-shadow: 0 0 32px rgba(124, 58, 237, 0.5), 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 22px rgba(6, 133, 84, 0.42);
     @apply -translate-y-px scale-[1.015];
   }
-
-  .btn-primary:active {
-    @apply scale-[0.98];
-  }
+  .btn-primary:active { @apply scale-[0.98]; }
 
   .btn-secondary {
     @apply relative inline-flex items-center justify-center gap-2;
     @apply font-display font-semibold text-[var(--text-primary)];
     @apply px-6 py-3 rounded-xl;
     @apply bg-transparent cursor-pointer;
-    border: 1.5px solid var(--border-medium);
+    border: 1.5px solid var(--border-strong);
     @apply transition-all duration-200;
   }
-
   .btn-secondary:hover {
-    background: var(--accent-light);
-    border-color: rgba(164, 116, 255, 0.5);
+    background: var(--brand-subtle);
+    border-color: color-mix(in srgb, var(--brand) 50%, transparent);
     @apply -translate-y-px scale-[1.015];
   }
-
-  .btn-secondary:active {
-    @apply scale-[0.98];
-  }
+  .btn-secondary:active { @apply scale-[0.98]; }
 
   /* Glows */
-  .shadow-glow-primary {
-    box-shadow: 0 0 40px rgba(124, 58, 237, 0.3);
-  }
+  .shadow-glow-primary { box-shadow: 0 0 40px rgba(13, 160, 107, 0.3); }
+  .shadow-glow-wa { box-shadow: 0 0 30px rgba(37, 211, 102, 0.25); }
 
-  .shadow-glow-wa {
-    box-shadow: 0 0 30px rgba(37, 211, 102, 0.25);
-  }
-
-  /* Hero glow overlay */
   .bg-hero-glow {
-    background: radial-gradient(ellipse 80% 60% at 50% -5%,
-        rgba(124, 58, 237, 0.28) 0%,
-        transparent 70%);
+    background: radial-gradient(ellipse 80% 60% at 50% -5%, rgba(13, 160, 107, 0.24) 0%, transparent 70%);
+  }
+  .bg-radial-center {
+    background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(13, 160, 107, 0.12) 0%, transparent 70%);
   }
 
-  /* Fallback for bg-radial-center */
-  .bg-radial-center {
-    background: radial-gradient(ellipse 80% 60% at 50% 50%,
-        rgba(124, 58, 237, 0.12) 0%,
-        transparent 70%);
+  /* ---- Shop design-system utility classes (ported) ---- */
+  .sec-title { font-size: 18px; font-weight: 800; letter-spacing: -0.015em; color: var(--text-strong); margin: 0; }
+  .overline { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text-subtle); margin: 0; }
+  .muted { color: var(--text-muted); font-size: 13px; }
+  .divider { height: 1px; background: var(--border-subtle); }
+  .row-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0; scrollbar-width: none; }
+  .row-chips::-webkit-scrollbar { display: none; }
+  .field {
+    width: 100%; font-family: var(--font-sans); font-size: 15px; color: var(--text-strong);
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-input);
+    padding: 11px 13px; outline: none;
+  }
+  .field:focus { border-color: var(--border-focus); box-shadow: var(--focus-ring); }
+
+  /* Responsive product grid: 2-col mobile → 3/4/5-col up */
+  .pgrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  @media (min-width: 640px)  { .pgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
+  @media (min-width: 1024px) { .pgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; } }
+  @media (min-width: 1280px) { .pgrid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+  .plist { display: flex; flex-direction: column; gap: 10px; }
+
+  /* Sticky action bar (mobile buy bar) */
+  .stickybar {
+    background: var(--surface); border-top: 1px solid var(--border); box-shadow: var(--shadow-bar);
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    display: flex; gap: 12px; align-items: center;
   }
 }
 
 /* ─── Utilities layer ────────────────────────────────────────────────────── */
 @layer utilities {
+  /* Per-section role accent — set via SectionShell, consumed by children. */
+  .role-accent { --role: var(--accent); }
+  .role-vendor { --role: var(--accent-vendor); }
+  .role-agency { --role: var(--accent-agency); }
+  .role-agent { --role: var(--accent-agent); }
+  .role-customer { --role: var(--accent-customer); }
 
-  /* Reduced motion */
+  .bg-role-soft { background: color-mix(in srgb, var(--role) 12%, transparent); }
+  .border-role-soft { border-color: color-mix(in srgb, var(--role) 32%, transparent); }
+  .shadow-role-glow { box-shadow: 0 0 40px color-mix(in srgb, var(--role) 30%, transparent); }
+  .ring-role { box-shadow: 0 0 0 1px color-mix(in srgb, var(--role) 40%, transparent); }
+
+  .aurora-blob { position: absolute; border-radius: 9999px; filter: blur(56px); will-change: transform, opacity; }
+
+  .grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  }
+
   @media (prefers-reduced-motion: reduce) {
-
-    *,
-    ::before,
-    ::after {
+    *, ::before, ::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
@@ -237,3 +451,35 @@ html.dark {
     }
   }
 }
+
+/* ─── Ambient keyframes ──────────────────────────────────────────────────── */
+@keyframes aurora-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.75; }
+  50% { transform: translate3d(12vw, 9vh, 0) scale(1.35); opacity: 1; }
+}
+@keyframes aurora-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.15); opacity: 1; }
+  50% { transform: translate3d(-13vw, -8vh, 0) scale(0.85); opacity: 0.7; }
+}
+@keyframes aurora-c {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(0.9); opacity: 0.7; }
+  50% { transform: translate3d(9vw, -11vh, 0) scale(1.3); opacity: 1; }
+}
+.aurora-a { animation: aurora-a 18s ease-in-out infinite; }
+.aurora-b { animation: aurora-b 22s ease-in-out infinite; }
+.aurora-c { animation: aurora-c 26s ease-in-out infinite; }
+
+@keyframes shimmer-line {
+  0% { background-position: -160% 0; }
+  100% { background-position: 260% 0; }
+}
+.animate-shimmer-text { background-size: 220% 100%; animation: shimmer-line 4.5s linear infinite; }
+
+/* Shop fade-in */
+@keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.fadein { animation: fade var(--dur-base) var(--ease-out); }
+@media (prefers-reduced-motion: reduce) { .fadein { animation: none; } }
+
+/* Shop skeleton shimmer */
+@keyframes shop-skel { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+@media (prefers-reduced-motion: reduce) { .shop-skeleton { animation: none !important; } }

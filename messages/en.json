@@ -4,6 +4,7 @@
         "langCode": "en"
     },
     "navbar": {
+        "shop": "Shop",
         "howItWorks": "How It Works",
         "vendors": "Vendors",
         "agencies": "Agencies",
@@ -26,7 +27,7 @@
         "userMenuAriaLabel": "User"
     },
     "hero": {
-        "badge": "Africa's WhatsApp Commerce Platform",
+        "badge": "The WhatsApp Commerce Platform",
         "title1": "Commerce",
         "title2": "runs on",
         "title3": "conversation.",
@@ -40,7 +41,7 @@
         "pillNoStorefront": "No storefront needed",
         "ctaPrimary": "Get Started",
         "ctaSecondary": "See How It Works",
-        "socialProof": "10,000+ vendors already earning",
+        "socialProof": "Be one of our founding vendors",
         "aiLabel": "AI Active",
         "orderConfirmed": "Order Confirmed!",
         "orderDetail": "₦ 12,500 · Arriving today 🚚",
@@ -60,8 +61,8 @@
         "stats": {
             "aiResponse": "AI response time",
             "uptime": "Platform uptime",
-            "payments": "Payment methods",
-            "cities": "Cities covered"
+            "payments": "Money & cards accepted",
+            "cities": "Cities on our roadmap"
         },
         "flow": {
             "step1Title": "Customer chats on WhatsApp",
@@ -138,8 +139,8 @@
             "chatDesc": "Describe what you want in natural language",
             "instantTitle": "Instant results",
             "instantDesc": "AI curates matching products in seconds",
-            "deliveryTitle": "Same-day delivery",
-            "deliveryDesc": "Available in major cities across Africa"
+            "deliveryTitle": "Fast delivery",
+            "deliveryDesc": "Available in major cities near you"
         },
         "whatsapp": {
             "cta": "Start Shopping on WhatsApp",
@@ -154,15 +155,15 @@
         }
     },
     "africaFirst": {
-        "sectionLabel": "Africa-First",
+        "sectionLabel": "Built For You",
         "title1": "Built for how",
-        "title2": "Africa",
-        "title3": "actually shops.",
-        "subtitle": "We didn't copy a Western ecommerce model and ship it here. Jovi Mall is built from the ground up for mobile-dominant, WhatsApp-native, data-conscious African consumers and businesses.",
-        "ctaPrimary": "Learn Our Africa Story",
+        "title2": "you",
+        "title3": "actually shop.",
+        "subtitle": "We didn't just repackage a Western ecommerce model. Jovi Mall is built from the ground up for mobile-dominant, WhatsApp-native, data-conscious shoppers and businesses.",
+        "ctaPrimary": "Learn Our Story",
         "features": {
             "mobileTitle": "Mobile-native by design",
-            "mobileDesc": "Every pixel optimized for the phones Africans actually use — from entry-level Infinix to flagship Samsung.",
+            "mobileDesc": "Every pixel optimized for the phones people actually use — from entry-level Infinix to flagship Samsung.",
             "whatsappTitle": "WhatsApp-first commerce",
             "whatsappDesc": "No downloads, no logins. Commerce where 2+ billion people already spend their day.",
             "dataTitle": "Low-data friendly",
@@ -187,8 +188,16 @@
         "title1": "Intelligent.",
         "title2": "Scalable.",
         "title3": "Ready for you.",
-        "subtitle": "Enterprise infrastructure built for the speed and scale of African commerce — without the enterprise complexity.",
-        "backedBy": "Backed by & integrated with",
+        "subtitle": "Enterprise-grade infrastructure built for the speed and scale of modern commerce — without the enterprise complexity.",
+        "statsHeading": "Where we're headed — our first-year goals",
+        "promiseHeading": "Our promise to you",
+        "guarantees": {
+            "payments": "Most local mobile payment methods accepted",
+            "secure": "Secure, encrypted transactions",
+            "noLockIn": "No lock-in — cancel anytime",
+            "support": "Real human support, always"
+        },
+        "backedBy": "Our promise to you",
         "features": {
             "aiTitle": "AI-Driven Recommendations",
             "aiDesc": "Our recommendation engine understands context, intent, and purchase history to surface the right product at the right time.",
@@ -200,10 +209,10 @@
             "scaleDesc": "Multi-city, multi-currency, and multi-language ready. Expand from Lagos to Nairobi to Accra without rebuilding."
         },
         "stats": {
-            "vendors": "Active Vendors",
+            "vendors": "Vendors",
             "agencies": "Delivery Agencies",
-            "orders": "Orders Delivered",
-            "cities": "African Cities"
+            "orders": "Orders",
+            "cities": "Cities"
         },
         "dashboard": {
             "recentActivity1": "New order #4821 assigned",
@@ -211,11 +220,20 @@
             "recentActivity3": "₦ 12,500 credited to wallet",
             "performance": "30-Day Performance",
             "stable": "Stable",
-            "up": "↑ +12%"
+            "up": "↑ +12%",
+            "agentsOnline": "Live agents",
+            "dispatchLoad": "Dispatch load",
+            "activeDelivery": "Active delivery",
+            "pickup": "Pickup",
+            "dropoff": "Drop-off",
+            "eta": "ETA",
+            "online": "Online",
+            "enRoute": "En route",
+            "idle": "Idle"
         }
     },
     "finalCta": {
-        "badge": "✦ Join 10,000+ businesses already on Jovi Mall",
+        "badge": "✦ Become a founding business on Jovi Mall",
         "title1": "Your business,",
         "title2": "powered by conversation.",
         "subtitle": "Get started in minutes. No credit card required. No tech team needed. Your first 30 days are completely free.",
@@ -264,7 +282,7 @@
         "terms": "Terms of Service",
         "cookies": "Cookie Policy",
         "copyright": "All rights reserved.",
-        "builtFor": "Built for Africa. Powered by AI.",
+        "builtFor": "Built for modern commerce. Powered by AI.",
         "logoAriaLabel": "Jovi Mall Home",
         "socialAriaLabel": "Social link"
     },
@@ -296,9 +314,9 @@
         "forgotPassword": "Forgot password?",
         "forgotPasswordAria": "Forgot password — not yet available",
         "signIn": "Sign in",
-        "signingIn": "Signing in\u2026",
+        "signingIn": "Signing in…",
         "createAccount": "Create account",
-        "creatingAccount": "Creating account\u2026",
+        "creatingAccount": "Creating account…",
         "chooseDifferentRole": "Choose a different role",
         "skipStep": "If you have only one role, you may skip this step.",
         "noAccount": "Don't have an account?",
@@ -307,7 +325,7 @@
         "signInLink": "Sign in",
         "genericError": "Something went wrong. Please try again.",
         "customerWaTitle": "Customers shop via WhatsApp",
-        "customerWaSubtitle": "No account needed \u2014 just start a chat.",
+        "customerWaSubtitle": "No account needed — just start a chat.",
         "customerWaBody": "Customers don't need to create an account. Continue on WhatsApp to access your profile.",
         "customerWaCta": "Continue on WhatsApp",
         "customerWaBack": "Choose a different role"
@@ -345,11 +363,11 @@
         "agencyNameLabel": "Agency Name",
         "agencyNamePlaceholder": "Your delivery agency name",
         "submitBtn": "Add {role} role",
-        "submitting": "Adding role\u2026",
+        "submitting": "Adding role…",
         "customerCalloutTitle": "Customers shop via WhatsApp",
-        "customerCalloutSubtitle": "The customer role is automatic \u2014 no setup needed.",
+        "customerCalloutSubtitle": "The customer role is automatic — no setup needed.",
         "customerCalloutBody": "Your account already supports shopping via WhatsApp. Just send a message to start browsing products.",
-        "customerCalloutBack": "\u2190 Choose a different role",
+        "customerCalloutBack": "← Choose a different role",
         "confirmTitle": "Role added!",
         "confirmSubtitle": "You now have the {role} role.",
         "confirmBody": "Would you like to switch to your new {role} role now and complete onboarding?",

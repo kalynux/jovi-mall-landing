@@ -1,7 +1,7 @@
 "use client";
 import { useRef } from "react";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
-import { ArrowRight, MessageCircle, Zap, Bot } from "lucide-react";
+import { MessageCircle, Zap, Bot } from "lucide-react";
 import CTAButton from "@/components/ui/CTAButton";
 import { BRAND } from "@/lib/constants";
 import { useTranslations } from "next-intl";
@@ -45,8 +45,8 @@ export default function HeroSection({ onGetStarted }: HeroSectionProps) {
       className="relative min-h-[100svh] flex flex-col items-center justify-center overflow-hidden pt-20"
       aria-labelledby="hero-headline"
     >
-      {/* Background */}
-      <div className="absolute inset-0 bg-[var(--bg)]" />
+      {/* Background — the shared AuroraBackground shows through; we only add the
+          hero glow + a faint grid on top of it. */}
       <div className="absolute inset-0 bg-hero-glow" />
       {/* Grid overlay */}
       <div
@@ -56,9 +56,6 @@ export default function HeroSection({ onGetStarted }: HeroSectionProps) {
           backgroundSize: "60px 60px",
         }}
       />
-      {/* Orbs */}
-      <div className="absolute top-1/4 left-0 w-[500px] h-[500px] rounded-full blur-3xl animate-pulse-glow" style={{ background: "rgba(124,58,237,0.08)" }} />
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full blur-3xl animate-float" style={{ background: "rgba(37,211,102,0.06)" }} />
 
       <motion.div
         style={{ y, opacity }}
@@ -86,7 +83,7 @@ export default function HeroSection({ onGetStarted }: HeroSectionProps) {
             transition={{ duration: 0.75, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           >
             {t("title1")}{" "}
-            <span className="text-gradient">{t("title2")}</span>
+            <span className="text-gradient-shimmer animate-shimmer-text">{t("title2")}</span>
             <br />
             {t("title3")}
           </motion.h1>

@@ -3,7 +3,7 @@ export const BRAND = {
     name: "Jovi Mall",
     tagline: "Commerce runs on conversation.",
     description:
-        "AI-powered ecommerce infrastructure built for WhatsApp-first Africa. No storefront needed — just upload products and let AI sell for you.",
+        "AI-powered ecommerce infrastructure for WhatsApp-first businesses. No storefront needed — just upload products and let AI sell for you.",
     whatsappNumber: "+2340000000000", // Placeholder
     email: "hello@jovimall.com",
 };
@@ -24,10 +24,24 @@ export const SECTION_IDS = [
     { id: "agencies", label: "Agencies" },
     { id: "agents", label: "Agents" },
     { id: "customers", label: "Customers" },
-    { id: "africa-first", label: "Africa-First" },
+    { id: "why-jovi", label: "Built For You" },
     { id: "trust", label: "Trust" },
     { id: "cta", label: "Get Started" },
 ];
+
+/** Maps each section id to its role-accent utility class (see globals.css `.role-*`).
+ *  Sections without a specific actor fall back to the global brand-green accent. */
+export const SECTION_ROLE_ACCENT: Record<string, string> = {
+    hero: "role-accent",
+    "how-it-works": "role-accent",
+    vendors: "role-vendor",
+    agencies: "role-agency",
+    agents: "role-agent",
+    customers: "role-customer",
+    "why-jovi": "role-accent",
+    trust: "role-accent",
+    cta: "role-customer",
+};
 
 // ─── Platform Flow Steps ─────────────────────────────────────────────────────
 export const FLOW_STEPS = [
@@ -118,11 +132,12 @@ export const ROLES = [
 export type RoleId = (typeof ROLES)[number]["id"];
 
 // ─── Trust stats ─────────────────────────────────────────────────────────────
+/** First-year targets — presented as goals we're building toward, not current counts. */
 export const TRUST_STATS = [
-    { value: "10K+", label: "Active Vendors" },
+    { value: "10K+", label: "Vendors" },
     { value: "500+", label: "Delivery Agencies" },
-    { value: "2M+", label: "Orders Delivered" },
-    { value: "15+", label: "African Cities" },
+    { value: "2M+", label: "Orders" },
+    { value: "15+", label: "Cities" },
 ];
 
 // ─── WhatsApp Simulation Messages ────────────────────────────────────────────
@@ -131,7 +146,7 @@ export const CHAT_MESSAGES = [
     { from: "ai", text: "Great! 🎧 I found 3 options that match perfectly:", isTyping: false },
     { from: "ai", text: "1. JoviBuds Pro – ₦12,500 ⭐ Best seller\n2. SoundX Lite – ₦9,999\n3. ClearTone W2 – ₦13,200", isTyping: false },
     { from: "customer", text: "Tell me more about the JoviBuds Pro" },
-    { from: "ai", text: "JoviBuds Pro features:\n• 30hr battery life\n• Active noise cancellation\n• Same-day delivery available ✅\n\nWould you like to order now?" },
+    { from: "ai", text: "JoviBuds Pro features:\n• 30hr battery life\n• Active noise cancellation\n• Fast delivery available ✅\n\nWould you like to order now?" },
     { from: "customer", text: "Yes, order the JoviBuds Pro please!" },
     { from: "ai", text: "✅ Order placed! Your JoviBuds Pro will arrive today between 2–5 PM. Track your delivery in this chat 📦" },
 ];

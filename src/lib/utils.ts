@@ -53,3 +53,24 @@ export const scaleIn: Variants = {
         transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
     },
 };
+
+/** Snappy blur-in reveal — cheap (opacity + small y + blur), great for headings. */
+export const revealUp: Variants = {
+    hidden: { opacity: 0, y: 24, filter: "blur(6px)" },
+    visible: {
+        opacity: 1,
+        y: 0,
+        filter: "blur(0px)",
+        transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+    },
+};
+
+/** Child item for staggerContainer (no transition here — parent staggers it). */
+export const staggerItem: Variants = {
+    hidden: { opacity: 0, y: 18 },
+    visible: {
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+    },
+};

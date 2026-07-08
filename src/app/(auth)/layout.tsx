@@ -48,7 +48,7 @@ export default function AuthLayout({
           className="pointer-events-none fixed inset-0 -z-10"
           aria-hidden="true"
         >
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_-10%,rgba(124,58,237,0.14)_0%,transparent_70%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_-10%,rgba(13,160,107,0.14)_0%,transparent_70%)]" />
         </div>
 
         <div className="w-full max-w-lg">{children}</div>

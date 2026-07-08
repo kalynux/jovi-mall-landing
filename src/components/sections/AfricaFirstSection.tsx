@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { Smartphone, MessageCircle, Wifi } from "lucide-react";
 import SectionLabel from "@/components/ui/SectionLabel";
 import AnimatedSection from "@/components/ui/AnimatedSection";
+import SectionShell from "@/components/ui/SectionShell";
 import CTAButton from "@/components/ui/CTAButton";
 import { useTranslations } from "next-intl";
 
@@ -109,65 +110,56 @@ export default function AfricaFirstSection() {
   const t = useTranslations("africaFirst");
 
   return (
-    <section
-      id="africa-first"
-      className="section-padding relative overflow-hidden"
-      style={{ background: "var(--bg-subtle)" }}
-      aria-labelledby="africa-title"
-    >
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary-400/30 to-transparent" />
+    <SectionShell id="why-jovi" glow="top">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center" ref={ref}>
+        {/* Left: Phone */}
+        <AnimatedSection direction="left" delay={0.1}>
+          <PhoneMockup />
+        </AnimatedSection>
 
-      <div className="container-xl relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center" ref={ref}>
-          {/* Left: Phone */}
-          <AnimatedSection direction="left" delay={0.1}>
-            <PhoneMockup />
-          </AnimatedSection>
+        {/* Right: Content */}
+        <AnimatedSection direction="right">
+          <SectionLabel className="mb-5">{t("sectionLabel")}</SectionLabel>
+          <h2 id="africa-title" className="font-display text-section text-[var(--text-primary)] mb-4">
+            {t("title1")}{" "}
+            <span className="text-gradient">{t("title2")}</span>
+            <br />
+            {t("title3")}
+          </h2>
+          <p className="text-base text-[var(--text-secondary)] leading-relaxed mb-6 max-w-lg">
+            {t("subtitle")}
+          </p>
 
-          {/* Right: Content */}
-          <AnimatedSection direction="right">
-            <SectionLabel className="mb-6">{t("sectionLabel")}</SectionLabel>
-            <h2 id="africa-title" className="font-display text-section text-[var(--text-primary)] mb-4">
-              {t("title1")}{" "}
-              <span className="text-gradient">{t("title2")}</span>
-              <br />
-              {t("title3")}
-            </h2>
-            <p className="text-base text-[var(--text-secondary)] leading-relaxed mb-8 max-w-lg">
-              {t("subtitle")}
-            </p>
+          <div className="space-y-3.5">
+            {FEATURES.map((f, i) => {
+              const Icon = FEATURE_ICONS[i];
+              return (
+                <motion.div
+                  key={f.titleKey}
+                  initial={{ opacity: 0, y: shouldReduce ? 0 : 20 }}
+                  animate={isInView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ delay: i * 0.12 + 0.25, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  className="flex gap-4 items-start"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-[var(--accent-light)] flex items-center justify-center flex-shrink-0">
+                    <Icon className="w-5 h-5 text-primary-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-display font-semibold text-sm text-[var(--text-primary)] mb-0.5">{t(f.titleKey)}</h3>
+                    <p className="text-xs text-[var(--text-muted)] leading-relaxed">{t(f.descKey)}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
 
-            <div className="space-y-4">
-              {FEATURES.map((f, i) => {
-                const Icon = FEATURE_ICONS[i];
-                return (
-                  <motion.div
-                    key={f.titleKey}
-                    initial={{ opacity: 0, y: shouldReduce ? 0 : 20 }}
-                    animate={isInView ? { opacity: 1, y: 0 } : {}}
-                    transition={{ delay: i * 0.15 + 0.3, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                    className="flex gap-4 items-start"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-[var(--accent-light)] flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-5 h-5 text-primary-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-display font-semibold text-sm text-[var(--text-primary)] mb-0.5">{t(f.titleKey)}</h3>
-                      <p className="text-xs text-[var(--text-muted)] leading-relaxed">{t(f.descKey)}</p>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            <div className="mt-8">
-              <CTAButton variant="primary" size="md" href="#" showArrow>
-                {t("ctaPrimary")}
-              </CTAButton>
-            </div>
-          </AnimatedSection>
-        </div>
+          <div className="mt-7">
+            <CTAButton variant="primary" size="md" href="#" showArrow>
+              {t("ctaPrimary")}
+            </CTAButton>
+          </div>
+        </AnimatedSection>
       </div>
-    </section>
+    </SectionShell>
   );
 }

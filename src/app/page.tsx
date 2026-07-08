@@ -13,22 +13,30 @@ import TrustSection from "@/components/sections/TrustSection";
 import FinalCTASection from "@/components/sections/FinalCTASection";
 import RoleSelectorModal from "@/components/ui/RoleSelectorModal";
 import SectionProgressIndicator from "@/components/ui/SectionProgressIndicator";
+import AuroraBackground from "@/components/layout/AuroraBackground";
+import GrainOverlay from "@/components/layout/GrainOverlay";
+import { SectionNavProvider } from "@/components/scroll/SectionNavProvider";
+import { SECTION_IDS } from "@/lib/constants";
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
-    <>
+    <SectionNavProvider sections={SECTION_IDS}>
+      {/* Ambient background layers (fixed, behind everything) */}
+      <AuroraBackground />
+      <GrainOverlay />
+
       {/* Sticky Navbar */}
       <Navbar onGetStarted={() => setModalOpen(true)} />
 
-      {/* Mobile section progress dots */}
+      {/* Section progress rail (desktop + mobile) */}
       <SectionProgressIndicator />
 
       {/* Role selector modal */}
       <RoleSelectorModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
 
-      {/* Page sections */}
+      {/* Page sections — each fills one viewport */}
       <main id="main-content">
         <HeroSection onGetStarted={() => setModalOpen(true)} />
         <HowItWorksSection />
@@ -43,6 +51,6 @@ export default function Home() {
 
       {/* Footer */}
       <Footer />
-    </>
+    </SectionNavProvider>
   );
 }

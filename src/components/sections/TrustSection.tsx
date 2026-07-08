@@ -1,11 +1,18 @@
 "use client";
-import { Bot, Settings2, DollarSign, Globe } from "lucide-react";
+import { Bot, Settings2, DollarSign, Globe, Smartphone, ShieldCheck, Unlock, Headset } from "lucide-react";
 import SectionLabel from "@/components/ui/SectionLabel";
 import AnimatedSection from "@/components/ui/AnimatedSection";
+import SectionShell from "@/components/ui/SectionShell";
 import { TRUST_STATS } from "@/lib/constants";
 import { useTranslations } from "next-intl";
 
-const TRUST_LOGOS = ["Techstars", "Google for Startups", "Y Combinator", "Paystack", "Flutterwave", "MTN"];
+// Honest, launch-phase trust signals (no fake investor logos).
+const GUARANTEES = [
+  { icon: Smartphone, key: "guarantees.payments" as const },
+  { icon: ShieldCheck, key: "guarantees.secure" as const },
+  { icon: Unlock, key: "guarantees.noLockIn" as const },
+  { icon: Headset, key: "guarantees.support" as const },
+];
 const FEATURE_ICONS = [Bot, Settings2, DollarSign, Globe];
 const FEATURE_GRADIENTS = [
   "from-primary-600 to-primary-400",
@@ -31,77 +38,75 @@ export default function TrustSection() {
   const t = useTranslations("trust");
 
   return (
-    <section
-      id="trust"
-      className="section-padding bg-[var(--bg)] relative overflow-hidden"
-      aria-labelledby="trust-title"
-    >
-      <div className="absolute inset-0 bg-hero-glow opacity-40" />
-
-      <div className="container-xl relative z-10">
-        {/* Header */}
-        <AnimatedSection className="text-center mb-16">
-          <div className="flex justify-center mb-4">
-            <SectionLabel>{t("sectionLabel")}</SectionLabel>
-          </div>
-          <h2 id="trust-title" className="font-display text-section text-[var(--text-primary)] mb-4">
-            {t("title1")}{" "}
-            <span className="text-gradient">{t("title2")}</span>
-            <br className="hidden sm:block" />
-            {t("title3")}
-          </h2>
-          <p className="text-base text-[var(--text-secondary)] max-w-2xl mx-auto leading-relaxed">
-            {t("subtitle")}
-          </p>
-        </AnimatedSection>
-
-        {/* Feature tiles */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-20">
-          {FEATURES.map((f, i) => {
-            const Icon = FEATURE_ICONS[i];
-            return (
-              <AnimatedSection key={f.titleKey} delay={i * 0.1}>
-                <div className="card p-6 h-full flex flex-col group hover:border-primary-400/40 transition-colors">
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${FEATURE_GRADIENTS[i]} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200`}>
-                    <Icon className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="font-display font-semibold text-sm text-[var(--text-primary)] mb-2">{t(f.titleKey)}</h3>
-                  <p className="text-xs text-[var(--text-muted)] leading-relaxed flex-1">{t(f.descKey)}</p>
-                </div>
-              </AnimatedSection>
-            );
-          })}
+    <SectionShell id="trust" glow="top">
+      {/* Header */}
+      <AnimatedSection className="text-center mb-8 lg:mb-10">
+        <div className="flex justify-center mb-4">
+          <SectionLabel>{t("sectionLabel")}</SectionLabel>
         </div>
+        <h2 id="trust-title" className="font-display text-section text-[var(--text-primary)] mb-4">
+          {t("title1")}{" "}
+          <span className="text-gradient">{t("title2")}</span>
+          <br className="hidden sm:block" />
+          {t("title3")}
+        </h2>
+        <p className="text-base text-[var(--text-secondary)] max-w-2xl mx-auto leading-relaxed">
+          {t("subtitle")}
+        </p>
+      </AnimatedSection>
 
-        {/* Stats Strip */}
-        <AnimatedSection className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-16" delay={0.2}>
+      {/* Feature tiles */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10 lg:mb-12">
+        {FEATURES.map((f, i) => {
+          const Icon = FEATURE_ICONS[i];
+          return (
+            <AnimatedSection key={f.titleKey} delay={i * 0.08}>
+              <div className="glass-strong rounded-2xl p-5 h-full flex flex-col group transition-all duration-200 hover:-translate-y-0.5">
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${FEATURE_GRADIENTS[i]} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200`}>
+                  <Icon className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="font-display font-semibold text-sm text-[var(--text-primary)] mb-2">{t(f.titleKey)}</h3>
+                <p className="text-xs text-[var(--text-muted)] leading-relaxed flex-1">{t(f.descKey)}</p>
+              </div>
+            </AnimatedSection>
+          );
+        })}
+      </div>
+
+      {/* Stats Strip — framed as first-year goals, not current counts */}
+      <AnimatedSection className="mb-10 lg:mb-12" delay={0.2}>
+        <p className="text-center text-xs text-[var(--text-muted)] uppercase tracking-widest font-display font-semibold mb-5">
+          {t("statsHeading")}
+        </p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {TRUST_STATS.map((stat, i) => (
             <div key={stat.value} className="text-center">
               <div className="font-display text-3xl sm:text-4xl font-black text-gradient mb-1">{stat.value}</div>
               <div className="text-sm text-[var(--text-muted)]">{t(STAT_KEYS[i])}</div>
             </div>
           ))}
-        </AnimatedSection>
+        </div>
+      </AnimatedSection>
 
-        {/* Trust logos */}
-        <AnimatedSection direction="none" delay={0.3}>
-          <div className="text-center mb-6">
-            <p className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-display font-semibold">
-              {t("backedBy")}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 opacity-50 grayscale hover:opacity-70 hover:grayscale-0 transition-all duration-500">
-            {TRUST_LOGOS.map((logo) => (
-              <div
-                key={logo}
-                className="px-4 py-2 rounded-xl border border-[var(--border)] text-xs font-display font-semibold text-[var(--text-secondary)] whitespace-nowrap"
-              >
-                {logo}
-              </div>
-            ))}
-          </div>
-        </AnimatedSection>
-      </div>
-    </section>
+      {/* Trust guarantees — honest signals for a launching platform */}
+      <AnimatedSection direction="none" delay={0.3}>
+        <div className="text-center mb-5">
+          <p className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-display font-semibold">
+            {t("promiseHeading")}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          {GUARANTEES.map(({ icon: Icon, key }) => (
+            <div
+              key={key}
+              className="flex items-center gap-2 px-4 py-2 rounded-full glass-strong text-xs font-display font-medium text-[var(--text-secondary)]"
+            >
+              <Icon className="w-3.5 h-3.5 text-primary-500 flex-shrink-0" />
+              {t(key)}
+            </div>
+          ))}
+        </div>
+      </AnimatedSection>
+    </SectionShell>
   );
 }

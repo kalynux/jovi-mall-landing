@@ -14,7 +14,7 @@ export default function FinalCTASection({ onGetStarted }: FinalCTASectionProps) 
   return (
     <section
       id="cta"
-      className="relative overflow-hidden py-28 lg:py-40"
+      className="relative flex min-h-[100svh] items-center justify-center overflow-hidden py-24"
       aria-labelledby="final-cta-title"
     >
       {/* Always-dark gradient background — themed via CSS var (dark in both modes) */}
@@ -25,7 +25,7 @@ export default function FinalCTASection({ onGetStarted }: FinalCTASectionProps) 
       <div
         className="absolute inset-0 opacity-[0.04]"
         style={{
-          backgroundImage: "linear-gradient(rgba(124,58,237,1) 1px, transparent 1px), linear-gradient(90deg, rgba(124,58,237,1) 1px, transparent 1px)",
+          backgroundImage: "linear-gradient(rgba(13,160,107,1) 1px, transparent 1px), linear-gradient(90deg, rgba(13,160,107,1) 1px, transparent 1px)",
           backgroundSize: "60px 60px",
         }}
       />
@@ -80,7 +80,7 @@ export default function FinalCTASection({ onGetStarted }: FinalCTASectionProps) 
             size="lg"
             onClick={onGetStarted}
             showArrow
-            className="text-base px-10 py-4 shadow-[0_0_40px_rgba(124,58,237,0.5)] hover:shadow-[0_0_60px_rgba(124,58,237,0.7)]"
+            className="text-base px-10 py-4 shadow-[0_0_40px_rgba(13,160,107,0.5)] hover:shadow-[0_0_60px_rgba(13,160,107,0.7)]"
           >
             {t("ctaPrimary")}
           </CTAButton>

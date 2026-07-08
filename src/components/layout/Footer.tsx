@@ -3,16 +3,32 @@ import Link from "next/link";
 import { Zap, Twitter, Linkedin, Instagram } from "lucide-react";
 import { BRAND } from "@/lib/constants";
 import { useTranslations } from "next-intl";
+import { useOptionalSectionNav } from "@/components/scroll/SectionNavProvider";
 
 export default function Footer() {
   const t = useTranslations("footer");
   const nav = useTranslations("navbar");
+  // Optional: null when the Footer is rendered off the landing page (e.g. /shop).
+  const sectionNav = useOptionalSectionNav();
+
+  // Route in-page section anchors through the full-page scroller when present;
+  // otherwise let the Link navigate (anchors resolve to the landing page).
+  const handleLink = (e: React.MouseEvent, href: string) => {
+    const id = href.startsWith("#") ? href.slice(1) : "";
+    if (id && sectionNav && sectionNav.sections.some((s) => s.id === id)) {
+      e.preventDefault();
+      sectionNav.scrollToId(id);
+    }
+  };
+
+  const resolveHref = (href: string) =>
+    href === "#" || !href.startsWith("#") || sectionNav ? href : `/${href}`;
 
   const footerLinks = [
     {
       label: t("platform"),
       links: [
-        { label: nav("howItWorks"), href: "#how-it-works" },
+        { label: nav("shop"), href: "/shop" },
         { label: nav("vendors"), href: "#vendors" },
         { label: nav("agencies"), href: "#agencies" },
         { label: nav("agents"), href: "#agents" },
@@ -77,7 +93,8 @@ export default function Footer() {
                 {group.links.map((link) => (
                   <li key={link.href + link.label}>
                     <Link
-                      href={link.href}
+                      href={resolveHref(link.href)}
+                      onClick={(e) => handleLink(e, link.href)}
                       className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:text-primary-600 transition-colors duration-200"
                     >
                       {link.label}

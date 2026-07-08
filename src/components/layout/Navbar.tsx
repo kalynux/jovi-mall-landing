@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, X, Zap, Sun, Moon, Globe, ChevronDown, LogIn } from "lucide-react";
 import { motion, useScroll, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -10,10 +11,103 @@ import { useTheme } from "@/lib/theme";
 import { useTranslations } from "next-intl";
 import { useLocale, LOCALES, type Locale } from "@/lib/i18n-provider";
 import { useAuth } from "@/lib/auth/useAuth";
+import type { AuthRoleEntity } from "@/lib/auth/auth.types";
 import UserMenuDropdown from "@/components/nav/UserMenuDropdown";
+import { useOptionalSectionNav } from "@/components/scroll/SectionNavProvider";
 
 interface NavbarProps {
   onGetStarted: () => void;
+}
+
+interface AuthControlsProps {
+  mobile?: boolean;
+  status: "loading" | "authenticated" | "unauthenticated";
+  user: unknown;
+  role_entity: AuthRoleEntity | null;
+  role: string | null;
+  logout: () => Promise<void>;
+  onGetStarted: () => void;
+  setMenuOpen: (open: boolean) => void;
+  t: ReturnType<typeof useTranslations>;
+}
+
+function AuthControls({
+  mobile = false,
+  status,
+  user,
+  role_entity,
+  role,
+  logout,
+  onGetStarted,
+  setMenuOpen,
+  t,
+}: AuthControlsProps) {
+  if (status === "loading") {
+    return (
+      <div
+        className={cn(
+          "rounded-xl bg-[var(--border)] animate-pulse",
+          mobile ? "h-10 w-full" : "h-9 w-48"
+        )}
+        aria-hidden="true"
+      />
+    );
+  }
+
+  if (status === "authenticated" && user && role_entity) {
+    return (
+      <UserMenuDropdown
+        user={{ ...role_entity, active_role: role } as AuthRoleEntity}
+        onLogout={logout}
+        onSwitchRole={() => {
+          setMenuOpen(false);
+          onGetStarted();
+        }}
+      />
+    );
+  }
+
+  if (mobile) {
+    return (
+      <>
+        <Link
+          href="/login"
+          onClick={() => setMenuOpen(false)}
+          className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-medium text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--accent-light)] transition-colors"
+        >
+          <LogIn className="w-4 h-4" aria-hidden="true" />
+          {t("login")}
+        </Link>
+        <CTAButton
+          variant="primary"
+          size="sm"
+          className="w-full justify-center"
+          onClick={() => {
+            setMenuOpen(false);
+            onGetStarted();
+          }}
+        >
+          {t("getStarted")}
+        </CTAButton>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Link
+        href="/login"
+        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--accent-light)] border border-[var(--border)] transition-all duration-200"
+        aria-label={t("login")}
+      >
+        <LogIn className="w-3.5 h-3.5" aria-hidden="true" />
+        {t("login")}
+      </Link>
+      <CTAButton variant="primary" size="sm" onClick={onGetStarted}>
+        {t("getStarted")}
+      </CTAButton>
+    </>
+  );
 }
 
 export default function Navbar({ onGetStarted }: NavbarProps) {
@@ -22,13 +116,26 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
   const { scrollY } = useScroll();
   const [scrolled, setScrolled] = useState(false);
   const { theme, toggle } = useTheme();
-  const { locale, setLocale } = useLocale();
+  const { locale, setLocale, localeLabels } = useLocale();
   const menuRef = useRef<HTMLDivElement>(null);
   const langRef = useRef<HTMLDivElement>(null);
   const t = useTranslations("navbar");
 
   // Auth state — single source of truth from AuthProvider
   const { user, role, role_entity, status, logout } = useAuth();
+
+  // Full-page scroll state — highlight the active section + smooth-jump on click.
+  // Optional: null when this Navbar is rendered off the landing page (no engine).
+  const sectionNav = useOptionalSectionNav();
+  const activeId = sectionNav?.activeId ?? "";
+
+  const handleNavClick = (e: React.MouseEvent, href: string) => {
+    if (href.startsWith("#") && sectionNav) {
+      e.preventDefault();
+      sectionNav.scrollToId(href.slice(1));
+      setMenuOpen(false);
+    }
+  };
 
   useEffect(() => {
     const unsub = scrollY.onChange((v) => setScrolled(v > 60));
@@ -59,96 +166,28 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [langOpen]);
 
-  // Nav links from translations
-  const NAV_LINKS = [
-    // { label: t("howItWorks"), href: "#how-it-works" },
+  const pathname = usePathname();
+
+  // Nav links from translations. `route` links are real pages; the rest are
+  // landing anchors (resolved to `/#…` when we're off the landing page).
+  const NAV_LINKS: { label: string; href: string; route?: boolean }[] = [
+    { label: t("shop"), href: "/shop", route: true },
     { label: t("vendors"), href: "#vendors" },
     { label: t("agencies"), href: "#agencies" },
     { label: t("agents"), href: "#agents" },
     { label: t("customers"), href: "#customers" },
   ];
 
+  const resolveHref = (link: { href: string; route?: boolean }) =>
+    link.route || sectionNav ? link.href : `/${link.href}`;
+  const isLinkActive = (link: { href: string; route?: boolean }) =>
+    link.route ? pathname.startsWith(link.href) : activeId === link.href.slice(1);
+
   const currentLocaleConfig = LOCALES.find((l) => l.code === locale)!;
 
   function handleLocaleChange(code: Locale) {
     setLocale(code);
     setLangOpen(false);
-  }
-
-  // ── Auth CTAs — shared logic for desktop + mobile CTAs ───────────────────
-
-  /**
-   * Renders the right-side auth controls.
-   * - "loading" → invisible skeleton (same width, no layout shift)
-   * - "unauthenticated" → Login + Get Started
-   * - "authenticated" → UserMenuDropdown
-   */
-  function AuthControls({ mobile = false }: { mobile?: boolean }) {
-    if (status === "loading") {
-      // Match approximate width of Login + Get Started buttons
-      return (
-        <div
-          className={cn(
-            "rounded-xl bg-[var(--border)] animate-pulse",
-            mobile ? "h-10 w-full" : "h-9 w-48"
-          )}
-          aria-hidden="true"
-        />
-      );
-    }
-
-    if (status === "authenticated" && user && role_entity) {
-      return (
-        <UserMenuDropdown
-          user={{...role_entity, active_role: role}}
-          onLogout={logout}
-          onSwitchRole={() => {
-            setMenuOpen(false);
-            onGetStarted(); // Reuse the existing role-modal flow
-          }}
-        />
-      );
-    }
-
-    // Unauthenticated
-    if (mobile) {
-      return (
-        <>
-          <Link
-            href="/login"
-            onClick={() => setMenuOpen(false)}
-            className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-medium text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--accent-light)] transition-colors"
-          >
-            <LogIn className="w-4 h-4" aria-hidden="true" />
-            {t("login")}
-          </Link>
-          <CTAButton
-            variant="primary"
-            size="sm"
-            className="w-full justify-center"
-            onClick={() => { setMenuOpen(false); onGetStarted(); }}
-          >
-            {t("getStarted")}
-          </CTAButton>
-        </>
-      );
-    }
-
-    return (
-      <>
-        <Link
-          href="/login"
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--accent-light)] border border-[var(--border)] transition-all duration-200"
-          aria-label={t("login")}
-        >
-          <LogIn className="w-3.5 h-3.5" aria-hidden="true" />
-          {t("login")}
-        </Link>
-        <CTAButton variant="primary" size="sm" onClick={onGetStarted}>
-          {t("getStarted")}
-        </CTAButton>
-      </>
-    );
   }
 
   return (
@@ -175,15 +214,32 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8" aria-label={t("mainNavAriaLabel")}>
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-200"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {NAV_LINKS.map((link) => {
+              const isActive = isLinkActive(link);
+              return (
+                <Link
+                  key={link.href}
+                  href={resolveHref(link)}
+                  onClick={(e) => handleNavClick(e, link.href)}
+                  aria-current={isActive ? "true" : undefined}
+                  className={cn(
+                    "relative text-sm font-medium transition-colors duration-200",
+                    isActive
+                      ? "text-[var(--text-primary)]"
+                      : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  )}
+                >
+                  {link.label}
+                  {isActive && (
+                    <motion.span
+                      layoutId="nav-active"
+                      className="absolute -bottom-1.5 left-0 right-0 h-0.5 rounded-full bg-primary-500"
+                      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Desktop controls */}
@@ -197,7 +253,7 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
                 className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--accent-light)] transition-all duration-200 border border-[var(--border)] text-xs font-display font-medium"
               >
                 <Globe className="w-3.5 h-3.5" />
-                <span>{currentLocaleConfig.label}</span>
+                <span>{localeLabels[locale] ?? currentLocaleConfig.label}</span>
                 <ChevronDown className={cn("w-3 h-3 transition-transform duration-200", langOpen && "rotate-180")} />
               </button>
               <AnimatePresence>
@@ -223,7 +279,7 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
                         lang={l.code}
                         dir={l.dir}
                       >
-                        {l.label}
+                        {localeLabels[l.code] ?? l.label}
                       </button>
                     ))}
                   </motion.div>
@@ -241,7 +297,16 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
             </button>
 
             {/* Auth CTAs (login/get-started OR user menu) */}
-            <AuthControls />
+            <AuthControls
+              status={status}
+              user={user}
+              role_entity={role_entity}
+              role={role}
+              logout={logout}
+              onGetStarted={onGetStarted}
+              setMenuOpen={setMenuOpen}
+              t={t}
+            />
           </div>
 
           {/* Mobile controls */}
@@ -278,7 +343,7 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
                         lang={l.code}
                         dir={l.dir}
                       >
-                        {l.label}
+                        {localeLabels[l.code] ?? l.label}
                       </button>
                     ))}
                   </motion.div>
@@ -322,18 +387,37 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
             }}
           >
             <div className="px-4 py-5 flex flex-col gap-1">
-              {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMenuOpen(false)}
-                  className="py-2.5 px-3 rounded-lg text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--accent-light)] hover:text-primary-600 transition-colors"
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {NAV_LINKS.map((link) => {
+                const isActive = isLinkActive(link);
+                return (
+                  <Link
+                    key={link.href}
+                    href={resolveHref(link)}
+                    onClick={(e) => handleNavClick(e, link.href)}
+                    aria-current={isActive ? "true" : undefined}
+                    className={cn(
+                      "py-2.5 px-3 rounded-lg text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-[var(--accent-light)] text-primary-600"
+                        : "text-[var(--text-primary)] hover:bg-[var(--accent-light)] hover:text-primary-600"
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
               <div className="pt-3 mt-2 border-t border-[var(--border-medium)] flex flex-col gap-2">
-                <AuthControls mobile />
+                <AuthControls
+                  mobile
+                  status={status}
+                  user={user}
+                  role_entity={role_entity}
+                  role={role}
+                  logout={logout}
+                  onGetStarted={onGetStarted}
+                  setMenuOpen={setMenuOpen}
+                  t={t}
+                />
               </div>
             </div>
           </motion.div>
