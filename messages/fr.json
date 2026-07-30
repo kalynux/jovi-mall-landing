@@ -1,4 +1,15 @@
 {
+    "verifyEmail": {
+        "title": "Vérification de l'e-mail",
+        "verifying": "Vérification de votre e-mail…",
+        "successTitle": "E-mail vérifié",
+        "successBody": "Votre adresse e-mail a été confirmée. Vous pouvez maintenant vous connecter.",
+        "errorTitle": "Échec de la vérification",
+        "errorBody": "Ce lien de vérification est invalide ou a expiré. Veuillez en demander un nouveau.",
+        "missingToken": "Aucun jeton de vérification n'a été fourni.",
+        "goToLogin": "Continuer vers la connexion",
+        "backToLogin": "Retour à la connexion"
+    },
     "meta": {
         "langName": "Français",
         "langCode": "fr"

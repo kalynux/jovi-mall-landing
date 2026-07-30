@@ -14,6 +14,7 @@ import FinalCTASection from "@/components/sections/FinalCTASection";
 import RoleSelectorModal from "@/components/ui/RoleSelectorModal";
 import SectionProgressIndicator from "@/components/ui/SectionProgressIndicator";
 import AuroraBackground from "@/components/layout/AuroraBackground";
+import InteractiveNetwork from "@/components/layout/InteractiveNetwork";
 import GrainOverlay from "@/components/layout/GrainOverlay";
 import { SectionNavProvider } from "@/components/scroll/SectionNavProvider";
 import { SECTION_IDS } from "@/lib/constants";
@@ -25,6 +26,7 @@ export default function Home() {
     <SectionNavProvider sections={SECTION_IDS}>
       {/* Ambient background layers (fixed, behind everything) */}
       <AuroraBackground />
+      <InteractiveNetwork />
       <GrainOverlay />
 
       {/* Sticky Navbar */}

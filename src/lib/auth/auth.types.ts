@@ -8,15 +8,41 @@ export type UiRole = Exclude<Role, "admin">;
 export const UI_ROLES: UiRole[] = ["vendor", "agency", "agent", "customer"];
 
 // ─── User ───────────────────────────────────────────────────────────────────
-/** Shape returned by GET /api/auth/me */
+
+/**
+ * Raw `data.user` object as returned on the wire by the auth endpoints
+ * (`/auth/login`, `/auth/register`, `/auth/me`, `/auth/auth-me/:role`, …).
+ *
+ * The backend serialises the account document verbatim — note the `_id`,
+ * `login_phone`, `login_email` field names. The active role is NOT on this
+ * object; it is the sibling top-level `role` field of the response. Use
+ * `normalizeUser()` (auth.service.ts) to convert this into the app-facing
+ * `AuthUser` before storing it in state.
+ */
+export interface RawAuthUser {
+    _id: string;
+    login_phone: string;
+    login_email?: string | null;
+    roles: Role[];
+    status: string;
+    [key: string]: unknown;
+}
+
+/**
+ * App-facing, normalized user shape.
+ *
+ * Derived from `RawAuthUser` + the response's top-level `role`. This is what
+ * the AuthProvider/context exposes; components should read from here, never
+ * from the raw wire object.
+ */
 export interface AuthUser {
     id: string;
-    name: string;
     phone: string;
     email?: string;
     roles: Role[];
-    /** The role this session is currently scoped to */
+    /** The role this session is currently scoped to (from top-level `role`). */
     activeRole: Role;
+    status?: string;
 }
 
 export interface AuthRoleEntity {
@@ -24,6 +50,8 @@ export interface AuthRoleEntity {
     user_id: string;
     email: string | null;
     phone: string | null;
+    /** Customer/agent/admin display name. Vendors use business_name, agencies agency_name. */
+    name?: string | null;
     business_name?: string | null;
     agency_name?: string | null;
     email_verified: boolean;
@@ -51,9 +79,28 @@ export interface AuthRoleEntity {
         whatsapp: boolean;
         phone: boolean;
     };
+    // ── Customer role_entity fields (api-doc/auth/README.md → role_entity Shapes) ──
+    /** Renamed from avatar_url. */
+    avatar?: string | null;
+    bio?: string | null;
+    /** Element shape is not documented in api-doc — narrow at the use site. */
+    saved_addresses?: unknown[];
+    preferences?: {
+        language: string;
+        currency: string;
+        marketing_opt_in: boolean;
+        ai_tone: string[];
+        ads_compact_mode: boolean;
+        compact_mode: boolean;
+    };
+    /**
+     * Branding images are *attached files*, not raw URLs — the ids come from
+     * POST /api/files/upload. Renamed from logo_url/cover_image_url
+     * (api-doc/auth/README.md, Vendor role_entity + Onboarding step 3).
+     */
     branding?: {
-        logo_url: string | null;
-        cover_image_url: string | null;
+        logo_file_id: string | null;
+        cover_image_file_id: string | null;
     };
     business_addresses?: any[];
     operating_hours?: any[];
@@ -110,11 +157,31 @@ export interface ApiResponse<T = unknown> {
     error?: string;
 }
 
+/**
+ * Auth endpoint payload — the object that lives under `data` in the standard
+ * `{ success, data, meta }` envelope (unwrapped by `apiFetch`). `user` is the
+ * raw wire shape; the service layer normalizes it before it reaches state.
+ */
 export interface AuthApiResponse {
-    user: AuthUser;
+    user: RawAuthUser;
     role: Role;
     role_entity: AuthRoleEntity;
     message?: string;
+}
+
+// ─── Extra auth endpoint payloads ────────────────────────────────────────────
+
+/** `data` payload of POST /auth/browser/refresh */
+export interface BrowserRefreshResponse {
+    user: { id: string; role: Role };
+}
+
+/**
+ * `data` payload of POST /auth/send-email-verification and
+ * GET /auth/verify-email — both return a single human-readable note.
+ */
+export interface MessageResponse {
+    message: string;
 }
 
 // ─── WhatsApp Verification ───────────────────────────────────────────────────
@@ -135,13 +202,20 @@ export interface WaVerificationCodeResponse {
     bot_number?: string;
 }
 
-/** Response from GET /api/whatsapp/link/status */
+/**
+ * Response from GET /api/whatsapp/link/status (api-doc/whatsapp/README.md §2).
+ *
+ * Not linked → `{ linked: false }` alone; every other field is present only
+ * once the account is linked.
+ */
 export interface WaLinkStatusResponse {
     linked: boolean;
-    /** Populated when linked — the linked phone number */
-    phone?: string;
-    /** Populated when linked — the WhatsApp phone ID */
+    /** The WhatsApp phone ID — the identifier that proves the link. */
     wa_phone_id?: string;
+    /** WhatsApp profile name of the linked account. */
+    name?: string;
+    /** ISO-8601 timestamp of when the link was established. */
+    bound_at?: string;
 }
 
 // ─── Post-Auth Action ────────────────────────────────────────────────────────

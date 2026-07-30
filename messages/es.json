@@ -1,4 +1,15 @@
 {
+    "verifyEmail": {
+        "title": "Verificación de correo",
+        "verifying": "Verificando tu correo…",
+        "successTitle": "Correo verificado",
+        "successBody": "Tu dirección de correo ha sido confirmada. Ya puedes iniciar sesión.",
+        "errorTitle": "Error de verificación",
+        "errorBody": "Este enlace de verificación no es válido o ha caducado. Solicita uno nuevo.",
+        "missingToken": "No se proporcionó ningún token de verificación.",
+        "goToLogin": "Continuar para iniciar sesión",
+        "backToLogin": "Volver a iniciar sesión"
+    },
     "meta": {
         "langName": "Español",
         "langCode": "es"

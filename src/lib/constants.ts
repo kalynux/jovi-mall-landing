@@ -155,28 +155,9 @@ export const CHAT_MESSAGES = [
 export const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8022";
 
-export const ROLE_SUBDOMAIN_MAP = {
-    vendor: "vendor.example.com",
-    agency: "agency.example.com",
-    agent: "agent.example.com",
-    customer: "example.com",
-    admin: "admin.example.com",
-} as const;
-
-/** Allowlist for ?return= URL validation. No open redirects beyond these hosts. */
-export const ALLOWED_RETURN_HOSTS: string[] = [
-    "example.com",
-    "vendor.example.com",
-    "agency.example.com",
-    "agent.example.com",
-    "admin.example.com",
-    "localhost",
-    "localhost:3000",
-    "localhost:3001",
-    "localhost:3002",
-    "localhost:3003",
-    "localhost:3004",
-];
+// NOTE: `ROLE_SUBDOMAIN_MAP` and `ALLOWED_RETURN_HOSTS` intentionally live in
+// a single source of truth — src/lib/auth/auth.redirect.ts. They used to be
+// duplicated here with divergent dev-port lists; import them from there instead.
 
 /** WhatsApp deep-link for the customer role registration callout */
 export const WHATSAPP_CUSTOMER_LINK = `https://wa.me/${BRAND.whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent("Hi, I want to shop on Jovi Mall!")}`;

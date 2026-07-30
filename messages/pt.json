@@ -1,4 +1,15 @@
 {
+    "verifyEmail": {
+        "title": "Verificação de e-mail",
+        "verifying": "A verificar o seu e-mail…",
+        "successTitle": "E-mail verificado",
+        "successBody": "O seu endereço de e-mail foi confirmado. Já pode iniciar sessão.",
+        "errorTitle": "Falha na verificação",
+        "errorBody": "Este link de verificação é inválido ou expirou. Solicite um novo.",
+        "missingToken": "Nenhum token de verificação foi fornecido.",
+        "goToLogin": "Continuar para iniciar sessão",
+        "backToLogin": "Voltar a iniciar sessão"
+    },
     "meta": {
         "langName": "Português",
         "langCode": "pt"
@@ -491,6 +502,16 @@
         "BOOKING_ALREADY_CANCELLED": "Esta reserva já foi cancelada.",
         "ADMIN_NOT_FOUND": "A conta de administrador não pôde ser encontrada.",
         "ADMIN_FORBIDDEN": "Acesso de administrador é necessário para esta ação.",
-        "COMMAND_NOT_FOUND": "O comando não pôde ser encontrado."
+        "COMMAND_NOT_FOUND": "O comando não pôde ser encontrado.",
+        "WHATSAPP_ROLE_NOT_SUPPORTED": "O WhatsApp não está disponível para este papel.",
+        "WHATSAPP_NOT_LINKED": "Sua conta do WhatsApp não está vinculada.",
+        "WHATSAPP_LINK_FAILED": "A vinculação do WhatsApp falhou. Tente novamente.",
+        "WHATSAPP_INVALID_PAYLOAD": "Uma mensagem inválida do WhatsApp foi recebida.",
+        "WHATSAPP_POLICY_VIOLATION": "Esta mensagem viola a política do WhatsApp.",
+        "WHATSAPP_PROVIDER_REJECTED": "A mensagem foi rejeitada pelo WhatsApp.",
+        "WHATSAPP_VALIDATION_ERROR": "Não foi possível validar a mensagem do WhatsApp.",
+        "WHATSAPP_IDEMPOTENCY_REQUIRED": "Uma chave de mensagem duplicada é necessária.",
+        "WHATSAPP_DUPLICATE_MESSAGE": "Esta mensagem já foi enviada.",
+        "WHATSAPP_UNSUPPORTED_MESSAGE_TYPE": "Este tipo de mensagem não é suportado."
     }
 }

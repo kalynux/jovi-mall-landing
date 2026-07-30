@@ -3,11 +3,12 @@ import type {
     RegisterPayload,
     AddRolePayload,
     AuthApiResponse,
-    AuthUser,
     Role,
     ApiErrorBody,
     WaVerificationCodeResponse,
     WaLinkStatusResponse,
+    BrowserRefreshResponse,
+    MessageResponse,
 } from "./auth.types";
 import { AuthError, ApiError } from "./auth.types";
 
@@ -56,6 +57,23 @@ async function apiFetch<T>(
             `Request failed (${res.status})`,
             res.status
         );
+    }
+
+    // ── Success envelope unwrap ──────────────────────────────────────────────
+    // Breaking change (api-doc/README.md, 2026-07-17): every endpoint now wraps
+    // its payload in `{ success, data, meta }`. Callers want `data`, not the
+    // envelope. We stay defensive: only unwrap when the standard envelope is
+    // actually present (`success === true` and a `data` key exists — `data` may
+    // legitimately be `null`, e.g. logout). Anything else (a bare body from a
+    // provider webhook, a proxy, etc.) is returned as-is.
+    const envelope = body as { success?: boolean; data?: unknown };
+    if (
+        envelope &&
+        typeof envelope === "object" &&
+        envelope.success === true &&
+        "data" in envelope
+    ) {
+        return envelope.data as T;
     }
 
     return body as T;
@@ -136,10 +154,52 @@ export async function requestWaVerification(
 }
 
 /**
- * GET /api/webhooks/whatsapp/link/status
+ * GET /api/whatsapp/link/status
  * Polls whether the authenticated user's WhatsApp number has been linked.
- * Returns { linked: boolean, phone?, wa_phone_id? }.
+ * Returns { linked, wa_phone_id?, name?, bound_at? } — api-doc/whatsapp/README.md §2,
+ * which also confirms this path is on the `/api/whatsapp` router, NOT under `/webhooks/`.
+ *
+ * Envelope note: whatsapp/README.md shows a bare body, while api-doc/README.md
+ * lists link-status among the endpoints moved to `{ success, data }` on 2026-07-17.
+ * No code change needed either way — `apiFetch` unwraps only when the envelope is
+ * actually present, so both shapes arrive here as `{ linked, ... }`.
  */
 export async function getWaLinkStatus(): Promise<WaLinkStatusResponse> {
-    return apiFetch<WaLinkStatusResponse>("/api/webhooks/whatsapp/link/status");
+    return apiFetch<WaLinkStatusResponse>("/api/whatsapp/link/status");
+}
+
+// ─── Session / Email Verification API ─────────────────────────────────────────
+
+/**
+ * POST /api/auth/browser/refresh
+ * Proactively issues a fresh access_token cookie from the refresh_token cookie.
+ * Browser clients rarely need this (requireAuth silently refreshes), but it lets
+ * a client refresh ahead of expiry. Bearer-only callers cannot use it.
+ */
+export async function browserRefresh(): Promise<BrowserRefreshResponse> {
+    return apiFetch<BrowserRefreshResponse>("/api/auth/browser/refresh", {
+        method: "POST",
+    });
+}
+
+/**
+ * POST /api/auth/send-email-verification
+ * Sends a verification link to the email on the caller's current role entity.
+ * userId + role are read from the JWT — no body required.
+ */
+export async function sendEmailVerification(): Promise<MessageResponse> {
+    return apiFetch<MessageResponse>("/api/auth/send-email-verification", {
+        method: "POST",
+    });
+}
+
+/**
+ * GET /api/auth/verify-email?token=...
+ * Confirms an email address from the token embedded in the verification link.
+ * Public endpoint — called by the /verify-email page when the user clicks through.
+ */
+export async function verifyEmail(token: string): Promise<MessageResponse> {
+    return apiFetch<MessageResponse>(
+        `/api/auth/verify-email?token=${encodeURIComponent(token)}`
+    );
 }

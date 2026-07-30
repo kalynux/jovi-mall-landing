@@ -20,9 +20,15 @@ export const ALLOWED_RETURN_HOSTS: string[] = [
     "agent.example.com",
     "admin.example.com",
     "localhost",
-    "localhost:3000",
+    // Dev ports must cover every entry in DEV_PORT_MAP below, otherwise a valid
+    // post-login return to a role's dev server is rejected as an open redirect.
+    "localhost:3000", // customer
     "localhost:3001",
-    "localhost:5173",
+    "localhost:3002",
+    "localhost:3003", // agent
+    "localhost:3004", // admin
+    "localhost:5173", // vendor
+    "localhost:5174", // agency
 ];
 
 // ─── URL Builders ───────────────────────────────────────────────────────────
@@ -32,7 +38,6 @@ export const ALLOWED_RETURN_HOSTS: string[] = [
  * Falls back to localhost for local development.
  */
 export function getRoleUrl(role: Role, path = ""): string {
-    console.log(role)
     const isDev =
         typeof window !== "undefined" && window.location.hostname === "localhost";
 

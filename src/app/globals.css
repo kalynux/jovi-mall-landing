@@ -483,3 +483,93 @@ html.dark,
 /* Shop skeleton shimmer */
 @keyframes shop-skel { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
 @media (prefers-reduced-motion: reduce) { .shop-skeleton { animation: none !important; } }
+
+/* ============================================================
+   Motion layer — the "conversation → automation" vocabulary.
+   Everything here is transform/opacity/filter only, respects
+   the global reduced-motion collapse above, and stops when the
+   element is offscreen (loops are opt-in via .is-live).
+   ============================================================ */
+
+/* Focal handoff: the flow pipeline "energizes" once in view. A single travelling
+   current runs the connector from the first node to the last, then rests. */
+@keyframes flow-current {
+  0%   { background-position: 200% 0; opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { background-position: -60% 0; opacity: 0.9; }
+}
+.flow-rail {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 42%, transparent), transparent 60%),
+    color-mix(in srgb, var(--accent) 16%, transparent);
+  background-size: 55% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  background-position: -60% 0, 0 0;
+}
+.flow-rail.is-live { animation: flow-current 2.4s var(--ease-out, cubic-bezier(0.22,1,0.36,1)) 0.15s both; }
+@media (prefers-reduced-motion: reduce) {
+  .flow-rail { background: color-mix(in srgb, var(--accent) 26%, transparent); }
+  .flow-rail.is-live { animation: none; }
+}
+
+/* A node "wakes up": a one-shot ring pulse used as the automation reaches it. */
+@keyframes node-wake {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--role, var(--accent)) 45%, transparent); }
+  70%  { box-shadow: 0 0 0 12px color-mix(in srgb, var(--role, var(--accent)) 0%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--role, var(--accent)) 0%, transparent); }
+}
+/* No fill-mode: after the one-shot pulse the node reverts to its resting
+   shadow-card instead of being left with a transparent box-shadow. */
+.node-wake { animation: node-wake 1.1s var(--ease-out, cubic-bezier(0.22,1,0.36,1)); }
+@media (prefers-reduced-motion: reduce) { .node-wake { animation: none; } }
+
+/* Delivered-ticks: the WhatsApp read receipt going blue on confirmation. */
+@keyframes tick-confirm { from { color: var(--gray-400); } to { color: #34B7F1; } }
+.tick-confirm { animation: tick-confirm 0.4s var(--ease-out, cubic-bezier(0.22,1,0.36,1)) both; }
+@media (prefers-reduced-motion: reduce) { .tick-confirm { animation: none; color: #34B7F1; } }
+
+/* Interactive lift for cards/rows — pairs a real offset+blur shadow with a
+   translate, so depth reads as depth (see craft-floor). Transitions only,
+   so it costs nothing until hover/focus. */
+.lift { transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out); }
+@media (hover: hover) {
+  .lift:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+}
+.lift:focus-visible { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+@media (prefers-reduced-motion: reduce) { .lift:hover, .lift:focus-visible { transform: none; } }
+
+/* Press feedback for tappable non-button surfaces (cards, chips). */
+.pressable { transition: transform var(--dur-fast) var(--ease-out); }
+.pressable:active { transform: scale(var(--press-scale)); }
+@media (prefers-reduced-motion: reduce) { .pressable:active { transform: none; } }
+
+/* Inline-styled shop DS hooks — these components set styles inline, so hover/
+   active feedback lives here as class hooks (transform-only, reduced-motion safe). */
+.ds-btn { transition: background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out); }
+@media (hover: hover) { .ds-btn:not(:disabled):hover { transform: translateY(-1px); } }
+.ds-btn:not(:disabled):active { transform: scale(0.97); }
+
+.ds-pop { transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out); }
+@media (hover: hover) { .ds-pop:hover { transform: scale(1.08); } }
+.ds-pop:active { transform: scale(0.9); }
+
+/* Product image gently scales toward the viewer on card hover — the image is
+   the content, so this is meaningful, not decoration. Bounded to the card. */
+.ds-media { overflow: hidden; }
+.ds-media img { transition: transform var(--dur-slow) var(--ease-out); }
+@media (hover: hover) { .ds-card:hover .ds-media img { transform: scale(1.05); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-btn, .ds-pop, .ds-media img { transition: none !important; transform: none !important; }
+}
+
+/* Underline that draws from the origin — nav links, inline links. */
+.link-underline { position: relative; }
+.link-underline::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 1.5px;
+  background: currentColor; transform: scaleX(0); transform-origin: left;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.link-underline:hover::after, .link-underline:focus-visible::after { transform: scaleX(1); }
+@media (prefers-reduced-motion: reduce) { .link-underline::after { transition: none; } }

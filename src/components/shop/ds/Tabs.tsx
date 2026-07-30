@@ -1,5 +1,8 @@
 "use client";
 
+import { useId } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+
 export interface TabItem {
   value: string;
   label: string;
@@ -13,7 +16,13 @@ export interface TabsProps {
   variant?: "underline" | "pill";
 }
 
+const SPRING = { type: "spring", stiffness: 520, damping: 40, mass: 0.8 } as const;
+
 export function Tabs({ value, onChange, tabs, variant = "underline" }: TabsProps) {
+  const uid = useId();
+  const shouldReduce = useReducedMotion();
+  const transition = shouldReduce ? { duration: 0 } : SPRING;
+
   if (variant === "pill") {
     return (
       <div
@@ -35,6 +44,7 @@ export function Tabs({ value, onChange, tabs, variant = "underline" }: TabsProps
               type="button"
               onClick={() => onChange(t.value)}
               style={{
+                position: "relative",
                 border: "none",
                 cursor: "pointer",
                 fontFamily: "var(--font-sans)",
@@ -42,13 +52,27 @@ export function Tabs({ value, onChange, tabs, variant = "underline" }: TabsProps
                 fontWeight: 700,
                 padding: "7px 14px",
                 borderRadius: 999,
-                background: active ? "var(--surface)" : "transparent",
+                background: "transparent",
                 color: active ? "var(--brand-hover)" : "var(--text-muted)",
-                boxShadow: active ? "var(--shadow-xs)" : "none",
-                transition: "var(--transition-colors)",
+                transition: "color var(--dur-fast) var(--ease-out)",
               }}
             >
-              {t.label}
+              {active && (
+                <motion.span
+                  layoutId={`${uid}-pill`}
+                  transition={transition}
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: "var(--surface)",
+                    borderRadius: 999,
+                    boxShadow: "var(--shadow-xs)",
+                    zIndex: 0,
+                  }}
+                />
+              )}
+              <span style={{ position: "relative", zIndex: 1 }}>{t.label}</span>
             </button>
           );
         })}
@@ -74,20 +98,21 @@ export function Tabs({ value, onChange, tabs, variant = "underline" }: TabsProps
             type="button"
             onClick={() => onChange(t.value)}
             style={{
+              position: "relative",
               border: "none",
               background: "transparent",
               cursor: "pointer",
               fontFamily: "var(--font-sans)",
               fontSize: 14,
               fontWeight: 700,
-              padding: "10px 12px",
+              padding: "10px 12px 12px",
               color: active ? "var(--text-strong)" : "var(--text-muted)",
-              borderBottom: `2px solid ${active ? "var(--brand)" : "transparent"}`,
               marginBottom: -1,
               whiteSpace: "nowrap",
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
+              transition: "color var(--dur-fast) var(--ease-out)",
             }}
           >
             {t.label}
@@ -100,10 +125,27 @@ export function Tabs({ value, onChange, tabs, variant = "underline" }: TabsProps
                   background: active ? "var(--brand-subtle)" : "var(--surface-2)",
                   borderRadius: 999,
                   padding: "1px 7px",
+                  transition: "var(--transition-colors)",
                 }}
               >
                 {t.count}
               </span>
+            )}
+            {active && (
+              <motion.span
+                layoutId={`${uid}-underline`}
+                transition={transition}
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  left: 8,
+                  right: 8,
+                  bottom: 0,
+                  height: 2,
+                  background: "var(--brand)",
+                  borderRadius: 2,
+                }}
+              />
             )}
           </button>
         );

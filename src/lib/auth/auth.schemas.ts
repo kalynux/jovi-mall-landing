@@ -21,13 +21,18 @@ export const RegisterSchema = z
     .object({
         phone: z
             .string()
-            .min(7, "Phone number is required")
-            .trim(),
+            .trim()
+            // Backend requires at least 10 digits (api-doc/auth/README.md).
+            // Count digits only so formatting (spaces, +, -) doesn't inflate length.
+            .refine((v) => v.replace(/\D/g, "").length >= 10, {
+                message: "Enter a valid phone number (at least 10 digits)",
+            }),
         email: z.string().email("Invalid email").optional().or(z.literal("")),
         name: z.string().min(2, "Name must be at least 2 characters").trim(),
         password: z
+            // Backend minimum is 6 characters (api-doc/auth/README.md).
             .string()
-            .min(8, "Password must be at least 8 characters"),
+            .min(6, "Password must be at least 6 characters"),
         role: UiRoleSchema,
         business_name: z.string().optional(),
         agency_name: z.string().optional(),

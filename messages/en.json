@@ -1,4 +1,15 @@
 {
+    "verifyEmail": {
+        "title": "Email verification",
+        "verifying": "Verifying your email…",
+        "successTitle": "Email verified",
+        "successBody": "Your email address has been confirmed. You can now sign in.",
+        "errorTitle": "Verification failed",
+        "errorBody": "This verification link is invalid or has expired. Please request a new one.",
+        "missingToken": "No verification token was provided.",
+        "goToLogin": "Continue to sign in",
+        "backToLogin": "Back to sign in"
+    },
     "meta": {
         "langName": "English",
         "langCode": "en"

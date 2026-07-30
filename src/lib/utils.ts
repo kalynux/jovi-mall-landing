@@ -74,3 +74,36 @@ export const staggerItem: Variants = {
         transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
     },
 };
+
+// ─── Shared performance-first primitives ────────────────────────────────────
+// GPU-cheap (transform + opacity), exponential ease-out from a visible-by-default
+// resting state. Reduced-motion is handled globally (globals.css collapses
+// durations) and per-component via useReducedMotion; keep these as the vocabulary
+// so every surface animates with one accent, not fifteen bespoke curves.
+
+/** The house ease — confident deceleration, no bounce. */
+export const EASE_OUT = [0.22, 1, 0.36, 1] as const;
+
+/** Tighter container for dense lists (cards, chips, rows) — capped total delay. */
+export const staggerContainerFast: Variants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.06, delayChildren: 0.04 } },
+};
+
+/** A small confident "land" — for badges, confirmations, arriving state. */
+export const popIn: Variants = {
+    hidden: { opacity: 0, scale: 0.8, y: 6 },
+    visible: {
+        opacity: 1,
+        scale: 1,
+        y: 0,
+        transition: { duration: 0.42, ease: [0.34, 1.4, 0.64, 1] },
+    },
+};
+
+/** Overlay/sheet/dropdown entrance — quick, from the surface it belongs to. */
+export const overlayIn: Variants = {
+    hidden: { opacity: 0, scale: 0.97, y: 8 },
+    visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] } },
+    exit: { opacity: 0, scale: 0.98, y: 6, transition: { duration: 0.14, ease: "easeIn" } },
+};

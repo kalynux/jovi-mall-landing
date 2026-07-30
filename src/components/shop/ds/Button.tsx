@@ -47,6 +47,7 @@ export function Button({
   children,
   disabled,
   style,
+  className,
   ...rest
 }: ButtonProps) {
   const s = sizeMap[size];
@@ -54,6 +55,7 @@ export function Button({
     <button
       {...rest}
       disabled={disabled}
+      className={className ? `ds-btn ${className}` : "ds-btn"}
       style={{
         display: block ? "flex" : "inline-flex",
         width: block ? "100%" : undefined,

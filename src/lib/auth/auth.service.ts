@@ -4,12 +4,32 @@ import type {
     RegisterPayload,
     AddRolePayload,
     AuthUser,
+    RawAuthUser,
     Role,
-    AuthRoleEntity,
     PostAuthAction,
 } from "./auth.types";
 import { AuthError } from "./auth.types";
 import * as api from "./auth.api";
+
+// ─── Normalization ───────────────────────────────────────────────────────────
+
+/**
+ * Converts the raw wire `data.user` object into the app-facing `AuthUser`.
+ *
+ * The backend returns `{ _id, login_phone, login_email, roles, status }` and
+ * reports the active role in the sibling top-level `role` field — never on the
+ * user object. This is the single place that reconciles the two.
+ */
+export function normalizeUser(raw: RawAuthUser, activeRole: Role): AuthUser {
+    return {
+        id: raw._id,
+        phone: raw.login_phone,
+        email: raw.login_email ?? undefined,
+        roles: raw.roles,
+        activeRole,
+        status: raw.status,
+    };
+}
 import {
     resolvePostLoginUrl,
     resolveOnboardingUrl,
@@ -27,7 +47,12 @@ import { requiresWaVerification } from "./wa-verification-gate";
 export async function restoreSession(): Promise<AuthState> {
     try {
         const { user, role, role_entity } = await api.getMe();
-        return { user, role, role_entity, status: "authenticated" };
+        return {
+            user: normalizeUser(user, role),
+            role,
+            role_entity,
+            status: "authenticated",
+        };
     } catch (err) {
         if (err instanceof AuthError && err.statusCode === 401) {
             return { user: null, role: null, role_entity: null, status: "unauthenticated" };
@@ -130,7 +155,7 @@ export async function addRoleAndGetAction(payload: AddRolePayload): Promise<{
         ? { type: "wa_gate", roleEntity: role_entity, redirectUrl }
         : { type: "redirect", url: redirectUrl };
 
-    return { user, newRole: role, action };
+    return { user: normalizeUser(user, role), newRole: role, action };
 }
 
 /**
@@ -141,7 +166,7 @@ export async function addRoleFlow(payload: AddRolePayload): Promise<{
     newRole: Role;
 }> {
     const { user, role } = await api.addRole(payload);
-    return { user, newRole: role };
+    return { user: normalizeUser(user, role), newRole: role };
 }
 
 /**
@@ -183,7 +208,7 @@ export async function switchRoleAndRedirect(role: Role): Promise<void> {
 
 /**
  * Logs out the user by instructing the backend to expire both cookies,
- * then redirects to /login.
+ * then redirects to the landing home page.
  */
 export async function logoutAndRedirect(): Promise<void> {
     try {

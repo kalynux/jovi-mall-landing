@@ -40,6 +40,7 @@ function FavButton({ favorite, onToggleFavorite }: Pick<ProductCardProps, "favor
       type="button"
       aria-label={favorite ? "Remove from saved" : "Save"}
       aria-pressed={favorite}
+      className="ds-pop"
       onClick={(e) => {
         e.stopPropagation();
         onToggleFavorite?.();
@@ -125,6 +126,7 @@ export function ProductCard(props: ProductCardProps) {
 
   const imageBox = (dim: { width: string | number; aspect?: string; height?: number }) => (
     <div
+      className="ds-media"
       style={{
         position: "relative",
         width: dim.width,
@@ -183,6 +185,7 @@ export function ProductCard(props: ProductCardProps) {
         <button
           type="button"
           aria-label={type === "service" ? "Book" : "Quick add"}
+          className="ds-pop"
           onClick={(e) => {
             e.stopPropagation();
             onQuickAdd();
@@ -217,6 +220,7 @@ export function ProductCard(props: ProductCardProps) {
         role="button"
         tabIndex={0}
         onKeyDown={(e) => e.key === "Enter" && onClick?.()}
+        className="ds-card lift"
         style={{
           display: "flex",
           gap: 12,
@@ -225,6 +229,7 @@ export function ProductCard(props: ProductCardProps) {
           borderRadius: "var(--radius-lg)",
           overflow: "hidden",
           cursor: "pointer",
+          boxShadow: "var(--shadow-card)",
         }}
       >
         {imageBox({ width: 118, height: 118 })}
@@ -239,7 +244,7 @@ export function ProductCard(props: ProductCardProps) {
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onClick?.()}
-      className="fadein"
+      className="fadein lift ds-card"
       style={{
         display: "flex",
         flexDirection: "column",

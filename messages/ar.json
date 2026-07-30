@@ -1,4 +1,15 @@
 {
+    "verifyEmail": {
+        "title": "التحقق من البريد الإلكتروني",
+        "verifying": "جارٍ التحقق من بريدك الإلكتروني…",
+        "successTitle": "تم التحقق من البريد الإلكتروني",
+        "successBody": "تم تأكيد عنوان بريدك الإلكتروني. يمكنك الآن تسجيل الدخول.",
+        "errorTitle": "فشل التحقق",
+        "errorBody": "رابط التحقق هذا غير صالح أو انتهت صلاحيته. يرجى طلب رابط جديد.",
+        "missingToken": "لم يتم توفير رمز التحقق.",
+        "goToLogin": "المتابعة إلى تسجيل الدخول",
+        "backToLogin": "العودة إلى تسجيل الدخول"
+    },
     "meta": {
         "langName": "العربية",
         "langCode": "ar"
@@ -489,6 +500,16 @@
         "BOOKING_ALREADY_CANCELLED": "تم إلغاء هذا الحجز بالفعل.",
         "ADMIN_NOT_FOUND": "لم يتم العثور على حساب المشرف.",
         "ADMIN_FORBIDDEN": "صلاحية المشرف مطلوبة لهذا الإجراء.",
-        "COMMAND_NOT_FOUND": "لم يتم العثور على الأمر."
+        "COMMAND_NOT_FOUND": "لم يتم العثور على الأمر.",
+        "WHATSAPP_ROLE_NOT_SUPPORTED": "واتساب غير متاح لهذا الدور.",
+        "WHATSAPP_NOT_LINKED": "حساب واتساب الخاص بك غير مرتبط.",
+        "WHATSAPP_LINK_FAILED": "فشل ربط واتساب. يرجى المحاولة مرة أخرى.",
+        "WHATSAPP_INVALID_PAYLOAD": "تم استلام رسالة واتساب غير صالحة.",
+        "WHATSAPP_POLICY_VIOLATION": "هذه الرسالة تنتهك سياسة واتساب.",
+        "WHATSAPP_PROVIDER_REJECTED": "تم رفض الرسالة من قبل واتساب.",
+        "WHATSAPP_VALIDATION_ERROR": "تعذر التحقق من رسالة واتساب.",
+        "WHATSAPP_IDEMPOTENCY_REQUIRED": "مطلوب مفتاح رسالة مكرر.",
+        "WHATSAPP_DUPLICATE_MESSAGE": "تم إرسال هذه الرسالة بالفعل.",
+        "WHATSAPP_UNSUPPORTED_MESSAGE_TYPE": "نوع الرسالة هذا غير مدعوم."
     }
 }
