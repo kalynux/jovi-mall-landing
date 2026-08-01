@@ -15,6 +15,7 @@ import RoleSelectorModal from "@/components/ui/RoleSelectorModal";
 import SectionProgressIndicator from "@/components/ui/SectionProgressIndicator";
 import AuroraBackground from "@/components/layout/AuroraBackground";
 import InteractiveNetwork from "@/components/layout/InteractiveNetwork";
+import OrbitalBackground from "@/components/layout/orbital";
 import GrainOverlay from "@/components/layout/GrainOverlay";
 import { SectionNavProvider } from "@/components/scroll/SectionNavProvider";
 import { SECTION_IDS } from "@/lib/constants";
@@ -24,9 +25,12 @@ export default function Home() {
 
   return (
     <SectionNavProvider sections={SECTION_IDS}>
-      {/* Ambient background layers (fixed, behind everything) */}
+      {/* Ambient background layers (fixed, behind everything).
+          OrbitalBackground sits after the aurora + network so it paints on top
+          of them, and before the grain so the grain still tops the stack. */}
       <AuroraBackground />
       <InteractiveNetwork />
+      <OrbitalBackground />
       <GrainOverlay />
 
       {/* Sticky Navbar */}

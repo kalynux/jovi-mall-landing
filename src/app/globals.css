@@ -573,3 +573,210 @@ html.dark,
 }
 .link-underline:hover::after, .link-underline:focus-visible::after { transform: scaleX(1); }
 @media (prefers-reduced-motion: reduce) { .link-underline::after { transition: none; } }
+
+/* ============================================================
+   OrbitalBackground — ambient "connected community" layer.
+   A fixed, non-interactive scene: brand-gradient wash, rotating
+   concentric rings, orbiting placeholder-avatar chips, a diagonal
+   light sweep, and drifting particles. All loops are transform/
+   opacity only so the layer stays on the compositor and never
+   forces a React re-render. Durations/phases arrive as inline CSS
+   custom properties from the component; geometry is viewport-vmin
+   so the scene self-centres and scales down on small screens.
+   ============================================================ */
+:root {
+  --orb-stroke:       #0DA06B;
+  --orb-wash-1:       rgba(13, 160, 107, 0.11);
+  --orb-wash-2:       rgba(245, 158, 11, 0.09);
+  --orb-particle:     #0DA06B;
+  --orb-core-bg:      rgba(255, 255, 255, 0.50);
+  --orb-core-border:  rgba(255, 255, 255, 0.65);
+  --orb-core-glow:    rgba(13, 160, 107, 0.18);
+  --orb-avatar-ring:  rgba(255, 255, 255, 0.92);
+}
+html.dark, .dark {
+  --orb-stroke:       #34D399;
+  --orb-wash-1:       rgba(34, 197, 140, 0.14);
+  --orb-wash-2:       rgba(245, 158, 11, 0.10);
+  --orb-particle:     #34D399;
+  --orb-core-bg:      rgba(28, 27, 22, 0.40);
+  --orb-core-border:  rgba(255, 255, 255, 0.10);
+  --orb-core-glow:    rgba(34, 197, 140, 0.22);
+  --orb-avatar-ring:  rgba(255, 255, 255, 0.16);
+}
+
+/* Root scene + pause hooks */
+.orb-scene { contain: strict; }
+.orb-scene[data-paused="true"] * { animation-play-state: paused !important; }
+
+.orb-parallax {
+  position: absolute;
+  inset: 0;
+  transform: translate3d(var(--par-x, 0px), var(--par-y, 0px), 0);
+  will-change: transform;
+}
+
+/* Centring helpers */
+.orb-center-item {          /* sized boxes: rings, core */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.orb-center-point {         /* zero-size anchor: avatar orbits */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+}
+
+/* ---- Gradient wash ---- */
+.orb-wash { position: absolute; inset: 0; overflow: hidden; }
+.orb-wash-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(70px);
+  will-change: transform, opacity;
+}
+.orb-wash-a {
+  top: -12%; left: 10%;
+  width: 62vmax; height: 62vmax;
+  background: radial-gradient(circle at center, var(--orb-wash-1), transparent 66%);
+  animation: orb-wash-a 26s ease-in-out infinite;
+}
+.orb-wash-b {
+  bottom: -18%; right: 4%;
+  width: 56vmax; height: 56vmax;
+  background: radial-gradient(circle at center, var(--orb-wash-2), transparent 66%);
+  animation: orb-wash-b 30s ease-in-out infinite;
+}
+@keyframes orb-wash-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(6vw, 5vh, 0) scale(1.12); }
+}
+@keyframes orb-wash-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.08); }
+  50%      { transform: translate3d(-7vw, -4vh, 0) scale(0.92); }
+}
+
+/* ---- Rings ---- */
+.orb-ring-breathe { animation: orb-breathe-ring var(--breathe) ease-in-out infinite; animation-delay: var(--breathe-delay); }
+.orb-ring-spin    { display: block; animation: orb-rotate var(--spin) linear infinite; transform-origin: center; will-change: transform; }
+@keyframes orb-breathe-ring { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+
+/* ---- Avatar orbit chain (each link is a 0-size node at the centre) ---- */
+.orb-spin, .orb-counter, .orb-arm, .orb-float, .orb-breathe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
+.orb-spin, .orb-counter { animation: orb-rotate var(--spin) linear infinite; will-change: transform; }
+.orb-float   { animation: orb-float var(--float) ease-in-out infinite; animation-delay: var(--float-delay); }
+.orb-breathe { animation: orb-breathe var(--breathe) ease-in-out infinite; animation-delay: var(--breathe-delay); }
+@keyframes orb-rotate  { to { transform: rotate(360deg); } }
+@keyframes orb-float   { 0% { transform: translateY(-6px); } 50% { transform: translateY(6px); } 100% { transform: translateY(-6px); } }
+@keyframes orb-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+
+.orb-avatar {
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 2px solid var(--orb-avatar-ring);
+  box-shadow: 0 6px 16px rgba(26, 25, 21, 0.18), 0 2px 4px rgba(26, 25, 21, 0.10);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  user-select: none;
+  opacity: 0.9;
+}
+html.dark .orb-avatar { box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4); }
+.orb-avatar span { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.22); line-height: 1; }
+
+/* ---- Glass core (adapted "centre card") ---- */
+.orb-core-wrap { width: 26vmin; height: 26vmin; max-width: 240px; max-height: 240px; }
+.orb-core {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 24px;
+  background: var(--orb-core-bg);
+  border: 1px solid var(--orb-core-border);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  box-shadow: 0 24px 60px rgba(26, 25, 21, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  opacity: 0.55;
+}
+html.dark .orb-core { box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06); }
+.orb-core-glow {
+  position: absolute;
+  inset: -30%;
+  border-radius: 9999px;
+  background: radial-gradient(circle at center, var(--orb-core-glow), transparent 70%);
+  filter: blur(24px);
+}
+
+/* ---- Light sweep ---- */
+.orb-sweep { position: absolute; inset: 0; overflow: hidden; }
+.orb-sweep-beam {
+  position: absolute;
+  top: -60%;
+  left: 0;
+  width: 34%;
+  height: 220%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.55) 50%, transparent 100%);
+  mix-blend-mode: overlay;
+  opacity: 0.07;
+  transform: translateX(-160%) rotate(16deg);
+  animation: orb-sweep var(--sweep) ease-in-out infinite;
+  will-change: transform;
+}
+html.dark .orb-sweep-beam { mix-blend-mode: screen; opacity: 0.05; }
+@keyframes orb-sweep {
+  0%   { transform: translateX(-160%) rotate(16deg); }
+  100% { transform: translateX(320%) rotate(16deg); }
+}
+
+/* ---- Particles ---- */
+.orb-particles { position: absolute; inset: 0; }
+.orb-particle {
+  position: absolute;
+  border-radius: 9999px;
+  background: var(--orb-particle);
+  opacity: var(--op-min);
+  transform: translate3d(0, 0, 0);
+  animation: orb-drift var(--drift) ease-in-out infinite;
+  animation-delay: var(--drift-delay);
+  will-change: transform, opacity;
+}
+.orb-particle-blur { filter: blur(1.5px); }
+.orb-particle-glow { box-shadow: 0 0 8px 1px color-mix(in srgb, var(--orb-particle) 60%, transparent); }
+@keyframes orb-drift {
+  0%   { transform: translate3d(0, 0, 0);                       opacity: var(--op-min); }
+  50%  { transform: translate3d(var(--dx), var(--dy), 0);       opacity: var(--op-max); }
+  100% { transform: translate3d(0, 0, 0);                       opacity: var(--op-min); }
+}
+
+/* ---- Mobile: keep the scene clearly ambient behind single-column copy. */
+@media (max-width: 767px) {
+  .orb-avatar { opacity: 0.74; }
+  .orb-core { opacity: 0.4; }
+}
+
+/* ---- Reduced-motion "still" tier: freeze every loop, keep the composed frame. */
+.orb-still .orb-wash-a,
+.orb-still .orb-wash-b,
+.orb-still .orb-ring-spin,
+.orb-still .orb-ring-breathe,
+.orb-still .orb-spin,
+.orb-still .orb-counter,
+.orb-still .orb-float,
+.orb-still .orb-breathe,
+.orb-still .orb-sweep-beam,
+.orb-still .orb-particle {
+  animation: none !important;
+}
