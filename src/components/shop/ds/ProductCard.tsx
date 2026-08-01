@@ -54,7 +54,7 @@ function FavButton({ favorite, onToggleFavorite }: Pick<ProductCardProps, "favor
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "rgba(255,255,255,0.9)",
+        background: "#FFFFFF",
         color: favorite ? "var(--danger)" : "var(--gray-600)",
         boxShadow: "var(--shadow-sm)",
       }}

@@ -155,7 +155,7 @@ function HeroConversation() {
             className="absolute -bottom-8 -left-10 z-20 flex items-center gap-2 bg-[var(--bg)] border border-[var(--border-medium)] px-3 py-2 rounded-2xl shadow-card"
             style={tilt ? { transform: "translateZ(55px)" } : undefined}
           >
-            <div className="w-6 h-6 rounded-full bg-wa/15 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-wa-soft flex items-center justify-center">
               <MessageCircle className="w-3.5 h-3.5 text-wa-dark" />
             </div>
             <div>

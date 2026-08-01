@@ -83,7 +83,7 @@ const CTAButton = forwardRef<HTMLButtonElement | HTMLAnchorElement, CTAButtonPro
       variant === "secondary" && [
         "text-[var(--text-primary)]",
         "border border-[var(--border)]",
-        "bg-[var(--surface-glass)] backdrop-blur-sm",
+        "bg-[var(--surface-glass)]",
         "hover:bg-[var(--accent-light)] hover:border-primary-400",
       ],
       variant === "ghost" && [

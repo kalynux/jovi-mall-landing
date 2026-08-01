@@ -355,7 +355,7 @@ export function WhatsAppVerificationModal({
             >
                 {/* ── Header ── */}
                 <div className="flex flex-col items-center gap-4 px-6 pt-8 pb-2 text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-wa/10 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-2xl bg-wa-soft flex items-center justify-center">
                         <MessageCircle className="w-8 h-8 text-wa-dark dark:text-wa" aria-hidden="true" />
                     </div>
                     <div className="space-y-1">

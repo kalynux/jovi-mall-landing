@@ -126,7 +126,7 @@ export default function AuthMePage() {
                   "transition-all duration-200",
                   isActive
                     ? isWa
-                      ? "border-wa/40 bg-wa/10 opacity-60 cursor-not-allowed"
+                      ? "border-wa/40 bg-wa-soft opacity-60 cursor-not-allowed"
                       : "border-primary-500/40 bg-[var(--accent-light)] opacity-60 cursor-not-allowed"
                     : "border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--bg-subtle)] hover:border-primary-400/40",
                   switching && !isSwitching && !isActive ? "opacity-50" : "",
@@ -137,7 +137,7 @@ export default function AuthMePage() {
                 <div
                   className={cn(
                     "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-                    isWa ? "bg-wa/10" : "bg-[var(--accent-light)]"
+                    isWa ? "bg-wa-soft" : "bg-[var(--accent-light)]"
                   )}
                 >
                   {isSwitching ? (

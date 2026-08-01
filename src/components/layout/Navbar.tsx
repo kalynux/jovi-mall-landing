@@ -379,11 +379,7 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
             transition={{ duration: 0.22 }}
             className="md:hidden overflow-hidden border-t border-[var(--border-medium)]"
             style={{
-              background: theme === "dark"
-                ? "rgba(5,5,12,0.97)"
-                : "rgba(255,255,255,0.98)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
+              background: theme === "dark" ? "#05050C" : "#FFFFFF",
             }}
           >
             <div className="px-4 py-5 flex flex-col gap-1">

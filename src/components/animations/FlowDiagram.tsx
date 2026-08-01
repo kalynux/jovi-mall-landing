@@ -71,7 +71,7 @@ function FlowNode({
           )}
           style={{
             background: isWa
-              ? "linear-gradient(135deg, rgba(37,211,102,0.12), rgba(18,140,126,0.08))"
+              ? "linear-gradient(135deg, color-mix(in srgb, #25D366 12%, var(--surface)), color-mix(in srgb, #128C7E 8%, var(--surface)))"
               : "var(--accent-light)",
             animationDelay: wake ? `${WAKE_BASE + index * WAKE_STEP}s` : undefined,
           }}

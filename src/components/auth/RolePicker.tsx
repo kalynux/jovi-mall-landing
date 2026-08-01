@@ -131,7 +131,7 @@ export default function RolePicker({
                   ? "opacity-50 cursor-not-allowed border-[var(--border)] bg-[var(--bg-subtle)]"
                   : isSelected
                     ? isWa
-                      ? "border-wa bg-wa/10"
+                      ? "border-wa bg-wa-soft"
                       : "border-primary-500 bg-[var(--accent-light)]"
                     : "border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--bg-subtle)] hover:border-primary-400/40",
                 !isDisabled && !isOwned && "hover:shadow-card-hover hover:-translate-y-0.5",
@@ -144,7 +144,7 @@ export default function RolePicker({
                   className={cn(
                     "text-[9px] font-display font-bold px-2 py-0.5 rounded-full",
                     isWa
-                      ? "bg-wa/10 text-wa-dark"
+                      ? "bg-wa-soft text-wa-dark"
                       : "bg-[var(--accent-light)] text-primary-600"
                   )}
                 >
@@ -165,7 +165,7 @@ export default function RolePicker({
               <div
                 className={cn(
                   "w-10 h-10 rounded-xl flex items-center justify-center mb-3",
-                  isWa ? "bg-wa/10" : "bg-[var(--accent-light)]"
+                  isWa ? "bg-wa-soft" : "bg-[var(--accent-light)]"
                 )}
               >
                 <Icon

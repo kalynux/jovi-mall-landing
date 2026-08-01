@@ -44,7 +44,7 @@ export default function CustomerWhatsAppCta({ onBack }: CustomerWhatsAppCtaProps
   return (
     <div className="flex flex-col items-center gap-5 py-2 text-center">
       {/* Icon */}
-      <div className="w-16 h-16 rounded-2xl bg-wa/10 flex items-center justify-center">
+      <div className="w-16 h-16 rounded-2xl bg-wa-soft flex items-center justify-center">
         <MessageCircle className="w-8 h-8 text-wa-dark" aria-hidden="true" />
       </div>
 

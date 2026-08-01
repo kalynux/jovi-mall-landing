@@ -153,8 +153,9 @@
   --border-medium: var(--border-strong);
   --text-primary:   var(--text-strong);
   --text-secondary: var(--text-body);
-  --surface-glass:        rgba(255, 255, 255, 0.8);
-  --surface-glass-border: rgba(255, 255, 255, 0.6);
+  /* Formerly translucent "glass" surfaces — now fully opaque. */
+  --surface-glass:        var(--surface);
+  --surface-glass-border: var(--border);
   --accent:       var(--brand);
   --accent-light: var(--brand-subtle);
   --accent-glow:  rgba(6, 133, 84, 0.25);
@@ -201,23 +202,25 @@ html.dark,
   --brand:        var(--green-500);
   --brand-hover:  var(--green-400);
   --brand-press:  var(--green-300);
-  --brand-subtle: rgba(13, 160, 107, 0.14);
-  --brand-subtle-2: rgba(13, 160, 107, 0.22);
+  /* Tints are mixed into --surface rather than layered with alpha, so every
+     icon / chip / badge fill stays fully opaque in dark mode. */
+  --brand-subtle: color-mix(in srgb, var(--green-500) 14%, var(--surface));
+  --brand-subtle-2: color-mix(in srgb, var(--green-500) 22%, var(--surface));
   --accent-gold:  var(--amber-400);
-  --accent-gold-subtle: rgba(245, 158, 11, 0.14);
+  --accent-gold-subtle: color-mix(in srgb, var(--amber-500) 14%, var(--surface));
 
   --price:        #F7F6F1;
   --price-sale:   #FCA5A5;
   --price-compare:var(--gray-500);
 
-  --success-bg: rgba(6, 133, 84, 0.16);  --success-border: rgba(13,160,107,0.34);
-  --warning-bg: rgba(245, 158, 11, 0.14);--warning-border: rgba(245,158,11,0.32);
-  --danger-bg:  rgba(239, 68, 68, 0.14); --danger-border:  rgba(239,68,68,0.32);
-  --info-bg:    rgba(59, 130, 246, 0.14);--info-border:    rgba(59,130,246,0.32);
+  --success-bg: color-mix(in srgb, var(--green-600) 16%, var(--surface));  --success-border: rgba(13,160,107,0.34);
+  --warning-bg: color-mix(in srgb, var(--amber-500) 14%, var(--surface));  --warning-border: rgba(245,158,11,0.32);
+  --danger-bg:  color-mix(in srgb, var(--red-500) 14%, var(--surface));    --danger-border:  rgba(239,68,68,0.32);
+  --info-bg:    color-mix(in srgb, var(--blue-500) 14%, var(--surface));   --info-border:    rgba(59,130,246,0.32);
 
-  --type-physical-bg: rgba(13,160,107,0.16);
-  --type-digital-bg:  rgba(99,102,241,0.18);
-  --type-service-bg:  rgba(245,158,11,0.16);
+  --type-physical-bg: color-mix(in srgb, var(--green-500) 16%, var(--surface));
+  --type-digital-bg:  color-mix(in srgb, var(--indigo-500) 18%, var(--surface));
+  --type-service-bg:  color-mix(in srgb, var(--amber-500) 16%, var(--surface));
   --star-empty: #33322A;
 
   --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.4);
@@ -230,8 +233,8 @@ html.dark,
   --shadow-brand: 0 6px 16px rgba(13, 160, 107, 0.4);
 
   /* Compat aliases (dark) */
-  --surface-glass:        rgba(28, 27, 22, 0.75);
-  --surface-glass-border: rgba(255, 255, 255, 0.08);
+  --surface-glass:        var(--surface);
+  --surface-glass-border: var(--border);
   --accent-light: var(--brand-subtle);
   --accent-glow:  rgba(13, 160, 107, 0.4);
 
@@ -301,18 +304,14 @@ html.dark,
   .section-padding { @apply py-20 px-4 sm:px-6 lg:py-28 lg:px-8; }
   .container-xl { @apply w-full max-w-7xl mx-auto; }
 
-  /* Glass surface */
+  /* Solid surface (legacy class names kept — no longer translucent) */
   .glass {
     background: var(--surface-glass);
     border: 1px solid var(--surface-glass-border);
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
   }
   .glass-strong {
     background: var(--surface-glass);
     border: 1px solid var(--surface-glass-border);
-    backdrop-filter: blur(22px) saturate(200%);
-    -webkit-backdrop-filter: blur(22px) saturate(200%);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 32px rgba(0, 0, 0, 0.12);
   }
   html.dark .glass-strong {
@@ -431,8 +430,11 @@ html.dark,
   .role-agent { --role: var(--accent-agent); }
   .role-customer { --role: var(--accent-customer); }
 
-  .bg-role-soft { background: color-mix(in srgb, var(--role) 12%, transparent); }
-  .border-role-soft { border-color: color-mix(in srgb, var(--role) 32%, transparent); }
+  /* Soft tints mix into --surface (not transparent) so icon chips stay opaque. */
+  .bg-role-soft { background: color-mix(in srgb, var(--role) 12%, var(--surface)); }
+  .border-role-soft { border-color: color-mix(in srgb, var(--role) 32%, var(--surface)); }
+  /* Opaque counterpart to the old bg-wa/10 icon fill. */
+  .bg-wa-soft { background: color-mix(in srgb, #25D366 12%, var(--surface)); }
   .shadow-role-glow { box-shadow: 0 0 40px color-mix(in srgb, var(--role) 30%, transparent); }
   .ring-role { box-shadow: 0 0 0 1px color-mix(in srgb, var(--role) 40%, transparent); }
 

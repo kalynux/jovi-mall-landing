@@ -116,13 +116,13 @@ export default function RoleSelectorModal({ isOpen, onClose }: RoleSelectorModal
                     >
                       <div className={cn(
                         "w-10 h-10 rounded-xl flex items-center justify-center mb-3",
-                        isWa ? "bg-wa/10" : "bg-[var(--accent-light)]"
+                        isWa ? "bg-wa-soft" : "bg-[var(--accent-light)]"
                       )}>
                         <Icon className={cn("w-5 h-5", isWa ? "text-wa-dark" : "text-primary-600")} />
                       </div>
                       <div className={cn(
                         "absolute top-3 right-3 text-[9px] font-display font-bold px-2 py-0.5 rounded-full",
-                        isWa ? "bg-wa/10 text-wa-dark" : "bg-[var(--accent-light)] text-primary-600"
+                        isWa ? "bg-wa-soft text-wa-dark" : "bg-[var(--accent-light)] text-primary-600"
                       )}>
                         {t(`roles.${role.id}.label` as Parameters<typeof t>[0])}
                       </div>
