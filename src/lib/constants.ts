@@ -140,16 +140,9 @@ export const TRUST_STATS = [
     { value: "15+", label: "Cities" },
 ];
 
-// ─── WhatsApp Simulation Messages ────────────────────────────────────────────
-export const CHAT_MESSAGES = [
-    { from: "customer", text: "Hi, I'm looking for wireless earbuds under ₦15,000" },
-    { from: "ai", text: "Great! 🎧 I found 3 options that match perfectly:", isTyping: false },
-    { from: "ai", text: "1. JoviBuds Pro – ₦12,500 ⭐ Best seller\n2. SoundX Lite – ₦9,999\n3. ClearTone W2 – ₦13,200", isTyping: false },
-    { from: "customer", text: "Tell me more about the JoviBuds Pro" },
-    { from: "ai", text: "JoviBuds Pro features:\n• 30hr battery life\n• Active noise cancellation\n• Fast delivery available ✅\n\nWould you like to order now?" },
-    { from: "customer", text: "Yes, order the JoviBuds Pro please!" },
-    { from: "ai", text: "✅ Order placed! Your JoviBuds Pro will arrive today between 2–5 PM. Track your delivery in this chat 📦" },
-];
+// NOTE: the customer chat script used to live here as CHAT_MESSAGES. It moved
+// into the message catalogs (`customer.chat.*`) when WhatsAppChat was
+// localised — the thread is copy, and copy belongs with the other copy.
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 export const API_BASE_URL =

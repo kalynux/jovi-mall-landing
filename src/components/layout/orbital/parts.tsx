@@ -1,7 +1,7 @@
 "use client";
 import { memo, type CSSProperties } from "react";
 import { motion } from "framer-motion";
-import type { AvatarSpec, ParticleSpec, RingSpec } from "./config";
+import type { CloudSpec, ParticleSpec, RingSpec } from "./config";
 import { EASE_OUT } from "@/lib/utils";
 
 /* Animation durations/phases are passed as CSS custom properties; the keyframes
@@ -27,7 +27,7 @@ export const ConcentricRings = memo(function ConcentricRings({ rings }: { rings:
   return (
     <>
       {rings.map((r, i) => {
-        const d = `${r.radius * 2}vmin`;
+        const d = `${r.radius * 2}vmax`;
         return (
           <div
             key={`ring-${i}`}
@@ -40,15 +40,18 @@ export const ConcentricRings = memo(function ConcentricRings({ rings }: { rings:
               viewBox="0 0 100 100"
               width="100%"
               height="100%"
-              style={{ "--spin": `${r.spin}s`, animationDirection: r.reverse ? "reverse" : "normal" } as Vars}
+              style={{ "--rate": r.rate } as Vars}
             >
+              {/* Non-scaling stroke: the hairline stays 1.2px whether the ring
+                  is 32vmax or 132vmax across, instead of thickening with radius. */}
               <circle
                 cx="50"
                 cy="50"
                 r="49"
                 fill="none"
                 stroke="var(--orb-stroke)"
-                strokeWidth="0.35"
+                strokeWidth="1.2"
+                vectorEffect="non-scaling-stroke"
                 strokeOpacity={r.opacity}
                 strokeLinecap="round"
                 pathLength="100"
@@ -62,36 +65,35 @@ export const ConcentricRings = memo(function ConcentricRings({ rings }: { rings:
   );
 });
 
-// ─── Orbiting avatars ────────────────────────────────────────────────────────
+// ─── Orbiting clouds ─────────────────────────────────────────────────────────
 const DEG = Math.PI / 180;
 
-const Avatar = memo(function Avatar({ a }: { a: AvatarSpec }) {
+const Cloud = memo(function Cloud({ c }: { c: CloudSpec }) {
   // Static orbit position (no rotation → no tilt to cancel).
-  const x = (a.radius * Math.sin(a.angle * DEG)).toFixed(3);
-  const y = (-a.radius * Math.cos(a.angle * DEG)).toFixed(3);
-  const spinDir = a.reverse ? "reverse" : "normal";
-  const counterDir = a.reverse ? "normal" : "reverse";
+  const x = (c.radius * Math.sin(c.angle * DEG)).toFixed(3);
+  const y = (-c.radius * Math.cos(c.angle * DEG)).toFixed(3);
   return (
     <div className="orb-center-point" aria-hidden="true">
-      {/* revolve the arm around the centre */}
-      <div className="orb-spin" style={{ "--spin": `${a.spin}s`, animationDirection: spinDir } as Vars}>
-        {/* place on the orbit */}
-        <div className="orb-arm" style={{ transform: `translate(${x}vmin, ${y}vmin)` }}>
-          {/* counter-rotate so the chip stays upright */}
-          <div className="orb-counter" style={{ "--spin": `${a.spin}s`, animationDirection: counterDir } as Vars}>
-            <div className="orb-float" style={{ "--float": `${a.float}s`, "--float-delay": `${a.delay}s` } as Vars}>
-              <div className="orb-breathe" style={{ "--breathe": `${a.breathe}s`, "--breathe-delay": `${a.delay}s` } as Vars}>
+      {/* revolve the arm around the centre (scroll-driven, see --orb-angle) */}
+      <div className="orb-spin" style={{ "--rate": c.rate } as Vars}>
+        {/* place on the orbit — vmax, so the outer orbits clear the corners */}
+        <div className="orb-arm" style={{ transform: `translate(${x}vmax, ${y}vmax)` }}>
+          {/* No counter-rotation link here: a radial blob is rotationally
+              symmetric, so there is no upright to preserve — which also saves a
+              promoted layer per blob. */}
+          {/* materialise / de-materialise with scroll progress */}
+          <div className="orb-reveal" style={{ "--reveal-at": c.revealAt } as Vars}>
+            <div className="orb-float" style={{ "--float": `${c.float}s`, "--float-delay": `${c.delay}s` } as Vars}>
+              <div className="orb-breathe" style={{ "--breathe": `${c.breathe}s`, "--breathe-delay": `${c.delay}s` } as Vars}>
                 <div
-                  className="orb-avatar"
+                  className="orb-cloud"
                   style={{
-                    width: `${a.size}px`,
-                    height: `${a.size}px`,
-                    backgroundImage: `linear-gradient(135deg, ${a.from} 0%, ${a.to} 100%)`,
-                    fontSize: `${Math.round(a.size * 0.34)}px`,
-                  }}
-                >
-                  <span>{a.initials}</span>
-                </div>
+                    // One var drives diameter *and* blur radius (20% of size),
+                    // so every blob stays equally soft at any scale.
+                    "--size": `${c.size}vmin`,
+                    "--tint": `radial-gradient(circle at 36% 32%, ${c.from} 0%, ${c.to} 48%, transparent 78%)`,
+                  } as Vars}
+                />
               </div>
             </div>
           </div>
@@ -101,11 +103,11 @@ const Avatar = memo(function Avatar({ a }: { a: AvatarSpec }) {
   );
 });
 
-export const OrbitingAvatars = memo(function OrbitingAvatars({ avatars }: { avatars: AvatarSpec[] }) {
+export const OrbitingClouds = memo(function OrbitingClouds({ clouds }: { clouds: CloudSpec[] }) {
   return (
     <>
-      {avatars.map((a) => (
-        <Avatar key={a.key} a={a} />
+      {clouds.map((c) => (
+        <Cloud key={c.key} c={c} />
       ))}
     </>
   );

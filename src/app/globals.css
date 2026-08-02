@@ -576,6 +576,16 @@ html.dark,
 .link-underline:hover::after, .link-underline:focus-visible::after { transform: scaleX(1); }
 @media (prefers-reduced-motion: reduce) { .link-underline::after { transition: none; } }
 
+/* Hero chat thread. The conversation is longer than the card on short viewports,
+   so it runs off the top edge the way a real chat scrolled to its latest message
+   does. Fading the first 30px means a bubble caught by that edge dissolves
+   instead of being sliced in half — which is otherwise down to luck, since the
+   cut lands wherever the current locale's text happens to wrap.
+   Standard property only: see the note on .orb-avatar's backdrop-filter. */
+.chat-thread-fade {
+  mask-image: linear-gradient(to bottom, transparent 0, #000 30px);
+}
+
 /* ============================================================
    OrbitalBackground — ambient "connected community" layer.
    A fixed, non-interactive scene: brand-gradient wash, rotating
@@ -594,7 +604,9 @@ html.dark,
   --orb-core-bg:      rgba(255, 255, 255, 0.50);
   --orb-core-border:  rgba(255, 255, 255, 0.65);
   --orb-core-glow:    rgba(13, 160, 107, 0.18);
-  --orb-avatar-ring:  rgba(255, 255, 255, 0.92);
+  /* Peak alpha of a fully-revealed cloud blob. Light backgrounds show tint more
+     readily, so this sits below the dark value. */
+  --orb-cloud-alpha:  0.30;
 }
 html.dark, .dark {
   --orb-stroke:       #34D399;
@@ -604,7 +616,7 @@ html.dark, .dark {
   --orb-core-bg:      rgba(28, 27, 22, 0.40);
   --orb-core-border:  rgba(255, 255, 255, 0.10);
   --orb-core-glow:    rgba(34, 197, 140, 0.22);
-  --orb-avatar-ring:  rgba(255, 255, 255, 0.16);
+  --orb-cloud-alpha:  0.38;
 }
 
 /* Root scene + pause hooks */
@@ -616,6 +628,17 @@ html.dark, .dark {
   inset: 0;
   transform: translate3d(var(--par-x, 0px), var(--par-y, 0px), 0);
   will-change: transform;
+  /* Content protection. The blobs are big enough to sit right behind the copy,
+     so the layer is masked down to ~20% alpha through the middle column and
+     ramps to full out at the edges and corners. That keeps the scene loud where
+     there is nothing to read and near-absent where there is. */
+  mask-image: radial-gradient(
+    ellipse 58% 52% at 50% 50%,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(0, 0, 0, 0.44) 46%,
+    rgba(0, 0, 0, 0.82) 72%,
+    #000 100%
+  );
 }
 
 /* Centring helpers */
@@ -662,42 +685,64 @@ html.dark, .dark {
   50%      { transform: translate3d(-7vw, -4vh, 0) scale(0.92); }
 }
 
+/* ---- Scroll drive ----
+   Rotation is not a timed loop: `useScrollDrive` writes --orb-angle (degrees,
+   a pure function of scrollY) on .orb-parallax and every rotating node inside
+   multiplies it by its own --rate. Scroll down → clockwise, scroll up → the
+   exact reverse, page still → radar still. --orb-p (scroll progress) drives the
+   chip reveal along the same axis, and defaults to 1 when the drive isn't
+   running so the reduced-motion tier still gets the fully composed frame. */
+/* Gain = 1/band. 4 (a 0.25-wide fade) clears the last chip's 0.72 threshold with
+   room to spare, so a fully-scrolled page reaches a fully-revealed scene. */
+.orb-scene { --orb-reveal-gain: 4; }
+
 /* ---- Rings ---- */
 .orb-ring-breathe { animation: orb-breathe-ring var(--breathe) ease-in-out infinite; animation-delay: var(--breathe-delay); }
-.orb-ring-spin    { display: block; animation: orb-rotate var(--spin) linear infinite; transform-origin: center; will-change: transform; }
+.orb-ring-spin    { display: block; transform: rotate(calc(var(--orb-angle, 0) * var(--rate, 1) * 1deg)); transform-origin: center; will-change: transform; }
 @keyframes orb-breathe-ring { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
 
-/* ---- Avatar orbit chain (each link is a 0-size node at the centre) ---- */
-.orb-spin, .orb-counter, .orb-arm, .orb-float, .orb-breathe {
+/* ---- Cloud orbit chain (each link is a 0-size node at the centre) ---- */
+.orb-spin, .orb-arm, .orb-reveal, .orb-float, .orb-breathe {
   position: absolute;
   top: 0;
   left: 0;
   transform-origin: 0 0;
 }
-.orb-spin, .orb-counter { animation: orb-rotate var(--spin) linear infinite; will-change: transform; }
+.orb-spin    { transform: rotate(calc(var(--orb-angle, 0) * var(--rate, 1) * 1deg)); will-change: transform; }
 .orb-float   { animation: orb-float var(--float) ease-in-out infinite; animation-delay: var(--float-delay); }
 .orb-breathe { animation: orb-breathe var(--breathe) ease-in-out infinite; animation-delay: var(--breathe-delay); }
-@keyframes orb-rotate  { to { transform: rotate(360deg); } }
 @keyframes orb-float   { 0% { transform: translateY(-6px); } 50% { transform: translateY(6px); } 100% { transform: translateY(-6px); } }
 @keyframes orb-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
 
-.orb-avatar {
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  border: 2px solid var(--orb-avatar-ring);
-  box-shadow: 0 6px 16px rgba(26, 25, 21, 0.18), 0 2px 4px rgba(26, 25, 21, 0.10);
-  color: #fff;
-  font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  user-select: none;
-  opacity: 0.9;
+/* Reveal: each chip condenses out of the haze as scroll progress passes its
+   --reveal-at threshold, and dissolves back when the user scrolls up. The floor
+   is what an un-revealed blob is worth at the top of the page — it multiplies
+   with .orb-cloud's own opacity, and then again with the parallax mask, so the
+   centre of a fresh page lands around 0.03–0.08 effective: present as haze,
+   nowhere near competing with the copy. */
+.orb-reveal {
+  --rev: clamp(0, calc((var(--orb-p, 1) - var(--reveal-at, 0)) * var(--orb-reveal-gain)), 1);
+  opacity: calc(0.45 + 0.55 * var(--rev));
+  transform: scale(calc(0.86 + 0.14 * var(--rev)));
 }
-html.dark .orb-avatar { box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4); }
-.orb-avatar span { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.22); line-height: 1; }
+
+/* ---- Cloud blobs ----
+   No pane, no border, no text — just a big ball of coloured light. The radial
+   tint already fades to transparent at 72%, and the blur (a fifth of the
+   diameter) dissolves whatever edge is left, so there is nothing in here that
+   can draw the eye as a *shape*. Cheaper than the frosted chips it replaces:
+   blur() rasterises once into a layer that the scroll rotation then just
+   transforms, where backdrop-filter had to re-sample the backdrop every frame. */
+.orb-cloud {
+  width: var(--size);
+  height: var(--size);
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  background-image: var(--tint);
+  filter: blur(calc(var(--size) * 0.15));
+  /* Lifts a touch while the radar is actually turning. */
+  opacity: calc(var(--orb-cloud-alpha) * (1 + 0.25 * var(--orb-drive, 0)));
+}
 
 /* ---- Glass core (adapted "centre card") ---- */
 .orb-core-wrap { width: 26vmin; height: 26vmin; max-width: 240px; max-height: 240px; }
@@ -708,8 +753,11 @@ html.dark .orb-avatar { box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), 0 2px 6px rg
   border-radius: 24px;
   background: var(--orb-core-bg);
   border: 1px solid var(--orb-core-border);
+  /* Standard property only. Turbopack's Lightning CSS pass adds the -webkit-
+     prefix for Safari from the browserslist targets; hand-writing it alongside
+     makes it drop the unprefixed declaration, which kills the blur in Chrome
+     and Firefox (they never supported the prefixed form). */
   backdrop-filter: blur(14px) saturate(150%);
-  -webkit-backdrop-filter: blur(14px) saturate(150%);
   box-shadow: 0 24px 60px rgba(26, 25, 21, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.35);
   opacity: 0.55;
 }
@@ -765,17 +813,20 @@ html.dark .orb-sweep-beam { mix-blend-mode: screen; opacity: 0.05; }
 
 /* ---- Mobile: keep the scene clearly ambient behind single-column copy. */
 @media (max-width: 767px) {
-  .orb-avatar { opacity: 0.74; }
+  /* Phones are a single column of copy over the full width — there is no "edge"
+     to hide the scene in, so pull the blobs down further. Set on .orb-scene, not
+     :root: the blobs inherit from the nearest ancestor that declares it, so this
+     beats the light/dark values without having to out-specify `html.dark`. */
+  .orb-scene { --orb-cloud-alpha: 0.26; }
   .orb-core { opacity: 0.4; }
 }
 
-/* ---- Reduced-motion "still" tier: freeze every loop, keep the composed frame. */
+/* ---- Reduced-motion "still" tier: freeze every loop, keep the composed frame.
+   The rotations need no entry here — they're driven by --orb-angle, which the
+   still tier never writes, so every node sits at its authored angle. */
 .orb-still .orb-wash-a,
 .orb-still .orb-wash-b,
-.orb-still .orb-ring-spin,
 .orb-still .orb-ring-breathe,
-.orb-still .orb-spin,
-.orb-still .orb-counter,
 .orb-still .orb-float,
 .orb-still .orb-breathe,
 .orb-still .orb-sweep-beam,

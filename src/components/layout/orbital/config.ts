@@ -19,38 +19,62 @@
 export type SceneTier = "full" | "lean" | "still";
 
 export interface RingSpec {
-  /** Radius in vmin (viewport-relative so the scene self-centres and scales). */
+  /**
+   * Radius in **vmax**, not vmin: the scene has to reach the corners of any
+   * aspect ratio, and the half-diagonal is 0.56–0.71 vmax depending on how
+   * square the viewport is. Anything sized in vmin stops at the short edge.
+   */
   radius: number;
-  /** One full rotation, in seconds (80–120s = barely-perceptible drift). */
+  /** Reference period, in seconds — the relative speed the `rate` is derived from. */
   spin: number;
   /** Rotation direction — alternated ring to ring. */
   reverse: boolean;
+  /**
+   * Scroll-driven rotation rate: degrees turned per degree of scene drive
+   * (`--orb-angle`). Signed — rings alternate direction for depth, which reads
+   * as a gyroscope rather than contradicting the overall scroll direction
+   * because the strokes sit at 7–14% opacity.
+   */
+  rate: number;
   /** Breathing (scale 1 → 1.02 → 1) period, in seconds. */
   breathe: number;
   /** Negative-delay phase offset so no two rings breathe in sync. */
   breatheDelay: number;
-  /** Dash geometry gives the thin stroke something to reveal as it rotates. */
+  /**
+   * Dash geometry, in the **0–100 space** that `pathLength="100"` normalises the
+   * circle to. Values above 100 make the first dash swallow the whole path and
+   * the ring renders solid — at which point rotating it looks like nothing is
+   * happening at all, because a solid circle is rotationally symmetric.
+   */
   dash: string;
-  /** Base stroke opacity (5–10%). */
+  /** Base stroke opacity (7–14%). */
   opacity: number;
 }
 
-export interface AvatarSpec {
+export interface CloudSpec {
   key: string;
-  initials: string;
-  /** Gradient stops (placeholder identity — swap for real avatars later). */
+  /** Gradient stops for the blob's radial tint. */
   from: string;
   to: string;
-  /** Diameter in px. */
+  /** Diameter in vmin (the blur is derived from it, at 20%). */
   size: number;
-  /** Orbit radius in vmin. */
+  /** Orbit radius in vmax — see the note on RingSpec.radius. */
   radius: number;
   /** Starting angle in degrees (position on the orbit). */
   angle: number;
-  /** One revolution, in seconds (18–45s). */
+  /** Reference period, in seconds (18–45s) — the `rate` is derived from it. */
   spin: number;
-  /** Orbit direction. */
-  reverse: boolean;
+  /**
+   * Scroll-driven orbit rate: degrees revolved per degree of scene drive
+   * (`--orb-angle`). Always positive so every blob follows the scroll direction
+   * — clockwise down, anticlockwise up. Depth comes from the speed spread.
+   */
+  rate: number;
+  /**
+   * Scroll progress (0–1) at which this blob starts materialising. Reveal is a
+   * pure function of position, so scrolling back up un-reveals it exactly.
+   */
+  revealAt: number;
   /** Vertical float period, in seconds. */
   float: number;
   /** Scale-breathe period, in seconds. */
@@ -77,7 +101,7 @@ export interface ParticleSpec {
 
 export interface TierConfig {
   rings: RingSpec[];
-  avatars: AvatarSpec[];
+  clouds: CloudSpec[];
   particles: ParticleSpec[];
   /** Whether the diagonal light sweep runs. */
   sweep: boolean;
@@ -99,89 +123,101 @@ function mulberry32(seed: number): () => number {
 
 const round = (n: number, p = 2) => Math.round(n * 10 ** p) / 10 ** p;
 
-// ─── Placeholder avatar identities ───────────────────────────────────────────
-// Generic, clearly-placeholder gradient chips (initials, not photos) so nothing
-// implies a real customer count. `PLACEHOLDER_AVATARS` is exported so callers
-// can pass their own set once real imagery exists.
-export interface AvatarSeed {
-  initials: string;
+// ─── Cloud tints ─────────────────────────────────────────────────────────────
+// The blobs carry no identity — no initials, no photos, nothing that implies a
+// customer count. They are just coloured light. `CLOUD_TINTS` is exported so a
+// caller can swap the palette without touching the geometry.
+export interface CloudTint {
   from: string;
   to: string;
 }
 
-export const PLACEHOLDER_AVATARS: AvatarSeed[] = [
-  { initials: "AK", from: "#22BD82", to: "#068554" }, // Jovi green
-  { initials: "NM", from: "#2DD4BF", to: "#0D9488" }, // teal
-  { initials: "OE", from: "#FBBF24", to: "#D97706" }, // amber
-  { initials: "TS", from: "#57D6A0", to: "#0DA06B" }, // light green
-  { initials: "BL", from: "#60A5FA", to: "#2563EB" }, // blue
-  { initials: "FA", from: "#34D399", to: "#059669" }, // emerald
-  { initials: "JD", from: "#FCD34D", to: "#B45309" }, // gold
-  { initials: "RM", from: "#5EEAD4", to: "#0F766E" }, // aqua
-  { initials: "IK", from: "#4ADE80", to: "#166534" }, // green
-  { initials: "PA", from: "#93E9C1", to: "#068554" }, // mint
-  { initials: "CN", from: "#7DD3FC", to: "#0369A1" }, // sky
-  { initials: "YB", from: "#FBBF24", to: "#0DA06B" }, // amber→green
-  { initials: "DL", from: "#22BD82", to: "#14B8A6" }, // green→teal
-  { initials: "MW", from: "#F59E0B", to: "#92400E" }, // deep amber
+export const CLOUD_TINTS: CloudTint[] = [
+  { from: "#22BD82", to: "#068554" }, // Jovi green
+  { from: "#2DD4BF", to: "#0D9488" }, // teal
+  { from: "#FBBF24", to: "#D97706" }, // amber
+  { from: "#57D6A0", to: "#0DA06B" }, // light green
+  { from: "#60A5FA", to: "#2563EB" }, // blue
+  { from: "#34D399", to: "#059669" }, // emerald
+  { from: "#FCD34D", to: "#B45309" }, // gold
+  { from: "#5EEAD4", to: "#0F766E" }, // aqua
+  { from: "#4ADE80", to: "#166534" }, // green
+  { from: "#93E9C1", to: "#068554" }, // mint
+  { from: "#7DD3FC", to: "#0369A1" }, // sky
+  { from: "#FBBF24", to: "#0DA06B" }, // amber→green
+  { from: "#22BD82", to: "#14B8A6" }, // green→teal
+  { from: "#F59E0B", to: "#92400E" }, // deep amber
 ];
 
 // ─── Tier builders ───────────────────────────────────────────────────────────
+// Rotation is scroll-driven (see useScrollDrive): every rotating node turns by
+// `--orb-angle × rate`. The reference periods below no longer set a wall-clock
+// speed — they only fix how fast each node turns *relative* to the others, so
+// the scene keeps the layered feel it had as a timed animation.
+const RING_RATE_REF = 40;
+const CLOUD_RATE_REF = 30;
+/** Last blob finishes revealing at this scroll progress (leaves a settled tail). */
+const REVEAL_SPAN = 0.72;
+
 function buildRings(count: number, seed: number): RingSpec[] {
   const rng = mulberry32(seed);
-  // Radii spread from just outside the core to near the viewport edge.
+  // Radii spread from behind the copy out past the corners (vmax — see RingSpec).
   const rings: RingSpec[] = [];
-  const inner = 14;
-  const outer = 50;
+  const inner = 16;
+  const outer = 66;
   for (let i = 0; i < count; i++) {
     const t = count === 1 ? 0 : i / (count - 1);
     const radius = round(inner + (outer - inner) * t, 1);
     const spin = round(80 + rng() * 40, 1); // 80–120s
     const breathe = round(8 + rng() * 2, 2); // 8–10s
-    // A single long arc + gap so the thin ring visibly (but calmly) rotates.
-    const circumference = 2 * Math.PI * radius;
-    const dashOn = round(circumference * (0.5 + rng() * 0.28), 1);
-    const dashOff = round(circumference - dashOn, 1);
+    // A single long arc + gap, in the normalised 0–100 pathLength space, so the
+    // ring is visibly an arc and its rotation actually reads.
+    const dashOn = round(46 + rng() * 30, 1); // 46–76% of the circle
+    const dashOff = round(100 - dashOn, 1);
+    const reverse = i % 2 === 1;
     rings.push({
       radius,
       spin,
-      reverse: i % 2 === 1,
+      reverse,
+      rate: round((RING_RATE_REF / spin) * (reverse ? -1 : 1), 3),
       breathe,
       breatheDelay: round(-rng() * breathe, 2),
       dash: `${dashOn} ${dashOff}`,
-      opacity: round(0.05 + rng() * 0.05, 3), // 5–10%
+      opacity: round(0.07 + rng() * 0.07, 3), // 7–14%
     });
   }
   return rings;
 }
 
-function buildAvatars(
+function buildClouds(
   radii: number[],
   perRing: number[],
   seed: number,
   sizeRange: [number, number]
-): AvatarSpec[] {
+): CloudSpec[] {
   const rng = mulberry32(seed);
-  const out: AvatarSpec[] = [];
+  const out: CloudSpec[] = [];
+  // Blobs reveal in build order — inner ring first, then outward — so scrolling
+  // down grows the field from the centre toward the corners.
+  const total = perRing.reduce((a, b) => a + b, 0);
   let idx = 0;
   radii.forEach((radius, ring) => {
     const n = perRing[ring];
     const spin = round(18 + rng() * 27, 1); // 18–45s
-    const reverse = ring % 2 === 1;
     const angleOffset = rng() * 360;
     for (let k = 0; k < n; k++) {
-      const seed3 = PLACEHOLDER_AVATARS[idx % PLACEHOLDER_AVATARS.length];
+      const tint = CLOUD_TINTS[idx % CLOUD_TINTS.length];
       const [minS, maxS] = sizeRange;
       out.push({
-        key: `av-${idx}`,
-        initials: seed3.initials,
-        from: seed3.from,
-        to: seed3.to,
-        size: Math.round(minS + rng() * (maxS - minS)),
+        key: `cl-${idx}`,
+        from: tint.from,
+        to: tint.to,
+        size: round(minS + rng() * (maxS - minS), 1),
         radius,
         angle: round((360 / n) * k + angleOffset, 1),
         spin,
-        reverse,
+        rate: round(CLOUD_RATE_REF / spin, 3),
+        revealAt: round((idx / Math.max(total - 1, 1)) * REVEAL_SPAN, 3),
         float: round(4 + rng() * 3, 2), // 4–7s
         breathe: round(5 + rng() * 3, 2), // 5–8s
         delay: round(-rng() * spin, 2),
@@ -214,9 +250,12 @@ function buildParticles(count: number, seed: number): ParticleSpec[] {
 }
 
 // Built once at module load (pure + deterministic).
+// Orbit radii are vmax and run out to 64 — past the 0.56–0.71 vmax half-diagonal
+// on most screens — so the outermost blobs sweep through the corners and bleed
+// off the edges rather than describing a neat circle inside the frame.
 const FULL: TierConfig = {
   rings: buildRings(6, 1201),
-  avatars: buildAvatars([22, 30, 38, 46], [3, 3, 3, 3], 4207, [40, 64]),
+  clouds: buildClouds([22, 36, 50, 64], [3, 3, 3, 3], 4207, [26, 48]),
   particles: buildParticles(30, 9109),
   sweep: true,
   parallax: 26,
@@ -224,9 +263,9 @@ const FULL: TierConfig = {
 
 const LEAN: TierConfig = {
   rings: buildRings(3, 3307),
-  // Smaller chips on wider orbits so they hug the edges and stay out of the
-  // single-column copy on phones (Jovi's primary, mobile-first audience).
-  avatars: buildAvatars([32, 48], [3, 3], 6607, [30, 42]),
+  // Fewer, proportionally larger blobs on phones — vmin is the short edge there,
+  // so the same vmin size covers much more of the (narrow) screen.
+  clouds: buildClouds([30, 56], [3, 3], 6607, [30, 54]),
   particles: [],
   sweep: false,
   parallax: 0,
@@ -235,7 +274,7 @@ const LEAN: TierConfig = {
 const STILL: TierConfig = {
   // Same geometry as lean, but the components skip every loop for this tier.
   rings: buildRings(4, 3307),
-  avatars: buildAvatars([24, 38], [3, 3], 6607, [36, 52]),
+  clouds: buildClouds([26, 50], [3, 3], 6607, [30, 52]),
   particles: [],
   sweep: false,
   parallax: 0,

@@ -3,14 +3,14 @@ import { useRef } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { TIER_CONFIG } from "./config";
-import { useMouseParallax, useSceneTier, useTabHidden } from "./hooks";
+import { useMouseParallax, useSceneTier, useScrollDrive, useTabHidden } from "./hooks";
 import {
   ConcentricRings,
   FloatingParticles,
-  GlassCore,
+  // GlassCore,   ← re-enable alongside the <GlassCore /> line below
   GradientWash,
   LightSweep,
-  OrbitingAvatars,
+  OrbitingClouds,
 } from "./parts";
 
 export interface OrbitalBackgroundProps {
@@ -25,17 +25,29 @@ export interface OrbitalBackgroundProps {
   zClassName?: string;
 }
 
+/** Degrees of scene rotation per pixel scrolled (0 disables the scroll drive). */
+const SCROLL_DEG_PER_PX = 0.06;
+
 /**
  * OrbitalBackground — a fixed, non-interactive ambient layer: slowly shifting
- * brand-gradient wash, concentric rotating rings, orbiting placeholder-avatar
- * chips, a diagonal light sweep, and drifting particles, all centred on the
- * viewport with a subtle pointer parallax.
+ * brand-gradient wash, concentric rings, orbiting cloud blobs, a diagonal light
+ * sweep, and drifting particles, all centred on the viewport with a subtle
+ * pointer parallax.
+ *
+ * The geometry is sized in vmax and runs past the viewport half-diagonal, so the
+ * scene fills the whole frame including the corners. A radial mask on the
+ * parallax layer thins it out behind the centre column, where the copy lives.
+ *
+ * The rotation is *scroll-driven*: the radar turns clockwise as the page scrolls
+ * down, unwinds anticlockwise on the way back up, and rests whenever the page
+ * does (see `useScrollDrive`). The chips reveal along the same axis, so scrolling
+ * up reverts the scene through exactly the states it came through.
  *
  * It renders nothing until the client resolves a fidelity tier (avoids
  * hydration mismatch), scales itself down on mobile / entry-level devices, and
- * collapses to a motionless composed frame under prefers-reduced-motion. Every
- * continuous loop is pure CSS (transform/opacity only) so the component never
- * re-renders after mount and stays on the compositor.
+ * collapses to a motionless composed frame under prefers-reduced-motion. The
+ * remaining ambient loops are pure CSS (transform/opacity only) so the component
+ * never re-renders after mount and stays on the compositor.
  */
 export default function OrbitalBackground({
   className,
@@ -45,9 +57,12 @@ export default function OrbitalBackground({
   const parallaxRef = useRef<HTMLDivElement>(null);
   const hidden = useTabHidden();
 
-  // Hooks must run every render; the parallax hook no-ops when travel is 0.
+  // Hooks must run every render; both no-op when their travel/rate is 0. They
+  // share the parallax node: everything that reads the drive vars lives inside
+  // it, so the per-frame style invalidation skips the particles and the wash.
   const cfg = tier ? TIER_CONFIG[tier] : null;
   useMouseParallax(parallaxRef, cfg?.parallax ?? 0);
+  useScrollDrive(parallaxRef, tier && tier !== "still" ? SCROLL_DEG_PER_PX : 0);
 
   if (!tier || !cfg) return null;
   const animate = tier !== "still";
@@ -61,6 +76,7 @@ export default function OrbitalBackground({
         zClassName,
         className
       )}
+      data-tier={tier}
       data-paused={hidden ? "true" : "false"}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -70,8 +86,8 @@ export default function OrbitalBackground({
 
       <div ref={parallaxRef} className="orb-parallax">
         <ConcentricRings rings={cfg.rings} />
-        <GlassCore animate={animate} />
-        <OrbitingAvatars avatars={cfg.avatars} />
+        {/* <GlassCore animate={animate} /> */}
+        <OrbitingClouds clouds={cfg.clouds} />
       </div>
 
       {cfg.sweep && animate && <LightSweep duration={15} />}

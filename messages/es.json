@@ -58,8 +58,14 @@
         "orderDetail": "₦ 12.500 · Llega hoy 🚚",
         "chatCustomer1": "Busco auriculares inalámbricos por menos de ₦15k 🎧",
         "chatAI1": "¡Encontré 3 opciones perfectas! El JoviBuds Pro (₦12.500) es el más vendido ⭐",
-        "chatCustomer2": "¡Sí! Pedir el JoviBuds Pro por favor",
-        "chatAI2": "✅ ¡Listo! Llega antes de las 15h de hoy 🚀",
+        "chatCustomer2": "¿Cuánto dura la batería?",
+        "chatAI2": "7 horas por carga, 28 con el estuche — e incluye 1 año de garantía 🔋",
+        "chatCustomer3": "Genial 👌 ¿Entregan hoy en Lagos?",
+        "chatAI3": "Sí — el mismo día en todo Lagos por ₦1.000 si pides antes de las 13h 🛵",
+        "chatCustomer4": "¡Sí! Pedir el JoviBuds Pro por favor",
+        "chatAI4": "¡Perfecto! 🎉 ¿Mobile Money o pago contra entrega?",
+        "chatCustomer5": "Mobile Money",
+        "chatAI5": "✅ ¡Listo! Llega antes de las 15h de hoy 🚀",
         "whatsAppOnline": "en línea",
         "scroll": "Desplazar"
     },
@@ -153,6 +159,24 @@
             "deliveryTitle": "Entrega rápida",
             "deliveryDesc": "Disponible en las principales ciudades cerca de ti"
         },
+        "chat": {
+            "headerRole": "Asistente de compras IA",
+            "placeholder": "Escribe un mensaje...",
+            "you": "Tú",
+            "ai": "Jovi IA",
+            "now": "ahora",
+            "m1": "¡Hola! Busco auriculares inalámbricos por menos de ₦15.000 🎧",
+            "m2": "Tres opciones ideales — este es nuestro más vendido ⭐",
+            "m3": "¿Cuánto dura la batería?",
+            "m4": "7 horas con una carga, 28 con el estuche — y un año de garantía 🔋",
+            "m5": "Perfecto. Me lo llevo ✅",
+            "m6": "¡Pedido confirmado! Llega hoy entre las 2 y las 5 PM. Síguelo aquí mismo 📦",
+            "productName": "JoviBuds Pro",
+            "productMeta": "Envío gratis · En stock",
+            "productPrice": "₦ 12.500",
+            "orderBadge": "Llega hoy",
+            "orderDetail": "₦ 12.500 · 2–5 PM 🛵"
+        },
         "whatsapp": {
             "cta": "Comprar en WhatsApp",
             "previewWelcome": "👋 ¡Bienvenido a Jovi Mall!",
@@ -191,7 +215,8 @@
             "chat2AI": "Aquí hay 5 regalos perfectos por menos de ₦15k — ¡los más vendidos! 🎉",
             "inputPlaceholder": "Mensaje...",
             "earnedBadge": "+₦12.500 ganados",
-            "aiActiveBadge": "IA activa ✦"
+            "aiActiveBadge": "IA activa ✦",
+            "lowSignalNote": "Sigue enviando en 2G"
         }
     },
     "trust": {
@@ -240,7 +265,26 @@
             "eta": "Llegada",
             "online": "En línea",
             "enRoute": "En ruta",
-            "idle": "Inactivo"
+            "idle": "Inactivo",
+            "deviceRail": "Dispositivo de vista previa",
+            "desktop": "Escritorio",
+            "tablet": "Tableta",
+            "phone": "Móvil",
+            "capDesktop": "La consola completa, en cualquier navegador",
+            "capTablet": "Se adapta hasta el formato tableta",
+            "capPhone": "Y una app nativa para iOS y Android",
+            "live": "En vivo",
+            "toastOrder": "Nuevo pedido · ₦ 2.450",
+            "toastDispatch": "Asignado al repartidor más cercano",
+            "toastDelivered": "Entregado · +₦ 1.200",
+            "stRevenue": "Ingresos",
+            "stOrders": "Pedidos",
+            "stProducts": "Productos",
+            "stDeliveries": "Entregas",
+            "stAgents": "Repartidores",
+            "stEarnings": "Ganancias",
+            "stDelivered": "Entregados",
+            "stRating": "Valoración"
         }
     },
     "finalCta": {

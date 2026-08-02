@@ -13,6 +13,7 @@ import {
 import { MessageCircle, Zap, Bot, CheckCheck } from "lucide-react";
 import CTAButton from "@/components/ui/CTAButton";
 import { BRAND } from "@/lib/constants";
+import { useSignatureReducedMotion } from "@/lib/reduced-motion";
 import { useTranslations } from "next-intl";
 
 interface HeroSectionProps {
@@ -30,8 +31,13 @@ interface HeroSectionProps {
  */
 function HeroConversation() {
   const t = useTranslations("hero");
-  const shouldReduce = useReducedMotion();
+  // Signature surface: the pointer interaction and the message timeline are the
+  // whole point of the hero, so they survive an OS reduced-motion setting. See
+  // lib/reduced-motion.ts for why, and for the switch that hands it back.
+  const shouldReduce = useSignatureReducedMotion();
 
+  // A full pre-sale exchange, not just an order: spec question, delivery
+  // question, then payment choice. Keys are in conversation order.
   const messages = useMemo(
     () =>
       [
@@ -39,6 +45,12 @@ function HeroConversation() {
         { from: "ai", text: t("chatAI1") },
         { from: "customer", text: t("chatCustomer2") },
         { from: "ai", text: t("chatAI2") },
+        { from: "customer", text: t("chatCustomer3") },
+        { from: "ai", text: t("chatAI3") },
+        { from: "customer", text: t("chatCustomer4") },
+        { from: "ai", text: t("chatAI4") },
+        { from: "customer", text: t("chatCustomer5") },
+        { from: "ai", text: t("chatAI5") },
       ] as const,
     [t]
   );
@@ -47,15 +59,36 @@ function HeroConversation() {
   const [typing, setTyping] = useState(false);
   const [done, setDone] = useState(shouldReduce);
 
+  /** How long the finished thread rests with the Order Confirmed badge up. */
+  const ROUND_PAUSE = 5000;
+  /** Beat between clearing the thread and the first message of the next round. */
+  const LEAD_IN = 450;
+
   useEffect(() => {
     if (shouldReduce) return;
     let i = 0;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    const after = (fn: () => void, ms: number) => timers.push(setTimeout(fn, ms));
+    // Exactly one timeout is ever pending — the sequence is strictly serial — so
+    // this holds a single handle rather than an array. An array would grow for as
+    // long as the page is open, since the loop never ends.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const after = (fn: () => void, ms: number) => {
+      timer = setTimeout(fn, ms);
+    };
 
     const next = () => {
       if (i >= messages.length) {
-        after(() => setDone(true), 350);
+        after(() => {
+          setDone(true);
+          // Hold on the payoff, then wipe the thread and run it again. The badge
+          // and the bubbles animate out together and the card refills from empty,
+          // so the loop reads as a new conversation rather than a jump cut.
+          after(() => {
+            setDone(false);
+            setCount(0);
+            i = 0;
+            after(next, LEAD_IN);
+          }, ROUND_PAUSE);
+        }, 350);
         return;
       }
       if (messages[i].from === "ai") {
@@ -63,16 +96,18 @@ function HeroConversation() {
         after(() => {
           setTyping(false);
           setCount(++i);
-          after(next, 850);
-        }, 1100);
+          after(next, 550);
+        }, 750);
       } else {
         setCount(++i);
-        after(next, 1250);
+        after(next, 750);
       }
     };
 
-    after(next, 550);
-    return () => timers.forEach(clearTimeout);
+    // Paced so ten messages still resolve in ~10s: at the original timings a
+    // conversation this long took 16s to reach the Order Confirmed payoff.
+    after(next, LEAD_IN);
+    return () => clearTimeout(timer);
   }, [messages, shouldReduce]);
 
   // ── Tactile 3D: the card tilts toward the pointer (or device tilt on mobile),
@@ -89,21 +124,53 @@ function HeroConversation() {
 
   const glare = useMotionTemplate`radial-gradient(120% 90% at ${glareX}% ${glareY}%, rgba(255,255,255,0.35), rgba(255,255,255,0) 60%)`;
 
+  // ── Oblique glide. The two floating badges sit on the card's NE–SW diagonal
+  // (AI label pinned top-right, order badge bottom-left), so that diagonal *is*
+  // the travel axis: pointer input is projected onto it, the card slides along
+  // it, and the badges slide back down it. The card therefore closes the gap
+  // with one badge exactly as it opens the gap with the other. Travel distances
+  // are signed — negative is "against the card" — and scale with each layer's
+  // translateZ, so the badge that floats highest reacts hardest.
+  // Travel is capped by collision, not by taste: both badges already overlap the
+  // card slightly at rest, and counter-travel closes that gap on one side of the
+  // sweep. At these distances the order badge stops inside the card's bottom
+  // padding instead of riding up over the last message bubble.
+  const AXIS = { x: Math.SQRT1_2, y: -Math.SQRT1_2 }; // ↗ positive, ↙ negative
+  const CHAT_TRAVEL = 13;
+  const AI_TRAVEL = -15;
+  const ORDER_TRAVEL = -10;
+
+  const glide = useMotionValue(0); // −1…1 along AXIS
+  const sGlide = useSpring(glide, { stiffness: 140, damping: 18, mass: 0.5 });
+
+  const chatX = useTransform(sGlide, (v) => v * CHAT_TRAVEL * AXIS.x);
+  const chatY = useTransform(sGlide, (v) => v * CHAT_TRAVEL * AXIS.y);
+  const aiX = useTransform(sGlide, (v) => v * AI_TRAVEL * AXIS.x);
+  const aiY = useTransform(sGlide, (v) => v * AI_TRAVEL * AXIS.y);
+  const orderX = useTransform(sGlide, (v) => v * ORDER_TRAVEL * AXIS.x);
+  const orderY = useTransform(sGlide, (v) => v * ORDER_TRAVEL * AXIS.y);
+
   const onPointerMove = (e: React.PointerEvent) => {
     if (!tilt || e.pointerType === "touch") return;
     const r = e.currentTarget.getBoundingClientRect();
     const px = (e.clientX - r.left) / r.width; // 0..1
     const py = (e.clientY - r.top) / r.height; // 0..1
-    ry.set((px - 0.5) * 2 * MAX_TILT);
-    rx.set((0.5 - py) * 2 * MAX_TILT);
+    const nx = (px - 0.5) * 2; // −1..1
+    const ny = (py - 0.5) * 2;
+    ry.set(nx * MAX_TILT);
+    rx.set(-ny * MAX_TILT);
     glareX.set(px * 100);
     glareY.set(py * 100);
+    // Project the pointer onto the diagonal; clamped so the corners don't
+    // overshoot the ±1 the travel distances are calibrated against.
+    glide.set(Math.max(-1, Math.min(1, nx * AXIS.x + ny * AXIS.y)));
   };
   const onPointerLeave = () => {
     rx.set(0);
     ry.set(0);
     glareX.set(50);
     glareY.set(0);
+    glide.set(0);
   };
 
   // Gyroscope tilt on mobile (Android fires without a permission prompt; where it
@@ -130,11 +197,17 @@ function HeroConversation() {
   return (
     <div className="[perspective:1200px]" onPointerMove={onPointerMove} onPointerLeave={onPointerLeave}>
       <motion.div
-        className="relative w-full max-w-[300px] sm:max-w-[340px] [transform-style:preserve-3d]"
+        className="relative w-full max-w-[336px] sm:max-w-[384px] [transform-style:preserve-3d]"
         style={tilt ? { rotateX: srx, rotateY: sry } : undefined}
       >
-      {/* Floating AI label — deepest layer, floats forward */}
-      <div className="absolute -top-6 -right-4 z-20" style={tilt ? { transform: "translateZ(70px)" } : undefined}>
+      {/* Floating AI label — highest layer, so it counter-glides hardest. The
+          outer node owns the parallax, the inner one keeps its idle float. */}
+      {/* Below ~420px the badges tuck inside the card: the wider card leaves them
+          no room to float past its corners, and the section clips overflow. */}
+      <motion.div
+        className="absolute -top-6 right-3 min-[420px]:-right-4 z-20"
+        style={tilt ? { z: 70, x: aiX, y: aiY } : undefined}
+      >
         <motion.div
           animate={{ y: shouldReduce ? 0 : [-6, 6, -6] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -143,33 +216,47 @@ function HeroConversation() {
           <Bot className="w-3.5 h-3.5" />
           {t("aiLabel")}
         </motion.div>
-      </div>
+      </motion.div>
 
       {/* Order confirmed badge — lands only when the conversation resolves */}
       <AnimatePresence>
         {done && (
+          // Outer node: parallax only. The landing animation below owns `y`, so
+          // the two cannot share a node without fighting over it.
           <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.45, ease: [0.34, 1.4, 0.64, 1] }}
-            className="absolute -bottom-8 -left-10 z-20 flex items-center gap-2 bg-[var(--bg)] border border-[var(--border-medium)] px-3 py-2 rounded-2xl shadow-card"
-            style={tilt ? { transform: "translateZ(55px)" } : undefined}
+            // -bottom-12, not -8: at -8 the badge already overlapped the card by
+            // ~11px at rest, which the counter-glide then pushed onto the copy.
+            className="absolute -bottom-12 left-2 min-[420px]:-left-10 z-20"
+            // Exit lives on the node AnimatePresence tracks; the landing
+            // animation stays on the inner node, which owns `y`.
+            exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.3 } }}
+            style={tilt ? { z: 55, x: orderX, y: orderY } : undefined}
           >
-            <div className="w-6 h-6 rounded-full bg-wa-soft flex items-center justify-center">
-              <MessageCircle className="w-3.5 h-3.5 text-wa-dark" />
-            </div>
-            <div>
-              <div className="text-[10px] font-display font-bold text-[var(--text-primary)]">{t("orderConfirmed")}</div>
-              <div className="text-[9px] text-[var(--text-muted)]">{t("orderDetail")}</div>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.45, ease: [0.34, 1.4, 0.64, 1] }}
+              className="flex items-center gap-2 bg-[var(--bg)] border border-[var(--border-medium)] px-3 py-2 rounded-2xl shadow-card"
+            >
+              <div className="w-6 h-6 rounded-full bg-wa-soft flex items-center justify-center">
+                <MessageCircle className="w-3.5 h-3.5 text-wa-dark" />
+              </div>
+              <div>
+                <div className="text-[10px] font-display font-bold text-[var(--text-primary)]">{t("orderConfirmed")}</div>
+                <div className="text-[9px] text-[var(--text-muted)]">{t("orderDetail")}</div>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Chat window */}
-      <div
-        className="relative rounded-3xl overflow-hidden border-[3px] border-black/10 shadow-2xl bg-[#ece5dd]"
-        style={tilt ? { transform: "translateZ(20px)" } : undefined}
+      {/* Chat window — glides along the diagonal, the badges glide back down it.
+          Height is viewport-relative so the card fills ~65% of the hero's right
+          column on desktop, with a floor and a ceiling so it neither collapses on
+          a short laptop nor outgrows the section on a tall monitor. */}
+      <motion.div
+        className="relative flex flex-col h-[clamp(360px,50svh,440px)] lg:h-[clamp(440px,65svh,620px)] rounded-3xl overflow-hidden border-[3px] border-black/10 shadow-2xl bg-[#ece5dd]"
+        style={tilt ? { z: 20, x: chatX, y: chatY } : undefined}
       >
         {/* Moving glass glare that tracks the pointer across the card */}
         {tilt && (
@@ -180,7 +267,7 @@ function HeroConversation() {
           />
         )}
         {/* WhatsApp header */}
-        <div className="bg-[#128C7E] px-4 py-3 flex items-center gap-3">
+        <div className="shrink-0 bg-[#128C7E] px-4 py-3 flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
             <span className="text-white font-bold text-sm">J</span>
           </div>
@@ -193,8 +280,11 @@ function HeroConversation() {
           </div>
         </div>
 
-        {/* Chat bubbles */}
-        <div className="p-3 space-y-2 min-h-[180px] flex flex-col justify-end">
+        {/* Chat bubbles. min-h-0 lets this flex child actually shrink (its default
+            min-height:auto would otherwise push past the card), and justify-end
+            keeps the thread pinned to the bottom the way a real chat sits — so a
+            long conversation runs off the top edge instead of overflowing. */}
+        <div className="chat-thread-fade flex-1 min-h-0 overflow-hidden p-3 space-y-2 flex flex-col justify-end">
           <AnimatePresence initial={false}>
             {messages.slice(0, count).map((msg, i) => {
               const isCustomer = msg.from === "customer";
@@ -205,6 +295,9 @@ function HeroConversation() {
                   key={i}
                   initial={{ opacity: 0, y: 8, scale: 0.94 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
+                  // On reset every bubble unmounts at once; fading them out is
+                  // what makes the loop read as the thread clearing.
+                  exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.28 } }}
                   transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
                   className={`flex ${isCustomer ? "justify-end" : "justify-start"}`}
                 >
@@ -244,7 +337,7 @@ function HeroConversation() {
             )}
           </AnimatePresence>
         </div>
-      </div>
+      </motion.div>
       </motion.div>
     </div>
   );

@@ -58,8 +58,14 @@
         "orderDetail": "₦ 12,500 · Arriving today 🚚",
         "chatCustomer1": "I need wireless earbuds under ₦15k 🎧",
         "chatAI1": "Found 3 perfect matches! The JoviBuds Pro (₦12,500) is our bestseller ⭐",
-        "chatCustomer2": "Yes! Order the JoviBuds Pro please",
-        "chatAI2": "✅ Done! Arriving by 3PM today 🚀",
+        "chatCustomer2": "How long does the battery last?",
+        "chatAI2": "7 hours on one charge, 28 with the case — and it ships with a 1-year warranty 🔋",
+        "chatCustomer3": "Nice 👌 Can you deliver to Lagos today?",
+        "chatAI3": "Yes — same-day anywhere in Lagos for ₦1,000 if you order before 1PM 🛵",
+        "chatCustomer4": "Yes! Order the JoviBuds Pro please",
+        "chatAI4": "Perfect 🎉 Mobile Money or pay on delivery?",
+        "chatCustomer5": "Mobile Money",
+        "chatAI5": "✅ Done! Arriving by 3PM today 🚀",
         "whatsAppOnline": "online",
         "scroll": "Scroll"
     },
@@ -153,6 +159,24 @@
             "deliveryTitle": "Fast delivery",
             "deliveryDesc": "Available in major cities near you"
         },
+        "chat": {
+            "headerRole": "AI Shopping Assistant",
+            "placeholder": "Type a message...",
+            "you": "You",
+            "ai": "Jovi AI",
+            "now": "now",
+            "m1": "Hi! I need wireless earbuds under ₦15,000 🎧",
+            "m2": "Three great matches — this one is our bestseller ⭐",
+            "m3": "How long does the battery last?",
+            "m4": "7 hours on one charge, 28 with the case — and a 1-year warranty 🔋",
+            "m5": "Perfect. I'll take it ✅",
+            "m6": "Order placed! Arriving today between 2–5 PM. Track it right here 📦",
+            "productName": "JoviBuds Pro",
+            "productMeta": "Free delivery · In stock",
+            "productPrice": "₦ 12,500",
+            "orderBadge": "Arriving today",
+            "orderDetail": "₦ 12,500 · 2–5 PM 🛵"
+        },
         "whatsapp": {
             "cta": "Start Shopping on WhatsApp",
             "previewWelcome": "👋 Welcome to Jovi Mall!",
@@ -191,7 +215,8 @@
             "chat2AI": "Here are 5 perfect gifts under ₦15k — featuring top sellers! 🎉",
             "inputPlaceholder": "Message...",
             "earnedBadge": "+₦12,500 earned",
-            "aiActiveBadge": "AI Active ✦"
+            "aiActiveBadge": "AI Active ✦",
+            "lowSignalNote": "Still sending on 2G"
         }
     },
     "trust": {
@@ -240,7 +265,26 @@
             "eta": "ETA",
             "online": "Online",
             "enRoute": "En route",
-            "idle": "Idle"
+            "idle": "Idle",
+            "deviceRail": "Preview device",
+            "desktop": "Desktop",
+            "tablet": "Tablet",
+            "phone": "Phone",
+            "capDesktop": "The full console, in any browser",
+            "capTablet": "Reflows all the way down to tablet",
+            "capPhone": "And a native app for iOS & Android",
+            "live": "Live",
+            "toastOrder": "New order · ₦ 2,450",
+            "toastDispatch": "Dispatched to nearest agent",
+            "toastDelivered": "Delivered · +₦ 1,200",
+            "stRevenue": "Revenue",
+            "stOrders": "Orders",
+            "stProducts": "Products",
+            "stDeliveries": "Deliveries",
+            "stAgents": "Agents",
+            "stEarnings": "Earnings",
+            "stDelivered": "Delivered",
+            "stRating": "Rating"
         }
     },
     "finalCta": {
