@@ -55,18 +55,37 @@ function HeroConversation() {
     [t]
   );
 
-  const [count, setCount] = useState(shouldReduce ? messages.length : 0);
-  const [typing, setTyping] = useState(false);
-  const [done, setDone] = useState(shouldReduce);
+  /** One rendered bubble. `id` is a global sequence number, never reused. */
+  type Entry = { id: number; from: "customer" | "ai"; text: string };
 
-  /** How long the finished thread rests with the Order Confirmed badge up. */
+  const [thread, setThread] = useState<Entry[]>([]);
+  const [typing, setTyping] = useState(false);
+  const [done, setDone] = useState(false);
+
+  /** How long the thread rests on the payoff before the next round starts. */
   const ROUND_PAUSE = 5000;
-  /** Beat between clearing the thread and the first message of the next round. */
+  /** Beat before the very first message. */
   const LEAD_IN = 450;
+  /**
+   * How many bubbles stay mounted. The thread never clears, so without a cap the
+   * DOM would grow by ten nodes a round for as long as the tab is open. At the
+   * tallest card (~556px of thread) about 14 bubbles can be on screen at once, so
+   * 18 keeps a margin and only ever drops bubbles that already scrolled off.
+   */
+  const THREAD_WINDOW = 18;
 
   useEffect(() => {
-    if (shouldReduce) return;
-    let i = 0;
+    if (shouldReduce) {
+      // No timeline: rest on the finished conversation with the badge landed.
+      setThread(messages.map((m, i) => ({ id: i, from: m.from, text: m.text })));
+      setDone(true);
+      return;
+    }
+
+    // Never resets. The conversation is one continuous thread; a "round" is just
+    // the sequence wrapping back to the first message, and the only thing that
+    // marks it is the pause.
+    let seq = 0;
     // Exactly one timeout is ever pending — the sequence is strictly serial — so
     // this holds a single handle rather than an array. An array would grow for as
     // long as the page is open, since the loop never ends.
@@ -76,31 +95,35 @@ function HeroConversation() {
     };
 
     const next = () => {
-      if (i >= messages.length) {
-        after(() => {
-          setDone(true);
-          // Hold on the payoff, then wipe the thread and run it again. The badge
-          // and the bubbles animate out together and the card refills from empty,
-          // so the loop reads as a new conversation rather than a jump cut.
+      const m = messages[seq % messages.length];
+
+      const commit = () => {
+        const id = seq; // captured before the increment — the updater runs later
+        seq += 1;
+        setThread((t) => [...t, { id, from: m.from, text: m.text }].slice(-THREAD_WINDOW));
+
+        if (seq % messages.length === 0) {
+          // Round closed. Land the badge — a no-op from the second round on, so
+          // it appears once and then simply stays — hold, and carry on in the
+          // same thread. Nothing is cleared; the next round types straight on
+          // under the last message.
           after(() => {
-            setDone(false);
-            setCount(0);
-            i = 0;
-            after(next, LEAD_IN);
-          }, ROUND_PAUSE);
-        }, 350);
-        return;
-      }
-      if (messages[i].from === "ai") {
+            setDone(true);
+            after(next, ROUND_PAUSE);
+          }, 350);
+        } else {
+          after(next, m.from === "ai" ? 550 : 750);
+        }
+      };
+
+      if (m.from === "ai") {
         setTyping(true);
         after(() => {
           setTyping(false);
-          setCount(++i);
-          after(next, 550);
+          commit();
         }, 750);
       } else {
-        setCount(++i);
-        after(next, 750);
+        commit();
       }
     };
 
@@ -218,7 +241,8 @@ function HeroConversation() {
         </motion.div>
       </motion.div>
 
-      {/* Order confirmed badge — lands only when the conversation resolves */}
+      {/* Order confirmed badge — lands when the first round resolves, then stays
+          for the life of the page (the thread keeps running underneath it). */}
       <AnimatePresence>
         {done && (
           // Outer node: parallax only. The landing animation below owns `y`, so
@@ -227,9 +251,6 @@ function HeroConversation() {
             // -bottom-12, not -8: at -8 the badge already overlapped the card by
             // ~11px at rest, which the counter-glide then pushed onto the copy.
             className="absolute -bottom-12 left-2 min-[420px]:-left-10 z-20"
-            // Exit lives on the node AnimatePresence tracks; the landing
-            // animation stays on the inner node, which owns `y`.
-            exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.3 } }}
             style={tilt ? { z: 55, x: orderX, y: orderY } : undefined}
           >
             <motion.div
@@ -286,18 +307,16 @@ function HeroConversation() {
             long conversation runs off the top edge instead of overflowing. */}
         <div className="chat-thread-fade flex-1 min-h-0 overflow-hidden p-3 space-y-2 flex flex-col justify-end">
           <AnimatePresence initial={false}>
-            {messages.slice(0, count).map((msg, i) => {
+            {thread.map((msg, idx) => {
               const isCustomer = msg.from === "customer";
-              // a customer line is "read" (blue ticks) once the AI has replied after it
-              const read = count > i + 1 || (typing && i === count - 1);
+              // a customer line is "read" (blue ticks) once anything follows it —
+              // another message, or the assistant starting to type
+              const read = idx < thread.length - 1 || typing;
               return (
                 <motion.div
-                  key={i}
+                  key={msg.id}
                   initial={{ opacity: 0, y: 8, scale: 0.94 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  // On reset every bubble unmounts at once; fading them out is
-                  // what makes the loop read as the thread clearing.
-                  exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.28 } }}
                   transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
                   className={`flex ${isCustomer ? "justify-end" : "justify-start"}`}
                 >

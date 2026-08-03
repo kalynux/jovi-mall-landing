@@ -45,11 +45,11 @@ export default function Home() {
       {/* Page sections — each fills one viewport */}
       <main id="main-content">
         <HeroSection onGetStarted={() => setModalOpen(true)} />
+        <CustomerSection />
         <HowItWorksSection />
         <VendorSection />
         <AgencySection />
         <AgentSection />
-        <CustomerSection />
         <AfricaFirstSection />
         <TrustSection />
         <FinalCTASection onGetStarted={() => setModalOpen(true)} />
