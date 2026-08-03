@@ -4,14 +4,20 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { RegisterSchema, type RegisterFormValues } from "@/lib/auth/auth.schemas";
+import {
+  RegisterSchema,
+  BUSINESS_NAME_MAX,
+  ROLES_WITH_BUSINESS_NAME,
+  type RegisterFormValues,
+} from "@/lib/auth/auth.schemas";
 import { registerAndGetAction, logoutAndRedirect } from "@/lib/auth/auth.service";
 import type { UiRole, AuthRoleEntity } from "@/lib/auth/auth.types";
 import { mapApiErrors, parseRootType } from "@/lib/auth/form-errors";
 import { sanitizePayload } from "@/lib/form/sanitize-payload";
-import AuthCard from "@/components/auth/AuthCard";
+import AuthSplitShell from "@/components/auth/AuthSplitShell";
 import AuthFormField from "@/components/auth/AuthFormField";
 import { GlobalError } from "@/components/auth/GlobalError";
 import RolePicker from "@/components/auth/RolePicker";
@@ -19,6 +25,14 @@ import CustomerWhatsAppCta from "@/components/auth/CustomerWhatsAppCta";
 import { WhatsAppVerificationModal } from "@/components/auth/WhatsAppVerificationModal";
 
 type Step = "role" | "customer-wa" | "form";
+
+/** Shared entrance for whichever step is on screen. */
+const stepMotion = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -8 },
+  transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] as const },
+};
 
 function RegisterFormContent() {
   const t = useTranslations("auth");
@@ -57,6 +71,11 @@ function RegisterFormContent() {
     resolver: zodResolver(RegisterSchema),
     defaultValues: { role: initialRole },
   });
+
+  // Vendor/agency give two distinct names: their own (stored on the role
+  // profile as display_name) and their business name (stored on their Store /
+  // Magazin). Every other role gives one name, so the extra labelling is dropped.
+  const hasBusinessName = ROLES_WITH_BUSINESS_NAME.includes(selectedRole);
 
   const handleRoleSelect = (role: UiRole) => {
     setSelectedRole(role);
@@ -117,49 +136,78 @@ function RegisterFormContent() {
 
   // ── Title / subtitle per step ──────────────────────────────────────────────
   const cardTitle =
-    step === "role"
-      ? t("registerTitle")
-      : step === "customer-wa"
-        ? t("customerWaTitle")
-        : t("registerSubtitleForm");
+    step === "customer-wa" ? t("customerWaTitle") : t("registerTitle");
 
   const cardSubtitle =
     step === "role"
       ? t("registerSubtitle")
       : step === "customer-wa"
         ? t("customerWaSubtitle")
-        : `${t("registeringAs")} ${selectedRole}`;
+        : t("registerSubtitleForm");
+
+  // Customers never reach the details step — they shop on WhatsApp — so the
+  // two-step rail is only shown on the path it actually describes.
+  const showSteps = step !== "customer-wa";
 
   return (
-    <AuthCard title={cardTitle} subtitle={cardSubtitle}>
-      <div className="flex flex-col gap-6">
-
-        {/* ── Step 1: Role picker ────────────────────────────────────── */}
+    <AuthSplitShell
+      mode="register"
+      eyebrow={t("createAccount")}
+      title={cardTitle}
+      subtitle={cardSubtitle}
+      steps={showSteps ? [t("stepRole"), t("stepDetails")] : undefined}
+      currentStep={step === "role" ? 1 : 2}
+      onStepSelect={handleBackToRole}
+      // `selectedRole` defaults to "vendor" so the form has something to
+      // validate against, but nothing has actually been chosen on the picker
+      // step — the showcase stays on its generic pitch until it has.
+      role={step === "role" ? null : selectedRole}
+      footer={
+        // On the form step the "Sign in" button below already carries this, so
+        // it isn't repeated here.
+        step === "form" ? undefined : (
+          <>
+            {t("alreadyAccount")}{" "}
+            <Link href="/login" className="font-medium text-primary-600 hover:underline">
+              {t("signInLink")}
+            </Link>
+          </>
+        )
+      }
+    >
+      <AnimatePresence mode="wait">
+        {/* ── Step 1: Role picker ─────────────────────────────────────────── */}
         {step === "role" && (
-          <RolePicker
-            selected={selectedRole}
-            onSelect={handleRoleSelect}
-            customerCallout
-            onCustomerCallout={() => {
-              setSelectedRole("customer");
-              setStep("customer-wa");
-            }}
-          />
+          <motion.div key="role" {...stepMotion}>
+            <RolePicker
+              selected={selectedRole}
+              onSelect={handleRoleSelect}
+              customerCallout
+              onCustomerCallout={() => {
+                setSelectedRole("customer");
+                setStep("customer-wa");
+              }}
+            />
+          </motion.div>
         )}
 
-        {/* ── Step: Customer → WhatsApp only ────────────────────────── */}
+        {/* ── Step: Customer → WhatsApp only ──────────────────────────────── */}
         {step === "customer-wa" && (
-          <CustomerWhatsAppCta
-            onBack={() => {
-              setSelectedRole("vendor");
-              setStep("role");
-            }}
-          />
+          <motion.div key="customer-wa" {...stepMotion}>
+            <CustomerWhatsAppCta
+              onBack={() => {
+                setSelectedRole("vendor");
+                setStep("role");
+              }}
+            />
+          </motion.div>
         )}
 
-        {/* ── Step 2: Registration form (non-customer roles only) ────── */}
+        {/* ── Step 2: Registration form (non-customer roles only) ─────────── */}
         {step === "form" && (
-          <form
+          <motion.form
+            key="form"
+            {...stepMotion}
             onSubmit={handleSubmit(onSubmit)}
             noValidate
             className="flex flex-col gap-4"
@@ -172,7 +220,7 @@ function RegisterFormContent() {
               <button
                 type="button"
                 onClick={handleBackToRole}
-                className="text-xs font-display font-semibold px-2.5 py-1 rounded-full bg-[var(--accent-light)] text-primary-600 hover:bg-primary-100 transition-colors capitalize"
+                className="rounded-full bg-[var(--accent-light)] px-2.5 py-1 font-display text-xs font-semibold capitalize text-primary-600 transition-colors hover:bg-primary-100"
               >
                 {tModal(`roles.${selectedRole}.label` as Parameters<typeof tModal>[0])} ↩
               </button>
@@ -181,86 +229,116 @@ function RegisterFormContent() {
             {/* Hidden role field */}
             <input type="hidden" value={selectedRole} {...register("role")} />
 
-            <AuthFormField
-              label={t("nameLabel")}
-              type="text"
-              autoComplete="name"
-              placeholder={t("namePlaceholder")}
-              required
-              {...register("name", {
-                onChange: () => clearErrors(["name", "root"] as any),
-              })}
-              error={errors.name?.message}
-            />
-
-            <AuthFormField
-              label={t("phoneLabel")}
-              type="tel"
-              autoComplete="tel"
-              placeholder={t("phonePlaceholderRegister")}
-              required
-              {...register("phone", {
-                onChange: () => clearErrors(["phone", "root"] as any),
-              })}
-              error={errors.phone?.message}
-            />
-
-            {/*
-              Email is required for vendors, optional for agency and agent.
-              sanitizePayload still drops it if left empty (only reachable
-              for non-vendor roles where the field is truly optional).
-            */}
-            <AuthFormField
-              label={t("emailLabel")}
-              type="email"
-              autoComplete="email"
-              placeholder={t("emailPlaceholder")}
-              required={selectedRole === "vendor"}
-              {...register("email", {
-                onChange: () => clearErrors(["email", "root"] as any),
-              })}
-              error={errors.email?.message}
-            />
-
-            {/* Vendor-only field */}
-            {selectedRole === "vendor" && (
+            {/* Two columns from `sm` up — the form pane is half the shell on
+                desktop, so a single column of six fields would run far past the
+                showcase beside it. */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              {/*
+                Personal name — lands on the role profile itself (display_name for
+                vendor/agency, name for agent). Vendors and agencies additionally
+                give a business name below, which the backend stores on a separate
+                document, so the two fields are labelled distinctly for them.
+              */}
               <AuthFormField
-                label={t("businessNameLabel")}
+                variant="floating"
+                label={hasBusinessName ? t("personalNameLabel") : t("nameLabel")}
                 type="text"
-                placeholder={t("businessNamePlaceholder")}
+                autoComplete="name"
+                placeholder={t("namePlaceholder")}
                 required
-                {...register("business_name", {
-                  onChange: () => clearErrors(["business_name", "root"] as any),
+                hint={hasBusinessName ? t("personalNameHint") : undefined}
+                {...register("name", {
+                  onChange: () => clearErrors(["name", "root"] as any),
                 })}
-                error={errors.business_name?.message}
+                error={errors.name?.message}
               />
-            )}
 
-            {/* Agency-only field */}
-            {selectedRole === "agency" && (
               <AuthFormField
-                label={t("agencyNameLabel")}
-                type="text"
-                placeholder={t("agencyNamePlaceholder")}
+                variant="floating"
+                label={t("phoneLabel")}
+                type="tel"
+                autoComplete="tel"
+                placeholder={t("phonePlaceholderRegister")}
                 required
-                {...register("agency_name", {
-                  onChange: () => clearErrors(["agency_name", "root"] as any),
+                {...register("phone", {
+                  onChange: () => clearErrors(["phone", "root"] as any),
                 })}
-                error={errors.agency_name?.message}
+                error={errors.phone?.message}
               />
-            )}
 
-            <AuthFormField
-              label={t("passwordLabel")}
-              type="password"
-              autoComplete="new-password"
-              placeholder={t("newPasswordPlaceholder")}
-              required
-              {...register("password", {
-                onChange: () => clearErrors(["password", "root"] as any),
-              })}
-              error={errors.password?.message}
-            />
+              {/*
+                Email is required for vendors, optional for agency and agent.
+                sanitizePayload still drops it if left empty (only reachable
+                for non-vendor roles where the field is truly optional).
+              */}
+              <AuthFormField
+                variant="floating"
+                label={t("emailLabel")}
+                type="email"
+                autoComplete="email"
+                placeholder={t("emailPlaceholder")}
+                required={selectedRole === "vendor"}
+                {...register("email", {
+                  onChange: () => clearErrors(["email", "root"] as any),
+                })}
+                error={errors.email?.message}
+              />
+
+              {/*
+                Vendor-only. This is NOT saved on the vendor profile — the backend
+                seeds it onto the vendor's Store, which is the source of truth for
+                the public business name (2–100 chars, enforced by RegisterSchema).
+              */}
+              {selectedRole === "vendor" && (
+                <AuthFormField
+                  variant="floating"
+                  label={t("businessNameLabel")}
+                  type="text"
+                  autoComplete="organization"
+                  placeholder={t("businessNamePlaceholder")}
+                  required
+                  maxLength={BUSINESS_NAME_MAX}
+                  hint={t("businessNameHint")}
+                  {...register("business_name", {
+                    onChange: () => clearErrors(["business_name", "root"] as any),
+                  })}
+                  error={errors.business_name?.message}
+                />
+              )}
+
+              {/* Agency-only. Same split — seeds the agency's Magazin, not the profile. */}
+              {selectedRole === "agency" && (
+                <AuthFormField
+                  variant="floating"
+                  label={t("agencyNameLabel")}
+                  type="text"
+                  autoComplete="organization"
+                  placeholder={t("agencyNamePlaceholder")}
+                  required
+                  maxLength={BUSINESS_NAME_MAX}
+                  hint={t("agencyNameHint")}
+                  {...register("agency_name", {
+                    onChange: () => clearErrors(["agency_name", "root"] as any),
+                  })}
+                  error={errors.agency_name?.message}
+                />
+              )}
+
+              <div className="sm:col-span-2">
+                <AuthFormField
+                  variant="floating"
+                  label={t("passwordLabel")}
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder={t("newPasswordPlaceholder")}
+                  required
+                  {...register("password", {
+                    onChange: () => clearErrors(["password", "root"] as any),
+                  })}
+                  error={errors.password?.message}
+                />
+              </div>
+            </div>
 
             {(() => {
               const { errorCode, requestId } = parseRootType(
@@ -275,44 +353,47 @@ function RegisterFormContent() {
               );
             })()}
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="btn-primary w-full mt-1 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isSubmitting ? t("creatingAccount") : t("createAccount")}
-            </button>
+            {/* Action pair — create, or peel off to sign-in. */}
+            <div className="mt-1 grid gap-3 sm:grid-cols-2">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isSubmitting ? t("creatingAccount") : t("createAccount")}
+                {!isSubmitting && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
+              </button>
+              <Link href="/login" className="btn-secondary w-full">
+                {t("signInLink")}
+              </Link>
+            </div>
 
             {/* Explicit back button for accessibility */}
             <button
               type="button"
               onClick={handleBackToRole}
-              className="text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] text-center transition-colors"
+              className="flex items-center justify-center gap-1.5 text-sm text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)]"
             >
-              ← {t("chooseDifferentRole")}
+              <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+              {t("chooseDifferentRole")}
             </button>
-          </form>
+          </motion.form>
         )}
-
-        {/* Footer */}
-        <div className="pt-4 border-t border-[var(--border)] text-center text-sm text-[var(--text-muted)]">
-          {t("alreadyAccount")}{" "}
-          <Link
-            href="/login"
-            className="text-primary-600 hover:underline font-medium"
-          >
-            {t("signInLink")}
-          </Link>
-        </div>
-      </div>
-    </AuthCard>
+      </AnimatePresence>
+    </AuthSplitShell>
   );
 }
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-[var(--text-muted)]" /></div>}>
+    <Suspense
+      fallback={
+        <div className="flex justify-center p-8">
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--text-muted)]" />
+        </div>
+      }
+    >
       <RegisterFormContent />
     </Suspense>
   );

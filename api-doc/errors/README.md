@@ -152,6 +152,13 @@ your upload list and show the per-file reason inline. `violation.code` is one of
 [File Management API](../vendor/file-management.md#post-apifilesupload) for the full
 per-code reference.
 
+Always read `details.violations[]`, never the top-level `message` — it is
+`"Upload policy permissions violated"` only when a `PERMISSION_DENIED` rule fired,
+and `"Upload policy violations found"` for everything else. `PERMISSION_DENIED` is
+not expected from `POST /api/files/upload`, which is open to every authenticated
+role; it belongs to the purpose-scoped upload routes (digital assets, delivery
+proof, system files).
+
 ### 8. Other Contextual Domain Errors
 The backend frequently includes context variables inside the `details` object for general domain errors. For example:
 - `PAYMENT_ORDER_NOT_FOUND` may include `{"orderId": "..."}`
@@ -217,11 +224,74 @@ deposits, remittances and discrepancies. Role-specific context:
 | `COD_DISCREPANCY_ALREADY_RESOLVED` | 409 | Discrepancy already closed | — |
 | `PAYMENT_ORDER_IS_COD` | 422 | Online payment attempted for a cash-on-delivery order/checkout | `{ cartId? }` |
 
-Related delivery-roster codes (agent↔agency membership — see
-[agency/agents.md](../agency/agents.md), [agent/agency-membership.md](../agent/agency-membership.md)):
-`DELIVERY_INVITE_NOT_FOUND` (404), `DELIVERY_INVITE_ALREADY_PENDING` (409),
-`DELIVERY_AGENT_ALREADY_IN_AGENCY` (409), `DELIVERY_AGENT_NOT_IN_AGENCY` (404),
-`DELIVERY_AGENT_HAS_ACTIVE_SHIPMENTS` (422).
+### Agent ↔ agency contracts
+
+Full documentation: [agency/agent-roster.md](../agency/agent-roster.md) (canonical) and
+[agent/agency-membership.md](../agent/agency-membership.md).
+
+**The handshake** — request, approve, reject, withdraw:
+
+| Code | HTTP | Description | Details |
+|------|------|-------------|---------|
+| `AGENT_MEMBERSHIP_ALREADY_EXISTS` | 409 | A live contract between this agent and agency already exists | `{ status, contractId }` |
+| `CONTRACT_NOT_FOUND` | 404 | Unknown, **or** belongs to another party — never 403, so neither side can probe the other's roster | — |
+| `CONTRACT_TRANSITION_NOT_PERMITTED` | 403 | Wrong party for this verb. **Keyed on whose TERMS are standing, not on who opened the contract**: the proposer may only `withdraw`, the counterparty may only `approve`/`reject`/`counter`. Also `suspend` raised by an agent | `{ transition, party, proposer, hint }` |
+| `CONTRACT_INVALID_TRANSITION` | 409 | The contract is not in a status this transition can leave | `{ transition, from, allowedFrom }` |
+| `AGENT_MEMBERSHIP_LIMIT_REACHED` | 422 | The agent is at their agency cap. Checked at **approval**, not at request | `{ current, max }` |
+| `AGENT_KYC_NOT_VERIFIED` | 422 | Re-checked at approval, not trusted from request time | `{ kycStatus, hint }` |
+| `AGENT_PLATFORM_BANNED` | 403 | A platform ban overrides every contract | `{ hint }` |
+| `AGENT_NOT_FOUND` | 404 | `agentId` does not resolve | — |
+
+**Two-party status requests** — pause, reactivate, terminate:
+
+| Code | HTTP | Description | Details |
+|------|------|-------------|---------|
+| `CONTRACT_STATUS_REQUEST_NOT_FOUND` | 404 | Unknown, or not addressed to you | — |
+| `CONTRACT_STATUS_REQUEST_NOT_PENDING` | 409 | Already resolved | `{ state }` |
+| `CONTRACT_STATUS_REQUEST_ALREADY_PENDING` | 409 | One open request per contract per transition | `{ requestId }` |
+| `CONTRACT_STATUS_REQUEST_NOT_YOURS` | 403 | You raised it; the counterparty resolves it | `{ requestedByRole, hint }` |
+| `CONTRACT_HAS_OUTSTANDING_COD` | 422 | Termination blocked — the agent still holds that agency's cash. Scoped to the one contract | `{ outstandingCod, hint }` |
+| `CONTRACT_HAS_UNPAID_EARNINGS` | 422 | Termination blocked — the agency still owes the agent | `{ outstandingPayment, hint }` |
+
+**Negotiated terms**:
+
+| Code | HTTP | Description | Details |
+|------|------|-------------|---------|
+| `CONTRACT_TERMS_REQUIRED` | 422 | An agent's join request stated terms but omitted `fee_split`. Coverage alone would leave their own proposal paying zero — omit `terms` entirely instead | `{ hint }` |
+| `CONTRACT_TERMS_NOT_PROPOSED` | 422 | **Approving terms nobody proposed.** `termsProposedBy` is `null` — a bare agent join request, or a legacy contract whose split was never configured. The agency must propose first | `{ contractId, hint }` |
+| `CONTRACT_TERMS_NOT_NEGOTIABLE` | 403 | A party wrote a term group that is not theirs. Agents may write `fee_split` and `coverage` only; `employment` and the COD threshold are nobody's to negotiate | `{ party, offending, negotiable, hint }` |
+| `CONTRACT_TERMS_LIVE_EDIT_NOT_ALLOWED` | 409 | `PATCH …/terms` on a live contract. Its agreed split is pricing deliveries right now — raise a proposal instead | `{ status, hint }` |
+| `CONTRACT_FEE_SPLIT_INVALID` | 422 | A `percentage` split with no share, or a `flat` one with no fee. Checked on the patch **merged over the stored split**, so a partial update is not rejected for a field it does not touch | `{ model, hint }` |
+| `CONTRACT_COD_THRESHOLD_OUT_OF_BOUNDS` | 422 | Outside the absolute per-contract bounds | `{ requested, min, max }` |
+| `CONTRACT_COD_THRESHOLD_EXCEEDS_HEADROOM` | 422 | The agent's shared pool has no room — another agency's slice may be the cause | `{ requested, headroom, shortfall, hint }` |
+| `CONTRACT_COD_THRESHOLD_BELOW_OUTSTANDING` | 422 | Cannot set a threshold beneath cash already held under the contract | `{ requested, outstandingBalance, hint }` |
+| `CONTRACT_COVERAGE_OUTSIDE_AGENT_RADIUS` | 422 | An agency cannot grant coverage the agent never agreed to work | — |
+| `CONTRACT_COVERAGE_REGION_NOT_COVERED` | 422 | **Assignment gate.** The delivery region is outside the regions this contract covers | `{ deliveryRegion, coveredRegions, hint }` |
+| `CONTRACT_SHIPMENT_VALUE_EXCEEDED` | 422 | **Assignment gate.** The shipment is worth more than this contract's per-shipment ceiling | `{ shipmentValue, ceiling, hint }` |
+| `CONTRACT_SETTLEMENT_EXCEEDS_OUTSTANDING` | 422 | A settlement larger than the balance it discharges | — |
+
+**Terms proposals** — changes to a **live** contract, which are staged rather than applied:
+
+| Code | HTTP | Description | Details |
+|------|------|-------------|---------|
+| `CONTRACT_TERMS_PROPOSAL_NOT_FOUND` | 404 | Unknown, **or** on a contract that is not yours — never 403, same rule as `CONTRACT_NOT_FOUND` | — |
+| `CONTRACT_TERMS_PROPOSAL_NOT_PENDING` | 409 | Already accepted, rejected, withdrawn or superseded — possibly by a concurrent call | `{ state }` |
+| `CONTRACT_TERMS_PROPOSAL_ALREADY_PENDING` | 409 | One open proposal per contract. Counter or cancel the open one | `{ proposalId, proposedByRole }` |
+| `CONTRACT_TERMS_PROPOSAL_NOT_YOURS` | 403 | Answering your own proposal, or cancelling someone else's. `/resolve` and `/counter` are the counterparty's; `/cancel` is the author's | `{ proposedByRole, hint }` |
+
+> **Reading a failed `approve`.** Guard order is terms → platform gates → COD pool, so
+> `CONTRACT_TERMS_NOT_PROPOSED` means exactly what it says — nobody has made an offer — and not that
+> something is wrong with the agent's account. Render it as "waiting on terms", not as an error.
+
+Legacy roster codes, still live: `DELIVERY_AGENT_ALREADY_IN_AGENCY` (409),
+`DELIVERY_AGENT_NOT_IN_AGENCY` (404), `DELIVERY_AGENT_HAS_ACTIVE_SHIPMENTS` (422),
+`AGENT_MEMBERSHIP_NOT_FOUND` (404), `AGENT_MEMBERSHIP_NOT_APPROVED` (409 — despite the name, it
+means "not **active**"; the code predates the status rename), `AGENT_MEMBERSHIP_NOT_PENDING` (409),
+`AGENT_MEMBERSHIP_NOT_SUSPENDED` (409).
+
+> `DELIVERY_INVITE_NOT_FOUND` and `DELIVERY_INVITE_ALREADY_PENDING` were **removed** with the
+> email-invite endpoints. An agency now reaches an agent through the directory
+> (`GET /api/agency/agents/browse` → `POST /api/agency/agents/requests`).
 
 ---
 

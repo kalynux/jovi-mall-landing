@@ -4,7 +4,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { AddRoleSchema, type AddRoleFormValues } from "@/lib/auth/auth.schemas";
+import {
+  AddRoleSchema,
+  BUSINESS_NAME_MAX,
+  ROLES_WITH_BUSINESS_NAME,
+  type AddRoleFormValues,
+} from "@/lib/auth/auth.schemas";
 import { addRoleAndGetAction, redirectToOnboarding, logoutAndRedirect } from "@/lib/auth/auth.service";
 import type { UiRole, AuthRoleEntity } from "@/lib/auth/auth.types";
 import { mapApiErrors, parseRootType } from "@/lib/auth/form-errors";
@@ -92,6 +97,12 @@ export default function AddRolePage() {
 
   // The role this session is currently scoped to
   const activeRole = role as UiRole | undefined;
+
+  // Vendor/agency give two distinct names: their own (stored on the new role
+  // profile as display_name) and their business name (stored on the Store /
+  // Magazin provisioned alongside it). Other roles give one name.
+  const hasBusinessName =
+    selectedRole !== null && ROLES_WITH_BUSINESS_NAME.includes(selectedRole);
 
   // Hide roles the user already holds — EXCEPT the active role (shown disabled)
   // const excludedRoles = heldRoles.filter((r) => r !== activeRole);
@@ -217,37 +228,48 @@ export default function AddRolePage() {
                 {...register("role")}
               />
 
-              {/* name — required for vendor, agency, agent */}
+              {/*
+                name — required for vendor, agency, agent. Lands on the new role
+                profile itself (display_name for vendor/agency, name for agent),
+                separate from the business name below.
+              */}
               <AuthFormField
-                label={t("nameLabel")}
+                label={hasBusinessName ? t("personalNameLabel") : t("nameLabel")}
                 type="text"
                 placeholder={t("namePlaceholder")}
                 required
+                hint={hasBusinessName ? t("personalNameHint") : undefined}
                 {...register("name")}
                 error={errors.name?.message}
                 id={`add-role-name-${selectedRole}`}
               />
 
-              {/* business_name — vendor only */}
+              {/* business_name — vendor only. Seeds the new Store, not the vendor profile. */}
               {selectedRole === "vendor" && (
                 <AuthFormField
                   label={t("businessNameLabel")}
                   type="text"
+                  autoComplete="organization"
                   placeholder={t("businessNamePlaceholder")}
                   required
+                  maxLength={BUSINESS_NAME_MAX}
+                  hint={t("businessNameHint")}
                   {...register("business_name")}
                   error={errors.business_name?.message}
                   id="add-role-business-name"
                 />
               )}
 
-              {/* agency_name — agency only */}
+              {/* agency_name — agency only. Seeds the new Magazin, not the agency profile. */}
               {selectedRole === "agency" && (
                 <AuthFormField
                   label={t("agencyNameLabel")}
                   type="text"
+                  autoComplete="organization"
                   placeholder={t("agencyNamePlaceholder")}
                   required
+                  maxLength={BUSINESS_NAME_MAX}
+                  hint={t("agencyNameHint")}
                   {...register("agency_name")}
                   error={errors.agency_name?.message}
                   id="add-role-agency-name"

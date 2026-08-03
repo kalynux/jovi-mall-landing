@@ -8,6 +8,13 @@ interface AuthFormFieldProps
   label: string;
   error?: string;
   hint?: string;
+  /**
+   * "stacked" (default) — label above the input.
+   * "floating" — filled field with the label riding inside it, used by the
+   * split login/register screens. Same markup contract either way: one input,
+   * one <label htmlFor>, the same describedby wiring.
+   */
+  variant?: "stacked" | "floating";
 }
 
 /**
@@ -21,12 +28,13 @@ interface AuthFormFieldProps
  * sibling-relative container instead of wrapping with another <input>.
  */
 const AuthFormField = forwardRef<HTMLInputElement, AuthFormFieldProps>(
-  ({ label, error, hint, className, id, type, ...props }, ref) => {
+  ({ label, error, hint, className, id, type, variant = "stacked", ...props }, ref) => {
     const fieldId = id ?? label.toLowerCase().replace(/\s+/g, "-");
     const errorId = `${fieldId}-error`;
     const hintId = `${fieldId}-hint`;
 
     const isPassword = type === "password";
+    const isFloating = variant === "floating";
     const [visible, setVisible] = useState(false);
 
     const toggleVisible = useCallback(() => setVisible((v) => !v), []);
@@ -34,6 +42,111 @@ const AuthFormField = forwardRef<HTMLInputElement, AuthFormFieldProps>(
     // Resolved input type: respect toggle only for password fields
     const resolvedType = isPassword ? (visible ? "text" : "password") : type;
 
+    const describedBy =
+      [error && errorId, hint && hintId].filter(Boolean).join(" ") || undefined;
+
+    const requiredMark = props.required && (
+      <span className="text-red-500 ml-0.5" aria-hidden="true">
+        *
+      </span>
+    );
+
+    const messages = (
+      <>
+        {hint && !error && (
+          <p id={hintId} className="text-xs text-[var(--text-muted)]">
+            {hint}
+          </p>
+        )}
+
+        {error && (
+          <p
+            id={errorId}
+            aria-live="polite"
+            className="text-xs text-red-500 font-medium transition-opacity duration-150"
+          >
+            {error}
+          </p>
+        )}
+      </>
+    );
+
+    // ── Floating variant ────────────────────────────────────────────────────
+    // The label parks at the top of the filled box and drops to the centre
+    // while the field is empty and unfocused (:placeholder-shown). That needs a
+    // placeholder to match against, so an empty one stands in when the caller
+    // gives none — and a real placeholder is held at opacity 0 until focus, so
+    // it never sits under the resting label.
+    if (isFloating) {
+      return (
+        <div className="flex flex-col gap-1.5">
+          <div className="relative">
+            <input
+              ref={ref}
+              id={fieldId}
+              type={resolvedType}
+              aria-invalid={error ? "true" : "false"}
+              aria-describedby={describedBy}
+              {...props}
+              placeholder={props.placeholder ?? " "}
+              className={cn(
+                "peer w-full rounded-2xl px-4 pt-6 pb-2 text-sm",
+                "bg-[var(--bg-subtle)] border border-[var(--border)]",
+                "text-[var(--text-primary)]",
+                "placeholder:text-[var(--text-subtle)] placeholder:opacity-0",
+                "focus:placeholder:opacity-100 placeholder:transition-opacity placeholder:duration-200",
+                "outline-none transition-all duration-200",
+                "hover:border-[var(--border-strong)]",
+                "focus:border-primary-400 focus:bg-[var(--surface)] focus:ring-2 focus:ring-primary-500/20",
+                isPassword && "pe-11",
+                error && "border-red-400 focus:border-red-500 focus:ring-red-500/20",
+                className
+              )}
+            />
+
+            <label
+              htmlFor={fieldId}
+              className={cn(
+                "pointer-events-none absolute start-4 top-2 origin-[0_0] text-[11px] font-medium",
+                "text-[var(--text-muted)] transition-all duration-200",
+                "peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-sm",
+                "peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-[11px] peer-focus:text-primary-600",
+                error && "peer-focus:text-red-500"
+              )}
+            >
+              {label}
+              {requiredMark}
+            </label>
+
+            {isPassword && (
+              <button
+                type="button"
+                tabIndex={0}
+                onClick={toggleVisible}
+                aria-label={visible ? "Hide password" : "Show password"}
+                aria-controls={fieldId}
+                className={cn(
+                  "absolute inset-y-0 end-0 flex w-11 items-center justify-center rounded-e-2xl",
+                  "text-[var(--text-muted)] hover:text-[var(--text-primary)]",
+                  "transition-colors duration-150",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-inset"
+                )}
+              >
+                {visible ? (
+                  <EyeOff className="w-4 h-4" aria-hidden="true" />
+                ) : (
+                  <Eye className="w-4 h-4" aria-hidden="true" />
+                )}
+              </button>
+            )}
+          </div>
+
+          {messages}
+        </div>
+      );
+    }
+
+    // ── Stacked variant (default) ───────────────────────────────────────────
     return (
       <div className="flex flex-col gap-1.5">
         <label
@@ -41,11 +154,7 @@ const AuthFormField = forwardRef<HTMLInputElement, AuthFormFieldProps>(
           className="text-sm font-medium text-[var(--text-primary)]"
         >
           {label}
-          {props.required && (
-            <span className="text-red-500 ml-0.5" aria-hidden="true">
-              *
-            </span>
-          )}
+          {requiredMark}
         </label>
 
         {/* Wrapper: relative only when password so the toggle button can be
@@ -57,10 +166,7 @@ const AuthFormField = forwardRef<HTMLInputElement, AuthFormFieldProps>(
             id={fieldId}
             type={resolvedType}
             aria-invalid={error ? "true" : "false"}
-            aria-describedby={
-              [error && errorId, hint && hintId].filter(Boolean).join(" ") ||
-              undefined
-            }
+            aria-describedby={describedBy}
             className={cn(
               "w-full px-4 py-3 rounded-xl text-sm",
               "bg-[var(--bg-subtle)] border border-[var(--border)]",
@@ -101,21 +207,7 @@ const AuthFormField = forwardRef<HTMLInputElement, AuthFormFieldProps>(
           )}
         </div>
 
-        {hint && !error && (
-          <p id={hintId} className="text-xs text-[var(--text-muted)]">
-            {hint}
-          </p>
-        )}
-
-        {error && (
-          <p
-            id={errorId}
-            aria-live="polite"
-            className="text-xs text-red-500 font-medium transition-opacity duration-150"
-          >
-            {error}
-          </p>
-        )}
+        {messages}
       </div>
     );
   }

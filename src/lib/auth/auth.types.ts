@@ -50,9 +50,26 @@ export interface AuthRoleEntity {
     user_id: string;
     email: string | null;
     phone: string | null;
-    /** Customer/agent/admin display name. Vendors use business_name, agencies agency_name. */
+    /** Personal name for customer/agent/admin role entities. */
     name?: string | null;
+    /**
+     * Personal name for vendor/agency role entities — the equivalent of `name`.
+     *
+     * A vendor/agency profile holds only the *person's* name. Their BUSINESS
+     * name lives on a separate document (Store for a vendor, Magazin for an
+     * agency) and is therefore absent from `role_entity`; fetch it from the
+     * store/magazin endpoints when you need it.
+     */
+    display_name?: string | null;
+    /**
+     * @deprecated Never returned by the auth endpoints — the vendor's business
+     * name is `Store.name`. Kept only so legacy reads still type-check.
+     */
     business_name?: string | null;
+    /**
+     * @deprecated Never returned by the auth endpoints — the agency's business
+     * name is `Magazin.name`. Kept only so legacy reads still type-check.
+     */
     agency_name?: string | null;
     email_verified: boolean;
     phone_verified: boolean;
@@ -136,17 +153,23 @@ export interface LoginPayload {
 export interface RegisterPayload {
     phone: string;
     email?: string;
+    /** The person's own name → role profile (`display_name` for vendor/agency). */
     name: string;
     password: string;
     role: UiRole;
+    /** Vendor only. Seeds `Store.name`, not the vendor profile. 2–100 chars. */
     business_name?: string;
+    /** Agency only. Seeds `Magazin.name`, not the agency profile. 2–100 chars. */
     agency_name?: string;
 }
 
 export interface AddRolePayload {
     role: UiRole;
+    /** The person's own name → role profile (`display_name` for vendor/agency). */
     name?: string;
+    /** Vendor only. Seeds `Store.name`, not the vendor profile. 2–100 chars. */
     business_name?: string;
+    /** Agency only. Seeds `Magazin.name`, not the agency profile. 2–100 chars. */
     agency_name?: string;
 }
 

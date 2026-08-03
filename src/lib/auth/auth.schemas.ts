@@ -7,6 +7,57 @@ import type { UiRole } from "./auth.types";
 const UI_ROLE_VALUES = ["vendor", "agency", "agent", "customer"] as const;
 export const UiRoleSchema = z.enum(UI_ROLE_VALUES);
 
+// ─── Business name ───────────────────────────────────────────────────────────
+/**
+ * `business_name` / `agency_name` are NOT stored on the role profile.
+ *
+ * On register/add-role the backend puts the person's own `name` on the role
+ * profile as `display_name`, then seeds the business name onto a *separate*
+ * document — `Store.name` for a vendor, `Magazin.name` for an agency
+ * (auth.service.ts → ensureStoreForVendor / ensureMagazinForAgency). This is
+ * why the returned `role_entity` has no `business_name` / `agency_name` field.
+ *
+ * Both target schemas bound the name to 2–100 chars, but the auth endpoint
+ * itself does not validate it: a shorter value is silently padded
+ * ("A" → "A Store") and a longer one is truncated at 100. Enforce the real
+ * bounds here so the name the user typed is the name that gets saved.
+ */
+const BUSINESS_NAME_MIN = 2;
+/** Exported so the forms can cap the input at the same length the backend stores. */
+export const BUSINESS_NAME_MAX = 100;
+
+/** Roles whose business name is stored away from the role profile. */
+export const ROLES_WITH_BUSINESS_NAME: readonly UiRole[] = ["vendor", "agency"];
+
+function refineBusinessName(
+    value: string | undefined,
+    path: "business_name" | "agency_name",
+    requiredMessage: string,
+    ctx: z.RefinementCtx
+) {
+    const trimmed = value?.trim() ?? "";
+
+    if (!trimmed) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: requiredMessage, path: [path] });
+        return;
+    }
+    if (trimmed.length < BUSINESS_NAME_MIN) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Must be at least ${BUSINESS_NAME_MIN} characters`,
+            path: [path],
+        });
+        return;
+    }
+    if (trimmed.length > BUSINESS_NAME_MAX) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Must be at most ${BUSINESS_NAME_MAX} characters`,
+            path: [path],
+        });
+    }
+}
+
 // ─── Login ───────────────────────────────────────────────────────────────────
 export const LoginSchema = z.object({
     identifier: z.string().min(1, "Phone number or email is required").trim(),
@@ -34,7 +85,9 @@ export const RegisterSchema = z
             .string()
             .min(6, "Password must be at least 6 characters"),
         role: UiRoleSchema,
+        /** Seeds Store.name — see refineBusinessName. */
         business_name: z.string().optional(),
+        /** Seeds Magazin.name — see refineBusinessName. */
         agency_name: z.string().optional(),
     })
     .superRefine((data, ctx) => {
@@ -47,20 +100,20 @@ export const RegisterSchema = z
                     path: ["email"],
                 });
             }
-            if (!data.business_name?.trim()) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    message: "Business name is required for vendors",
-                    path: ["business_name"],
-                });
-            }
+            refineBusinessName(
+                data.business_name,
+                "business_name",
+                "Business name is required for vendors",
+                ctx
+            );
         }
-        if (data.role === "agency" && !data.agency_name?.trim()) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "Agency name is required",
-                path: ["agency_name"],
-            });
+        if (data.role === "agency") {
+            refineBusinessName(
+                data.agency_name,
+                "agency_name",
+                "Agency name is required",
+                ctx
+            );
         }
     });
 
@@ -71,11 +124,14 @@ export const AddRoleSchema = z
     .object({
         role: UiRoleSchema,
         name: z.string().optional(),
+        /** Seeds Store.name — see refineBusinessName. */
         business_name: z.string().optional(),
+        /** Seeds Magazin.name — see refineBusinessName. */
         agency_name: z.string().optional(),
     })
     .superRefine((data, ctx) => {
-        // name is required for every non-customer role
+        // name is required for every non-customer role — it lands on the role
+        // profile itself (display_name for vendor/agency, name for agent).
         if (data.role !== "customer" && !data.name?.trim()) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
@@ -83,21 +139,23 @@ export const AddRoleSchema = z
                 path: ["name"],
             });
         }
-        // vendor additionally requires business_name
-        if (data.role === "vendor" && !data.business_name?.trim()) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "Business name is required for vendors",
-                path: ["business_name"],
-            });
+        // vendor additionally requires business_name (seeds their Store)
+        if (data.role === "vendor") {
+            refineBusinessName(
+                data.business_name,
+                "business_name",
+                "Business name is required for vendors",
+                ctx
+            );
         }
-        // agency additionally requires agency_name
-        if (data.role === "agency" && !data.agency_name?.trim()) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "Agency name is required",
-                path: ["agency_name"],
-            });
+        // agency additionally requires agency_name (seeds their Magazin)
+        if (data.role === "agency") {
+            refineBusinessName(
+                data.agency_name,
+                "agency_name",
+                "Agency name is required",
+                ctx
+            );
         }
     });
 
