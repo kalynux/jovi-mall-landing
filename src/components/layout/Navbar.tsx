@@ -2,7 +2,8 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Zap, Sun, Moon, Globe, ChevronDown, LogIn } from "lucide-react";
+import { Menu, X, Sun, Moon, Globe, ChevronDown, LogIn } from "lucide-react";
+import WiMallMark from "@/components/brand/WiMallMark.generated";
 import { motion, useScroll, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { BRAND } from "@/lib/constants";
@@ -204,9 +205,7 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
         <div className="flex items-center justify-between h-16 lg:h-[4.5rem]">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group" aria-label={t("logoAriaLabel")}>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-glow-primary group-hover:scale-110 transition-transform duration-200">
-              <Zap className="w-4 h-4 text-white" />
-            </div>
+            <WiMallMark className="w-8 h-8 group-hover:scale-110 transition-transform duration-200" />
             <span className="font-display font-bold text-lg tracking-tight text-[var(--text-primary)]">
               {BRAND.name}
             </span>

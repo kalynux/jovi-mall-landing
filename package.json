@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "gen:phone-countries": "node scripts/gen-phone-countries.mjs src/lib/phone/countries.generated.ts"
+    "gen:phone-countries": "node scripts/gen-phone-countries.mjs src/lib/phone/countries.generated.ts",
+    "gen:app-icons": "node scripts/gen-app-icons.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

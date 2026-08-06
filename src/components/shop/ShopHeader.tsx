@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "@/lib/theme";
 import { useCart, useFavorites } from "@/components/shop/providers";
 import { Icon } from "@/components/shop/ds";
+import WiMallMark from "@/components/brand/WiMallMark.generated";
 
 function CountDot({ n }: { n: number }) {
   if (n <= 0) return null;
@@ -66,10 +67,7 @@ export function ShopHeader() {
     >
       <div className="mx-auto flex h-14 max-w-[1200px] items-center gap-3 px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2" aria-label="WiMall shop">
-          <span
-            aria-hidden
-            style={{ width: 14, height: 14, borderRadius: 3, background: "var(--brand)", transform: "rotate(45deg)" }}
-          />
+          <WiMallMark style={{ width: 22, height: 22 }} />
           <span
             className="font-display"
             style={{ fontWeight: 800, fontSize: 19, letterSpacing: "-0.03em", color: "var(--text-strong)" }}

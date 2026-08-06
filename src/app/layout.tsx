@@ -4,7 +4,18 @@ import { ThemeProvider } from "@/lib/theme";
 import { I18nProvider } from "@/lib/i18n-provider";
 import { AuthProvider } from "@/lib/auth/useAuth";
 
+/**
+ * Absolute origin for share metadata. Crawlers reject the relative URLs Next
+ * would otherwise emit for og:image, so this has to resolve even in preview
+ * builds — hence the fallback rather than a bare env read.
+ */
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wimall.com";
+
+// icon.svg, favicon.ico, apple-icon.png, opengraph-image.png and
+// twitter-image.png sit beside this file; Next picks them up by convention and
+// emits the tags. Regenerate them from AppIcons/ with `npm run gen:app-icons`.
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "WiMall — Commerce Runs on Conversation",
   description:
     "AI-powered ecommerce infrastructure for WhatsApp-first businesses. Vendors sell without a website. Customers shop by chatting. Agencies and agents earn on every delivery.",
@@ -21,12 +32,17 @@ export const metadata: Metadata = {
     description: "The WhatsApp-first AI ecommerce platform for modern businesses.",
     type: "website",
     siteName: "WiMall",
+    url: "/",
+    locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
     title: "WiMall — Commerce Runs on Conversation",
     description: "The WhatsApp-first AI ecommerce platform for modern businesses.",
   },
+  alternates: { canonical: "/" },
+  applicationName: "WiMall",
+  appleWebApp: { capable: true, title: "WiMall", statusBarStyle: "default" },
   robots: { index: true, follow: true },
 };
 

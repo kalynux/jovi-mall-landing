@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { Zap, Twitter, Linkedin, Instagram } from "lucide-react";
+import { Twitter, Linkedin, Instagram } from "lucide-react";
+import WiMallMark from "@/components/brand/WiMallMark.generated";
 import { BRAND } from "@/lib/constants";
 import { useTranslations } from "next-intl";
 import { useOptionalSectionNav } from "@/components/scroll/SectionNavProvider";
@@ -61,9 +62,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4 group" aria-label={t("logoAriaLabel")}>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-glow-primary group-hover:scale-110 transition-transform duration-200">
-                <Zap className="w-4 h-4 text-white" />
-              </div>
+              <WiMallMark className="w-8 h-8 group-hover:scale-110 transition-transform duration-200" />
               <span className="font-display font-bold text-lg text-[var(--text-primary)]">{BRAND.name}</span>
             </Link>
             <p className="text-[var(--text-muted)] text-sm leading-relaxed max-w-xs">

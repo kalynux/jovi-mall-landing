@@ -22,6 +22,7 @@ import type { UiRole } from "@/lib/auth/auth.types";
 import { cn } from "@/lib/utils";
 import AuthPageControls from "@/components/auth/AuthPageControls";
 import AuthShowcase from "@/components/auth/AuthShowcase";
+import WiMallMark from "@/components/brand/WiMallMark.generated";
 
 interface AuthSplitShellProps {
   mode: "login" | "register";
@@ -152,9 +153,7 @@ export default function AuthSplitShell({
         {/* Brand row */}
         <div className="flex items-center justify-between gap-4">
           <Link href="/" className="group flex items-center gap-2" aria-label={t("backToHome")}>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 shadow-glow-primary transition-transform duration-200 group-hover:scale-110">
-              <Zap className="h-4 w-4 text-white" aria-hidden="true" />
-            </div>
+            <WiMallMark className="h-8 w-8 transition-transform duration-200 group-hover:scale-110" />
             <span className="font-display text-lg font-bold tracking-tight text-[var(--text-primary)]">
               {BRAND.name}
             </span>
