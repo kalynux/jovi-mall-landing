@@ -10,9 +10,9 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { vendorSlug } = await params;
   const vendor = await getVendorBySlug(vendorSlug);
-  if (!vendor) return { title: "Store not found — Jovi Mall" };
+  if (!vendor) return { title: "Store not found — WiMall" };
   return {
-    title: `${vendor.name} — Jovi Mall`,
+    title: `${vendor.name} — WiMall`,
     description: vendor.desc,
   };
 }

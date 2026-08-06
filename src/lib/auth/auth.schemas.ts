@@ -1,5 +1,7 @@
 import { z } from "zod";
 import type { UiRole } from "./auth.types";
+import { PhoneSchema } from "@/lib/phone/phone.schema";
+import { phoneErrorMessage, toE164, validatePhone } from "@/lib/phone/phone";
 
 // ─── Role Schema ─────────────────────────────────────────────────────────────
 // Use z.enum() directly — avoids .transform() which widens the inferred type
@@ -59,25 +61,74 @@ function refineBusinessName(
 }
 
 // ─── Login ───────────────────────────────────────────────────────────────────
-export const LoginSchema = z.object({
-    identifier: z.string().min(1, "Phone number or email is required").trim(),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    role: UiRoleSchema.optional(),
-});
+/**
+ * The backend takes a single `identifier` that may be either a phone number or
+ * an email. The form asks which one is being entered, because a phone number
+ * needs a country selector and E.164 normalisation and an email must not get
+ * either — one field cannot honestly be both.
+ *
+ * `identifier_type` drives the UI only; it is stripped before submit.
+ */
+export const IDENTIFIER_TYPES = ["phone", "email"] as const;
+export const IdentifierTypeSchema = z.enum(IDENTIFIER_TYPES);
+export type IdentifierType = (typeof IDENTIFIER_TYPES)[number];
+
+export const LoginSchema = z
+    .object({
+        identifier_type: IdentifierTypeSchema,
+        identifier: z.string().trim(),
+        password: z.string().min(6, "Password must be at least 6 characters"),
+        role: UiRoleSchema.optional(),
+    })
+    .superRefine((data, ctx) => {
+        if (data.identifier_type === "phone") {
+            const error = validatePhone(data.identifier, { required: true });
+            if (error) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: phoneErrorMessage(error),
+                    path: ["identifier"],
+                });
+            }
+            return;
+        }
+
+        if (!data.identifier) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Email is required",
+                path: ["identifier"],
+            });
+            return;
+        }
+        if (!z.string().email().safeParse(data.identifier).success) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Invalid email",
+                path: ["identifier"],
+            });
+        }
+    })
+    // Normalise here rather than in the page so every caller of LoginSchema
+    // gets an E.164 identifier, not just the one that remembered to convert.
+    .transform((data) => ({
+        ...data,
+        identifier:
+            data.identifier_type === "phone"
+                ? (toE164(data.identifier) ?? data.identifier)
+                : data.identifier,
+    }));
 
 export type LoginFormValues = z.infer<typeof LoginSchema>;
 
 // ─── Register ────────────────────────────────────────────────────────────────
 export const RegisterSchema = z
     .object({
-        phone: z
-            .string()
-            .trim()
-            // Backend requires at least 10 digits (api-doc/auth/README.md).
-            // Count digits only so formatting (spaces, +, -) doesn't inflate length.
-            .refine((v) => v.replace(/\D/g, "").length >= 10, {
-                message: "Enter a valid phone number (at least 10 digits)",
-            }),
+        // Validated against the selected country's numbering rules and emitted
+        // as strict E.164. The backend's own rule is a floor of 10 digits
+        // (api-doc/auth/README.md); every number that satisfies its country's
+        // plan and carries a calling code clears it.
+        phone: PhoneSchema,
         email: z.string().email("Invalid email").optional().or(z.literal("")),
         name: z.string().min(2, "Name must be at least 2 characters").trim(),
         password: z

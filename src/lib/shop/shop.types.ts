@@ -1,7 +1,7 @@
 /**
  * Shop domain types.
  *
- * Shapes mirror the jovi-mall backend's serialized catalog model:
+ * Shapes mirror the wimall backend's serialized catalog model:
  *  - product `type` ∈ physical | digital | service
  *  - price / stock / compareAt / sku live on VARIANTS, not the product
  *  - `category` is free-text (no taxonomy)

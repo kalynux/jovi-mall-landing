@@ -11,7 +11,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Brand green (Jovi green) — remapped so existing `primary-*` usage re-skins.
+        // Brand green (WiMall green) — remapped so existing `primary-*` usage re-skins.
         primary: {
           50: "#E9FBF2",
           100: "#C7F5DE",

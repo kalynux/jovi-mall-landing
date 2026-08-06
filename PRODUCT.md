@@ -17,7 +17,7 @@ Serving four roles on one platform. Acquisition priority (confirmed): **customer
 
 ## Product Purpose
 
-Jovi Mall is WhatsApp-first, AI-powered ecommerce infrastructure. Customers shop by chatting on WhatsApp; an AI assistant understands intent, recommends products, and creates orders inside the chat. Vendors upload a catalog and the AI sells on their behalf — with no storefront, website, or app on either side. Agencies and agents fulfill delivery and earn on each order. Success is a transaction completed end-to-end — chat → recommendation → order → payment → delivery → payout — with value flowing to all actors. Tagline: *"Commerce runs on conversation."*
+WiMall is WhatsApp-first, AI-powered ecommerce infrastructure. Customers shop by chatting on WhatsApp; an AI assistant understands intent, recommends products, and creates orders inside the chat. Vendors upload a catalog and the AI sells on their behalf — with no storefront, website, or app on either side. Agencies and agents fulfill delivery and earn on each order. Success is a transaction completed end-to-end — chat → recommendation → order → payment → delivery → payout — with value flowing to all actors. Tagline: *"Commerce runs on conversation."*
 
 ## Positioning
 
@@ -35,16 +35,16 @@ WhatsApp-native, AI-run commerce built from the ground up for mobile-dominant, W
 
 - **Confirmed functionality (from code):** AI product recommendation over WhatsApp; vendor catalog upload; multi-role auth (register / login / add-role / switch-role) with WhatsApp verification; a shop experience (product detail, cart, checkout, saved items, vendor stores, account); local mobile payment methods; delivery dispatch to agents with tracking.
 - **Stack (existing — do not swap frameworks):** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS, next-intl for i18n, framer-motion, react-hook-form + zod. Backend API base is configurable via `NEXT_PUBLIC_API_URL`.
-- **Terminology:** Vendor, Agency, Agent, Customer; "roles"; the AI assistant is "Jovi AI".
+- **Terminology:** Vendor, Agency, Agent, Customer; "roles"; the AI assistant is "WiMall AI".
 - **Constraints to honor:** low-data / low-bandwidth performance, entry-level device support, RTL for Arabic, and WhatsApp as the primary customer channel.
-- **Open / not yet settled:** the primary market is Cameroon / Francophone Central Africa, but current demo copy is English-led and prices in Naira (₦, Nigeria). Currency and default language for the real market are **not yet aligned** — treat Naira pricing and English-only demo copy as placeholder, not settled product truth (real market likely points to FCFA / XAF and French-first). The WhatsApp business number (`+2340000000000`) is a placeholder; `hello@jovimall.com` is unconfirmed as a live contact.
+- **Open / not yet settled:** the primary market is Cameroon / Francophone Central Africa, but current demo copy is English-led and prices in Naira (₦, Nigeria). Currency and default language for the real market are **not yet aligned** — treat Naira pricing and English-only demo copy as placeholder, not settled product truth (real market likely points to FCFA / XAF and French-first). The WhatsApp business number (`+2340000000000`) is a placeholder; `hello@wimall.com` is unconfirmed as a live contact.
 
 ## Brand Commitments
 
-- **Name:** Jovi Mall. (The repo folder `wi-mall` is legacy; the product name is Jovi Mall throughout the code and metadata.)
+- **Name:** WiMall. (Written as one word, capital W and M; used consistently throughout the code and metadata. Formerly "Jovi Mall".)
 - **Tagline:** "Commerce runs on conversation."
 - **Voice:** confident, plain-spoken, benefit-led, and optimistic — commerce made effortless and human through chat, with an explicit Africa-first framing ("Built for how you actually shop").
-- **Identity anchor:** WhatsApp-native conversational commerce and the AI assistant persona ("Jovi AI").
+- **Identity anchor:** WhatsApp-native conversational commerce and the AI assistant persona ("WiMall AI").
 - Visual identity (palette, typography, components) is intentionally left to DESIGN.md, not recorded here.
 
 ## Evidence on Hand

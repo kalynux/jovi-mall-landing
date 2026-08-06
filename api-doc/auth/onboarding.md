@@ -1,6 +1,6 @@
 # Onboarding API Endpoints Documentation
 
-This document provides details on the onboarding flows and endpoints for the different roles in the Jovi Mall platform: **Vendor**, **Delivery Agent**, and **Delivery Agency**. 
+This document provides details on the onboarding flows and endpoints for the different roles in the WiMall platform: **Vendor**, **Delivery Agent**, and **Delivery Agency**. 
 
 Note: **Customers** do not have an onboarding flow (their `onboarding_step` is inherently `0` or complete upon registration).
 

@@ -10,9 +10,9 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { productSlug } = await params;
   const product = await getProductBySlug(productSlug);
-  if (!product) return { title: "Product not found — Jovi Mall" };
+  if (!product) return { title: "Product not found — WiMall" };
   return {
-    title: `${product.title} — Jovi Mall`,
+    title: `${product.title} — WiMall`,
     description: product.desc,
     openGraph: {
       title: product.title,

@@ -1,11 +1,11 @@
 // ─── Brand ──────────────────────────────────────────────────────────────────
 export const BRAND = {
-    name: "Jovi Mall",
+    name: "WiMall",
     tagline: "Commerce runs on conversation.",
     description:
         "AI-powered ecommerce infrastructure for WhatsApp-first businesses. No storefront needed — just upload products and let AI sell for you.",
     whatsappNumber: "+2340000000000", // Placeholder
-    email: "hello@jovimall.com",
+    email: "hello@wimall.com",
 };
 
 // ─── Navigation ─────────────────────────────────────────────────────────────
@@ -24,7 +24,7 @@ export const SECTION_IDS = [
     { id: "agencies", label: "Agencies" },
     { id: "agents", label: "Agents" },
     { id: "customers", label: "Customers" },
-    { id: "why-jovi", label: "Built For You" },
+    { id: "why-wimall", label: "Built For You" },
     { id: "trust", label: "Trust" },
     { id: "cta", label: "Get Started" },
 ];
@@ -38,7 +38,7 @@ export const SECTION_ROLE_ACCENT: Record<string, string> = {
     agencies: "role-agency",
     agents: "role-agent",
     customers: "role-customer",
-    "why-jovi": "role-accent",
+    "why-wimall": "role-accent",
     trust: "role-accent",
     cta: "role-customer",
 };
@@ -153,4 +153,4 @@ export const API_BASE_URL =
 // duplicated here with divergent dev-port lists; import them from there instead.
 
 /** WhatsApp deep-link for the customer role registration callout */
-export const WHATSAPP_CUSTOMER_LINK = `https://wa.me/${BRAND.whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent("Hi, I want to shop on Jovi Mall!")}`;
+export const WHATSAPP_CUSTOMER_LINK = `https://wa.me/${BRAND.whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent("Hi, I want to shop on WiMall!")}`;

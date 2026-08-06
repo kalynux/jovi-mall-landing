@@ -65,7 +65,7 @@ export function ShopHeader() {
       style={{ background: "var(--surface)", borderColor: "var(--border-subtle)" }}
     >
       <div className="mx-auto flex h-14 max-w-[1200px] items-center gap-3 px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2" aria-label="Jovi Mall shop">
+        <Link href="/" className="flex items-center gap-2" aria-label="WiMall shop">
           <span
             aria-hidden
             style={{ width: 14, height: 14, borderRadius: 3, background: "var(--brand)", transform: "rotate(45deg)" }}
@@ -74,7 +74,7 @@ export function ShopHeader() {
             className="font-display"
             style={{ fontWeight: 800, fontSize: 19, letterSpacing: "-0.03em", color: "var(--text-strong)" }}
           >
-            Jovi<span style={{ color: "var(--brand)" }}>Mall</span>
+            Wi<span style={{ color: "var(--brand)" }}>Mall</span>
           </span>
         </Link>
 

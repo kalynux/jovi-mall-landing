@@ -14,7 +14,7 @@ interface CartContextValue {
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
-const STORAGE_KEY = "jovi-shop-carts";
+const STORAGE_KEY = "wimall-shop-carts";
 const EMPTY: Carts = { physical: [], digital: [] };
 
 export function useCart(): CartContextValue {

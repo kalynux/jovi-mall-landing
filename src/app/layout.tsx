@@ -5,7 +5,7 @@ import { I18nProvider } from "@/lib/i18n-provider";
 import { AuthProvider } from "@/lib/auth/useAuth";
 
 export const metadata: Metadata = {
-  title: "Jovi Mall — Commerce Runs on Conversation",
+  title: "WiMall — Commerce Runs on Conversation",
   description:
     "AI-powered ecommerce infrastructure for WhatsApp-first businesses. Vendors sell without a website. Customers shop by chatting. Agencies and agents earn on every delivery.",
   keywords: [
@@ -14,17 +14,17 @@ export const metadata: Metadata = {
     "sell on WhatsApp",
     "mobile commerce",
     "ecommerce platform",
-    "Jovi Mall",
+    "WiMall",
   ],
   openGraph: {
-    title: "Jovi Mall — Commerce Runs on Conversation",
+    title: "WiMall — Commerce Runs on Conversation",
     description: "The WhatsApp-first AI ecommerce platform for modern businesses.",
     type: "website",
-    siteName: "Jovi Mall",
+    siteName: "WiMall",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Jovi Mall — Commerce Runs on Conversation",
+    title: "WiMall — Commerce Runs on Conversation",
     description: "The WhatsApp-first AI ecommerce platform for modern businesses.",
   },
   robots: { index: true, follow: true },
@@ -39,13 +39,13 @@ export default function RootLayout({
         {/* Prevent FOUC: apply stored theme class before first paint */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('jovi-theme');if(t==='dark'||(t==null&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+            __html: `(function(){try{var t=localStorage.getItem('wimall-theme');if(t==='dark'||(t==null&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
           }}
         />
         {/* Apply stored lang/dir before first paint */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var l=localStorage.getItem('jovi-lang')||'en';var rtl=['ar'];document.documentElement.setAttribute('lang',l);document.documentElement.setAttribute('dir',rtl.includes(l)?'rtl':'ltr');}catch(e){}})()`,
+            __html: `(function(){try{var l=localStorage.getItem('wimall-lang')||'en';var rtl=['ar'];document.documentElement.setAttribute('lang',l);document.documentElement.setAttribute('dir',rtl.includes(l)?'rtl':'ltr');}catch(e){}})()`,
           }}
         />
         <link rel="preconnect" href="https://fonts.googleapis.com" />

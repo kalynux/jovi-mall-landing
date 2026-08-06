@@ -4,7 +4,8 @@
  *
  * Always dark emerald regardless of theme (the same always-dark treatment the
  * landing's final CTA section uses), so the light form pane next to it reads as
- * the "paper" side of the seam.
+ * the "paper" side of the seam. Rendered only from `lg` up: below that the auth
+ * card is the form alone.
  *
  * The copy tracks the role the visitor has picked, and it is the landing page's
  * own copy: each role's section headline, subtitle and three beats, pulled from
@@ -43,11 +44,6 @@ interface AuthShowcaseProps {
   mode: "login" | "register";
   /** Selected role, or null before the visitor has picked one. */
   role?: UiRole | null;
-  /**
-   * Compact renders the slim banner used above the form on narrow viewports,
-   * where the full panel is hidden. Same copy, one line of it.
-   */
-  compact?: boolean;
   className?: string;
 }
 
@@ -136,7 +132,7 @@ function ShowcaseOrnament({ icon: Icon, accent }: { icon: React.ElementType; acc
   );
 }
 
-export default function AuthShowcase({ mode, role = null, compact = false, className }: AuthShowcaseProps) {
+export default function AuthShowcase({ mode, role = null, className }: AuthShowcaseProps) {
   const t = useTranslations("auth");
   // One hook per role namespace — the landing sections own this copy, and it is
   // already translated everywhere, so the panel reads from them rather than
@@ -207,46 +203,6 @@ export default function AuthShowcase({ mode, role = null, compact = false, class
   // Swapping role re-keys the copy so it cross-fades rather than snapping.
   const swapKey = role ?? `default-${mode}`;
 
-  // ── Compact banner (mobile / tablet) ──────────────────────────────────────
-  if (compact) {
-    return (
-      <div
-        className={cn("relative isolate overflow-hidden rounded-2xl px-5 py-4 text-white", className)}
-        style={{ background: "linear-gradient(135deg, #06412E 0%, #066844 55%, #075138 100%)" }}
-      >
-        <ShowcaseBackdrop accent={visuals.accent} />
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={swapKey}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="relative"
-          >
-            <div className="flex items-center gap-2 font-display text-[10px] font-semibold uppercase tracking-[0.14em] text-primary-200">
-              <Sparkles className="h-3 w-3" aria-hidden="true" />
-              {content.eyebrow}
-            </div>
-            <p className="mt-1.5 font-display text-base font-bold leading-snug">{content.title}</p>
-            <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5">
-              {content.points.map((text, i) => {
-                const Icon = visuals.pointIcons[i];
-                return (
-                  <li key={text} className="flex items-center gap-1.5 text-[11px] text-white/75">
-                    <Icon className="h-3 w-3 shrink-0" style={{ color: visuals.accent }} aria-hidden="true" />
-                    {text}
-                  </li>
-                );
-              })}
-            </ul>
-          </motion.div>
-        </AnimatePresence>
-      </div>
-    );
-  }
-
-  // ── Full panel (lg and up) ────────────────────────────────────────────────
   return (
     <div
       className={cn(

@@ -4,7 +4,7 @@ These are the core endpoints implemented in the WhatsApp module (`/api/whatsapp`
 
 ## 1. Webhook (Inbound Messages)
 
-This endpoint receives inbound messages sent to the Jovi Mall WhatsApp business number. It is intended to be called by an automation layer (like n8n) rather than directly by frontend applications.
+This endpoint receives inbound messages sent to the WiMall WhatsApp business number. It is intended to be called by an automation layer (like n8n) rather than directly by frontend applications.
 
 - **Endpoint:** `POST /api/whatsapp/`
 - **Authentication:** None (Public)

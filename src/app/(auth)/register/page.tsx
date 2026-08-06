@@ -1,6 +1,6 @@
 "use client";
 import { useState, Suspense } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -19,6 +19,7 @@ import { mapApiErrors, parseRootType } from "@/lib/auth/form-errors";
 import { sanitizePayload } from "@/lib/form/sanitize-payload";
 import AuthSplitShell from "@/components/auth/AuthSplitShell";
 import AuthFormField from "@/components/auth/AuthFormField";
+import { PhoneField } from "@/components/ui/phone";
 import { GlobalError } from "@/components/auth/GlobalError";
 import RolePicker from "@/components/auth/RolePicker";
 import CustomerWhatsAppCta from "@/components/auth/CustomerWhatsAppCta";
@@ -62,6 +63,7 @@ function RegisterFormContent() {
 
   const {
     register,
+    control,
     handleSubmit,
     setError,
     clearErrors,
@@ -69,7 +71,9 @@ function RegisterFormContent() {
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(RegisterSchema),
-    defaultValues: { role: initialRole },
+    // `phone` must start as "" rather than undefined — PhoneField is a
+    // controlled input and would otherwise flip from uncontrolled on first key.
+    defaultValues: { role: initialRole, phone: "" },
   });
 
   // Vendor/agency give two distinct names: their own (stored on the role
@@ -253,17 +257,30 @@ function RegisterFormContent() {
                 error={errors.name?.message}
               />
 
-              <AuthFormField
-                variant="floating"
-                label={t("phoneLabel")}
-                type="tel"
-                autoComplete="tel"
-                placeholder={t("phonePlaceholderRegister")}
-                required
-                {...register("phone", {
-                  onChange: () => clearErrors(["phone", "root"] as any),
-                })}
-                error={errors.phone?.message}
+              {/*
+                Phone is the login identifier, so it is the one field that must
+                be unambiguous: PhoneField validates against the selected
+                country's numbering plan and hands RegisterSchema a value it
+                normalises to E.164 before submit.
+              */}
+              <Controller
+                name="phone"
+                control={control}
+                render={({ field }) => (
+                  <PhoneField
+                    label={t("phoneLabel")}
+                    required
+                    name={field.name}
+                    value={field.value ?? ""}
+                    onChange={(next) => {
+                      field.onChange(next);
+                      clearErrors(["phone", "root"] as any);
+                    }}
+                    onBlur={field.onBlur}
+                    inputRef={field.ref}
+                    error={errors.phone?.message}
+                  />
+                )}
               />
 
               {/*

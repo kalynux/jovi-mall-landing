@@ -47,19 +47,19 @@ const ROLE: Record<Variant, { accent: string; title: string; address: string; ta
   vendor: {
     accent: "#068554",
     title: "Vendor Dashboard",
-    address: "app.jovimall.com/vendor",
+    address: "app.wimall.com/vendor",
     tabs: [Home, Package, BarChart2, Wallet],
   },
   agency: {
     accent: "#2563eb",
     title: "Agency Console",
-    address: "app.jovimall.com/agency",
+    address: "app.wimall.com/agency",
     tabs: [Home, Users, Route, Wallet],
   },
   agent: {
     accent: "#f59e0b",
     title: "Agent App",
-    address: "app.jovimall.com/agent",
+    address: "app.wimall.com/agent",
     tabs: [Home, Navigation, Package, Wallet],
   },
 };
@@ -626,7 +626,7 @@ function AgentPanels({
         {!dense && (
           <div className="mt-2 flex shrink-0 items-center justify-between text-[9px]">
             <span className="text-[var(--text-muted)]">
-              {t("pickup")} · <span className="font-medium text-[var(--text-primary)]">JoviTech Store</span>
+              {t("pickup")} · <span className="font-medium text-[var(--text-primary)]">WiTech Store</span>
             </span>
             <span className="text-[var(--text-muted)]">
               {t("dropoff")} · <span className="font-medium text-[var(--text-primary)]">Lekki Phase 1</span>

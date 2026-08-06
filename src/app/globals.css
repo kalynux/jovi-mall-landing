@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 /* ============================================================
-   Jovi Mall Design System — tokens (ported from JoviMallDesignSystem_cc21b6)
-   Warm-neutral base + emerald "Jovi" green primary + amber accent.
+   WiMall Design System — tokens (ported from WiMallDesignSystem_cc21b6)
+   Warm-neutral base + emerald "WiMall" green primary + amber accent.
    Light values on :root, dark values on html.dark.
    ============================================================ */
 :root {
-  /* ---- Brand green (Jovi green — jade/emerald) ---- */
+  /* ---- Brand green (WiMall green — jade/emerald) ---- */
   --green-50:  #E9FBF2;
   --green-100: #C7F5DE;
   --green-200: #93E9C1;

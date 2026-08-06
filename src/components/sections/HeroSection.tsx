@@ -345,7 +345,7 @@ function HeroConversation() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 className="flex justify-start"
-                aria-label="Jovi AI is typing"
+                aria-label="WiMall AI is typing"
               >
                 <div className="bg-white px-3 py-2.5 rounded-xl rounded-bl-none shadow-sm flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-typing-1" />

@@ -6,6 +6,8 @@ import { Avatar, Badge, Button, Icon } from "@/components/shop/ds";
 import { useCart } from "@/components/shop/providers";
 import { findProductById, findVendorById } from "@/lib/shop/shop.api";
 import { formatXAF } from "@/lib/shop/format";
+import { isValidPhone, toE164 } from "@/lib/phone";
+import { PhoneField } from "@/components/ui/phone";
 import type { CartItem, CartKey } from "@/lib/shop/shop.types";
 
 function line(item: CartItem) {
@@ -31,7 +33,8 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { carts, clearCarts } = useCart();
   const [pay, setPay] = useState("mtn");
-  const [phone, setPhone] = useState("+237 6 ");
+  /** International value from PhoneField — see src/lib/phone/README.md. */
+  const [phone, setPhone] = useState("");
   const [total, setTotal] = useState(0);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -40,6 +43,9 @@ export default function CheckoutPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (t) setTotal(t);
   }, []);
+
+  /** Mobile money debits a phone number; card does not. */
+  const needsPhone = pay !== "card";
 
   const orders = useMemo<VendorOrder[]>(() => {
     const grouped: Record<string, VendorOrder> = {};
@@ -125,8 +131,19 @@ export default function CheckoutPage() {
           </button>
         ))}
       </div>
-      {pay !== "card" ? (
-        <input className="field" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Mobile money number" style={{ marginBottom: 20 }} />
+      {needsPhone ? (
+        <div style={{ marginBottom: 20 }}>
+          <PhoneField
+            variant="stacked"
+            label="Mobile money number"
+            required
+            name="momo-phone"
+            autoComplete="tel"
+            value={phone}
+            onChange={setPhone}
+            hint="The number the payment prompt will be sent to."
+          />
+        </div>
       ) : (
         <div style={{ marginBottom: 20 }}>
           <input className="field" placeholder="Card number" style={{ marginBottom: 8 }} />
@@ -189,7 +206,16 @@ export default function CheckoutPage() {
           size="lg"
           elevated
           leadingIcon="lock"
+          // Mobile money charges the number typed here, so an incomplete one
+          // must not be payable. Card has its own fields and no phone.
+          disabled={needsPhone && !isValidPhone(phone)}
+          title={needsPhone && !isValidPhone(phone) ? "Enter a valid mobile money number" : undefined}
           onClick={() => {
+            // Whatever a payment call ends up being wired to, it receives
+            // E.164 — the same normalisation every other form applies.
+            const momoNumber = needsPhone ? toE164(phone) : null;
+            if (needsPhone && !momoNumber) return;
+
             clearCarts();
             router.push(`/shop/checkout/success?orders=${orders.length}&total=${total}`);
           }}

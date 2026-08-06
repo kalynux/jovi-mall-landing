@@ -133,7 +133,7 @@ export interface CloudTint {
 }
 
 export const CLOUD_TINTS: CloudTint[] = [
-  { from: "#22BD82", to: "#068554" }, // Jovi green
+  { from: "#22BD82", to: "#068554" }, // WiMall green
   { from: "#2DD4BF", to: "#0D9488" }, // teal
   { from: "#FBBF24", to: "#D97706" }, // amber
   { from: "#57D6A0", to: "#0DA06B" }, // light green

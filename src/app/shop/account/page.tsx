@@ -100,7 +100,7 @@ export default function AccountPage() {
       </div>
 
       <p className="muted" style={{ textAlign: "center", marginTop: 20 }}>
-        Jovi Mall · shopping from your WhatsApp
+        WiMall · shopping from your WhatsApp
       </p>
     </div>
   );

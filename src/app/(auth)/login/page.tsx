@@ -1,19 +1,25 @@
 "use client";
-import { useState, Suspense } from "react";
-import { useForm } from "react-hook-form";
+import { useRef, useState, Suspense } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { LoginSchema, type LoginFormValues } from "@/lib/auth/auth.schemas";
+import {
+  IDENTIFIER_TYPES,
+  LoginSchema,
+  type IdentifierType,
+  type LoginFormValues,
+} from "@/lib/auth/auth.schemas";
 import { loginAndGetAction, logoutAndRedirect } from "@/lib/auth/auth.service";
 import type { UiRole, AuthRoleEntity } from "@/lib/auth/auth.types";
 import { mapApiErrors, parseRootType } from "@/lib/auth/form-errors";
 import { sanitizePayload } from "@/lib/form/sanitize-payload";
 import AuthSplitShell from "@/components/auth/AuthSplitShell";
 import AuthFormField from "@/components/auth/AuthFormField";
+import { PhoneField } from "@/components/ui/phone";
 import { GlobalError } from "@/components/auth/GlobalError";
 import RolePicker from "@/components/auth/RolePicker";
 import CustomerWhatsAppCta from "@/components/auth/CustomerWhatsAppCta";
@@ -28,6 +34,84 @@ const stepMotion = {
   exit: { opacity: 0, y: -8 },
   transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] as const },
 };
+
+/**
+ * Picks which kind of identifier is being entered.
+ *
+ * Sign-in accepts a phone number or an email, and the two need different
+ * inputs — a phone needs the country selector and E.164 normalisation that the
+ * rest of the app uses, an email must not get either. Asking up front is what
+ * lets both be handled properly instead of guessing from the typed characters.
+ *
+ * Radio semantics with a roving tabindex: one tab stop for the group, arrows
+ * move between the options, which is what a segmented control should do.
+ */
+function IdentifierTypeToggle({
+  value,
+  onChange,
+  labels,
+  groupLabel,
+}: {
+  value: IdentifierType;
+  onChange: (next: IdentifierType) => void;
+  labels: Record<IdentifierType, string>;
+  groupLabel: string;
+}) {
+  const refs = useRef<Partial<Record<IdentifierType, HTMLButtonElement | null>>>({});
+
+  const move = (delta: number) => {
+    const index = IDENTIFIER_TYPES.indexOf(value);
+    const next =
+      IDENTIFIER_TYPES[
+        (index + delta + IDENTIFIER_TYPES.length) % IDENTIFIER_TYPES.length
+      ];
+    onChange(next);
+    refs.current[next]?.focus();
+  };
+
+  return (
+    <div
+      role="radiogroup"
+      aria-label={groupLabel}
+      className="inline-flex rounded-full bg-[var(--bg-subtle)] p-0.5"
+      onKeyDown={(e) => {
+        if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+          e.preventDefault();
+          move(1);
+        } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+          e.preventDefault();
+          move(-1);
+        }
+      }}
+    >
+      {IDENTIFIER_TYPES.map((type) => {
+        const selected = type === value;
+        return (
+          <button
+            key={type}
+            ref={(node) => {
+              refs.current[type] = node;
+            }}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            tabIndex={selected ? 0 : -1}
+            onClick={() => onChange(type)}
+            className={[
+              "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors duration-150",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500",
+              selected
+                ? "bg-[var(--surface)] text-primary-600 shadow-[var(--shadow-sm)]"
+                : "text-[var(--text-muted)] hover:text-[var(--text-primary)]",
+            ].join(" ")}
+          >
+            {labels[type]}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 function LoginFormContent() {
   const t = useTranslations("auth");
@@ -47,13 +131,37 @@ function LoginFormContent() {
 
   const {
     register,
+    control,
     handleSubmit,
     setError,
     clearErrors,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(LoginSchema),
+    defaultValues: { identifier_type: "phone", identifier: "", password: "" },
   });
+
+  const identifierType = watch("identifier_type");
+
+  /**
+   * Clears the identifier field and any global error together.
+   *
+   * Two calls rather than one array: `clearErrors` types "root" separately
+   * from field paths, so a mixed array only compiles behind a cast.
+   */
+  const clearIdentifierErrors = () => {
+    clearErrors("identifier");
+    clearErrors("root");
+  };
+
+  /** Switching kind clears the value — a phone number is not a draft email. */
+  const handleIdentifierType = (next: IdentifierType) => {
+    setValue("identifier_type", next);
+    setValue("identifier", "");
+    clearIdentifierErrors();
+  };
 
   const handleRoleSelect = (role: UiRole) => {
     if (role === "customer") {
@@ -79,8 +187,15 @@ function LoginFormContent() {
     clearErrors("root");
 
     try {
+      // `identifier_type` picks the input; the backend only wants the
+      // identifier itself, already normalised to E.164 by LoginSchema.
+      const credentials = {
+        identifier: data.identifier,
+        password: data.password,
+      };
+
       const payload = sanitizePayload({
-        ...data,
+        ...credentials,
         role: selectedRole ?? undefined,
       });
 
@@ -199,18 +314,56 @@ function LoginFormContent() {
               </div>
             )}
 
-            <AuthFormField
-              variant="floating"
-              label={t("phoneLabelLogin")}
-              type="text"
-              autoComplete="username"
-              placeholder={t("phonePlaceholder")}
-              required
-              {...register("identifier", {
-                onChange: () => clearErrors(["identifier", "root"] as any),
-              })}
-              error={errors.identifier?.message}
-            />
+            {/* Identifier — phone or email, each with the input it deserves. */}
+            <div className="flex flex-col gap-2">
+              <IdentifierTypeToggle
+                value={identifierType}
+                onChange={handleIdentifierType}
+                groupLabel={t("identifierTypeLabel")}
+                labels={{
+                  phone: t("identifierTypePhone"),
+                  email: t("identifierTypeEmail"),
+                }}
+              />
+
+              {identifierType === "phone" ? (
+                <Controller
+                  name="identifier"
+                  control={control}
+                  render={({ field }) => (
+                    <PhoneField
+                      label={t("phoneLabel")}
+                      required
+                      autoComplete="username"
+                      name={field.name}
+                      value={field.value ?? ""}
+                      onChange={(next) => {
+                        field.onChange(next);
+                        clearIdentifierErrors();
+                      }}
+                      onBlur={field.onBlur}
+                      inputRef={field.ref}
+                      error={errors.identifier?.message}
+                    />
+                  )}
+                />
+              ) : (
+                <AuthFormField
+                  variant="floating"
+                  // Not `emailLabel` — that one is suffixed "(optional)" for
+                  // registration, and here it is the credential.
+                  label={t("emailLabelLogin")}
+                  type="email"
+                  autoComplete="username"
+                  placeholder={t("emailPlaceholder")}
+                  required
+                  {...register("identifier", {
+                    onChange: () => clearErrors(["identifier", "root"] as any),
+                  })}
+                  error={errors.identifier?.message}
+                />
+              )}
+            </div>
 
             <div className="flex flex-col gap-1.5">
               <AuthFormField

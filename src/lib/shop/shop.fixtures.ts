@@ -1,6 +1,6 @@
 /**
  * Mock catalog data for the Shop — ported from the Claude Design bundle
- * (JoviMallDesignSystem_cc21b6). Shapes mirror the backend; images use the
+ * (WiMallDesignSystem_cc21b6). Shapes mirror the backend; images use the
  * design's Picsum placeholder seeds. Swap this module for real API calls later.
  */
 import { slugify } from "./format";
@@ -23,7 +23,7 @@ export const vendors: Vendor[] = [
     isOpen: true,
     banner: banner("bella-banner"),
     desc: "Contemporary African fashion, handmade in Douala. Wax prints, accessories & made-to-order pieces.",
-    agency: "Jovi Express",
+    agency: "WiExpress",
     whatsapp: "+237 6 70 00 00 00",
     rating: 4.8,
     reviews: 320,
@@ -89,7 +89,7 @@ const rawProducts: Omit<Product, "slug">[] = [
     rating: 4.6,
     reviews: 214,
     sales: 512,
-    images: img("jovi-dress", 4),
+    images: img("wimall-dress", 4),
     delivery: "Free delivery",
     inStock: true,
     options: [
@@ -113,7 +113,7 @@ const rawProducts: Omit<Product, "slug">[] = [
     rating: 4.4,
     reviews: 52,
     sales: 130,
-    images: img("jovi-bag", 3),
+    images: img("wimall-bag", 3),
     delivery: "Delivery available",
     inStock: true,
     options: [{ name: "Color", values: ["Natural", "Black"] }],
@@ -130,7 +130,7 @@ const rawProducts: Omit<Product, "slug">[] = [
     rating: 4.7,
     reviews: 88,
     sales: 240,
-    images: img("jovi-neck", 3),
+    images: img("wimall-neck", 3),
     delivery: "Free delivery",
     inStock: false,
     options: [],
@@ -147,7 +147,7 @@ const rawProducts: Omit<Product, "slug">[] = [
     rating: 4.9,
     reviews: 88,
     sales: 1200,
-    images: img("jovi-course", 2),
+    images: img("wimall-course", 2),
     inStock: true,
     digital: { license: "Single user", access: "Lifetime", downloads: 5, platforms: "Web, iOS, Android" },
     options: [{ name: "Format", values: ["Video + PDF", "PDF only"] }],
@@ -168,7 +168,7 @@ const rawProducts: Omit<Product, "slug">[] = [
     rating: 4.5,
     reviews: 34,
     sales: 300,
-    images: img("jovi-ebook", 1),
+    images: img("wimall-ebook", 1),
     inStock: true,
     digital: { license: "Single user", access: "1 year", downloads: 3, platforms: "PDF, EPUB" },
     options: [{ name: "Format", values: ["PDF", "EPUB"] }],
@@ -185,7 +185,7 @@ const rawProducts: Omit<Product, "slug">[] = [
     rating: 4.8,
     reviews: 31,
     sales: 90,
-    images: img("jovi-salon", 3),
+    images: img("wimall-salon", 3),
     inStock: true,
     service: { duration: 60, mode: "calendar", location: "At your address (Douala)", buffer: 15 },
     options: [],
@@ -202,7 +202,7 @@ const rawProducts: Omit<Product, "slug">[] = [
     rating: 4.3,
     reviews: 40,
     sales: 75,
-    images: img("jovi-shirt", 3),
+    images: img("wimall-shirt", 3),
     delivery: "Free delivery",
     inStock: true,
     options: [{ name: "Size", values: ["M", "L", "XL"] }],
@@ -219,7 +219,7 @@ const rawProducts: Omit<Product, "slug">[] = [
     rating: 4.6,
     reviews: 22,
     sales: 60,
-    images: img("jovi-bowl", 2),
+    images: img("wimall-bowl", 2),
     delivery: "Delivery available",
     inStock: true,
     options: [],

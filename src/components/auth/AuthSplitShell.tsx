@@ -5,8 +5,10 @@
  * One card, split down the middle: the warm-neutral form pane on the leading
  * side, the always-dark emerald AuthShowcase on the trailing side, and a switch
  * medallion sitting on the seam that flips between signing in and signing up.
- * Below `lg` the showcase pane is dropped for a compact banner above the form,
- * so a phone gets the brand note without losing the fold.
+ *
+ * Below `lg` the showcase drops out entirely and the card narrows to a single
+ * centred column — just the form. A phone has one job on this screen, and the
+ * brand pitch would only push the first field below the fold.
  *
  * The shell carries its own logo and locale/theme controls, which is why the
  * (auth) layout skips its header on these two routes — see that file.
@@ -138,7 +140,8 @@ export default function AuthSplitShell({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        "relative mx-auto w-full max-w-6xl",
+        // Narrow contained card until the showcase pane appears at `lg`.
+        "relative mx-auto w-full max-w-md sm:max-w-lg lg:max-w-6xl",
         "rounded-[28px] border border-[var(--border)] bg-[var(--surface)]",
         "shadow-[var(--shadow-xl)] overflow-hidden",
         "grid lg:grid-cols-[minmax(0,1.02fr)_minmax(0,1fr)]"
@@ -158,9 +161,6 @@ export default function AuthSplitShell({
           </Link>
           <AuthPageControls />
         </div>
-
-        {/* Compact brand banner — stands in for the showcase pane below lg. */}
-        <AuthShowcase mode={mode} role={role} compact className="mt-6 lg:hidden" />
 
         {/* Heading block */}
         <div className="mt-8 lg:mt-12">

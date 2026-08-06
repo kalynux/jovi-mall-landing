@@ -311,7 +311,7 @@ export function ProductDetail({ product: p, vendor: v }: { product: Product; ven
           <div style={{ marginTop: 18 }}>
             {p.type === "physical" && (
               <InfoCard title="Delivery" icon="truck">
-                <InfoRow icon="building-2" label="Delivery agency" value={v.agency || "Jovi Express"} />
+                <InfoRow icon="building-2" label="Delivery agency" value={v.agency || "WiExpress"} />
                 <InfoRow icon="coins" label="Delivery fee" value={formatXAF(deliveryFee)} />
                 <InfoRow icon="clock" label="Estimated time" value="2–4 business days" />
                 <InfoRow icon="map-pin" label="Regions" value="Douala, Yaoundé + nationwide" />
@@ -360,7 +360,7 @@ export function ProductDetail({ product: p, vendor: v }: { product: Product; ven
             <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--text-body)", margin: 0 }}>
               {isService
                 ? "Free cancellation up to 24h before your appointment. Rescheduling is subject to availability."
-                : `Delivered by ${v.agency || "Jovi Express"}. Returns accepted within 7 days of delivery for unused items in original packaging.`}
+                : `Delivered by ${v.agency || "WiExpress"}. Returns accepted within 7 days of delivery for unused items in original packaging.`}
             </p>
           )}
         </div>

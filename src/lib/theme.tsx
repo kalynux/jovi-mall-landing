@@ -23,7 +23,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   // On mount: read from localStorage or system preference
   useEffect(() => {
-    const stored = localStorage.getItem("jovi-theme") as Theme | null;
+    const stored = localStorage.getItem("wimall-theme") as Theme | null;
     const preferred: Theme =
       stored ??
       (window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -36,7 +36,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const toggle = () => {
     setTheme((prev) => {
       const next: Theme = prev === "light" ? "dark" : "light";
-      localStorage.setItem("jovi-theme", next);
+      localStorage.setItem("wimall-theme", next);
       document.documentElement.classList.toggle("dark", next === "dark");
       return next;
     });

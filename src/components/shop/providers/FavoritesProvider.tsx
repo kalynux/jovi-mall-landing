@@ -11,7 +11,7 @@ interface FavoritesContextValue {
 }
 
 const FavoritesContext = createContext<FavoritesContextValue | null>(null);
-const STORAGE_KEY = "jovi-shop-favorites";
+const STORAGE_KEY = "wimall-shop-favorites";
 
 export function useFavorites(): FavoritesContextValue {
   const ctx = useContext(FavoritesContext);

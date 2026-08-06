@@ -28,7 +28,7 @@
         "toggleLight": "Switch to light mode",
         "openMenu": "Open menu",
         "closeMenu": "Close menu",
-        "logoAriaLabel": "Jovi Mall Home",
+        "logoAriaLabel": "WiMall Home",
         "mainNavAriaLabel": "Main navigation",
         "languageSwitcher": "Select language",
         "dashboard": "Dashboard",
@@ -57,12 +57,12 @@
         "orderConfirmed": "Order Confirmed!",
         "orderDetail": "₦ 12,500 · Arriving today 🚚",
         "chatCustomer1": "I need wireless earbuds under ₦15k 🎧",
-        "chatAI1": "Found 3 perfect matches! The JoviBuds Pro (₦12,500) is our bestseller ⭐",
+        "chatAI1": "Found 3 perfect matches! The WiBuds Pro (₦12,500) is our bestseller ⭐",
         "chatCustomer2": "How long does the battery last?",
         "chatAI2": "7 hours on one charge, 28 with the case — and it ships with a 1-year warranty 🔋",
         "chatCustomer3": "Nice 👌 Can you deliver to Lagos today?",
         "chatAI3": "Yes — same-day anywhere in Lagos for ₦1,000 if you order before 1PM 🛵",
-        "chatCustomer4": "Yes! Order the JoviBuds Pro please",
+        "chatCustomer4": "Yes! Order the WiBuds Pro please",
         "chatAI4": "Perfect 🎉 Mobile Money or pay on delivery?",
         "chatCustomer5": "Mobile Money",
         "chatAI5": "✅ Done! Arriving by 3PM today 🚀",
@@ -74,7 +74,7 @@
         "title1": "One platform.",
         "title2": "Every role.",
         "title3": "Connected.",
-        "subtitle": "From a WhatsApp message to a delivered product and payout — every step runs on Jovi Mall automatically.",
+        "subtitle": "From a WhatsApp message to a delivered product and payout — every step runs on WiMall automatically.",
         "stats": {
             "aiResponse": "AI response time",
             "uptime": "Platform uptime",
@@ -115,7 +115,7 @@
         "sectionLabel": "For Agencies",
         "title1": "Turn logistics",
         "title2": "into revenue.",
-        "subtitle": "Build a delivery business on top of Jovi Mall. Receive orders, coordinate your agent network, and earn commission on every successful delivery — with zero customer acquisition cost.",
+        "subtitle": "Build a delivery business on top of WiMall. Receive orders, coordinate your agent network, and earn commission on every successful delivery — with zero customer acquisition cost.",
         "ctaPrimary": "Join as Agency",
         "flow": {
             "orderIn": "Order In",
@@ -134,7 +134,7 @@
         "title1": "Deliver.",
         "title2": "Earn.",
         "title3": "Repeat.",
-        "subtitle": "Join a delivery network powered by Jovi Mall. Set your hours, pick up assignments, deliver orders, and get paid per delivery — all from your phone.",
+        "subtitle": "Join a delivery network powered by WiMall. Set your hours, pick up assignments, deliver orders, and get paid per delivery — all from your phone.",
         "ctaPrimary": "Become an Agent",
         "steps": {
             "stepLabel": "Step",
@@ -163,7 +163,7 @@
             "headerRole": "AI Shopping Assistant",
             "placeholder": "Type a message...",
             "you": "You",
-            "ai": "Jovi AI",
+            "ai": "WiMall AI",
             "now": "now",
             "m1": "Hi! I need wireless earbuds under ₦15,000 🎧",
             "m2": "Three great matches — this one is our bestseller ⭐",
@@ -171,7 +171,7 @@
             "m4": "7 hours on one charge, 28 with the case — and a 1-year warranty 🔋",
             "m5": "Perfect. I'll take it ✅",
             "m6": "Order placed! Arriving today between 2–5 PM. Track it right here 📦",
-            "productName": "JoviBuds Pro",
+            "productName": "WiBuds Pro",
             "productMeta": "Free delivery · In stock",
             "productPrice": "₦ 12,500",
             "orderBadge": "Arriving today",
@@ -179,10 +179,10 @@
         },
         "whatsapp": {
             "cta": "Start Shopping on WhatsApp",
-            "previewWelcome": "👋 Welcome to Jovi Mall!",
+            "previewWelcome": "👋 Welcome to WiMall!",
             "previewMsg": "Tell us what you're looking for and our AI will find the best deals for you. What do you need today?",
-            "previewTime": "Jovi AI · now",
-            "previewUserMsg": "Hi Jovi Mall! I'd like to start shopping.",
+            "previewTime": "WiMall AI · now",
+            "previewUserMsg": "Hi WiMall! I'd like to start shopping.",
             "trust": "Verified Business · Secure",
             "openWhatsApp": "Open WhatsApp",
             "closePreview": "Close preview",
@@ -194,7 +194,7 @@
         "title1": "Built for how",
         "title2": "you",
         "title3": "actually shop.",
-        "subtitle": "We didn't just repackage a Western ecommerce model. Jovi Mall is built from the ground up for mobile-dominant, WhatsApp-native, data-conscious shoppers and businesses.",
+        "subtitle": "We didn't just repackage a Western ecommerce model. WiMall is built from the ground up for mobile-dominant, WhatsApp-native, data-conscious shoppers and businesses.",
         "ctaPrimary": "Learn Our Story",
         "features": {
             "mobileTitle": "Mobile-native by design",
@@ -206,7 +206,7 @@
         },
         "phone": {
             "status": "9:41",
-            "assistantName": "Jovi Mall",
+            "assistantName": "WiMall",
             "assistantSub": "AI Shopping Assistant",
             "onlineLabel": "online",
             "chat1Customer": "I need a birthday gift 🎁",
@@ -288,7 +288,7 @@
         }
     },
     "finalCta": {
-        "badge": "✦ Become a founding business on Jovi Mall",
+        "badge": "✦ Become a founding business on WiMall",
         "title1": "Your business,",
         "title2": "powered by conversation.",
         "subtitle": "Get started in minutes. No credit card required. No tech team needed. Your first 30 days are completely free.",
@@ -337,8 +337,8 @@
         "terms": "Terms of Service",
         "cookies": "Cookie Policy",
         "copyright": "All rights reserved.",
-        "builtFor": "Built for modern commerce. Powered by AI.",
-        "logoAriaLabel": "Jovi Mall Home",
+        "builtFor": "Built for modern commerce. Powered by WiMall.",
+        "logoAriaLabel": "WiMall Home",
         "socialAriaLabel": "Social link"
     },
     "auth": {
@@ -349,11 +349,11 @@
         "showcaseEyebrow": "Commerce runs on conversation",
         "showcaseTitleLogin": "Your storefront is a chat window.",
         "showcaseTitleRegister": "Start selling where your customers already are.",
-        "showcaseBody": "Jovi Mall turns WhatsApp into a full storefront — AI answers questions, takes orders, and hands delivery to an agent near your customer.",
+        "showcaseBody": "WiMall turns WhatsApp into a full storefront — AI answers questions, takes orders, and hands delivery to an agent near your customer.",
         "showcasePoint1": "AI that replies in seconds, day and night",
         "showcasePoint2": "Orders and payments settled inside the chat",
         "showcasePoint3": "Delivery dispatched and tracked to the door",
-        "loginTitle": "Sign in to Jovi Mall",
+        "loginTitle": "Sign in to WiMall",
         "loginSubtitle": "Choose the role you want to sign in with",
         "loginSubtitleForm": "Enter your credentials to continue",
         "registerTitle": "Create your account",
@@ -361,7 +361,6 @@
         "registerSubtitleForm": "Complete your registration",
         "registeringAs": "Registering as",
         "signingInAs": "Signing in as",
-        "phoneLabelLogin": "Phone or Email",
         "phoneLabel": "Phone Number",
         "emailLabel": "Email (optional)",
         "nameLabel": "Full Name",
@@ -372,8 +371,6 @@
         "agencyNameLabel": "Agency Name",
         "agencyNameHint": "The name vendors see when choosing a delivery partner. You can change it later from your dashboard.",
         "passwordLabel": "Password",
-        "phonePlaceholder": "+234... or email@example.com",
-        "phonePlaceholderRegister": "+234 800 000 0000",
         "emailPlaceholder": "you@example.com",
         "namePlaceholder": "Your full name",
         "businessNamePlaceholder": "Your shop or brand name",
@@ -397,7 +394,11 @@
         "customerWaSubtitle": "No account needed — just start a chat.",
         "customerWaBody": "Customers don't need to create an account. Continue on WhatsApp to access your profile.",
         "customerWaCta": "Continue on WhatsApp",
-        "customerWaBack": "Choose a different role"
+        "customerWaBack": "Choose a different role",
+        "identifierTypeLabel": "Sign in with",
+        "identifierTypePhone": "Phone",
+        "identifierTypeEmail": "Email",
+        "emailLabelLogin": "Email"
     },
     "authMe": {
         "title": "Switch Role",
@@ -424,7 +425,7 @@
     "addRole": {
         "title": "Add a new role",
         "subtitle": "You currently have: {roles}",
-        "subtitleEmpty": "Expand what you can do on Jovi Mall",
+        "subtitleEmpty": "Expand what you can do on WiMall",
         "nameLabel": "Full Name",
         "namePlaceholder": "Your full name",
         "personalNameLabel": "Your Name",
@@ -736,5 +737,20 @@
         "ADMIN_FORBIDDEN": "Admin access is required for this action.",
         "COMMAND_ALREADY_REGISTERED": "This command is already registered.",
         "COMMAND_NOT_FOUND": "The command could not be found."
+    },
+    "phone": {
+        "errors": {
+            "required": "Phone number is required",
+            "tooShort": "This number is too short for the country selected",
+            "tooLong": "This number is too long for the country selected",
+            "invalidCountry": "Select a country for this number",
+            "invalid": "Enter a valid phone number"
+        },
+        "countrySelectorLabel": "Country: {country} ({code})",
+        "countrySelectorEmptyLabel": "Select a country",
+        "countryListLabel": "Countries",
+        "searchCountryLabel": "Search countries",
+        "searchCountryPlaceholder": "Search country or code",
+        "noCountryMatch": "No country matches that search"
     }
 }

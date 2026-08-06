@@ -1,6 +1,6 @@
-# jovi-mall API — Frontend Integration Guide
+# wimall API — Frontend Integration Guide
 
-> **Start here.** This is the index and the shared contract for every jovi-mall HTTP endpoint.
+> **Start here.** This is the index and the shared contract for every wimall HTTP endpoint.
 > Read this page once, then jump to the per-feature docs linked below. Live GPS tracking lives in a
 > **separate service** (geo-tracker) — see [Live Tracking](#live-tracking-geo-tracker).
 
@@ -10,18 +10,18 @@
 
 | Service | Stack | Base URL (dev) | Realtime | Docs |
 |---|---|---|---|---|
-| **jovi-mall** (this repo) | Express + TypeScript + MongoDB | `http://localhost:8022/api` | ❌ HTTP only | this folder |
+| **wimall** (this repo) | Express + TypeScript + MongoDB | `http://localhost:8022/api` | ❌ HTTP only | this folder |
 | **geo-tracker** | Go + Redis + Postgres | `http://localhost:8080` | ✅ WebSocket | `../../geo-tracker/api-doc/` |
 
-jovi-mall owns all users, orders, shipments, money, and the **tracking authorization policy**.
+wimall owns all users, orders, shipments, money, and the **tracking authorization policy**.
 geo-tracker owns live positions, the tracking WebSocket, and routing. A frontend that shows a live
-map talks to **both**: jovi-mall for data, geo-tracker for the live stream.
+map talks to **both**: wimall for data, geo-tracker for the live stream.
 
 ---
 
 ## The response envelope (read this first)
 
-Every jovi-mall endpoint returns one of exactly two shapes.
+Every wimall endpoint returns one of exactly two shapes.
 
 ### Success
 
@@ -179,7 +179,7 @@ type (`images/`, `documents/`, `audio/`, `archives/`, `videos/`, `other/`). Full
 
 ## Live tracking (geo-tracker)
 
-The live map/GPS stream is a **separate service**. jovi-mall only answers *"which agents may this
+The live map/GPS stream is a **separate service**. wimall only answers *"which agents may this
 viewer track?"* via `GET /api/tracking/visible-agents`; geo-tracker does the streaming.
 
 - Authorization policy & the visible-agents contract: [tracking/live-tracking.md](./tracking/live-tracking.md),

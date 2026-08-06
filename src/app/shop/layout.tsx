@@ -6,9 +6,9 @@ import { ShopHeader } from "@/components/shop/ShopHeader";
 import { ShopBottomNav } from "@/components/shop/ShopBottomNav";
 
 export const metadata: Metadata = {
-  title: "Shop — Jovi Mall",
+  title: "Shop — WiMall",
   description:
-    "Browse products from verified African vendors on Jovi Mall — fashion, home, digital courses, e-books and services. Shop from your WhatsApp.",
+    "Browse products from verified African vendors on WiMall — fashion, home, digital courses, e-books and services. Shop from your WhatsApp.",
 };
 
 export default function ShopLayout({ children }: { children: ReactNode }) {

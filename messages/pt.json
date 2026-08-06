@@ -28,7 +28,7 @@
         "toggleLight": "Mudar para modo claro",
         "openMenu": "Abrir menu",
         "closeMenu": "Fechar menu",
-        "logoAriaLabel": "Início Jovi Mall",
+        "logoAriaLabel": "Início WiMall",
         "mainNavAriaLabel": "Navegação principal",
         "languageSwitcher": "Selecionar idioma",
         "dashboard": "Painel",
@@ -57,12 +57,12 @@
         "orderConfirmed": "Pedido confirmado!",
         "orderDetail": "₦ 12.500 · Chegando hoje 🚚",
         "chatCustomer1": "Procuro fones de ouvido sem fio por menos de ₦15k 🎧",
-        "chatAI1": "Encontrei 3 opções perfeitas! JoviBuds Pro (₦12.500) é o mais vendido ⭐",
+        "chatAI1": "Encontrei 3 opções perfeitas! WiBuds Pro (₦12.500) é o mais vendido ⭐",
         "chatCustomer2": "Quanto tempo dura a bateria?",
         "chatAI2": "7 horas por carga, 28 com o estojo — e vai com 1 ano de garantia 🔋",
         "chatCustomer3": "Boa 👌 Entregam hoje em Lagos?",
         "chatAI3": "Sim — no mesmo dia em toda Lagos por ₦1.000 se pedir antes das 13h 🛵",
-        "chatCustomer4": "Sim! Comprar o JoviBuds Pro por favor",
+        "chatCustomer4": "Sim! Comprar o WiBuds Pro por favor",
         "chatAI4": "Perfeito 🎉 Mobile Money ou pagamento na entrega?",
         "chatCustomer5": "Mobile Money",
         "chatAI5": "✅ Pronto! Chegando às 15h de hoje 🚀",
@@ -74,7 +74,7 @@
         "title1": "Uma plataforma.",
         "title2": "Todos os papéis.",
         "title3": "Conectados.",
-        "subtitle": "De uma mensagem no WhatsApp a um produto entregue — cada etapa funciona automaticamente no Jovi Mall.",
+        "subtitle": "De uma mensagem no WhatsApp a um produto entregue — cada etapa funciona automaticamente no WiMall.",
         "stats": {
             "aiResponse": "Tempo de resposta da IA",
             "uptime": "Disponibilidade da plataforma",
@@ -115,7 +115,7 @@
         "sectionLabel": "Para agências",
         "title1": "Transforme logística",
         "title2": "em receita.",
-        "subtitle": "Monte um negócio de entregas sobre o Jovi Mall. Receba pedidos, coordene sua rede e ganhe comissão em cada entrega bem-sucedida — com custo zero de aquisição de clientes.",
+        "subtitle": "Monte um negócio de entregas sobre o WiMall. Receba pedidos, coordene sua rede e ganhe comissão em cada entrega bem-sucedida — com custo zero de aquisição de clientes.",
         "ctaPrimary": "Entrar como agência",
         "flow": {
             "orderIn": "Pedido recebido",
@@ -134,7 +134,7 @@
         "title1": "Entregue.",
         "title2": "Ganhe.",
         "title3": "Repita.",
-        "subtitle": "Entre na rede de entregas do Jovi Mall. Defina seus horários, aceite missões, entregue pedidos e receba por entrega — tudo pelo celular.",
+        "subtitle": "Entre na rede de entregas do WiMall. Defina seus horários, aceite missões, entregue pedidos e receba por entrega — tudo pelo celular.",
         "ctaPrimary": "Tornar-se entregador",
         "steps": {
             "stepLabel": "Passo",
@@ -163,7 +163,7 @@
             "headerRole": "Assistente de compras IA",
             "placeholder": "Digite uma mensagem...",
             "you": "Você",
-            "ai": "Jovi IA",
+            "ai": "WiMall IA",
             "now": "agora",
             "m1": "Oi! Procuro fones sem fio por menos de ₦15.000 🎧",
             "m2": "Três opções perfeitas — este é o nosso mais vendido ⭐",
@@ -171,7 +171,7 @@
             "m4": "7 horas numa carga, 28 com o estojo — e um ano de garantia 🔋",
             "m5": "Perfeito. Vou levar ✅",
             "m6": "Pedido confirmado! Chega hoje entre 14h e 17h. Acompanhe por aqui 📦",
-            "productName": "JoviBuds Pro",
+            "productName": "WiBuds Pro",
             "productMeta": "Entrega grátis · Em estoque",
             "productPrice": "₦ 12.500",
             "orderBadge": "Chega hoje",
@@ -179,10 +179,10 @@
         },
         "whatsapp": {
             "cta": "Comprar no WhatsApp",
-            "previewWelcome": "👋 Bem-vindo ao Jovi Mall!",
+            "previewWelcome": "👋 Bem-vindo ao WiMall!",
             "previewMsg": "Nos diga o que procura e nossa IA encontrará as melhores ofertas. O que você precisa hoje?",
-            "previewTime": "Jovi IA · agora",
-            "previewUserMsg": "Olá Jovi Mall! Gostaria de começar a comprar.",
+            "previewTime": "WiMall IA · agora",
+            "previewUserMsg": "Olá WiMall! Gostaria de começar a comprar.",
             "trust": "Negócio verificado · Seguro",
             "openWhatsApp": "Abrir WhatsApp",
             "closePreview": "Fechar visualização",
@@ -194,7 +194,7 @@
         "title1": "Criado para como",
         "title2": "você",
         "title3": "realmente compra.",
-        "subtitle": "Não apenas copiamos um modelo ocidental de e-commerce. O Jovi Mall foi construído do zero para compradores e empresas mobile, WhatsApp, conscientes dos dados.",
+        "subtitle": "Não apenas copiamos um modelo ocidental de e-commerce. O WiMall foi construído do zero para compradores e empresas mobile, WhatsApp, conscientes dos dados.",
         "ctaPrimary": "Conheça nossa história",
         "features": {
             "mobileTitle": "Nativo para mobile",
@@ -206,7 +206,7 @@
         },
         "phone": {
             "status": "9:41",
-            "assistantName": "Jovi Mall",
+            "assistantName": "WiMall",
             "assistantSub": "Assistente de compras com IA",
             "onlineLabel": "on-line",
             "chat1Customer": "Preciso de um presente de aniversário 🎁",
@@ -288,7 +288,7 @@
         }
     },
     "finalCta": {
-        "badge": "✦ Seja uma empresa fundadora no Jovi Mall",
+        "badge": "✦ Seja uma empresa fundadora no WiMall",
         "title1": "Seu negócio,",
         "title2": "impulsionado pela conversa.",
         "subtitle": "Comece em minutos. Sem cartão de crédito. Sem equipe técnica. Seus primeiros 30 dias são completamente gratuitos.",
@@ -337,8 +337,8 @@
         "terms": "Termos de Serviço",
         "cookies": "Política de Cookies",
         "copyright": "Todos os direitos reservados.",
-        "builtFor": "Feito para o comércio moderno. Impulsionado por IA.",
-        "logoAriaLabel": "Início Jovi Mall",
+        "builtFor": "Feito para o comércio moderno. Impulsionado por WiMall.",
+        "logoAriaLabel": "Início WiMall",
         "socialAriaLabel": "Link social"
     },
     "auth": {
@@ -355,11 +355,11 @@
         "showcaseEyebrow": "O comércio acontece na conversa",
         "showcaseTitleLogin": "A sua loja cabe numa conversa.",
         "showcaseTitleRegister": "Venda onde os seus clientes já estão.",
-        "showcaseBody": "O Jovi Mall transforma o WhatsApp numa loja completa: a IA responde às perguntas, regista pedidos e entrega a encomenda a um agente perto do seu cliente.",
+        "showcaseBody": "O WiMall transforma o WhatsApp numa loja completa: a IA responde às perguntas, regista pedidos e entrega a encomenda a um agente perto do seu cliente.",
         "showcasePoint1": "IA que responde em segundos, de dia e de noite",
         "showcasePoint2": "Pedidos e pagamentos resolvidos dentro do chat",
         "showcasePoint3": "Entregas despachadas e acompanhadas até à porta",
-        "loginTitle": "Entre no Jovi Mall",
+        "loginTitle": "Entre no WiMall",
         "loginSubtitle": "Escolha o papel com que deseja entrar",
         "loginSubtitleForm": "Insira suas credenciais para continuar",
         "registerTitle": "Crie sua conta",
@@ -367,7 +367,6 @@
         "registerSubtitleForm": "Conclua seu cadastro",
         "registeringAs": "Cadastrando como",
         "signingInAs": "Entrando como",
-        "phoneLabelLogin": "Telefone ou e-mail",
         "phoneLabel": "Número de telefone",
         "emailLabel": "E-mail (opcional)",
         "nameLabel": "Nome completo",
@@ -378,8 +377,6 @@
         "agencyNameLabel": "Nome da agência",
         "agencyNameHint": "O nome que os vendedores veem ao escolher um parceiro de entrega. Pode alterá-lo mais tarde no seu painel.",
         "passwordLabel": "Senha",
-        "phonePlaceholder": "+234... ou email@exemplo.com",
-        "phonePlaceholderRegister": "+234 800 000 0000",
         "emailPlaceholder": "voce@exemplo.com",
         "namePlaceholder": "Seu nome completo",
         "businessNamePlaceholder": "Nome da sua loja",
@@ -397,7 +394,11 @@
         "createOne": "Crie uma",
         "alreadyAccount": "Já tem uma conta?",
         "signInLink": "Entrar",
-        "genericError": "Algo deu errado. Por favor, tente novamente."
+        "genericError": "Algo deu errado. Por favor, tente novamente.",
+        "identifierTypeLabel": "Iniciar sessão com",
+        "identifierTypePhone": "Telefone",
+        "identifierTypeEmail": "E-mail",
+        "emailLabelLogin": "E-mail"
     },
     "authMe": {
         "title": "Mudar papel",
@@ -424,7 +425,7 @@
     "addRole": {
         "title": "Adicionar novo papel",
         "subtitle": "Você atualmente tem: {roles}",
-        "subtitleEmpty": "Expanda o que você pode fazer no Jovi Mall",
+        "subtitleEmpty": "Expanda o que você pode fazer no WiMall",
         "nameLabel": "Nome completo",
         "namePlaceholder": "Seu nome completo",
         "personalNameLabel": "Seu nome",
@@ -575,5 +576,20 @@
         "WHATSAPP_IDEMPOTENCY_REQUIRED": "Uma chave de mensagem duplicada é necessária.",
         "WHATSAPP_DUPLICATE_MESSAGE": "Esta mensagem já foi enviada.",
         "WHATSAPP_UNSUPPORTED_MESSAGE_TYPE": "Este tipo de mensagem não é suportado."
+    },
+    "phone": {
+        "errors": {
+            "required": "O número de telefone é obrigatório",
+            "tooShort": "Este número é demasiado curto para o país selecionado",
+            "tooLong": "Este número é demasiado longo para o país selecionado",
+            "invalidCountry": "Selecione um país para este número",
+            "invalid": "Introduza um número de telefone válido"
+        },
+        "countrySelectorLabel": "País: {country} ({code})",
+        "countrySelectorEmptyLabel": "Selecione um país",
+        "countryListLabel": "Países",
+        "searchCountryLabel": "Pesquisar países",
+        "searchCountryPlaceholder": "Pesquisar país ou indicativo",
+        "noCountryMatch": "Nenhum país corresponde à pesquisa"
     }
 }

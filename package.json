@@ -6,12 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "gen:phone-countries": "node scripts/gen-phone-countries.mjs src/lib/phone/countries.generated.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "clsx": "^2.1.1",
     "framer-motion": "^12.34.3",
+    "libphonenumber-js": "^1.13.10",
     "lucide-react": "^0.575.0",
     "next": "16.1.6",
     "next-intl": "^4.8.3",

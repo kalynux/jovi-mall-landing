@@ -1,6 +1,6 @@
 # API Error Handling Guide
 
-This guide explains how frontend applications should handle and parse error responses from the Jovi Mall API. By standardizing our error formats, the frontend can reliably display appropriate feedback to users and trigger specific client-side UI flows based on explicit error codes.
+This guide explains how frontend applications should handle and parse error responses from the WiMall API. By standardizing our error formats, the frontend can reliably display appropriate feedback to users and trigger specific client-side UI flows based on explicit error codes.
 
 ## Standard Error Response Structure
 

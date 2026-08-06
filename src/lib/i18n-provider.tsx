@@ -27,7 +27,7 @@ export const LOCALES: { code: Locale; label: string; dir: "ltr" | "rtl" }[] = [
   { code: "ar", label: FALLBACK_LOCALE_LABELS.ar, dir: "rtl" },
 ];
 
-const STORAGE_KEY = "jovi-lang";
+const STORAGE_KEY = "wimall-lang";
 
 type MessageBundle = Record<string, unknown> & {
   meta?: {
