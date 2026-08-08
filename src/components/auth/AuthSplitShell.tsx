@@ -13,7 +13,7 @@
  * The shell carries its own logo and locale/theme controls, which is why the
  * (auth) layout skips its header on these two routes — see that file.
  */
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { ArrowLeftRight, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";

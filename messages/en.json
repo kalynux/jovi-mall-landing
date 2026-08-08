@@ -12,7 +12,10 @@
     },
     "meta": {
         "langName": "English",
-        "langCode": "en"
+        "langCode": "en",
+        "title": "WiMall — Commerce Runs on Conversation",
+        "description": "AI-powered ecommerce infrastructure for WhatsApp-first businesses. Vendors sell without a website. Customers shop by chatting. Agencies and agents earn on every delivery.",
+        "shareDescription": "The WhatsApp-first AI ecommerce platform for modern businesses."
     },
     "navbar": {
         "shop": "Shop",
@@ -35,7 +38,10 @@
         "switchRole": "Switch Role",
         "addRole": "Add role",
         "logout": "Logout",
-        "userMenuAriaLabel": "User"
+        "userMenuAriaLabel": "User",
+        "pricing": "Pricing",
+        "faq": "FAQ",
+        "cameroon": "Cameroon"
     },
     "hero": {
         "badge": "The WhatsApp Commerce Platform",
@@ -109,7 +115,8 @@
             "aiDesc": "Our engine matches your products to interested customers on WhatsApp 24/7.",
             "revenueTitle": "Revenue flows to you",
             "revenueDesc": "Get paid per sale, automatically. No chasing customers."
-        }
+        },
+        "ctaSecondary": "See how selling works"
     },
     "agency": {
         "sectionLabel": "For Agencies",
@@ -127,7 +134,8 @@
             "tracking": "Real-time tracking for every delivery",
             "payout": "Automated commission calculation & payout"
         },
-        "ariaLabel": "Delivery assignment flow"
+        "ariaLabel": "Delivery assignment flow",
+        "ctaSecondary": "See how agencies earn"
     },
     "agent": {
         "sectionLabel": "For Agents",
@@ -144,7 +152,8 @@
             "step02Desc": "Navigate to pickup, deliver to customer.",
             "step03Title": "Get paid",
             "step03Desc": "Earnings credited instantly on delivery."
-        }
+        },
+        "ctaSecondary": "See how agents get paid"
     },
     "customer": {
         "sectionLabel": "For Customers",
@@ -339,7 +348,8 @@
         "copyright": "All rights reserved.",
         "builtFor": "Built for modern commerce. Powered by WiMall.",
         "logoAriaLabel": "WiMall Home",
-        "socialAriaLabel": "Social link"
+        "socialAriaLabel": "Social link",
+        "learn": "Learn"
     },
     "auth": {
         "backToHome": "Back to home",
@@ -752,5 +762,481 @@
         "searchCountryLabel": "Search countries",
         "searchCountryPlaceholder": "Search country or code",
         "noCountryMatch": "No country matches that search"
+    },
+    "pages": {
+        "nav": {
+            "vendors": "For vendors",
+            "agencies": "For agencies",
+            "agents": "For agents",
+            "pricing": "Pricing",
+            "faq": "FAQ",
+            "cameroon": "Cameroon"
+        },
+        "common": {
+            "breadcrumbLabel": "Breadcrumb",
+            "home": "Home",
+            "ctaVendor": "Start selling free",
+            "ctaAgency": "Register your agency",
+            "ctaAgent": "Sign up as an agent",
+            "ctaCustomer": "Shop on WhatsApp",
+            "ctaPricing": "See the plans",
+            "ctaFaq": "Read the FAQ",
+            "ctaHowItWorks": "See how it works",
+            "keepReading": "Keep reading",
+            "commonQuestions": "Common questions",
+            "allQuestions": "See all the questions",
+            "currencyNote": "Prices are in FCFA (XAF), the currency of the market WiMall serves first.",
+            "faqShort": "FAQ"
+        },
+        "plans": {
+            "free": "Free",
+            "perTerm": "/ {days} {days, plural, one {day} other {days}}",
+            "unlimited": "Unlimited",
+            "cta": "Get started",
+            "limits": {
+                "products": "active products",
+                "storage": "media storage",
+                "commission": "commission per paid order",
+                "credits": "credits included",
+                "openShipments": "deliveries open at once",
+                "concurrentDeliveries": "deliveries at a time"
+            },
+            "unavailable": "Not on sale"
+        },
+        "regions": {
+            "adamaoua": "Adamaoua",
+            "centre": "Centre",
+            "east": "East",
+            "far_north": "Far North",
+            "littoral": "Littoral",
+            "north": "North",
+            "northwest": "Northwest",
+            "south": "South",
+            "southwest": "Southwest",
+            "west": "West"
+        },
+        "pricing": {
+            "metaTitle": "WiMall pricing — start free, pay when it pays you back",
+            "metaDescription": "What WiMall costs for vendors, delivery agencies and delivery agents. Free tiers that never expire, vendor plans from 5,000 FCFA per 30 days, commission from 7% down to 3%, and nothing that renews itself.",
+            "eyebrow": "Plans, commission and credits",
+            "title": "Start at zero. Pay when it pays you back.",
+            "lead": "Vendors, delivery agencies and delivery agents each get a free tier that never expires. Paid plans raise your limits and, for vendors, cut the commission on every order. No setup fee, no contract, and nothing renews itself.",
+            "howWeEarn": {
+                "title": "How WiMall makes money",
+                "lead": "Worth stating plainly, because it is what decides whether this arrangement works for you.",
+                "commission": {
+                    "title": "A commission on each paid order",
+                    "body": "A percentage of the order total, taken at the moment the customer pays. The vendor's plan sets it: 7% on the free tier, 5% on Growth, 3% on Business."
+                },
+                "plans": {
+                    "title": "Optional plan subscriptions",
+                    "body": "A 30-day term that raises your limits. Every role can operate indefinitely without ever buying one."
+                },
+                "credits": {
+                    "title": "Credits for metered work",
+                    "body": "Indexing a product so the AI can recommend it, and sending a billable WhatsApp template message. Your plan includes an allowance; top up only if you use it all."
+                },
+                "delivery": {
+                    "title": "Nothing out of the delivery fee",
+                    "body": "The delivery fee is set by the delivery agency and divided between that agency and the agent who ran the delivery. WiMall takes no share of it."
+                },
+                "customerNote": "Customers pay for what they buy and nothing else. There is no fee, no subscription and no account charge for shopping on WiMall."
+            },
+            "vendor": {
+                "title": "Vendor plans",
+                "lead": "The commission is the number worth comparing. On a month of 400,000 FCFA in paid orders, moving from Starter to Growth saves 8,000 FCFA in commission and costs 5,000.",
+                "note": "Limits count published products. At the cap, creating another is refused until you deactivate one or move up a tier — nothing already published is taken down."
+            },
+            "agency": {
+                "title": "Delivery agency plans",
+                "lead": "An agency's limit is how many shipments can be open at the same time, not how many you run in a month. Finish a delivery and the slot frees up.",
+                "note": "This cap is soft. Cross it and you get an alert, not a stop — deliveries keep flowing while you decide whether to move up."
+            },
+            "agent": {
+                "title": "Delivery agent plans",
+                "lead": "Same idea as agencies: the number is how many deliveries you can be holding at any one moment, not a monthly quota.",
+                "note": "This cap is hard. Accepting one more offer past your ceiling is refused until one of the deliveries you are holding is finished."
+            },
+            "credits": {
+                "title": "What credits are",
+                "p1": "Two things on WiMall cost real money every time they happen, so they are metered rather than bundled: indexing one of your products so the AI assistant can find and recommend it, and sending one billable WhatsApp template message to a customer. Each costs 1 credit.",
+                "p2": "Activating a plan grants its allowance once — 50 credits on the vendor free tier, 4,500 on Business. If you use it all, top up in packs. The larger the pack, the less each credit costs.",
+                "packsTitle": "Credit packs",
+                "packsCaption": "Credit top-up packs and their prices",
+                "creditsHead": "Credits",
+                "priceHead": "Price",
+                "perCreditHead": "Per credit"
+            },
+            "payment": {
+                "title": "How paying works",
+                "p1": "Plans and credit packs are paid through NotchPay or MyCoolPay for mobile money, or Stripe for cards. Nothing is stored and charged again later — there is no recurring subscription anywhere on WiMall.",
+                "p2": "A paid term simply runs out after 30 days. If you bought another plan while one was still running, it was queued and takes over at that moment; if you did not, you drop back to your role's free tier and carry on working. You can hold one active plan and one queued plan at a time.",
+                "p3": "If a card payment is reversed after the fact, the plan it bought rolls back to the free tier and any credits it granted are taken back — which can leave a balance negative until it is topped up."
+            },
+            "faqTitle": "Pricing questions",
+            "cta": {
+                "title": "The free tier needs no payment method",
+                "body": "Set your catalogue up, see what sells, and move up a tier only when the commission maths says you should.",
+                "finePrint": "Free tiers never expire. Paid terms run 30 days and do not auto-renew."
+            },
+            "unsoldTierNote": "Tiers marked as not on sale are listed at their catalogue price but cannot be bought here today. The free tier is always available."
+        },
+        "vendors": {
+            "metaTitle": "Sell on WhatsApp without a website — WiMall for vendors",
+            "metaDescription": "Upload your products once and let WiMall's AI assistant sell them inside WhatsApp. No storefront, no app, no developer. Free tier: 15 products, 7% commission, no expiry.",
+            "eyebrow": "Selling on WiMall",
+            "title": "Sell on WhatsApp without a website",
+            "lead": "You do not need a storefront, a domain or a developer. Upload your products once, and WiMall's AI assistant sells them inside the WhatsApp conversations your customers are already having.",
+            "problem": {
+                "title": "You already sell on WhatsApp. That is the problem.",
+                "p1": "The conversation itself works. People trust it, it costs almost nothing in data to open, and nobody has to create an account to talk to you. What does not work is that you are the catalogue, the salesperson and the dispatcher — and all three only exist while your phone is in your hand.",
+                "p2": "So the same five questions come back all day. Is it still available. How much. What colours. Do you deliver to my area. Can I pay when it arrives. Miss an hour and you have missed the sale, because the customer has already asked somebody else.",
+                "p3": "WiMall does not move you off WhatsApp. It puts a real catalogue and an assistant behind the chat, so those five questions get answered at two in the morning the same way they would be answered at two in the afternoon."
+            },
+            "how": {
+                "title": "How it works",
+                "lead": "Six steps, and you are only involved in the first and the last.",
+                "s1Title": "Upload your catalogue",
+                "s1Body": "Photos, prices, descriptions, variants and stock. Simple products, products with options, digital downloads and bookable services all work.",
+                "s2Title": "Your products get indexed",
+                "s2Body": "Each one is indexed so the assistant can match it to what a customer describes, rather than only to the exact words they typed.",
+                "s3Title": "A customer starts a chat",
+                "s3Body": "They say what they are looking for in their own words. The assistant answers with your products and your stock, not with generic advice.",
+                "s4Title": "The order is created in the chat",
+                "s4Body": "The customer confirms and pays without leaving WhatsApp — mobile money, card, or cash when it arrives.",
+                "s5Title": "A delivery agency takes over",
+                "s5Body": "The order becomes a shipment, an agency dispatches one of its agents, and the customer can follow where it is.",
+                "s6Title": "Your share is recorded and paid",
+                "s6Body": "The order total, minus the platform commission and the delivery fee, lands in your earnings with every part of the split written down."
+            },
+            "included": {
+                "title": "What you get",
+                "i1": "A product catalogue with variants, options, stock levels and per-product shipping rules",
+                "i2": "An AI assistant that answers in the customer's language, at any hour",
+                "i3": "Orders with a real lifecycle, instead of a chat thread you have to re-read",
+                "i4": "Delivery through the agencies already on the platform, so you never have to own a bike",
+                "i5": "Digital products and bookable services alongside physical goods",
+                "i6": "An earnings ledger showing commission, delivery fee and your net on every single order",
+                "i7": "Analytics on what sells, and stock requests for what runs out",
+                "i8": "Notifications in the dashboard, by push, by email, on Telegram and on WhatsApp"
+            },
+            "cost": {
+                "title": "What it costs",
+                "p1": "The free tier is not a trial. Starter lets you publish 15 products with 1 GB of media, takes 7% of each paid order, and never expires.",
+                "p2": "Growth is 5,000 FCFA per 30 days: 150 products, 10 GB, and the commission drops to 5%. Business is 25,000 FCFA per 30 days for unlimited products, 100 GB and 3%. Nothing renews on its own — when a term ends you either move to the plan you queued, or go back to Starter and keep selling."
+            },
+            "start": {
+                "title": "What you need to start",
+                "lead": "Setup is four steps and only the first is required. You can be listing products before you have decided on branding or delivery policy.",
+                "i1": "A WhatsApp number you can verify",
+                "i2": "Your country and a way to be paid out — that is the whole of the required step",
+                "i3": "Products with a photo, a price and a short description",
+                "i4": "Optionally: a delivery agency to link with, your branding, and your own return and shipping policy"
+            },
+            "faqTitle": "Questions vendors ask",
+            "cta": {
+                "title": "Put your catalogue where the conversation already is",
+                "body": "Starter costs nothing, needs no payment method, and does not expire. If it works, the paid tiers pay for themselves in commission.",
+                "finePrint": "15 products, 1 GB and 7% commission on the free tier. No card required."
+            }
+        },
+        "agencies": {
+            "metaTitle": "Delivery agencies on WiMall — orders that arrive paid and addressed",
+            "metaDescription": "Run a delivery business on WiMall: paid orders dispatched to your agents, coverage by region, live tracking, cash-on-delivery reconciliation. You set the delivery fee and WiMall takes none of it.",
+            "eyebrow": "Delivery operations",
+            "title": "Orders that arrive already paid and already addressed",
+            "lead": "WiMall hands your agency real shipments with a destination and a fee attached. You dispatch them to your agents, your agents deliver, and the delivery fee is yours to split — WiMall takes no part of it.",
+            "money": {
+                "title": "Where an agency's money comes from",
+                "p1": "You set your own delivery pricing in your agency policy. When an order is paid, the fee for each of its shipments is reserved against that shipment and taken out of the vendor's side of the order — not added on top of what you are owed.",
+                "p2": "When a delivery finishes, that reserved fee is divided between your agency and the agent who ran it, following the contract you agreed with that agent: either a percentage of the fee, or a flat amount per delivery. Whatever is left after the agent's cut is your agency's.",
+                "p3": "WiMall's commission comes out of the vendor's share of the order total. It never touches the delivery fee. If a shipment has no agent contract attached, the agency keeps the whole fee.",
+                "codNote": "Cash on delivery is handled as its own flow: the agent collects, the collection is recorded against the agency, and the same split runs on the cash instead of on the card payment."
+            },
+            "run": {
+                "title": "What you actually run",
+                "i1Title": "An agent roster",
+                "i1Body": "Approach agents or accept the ones who apply. Every relationship is its own contract, with its own status, fee split and cash allocation.",
+                "i2Title": "Coverage by region",
+                "i2Body": "Your agency registers a country and the regions it covers. Cameroon's ten are all available; orders outside them are not routed to you.",
+                "i3Title": "Dispatch and auto-assignment",
+                "i3Body": "Send an offer to the agent you choose, or let assignment route it to the nearest available one and take the first acceptance.",
+                "i4Title": "Live tracking",
+                "i4Body": "Follow a delivery while it runs, and let the customer follow it too. Enabled on every plan tier, including the free one.",
+                "i5Title": "Cash management",
+                "i5Body": "Cash-on-delivery collections are tracked per agent and reconciled against what has been handed over, with a handling fee of your own.",
+                "i6Title": "Earnings and disputes",
+                "i6Body": "A ledger for every shipment: what the fee was, what the agent took, what you kept, and what happened when a delivery came back."
+            },
+            "capacity": {
+                "title": "Capacity, and what happens at the limit",
+                "p1": "The free tier lets you hold 1,000 shipments open at the same time. That is a working ceiling, not a monthly quota — every completed delivery frees its slot back up.",
+                "p2": "The cap is deliberately soft. If you cross it, you get an alert and the option to move up; nothing about checkout, dispatch or delivery stops working. An agency that is at capacity is having a good week, and the platform should not punish that."
+            },
+            "start": {
+                "title": "What you need to register",
+                "i1": "A WhatsApp number you can verify",
+                "i2": "At least one headquarters address, and the regions you intend to cover",
+                "i3": "Payout details for your agency",
+                "i4": "Your delivery policy — the pricing you charge and the terms you deliver under"
+            },
+            "faqTitle": "Questions agencies ask",
+            "cta": {
+                "title": "Bring your fleet the orders",
+                "body": "Registering costs nothing and the free tier carries a thousand open deliveries. The only thing you need decided before you start is what you charge.",
+                "finePrint": "Free tier: 1,000 open shipments, 5 GB, live tracking included."
+            }
+        },
+        "agents": {
+            "metaTitle": "Become a delivery agent — WiMall",
+            "metaDescription": "Deliver for WiMall on your own schedule. Sign up independently, join one agency or several, see what a run pays before you accept it, and get your share of every delivery fee.",
+            "eyebrow": "Delivering on WiMall",
+            "title": "Deliver on your own terms. See the pay before you accept.",
+            "lead": "Sign up as a delivery agent, join an agency — or several — and start receiving delivery offers on your phone. Every offer tells you what the run pays before you decide.",
+            "how": {
+                "title": "How it works",
+                "s1Title": "Sign up on your own",
+                "s1Body": "You register independently and are attached to no agency at first. Your account, your details, your vehicle.",
+                "s2Title": "Join an agency",
+                "s2Body": "Apply to one, or accept an agency that approaches you. You can hold contracts with several at the same time.",
+                "s3Title": "Get an offer",
+                "s3Body": "A delivery arrives on your phone with pickup, drop-off and what it pays. Accept it, or leave it for someone else.",
+                "s4Title": "Pick up and deliver",
+                "s4Body": "Collect from the vendor, deliver to the customer, and confirm it with proof of delivery.",
+                "s5Title": "Collect the cash if it is a COD run",
+                "s5Body": "For cash-on-delivery orders you collect at the door and hand it over to your agency, tracked against your name.",
+                "s6Title": "Your share is recorded",
+                "s6Body": "Your cut of the delivery fee is allocated to you when the run is completed, at the split your contract sets."
+            },
+            "earnings": {
+                "title": "What you earn",
+                "p1": "Your earnings come out of the delivery fee on each shipment. How much of it is yours is set in the contract you hold with that agency: either a percentage of the fee, or a flat amount per delivery.",
+                "p2": "Because it is per contract, two agencies can pay differently for the same kind of run — and you can see what a specific job pays before accepting it rather than after. A delivery that ends in a return is settled under its own rule rather than being written off.",
+                "p3": "WiMall takes nothing from the delivery fee. The whole of it is divided between your agency and you."
+            },
+            "capacity": {
+                "title": "How many at once",
+                "p1": "The free tier lets you hold 20 deliveries at the same time. Finish one and the slot comes back.",
+                "p2": "Unlike the agency cap, this one is firm: accepting an offer beyond your ceiling is refused rather than merely flagged. The point is that a customer waiting on a delivery you cannot get to is worse than an offer you did not receive."
+            },
+            "start": {
+                "title": "What you need",
+                "i1": "A smartphone and a WhatsApp number you can verify",
+                "i2": "A vehicle — bike, car, van or truck — with its type and colour on your profile",
+                "i3": "An agency to hold a contract with, which you can apply to after signing up",
+                "i4": "Optionally an emergency contact, and a photo of the vehicle"
+            },
+            "faqTitle": "Questions agents ask",
+            "cta": {
+                "title": "Start with one agency, or five",
+                "body": "Signing up is free and independent. Nothing obliges you to a single agency, and no offer is binding until you accept it.",
+                "finePrint": "Free tier: 20 deliveries held at once. No monthly quota."
+            }
+        },
+        "faq": {
+            "metaTitle": "WiMall FAQ — selling, delivering and paying on WhatsApp",
+            "metaDescription": "Straight answers about WiMall: how buying on WhatsApp works, what selling costs, how delivery agencies and agents are paid, which payment methods work, and where the platform operates.",
+            "eyebrow": "Questions and answers",
+            "title": "Questions, answered plainly",
+            "lead": "If something here is out of date or missing, the honest answer is usually in the product itself — but these are the questions people actually ask before they sign up.",
+            "groups": {
+                "general": "About WiMall",
+                "selling": "Selling on WiMall",
+                "delivering": "Delivering on WiMall",
+                "money": "Money and payments"
+            },
+            "q": {
+                "whatIsWimall": {
+                    "q": "What is WiMall?",
+                    "a": "A commerce platform that runs inside WhatsApp. Vendors upload a catalogue; customers chat with an AI assistant that understands what they are looking for, recommends products and creates the order in the conversation; delivery agencies and their agents deliver it. Nobody involved needs a website or an app."
+                },
+                "howShopping": {
+                    "q": "How do I buy something?",
+                    "a": "You open a WhatsApp conversation and describe what you want in your own words. The assistant answers with real products from real vendors, along with prices and availability, and can answer follow-up questions about them. When you are ready it creates the order and takes payment in the same thread."
+                },
+                "needApp": {
+                    "q": "Do I need to download an app or make an account?",
+                    "a": "Not as a customer. Buying happens in WhatsApp, which you already have. Vendors, delivery agencies and agents do have accounts, because they need dashboards — but customers do not."
+                },
+                "whereAvailable": {
+                    "q": "Where does WiMall operate?",
+                    "a": "Cameroon first. All ten regions are available for a delivery agency to register coverage in, and delivery in any given place depends on an agency covering that region. Prices are in FCFA and the platform is built around the payment methods used there."
+                },
+                "languages": {
+                    "q": "What languages does WiMall work in?",
+                    "a": "The site and the product are in French, English, Portuguese, Spanish and Arabic, with right-to-left layout for Arabic. For Cameroon the two that matter most are French and English, and the assistant answers a customer in the language they wrote in."
+                },
+                "shopperCost": {
+                    "q": "Does it cost anything to shop on WiMall?",
+                    "a": "No. Customers pay for what they buy and for delivery where the vendor charges it. There is no platform fee, no subscription and no account charge on the buying side."
+                },
+                "vendorStart": {
+                    "q": "What do I need to start selling?",
+                    "a": "A WhatsApp number you can verify, your country, and a way to be paid out. That is the only required setup step. Linking a delivery agency, adding branding and writing your own policies are all optional and can be done later."
+                },
+                "vendorWebsite": {
+                    "q": "Do I need a website or an online shop?",
+                    "a": "No, and that is the point. Your catalogue lives on WiMall and is sold through the WhatsApp conversation. There is no storefront to design, no domain to buy and no developer to pay."
+                },
+                "vendorCost": {
+                    "q": "What does selling cost?",
+                    "a": "The Starter tier is free and never expires: 15 published products, 1 GB of media, and 7% commission on each paid order. Growth is 5,000 FCFA per 30 days for 150 products and 5% commission; Business is 25,000 FCFA per 30 days for unlimited products and 3%."
+                },
+                "vendorProductLimit": {
+                    "q": "What happens when I reach my product limit?",
+                    "a": "Creating another product is refused until you either deactivate one you no longer sell or move up a tier. Nothing already published is removed, and no order in flight is affected."
+                },
+                "vendorDigital": {
+                    "q": "Can I sell digital products or services?",
+                    "a": "Yes. Alongside physical goods you can sell digital downloads, and bookable services with their own availability rules and calendar. Digital orders have no shipment, so there is no delivery fee on them."
+                },
+                "vendorDelivery": {
+                    "q": "Do I have to handle delivery myself?",
+                    "a": "No. Delivery is run by the agencies on the platform. A paid order becomes a shipment, an agency dispatches one of its agents, and the delivery fee is taken from the order and split between that agency and the agent. You can link with a specific agency, or let the platform route it."
+                },
+                "vendorPayout": {
+                    "q": "When do I get paid?",
+                    "a": "Your net on an order is held the moment the customer's payment settles. It becomes withdrawable once the order completes — the customer confirms delivery, or it auto-confirms seven days after delivery — plus a seven-day hold window after that. From there you request a payout of your available balance. The ledger shows the gross, the commission, the delivery fee and your net for every order, so the figure is never a mystery."
+                },
+                "agencyEarn": {
+                    "q": "How does a delivery agency make money?",
+                    "a": "From the delivery fee, which you set yourself in your agency policy. It is reserved against each shipment when the order is paid and divided when the delivery completes: the agent takes the cut their contract specifies, and your agency keeps the rest. WiMall takes no share of the delivery fee."
+                },
+                "agencyCoverage": {
+                    "q": "How do I choose where my agency delivers?",
+                    "a": "By region. Your agency registers a country and then selects the regions it covers — Cameroon has ten, from Littoral and Centre to the Far North. Orders outside your coverage are not routed to you."
+                },
+                "agencySoftCap": {
+                    "q": "What happens if my agency hits its shipment limit?",
+                    "a": "Nothing stops. The agency cap is soft on purpose: crossing it raises an alert and suggests moving up a tier, but checkout, dispatch and delivery all keep working. Every completed delivery frees a slot back up."
+                },
+                "agentEarn": {
+                    "q": "How much does an agent earn per delivery?",
+                    "a": "It depends on the contract you hold with the agency: either a percentage of that shipment's delivery fee, or a flat amount per delivery. You can see what a specific job pays before you accept it, and holding contracts with several agencies at once is normal."
+                },
+                "agentJoin": {
+                    "q": "Can I work as an agent without joining an agency?",
+                    "a": "You sign up on your own and belong to no agency at first, but deliveries reach you through an agency contract. You can apply to an agency, or accept one that approaches you — and you can hold several contracts at the same time."
+                },
+                "agentCapacity": {
+                    "q": "How many deliveries can I hold at once?",
+                    "a": "Twenty on the free tier. Unlike the agency limit this one is enforced: accepting an offer past your ceiling is refused until one of the deliveries you are already holding is completed."
+                },
+                "paymentMethods": {
+                    "q": "How can customers pay?",
+                    "a": "Mobile money through NotchPay or MyCoolPay, covering MTN, Orange and Moov; cards through Stripe; and cash on delivery where the vendor and agency accept it."
+                },
+                "cashOnDelivery": {
+                    "q": "Is cash on delivery supported?",
+                    "a": "Yes, and it is treated as a first-class flow rather than an exception. The agent collects at the door, the collection is recorded against them and reconciled with their agency, and everybody's share is split from the cash the same way it would be from a card payment."
+                },
+                "credits": {
+                    "q": "What are credits, and do I have to buy them?",
+                    "a": "Credits meter two things that cost money every time they happen: indexing a product so the assistant can recommend it, and sending a billable WhatsApp template message. Each costs one credit. Every plan grants an allowance when it activates, so most accounts never buy any; if you use yours up, packs start at 600 FCFA for 100 credits."
+                },
+                "renewal": {
+                    "q": "Do plans renew automatically?",
+                    "a": "No. There is no stored card and no recurring charge anywhere on WiMall. A paid plan runs its 30 days and then either hands over to a plan you queued while it was running, or drops you back to your role's free tier."
+                },
+                "downgrade": {
+                    "q": "What happens if I stop paying?",
+                    "a": "You go back to the free tier of your role and carry on working with its limits. Nothing is deleted and no account is closed. If a card payment is reversed after the fact, the plan it bought is rolled back and the credits it granted are taken back with it."
+                }
+            },
+            "cta": {
+                "title": "Still deciding?",
+                "body": "Every role has a free tier that never expires, so the cheapest way to answer a question about WiMall is usually to try it.",
+                "finePrint": "No payment method required to start."
+            }
+        },
+        "country": {
+            "metaTitle": "WiMall in Cameroon — WhatsApp commerce in FCFA",
+            "metaDescription": "WiMall is built for Cameroon first: prices in FCFA, French and English, MTN and Orange mobile money, cash on delivery, and delivery coverage across all ten regions.",
+            "eyebrow": "Where we operate",
+            "title": "Built for Cameroon first",
+            "lead": "Not a Western storefront translated into French. WiMall prices in FCFA, speaks French and English, settles through the mobile money people actually use, and organises delivery by region — because that is how the country is organised.",
+            "why": {
+                "title": "Why here first",
+                "p1": "Commerce in Cameroon already happens in WhatsApp. A seller posts to a status, a buyer replies, they negotiate in the thread, and somebody arranges a moto. None of that needs to be replaced — it needs a catalogue behind it, a way to take payment that both sides trust, and a delivery leg that does not depend on knowing a guy.",
+                "p2": "That is the whole design. The assistant sells from a real catalogue inside the conversation the customer was already going to have. Payment goes through the mobile money accounts that most adults already hold. Delivery goes to an agency that registered the regions it covers, and to an agent who gets paid per run.",
+                "p3": "It also means the constraints are the design brief, not an afterthought: entry-level phones, expensive data, and networks that drop. The product is built to keep working through all three."
+            },
+            "coverage": {
+                "title": "Where deliveries can run",
+                "lead": "Delivery coverage follows the agencies on the platform. An agency registers a country and the regions it covers, and all ten of Cameroon's regions are available to register.",
+                "regionLabel": "Region",
+                "capitalLabel": "Regional capital",
+                "note": "A region with no agency covering it yet is not a region WiMall refuses — it is one where an agency has not registered. If you run deliveries there, that is an opening rather than an obstacle."
+            },
+            "payments": {
+                "title": "Paying, the way it is actually done here",
+                "mobileTitle": "Mobile money",
+                "mobileBody": "MTN, Orange and Moov, through NotchPay or MyCoolPay. The customer confirms on their handset in the usual way.",
+                "cardTitle": "Cards",
+                "cardBody": "Visa and Mastercard through Stripe, for the customers and businesses that use them.",
+                "codTitle": "Cash on delivery",
+                "codBody": "Collected at the door by the agent, reconciled with their agency, and split the same way a card payment would be.",
+                "currencyTitle": "FCFA throughout",
+                "currencyBody": "Plans, credits, commissions and payouts are all denominated in XAF. Nothing is quoted in a currency you then have to convert."
+            },
+            "cities": {
+                "title": "City by city",
+                "lead": "Where there is enough to say about commerce in a place, it has its own page."
+            },
+            "faqTitle": "Questions about Cameroon",
+            "cta": {
+                "title": "Sell where the conversation already is",
+                "body": "Whether you are a vendor with a catalogue, an agency with a fleet, or an agent with a bike, the free tier is enough to find out whether this works.",
+                "finePrint": "Prices in FCFA. French and English throughout."
+            }
+        },
+        "city": {
+            "metaTitlePattern": "Sell on WhatsApp in {city} — WiMall",
+            "metaDescriptionPattern": "How WhatsApp commerce and delivery work in {city}, {region}: what selling costs, how orders reach a delivery agency, and how agents in {city} get paid.",
+            "eyebrowPattern": "{city}, Cameroon",
+            "titlePattern": "Selling and delivering in {city}",
+            "regionLabel": "Region",
+            "sellingTitle": "Selling in {city}",
+            "sellingP1": "The setup is the same everywhere: upload a catalogue, and the assistant sells from it inside WhatsApp. What changes by city is who is buying and how far a delivery has to travel — and both of those are decided by the agencies covering the region rather than by us.",
+            "sellingP2": "Starter costs nothing, holds 15 published products, and takes 7% of each paid order. That is usually enough to find out whether the demand in your part of the city is real before you spend anything.",
+            "deliveryTitle": "How delivery works in {city}",
+            "deliveryP1": "A delivery agency registers {region} as one of its coverage regions. Orders headed for {city} are routed to the agencies that cover it, and each one dispatches an agent from its own roster.",
+            "deliveryP2": "The agency sets the delivery fee and the agent's cut is fixed in their contract — a percentage of the fee, or a flat rate per run. Cash on delivery is collected by the agent and reconciled with the agency, which matters in a market where a lot of buyers still prefer to pay at the door.",
+            "opportunityTitle": "If you deliver in {city}",
+            "opportunityBody": "An agency that registers {region} gets routed the orders headed there. The free tier carries a thousand open deliveries, which is more than most local fleets run at once, and the platform takes no share of what you charge for delivery.",
+            "relatedTitle": "Elsewhere in Cameroon",
+            "ctaTitle": "Start in {city}",
+            "ctaBody": "Free tiers for vendors, agencies and agents. Nothing to pay before you know whether it works.",
+            "ctaFinePrint": "Prices in FCFA. No payment method needed to start.",
+            "regionReach": "The same registration covers the rest of {region}, so an agency based here also reaches {towns}.",
+            "contextTitle": "The shape of trade in {city}"
+        },
+        "cities": {
+            "douala": {
+                "lead": "Douala is where most of the country's goods arrive and most of its trade is settled — which makes it the hardest place to be a small seller and the best place to have someone else handle discovery and delivery.",
+                "context": "The port city and economic capital of Cameroon, in the Littoral region. Commerce concentrates around Marché Mboppi and the Marché Central, with business districts in Akwa and Bonanjo, dense residential trade through New Bell and Deido, and a whole second half of the city across the Wouri in Bonabéri.",
+                "angle": "Distance is the real cost here. A customer in Bonabéri and a seller in Akwa are twenty minutes apart on a good day and an hour on a bad one, so the delivery leg is worth organising properly rather than improvising per order."
+            },
+            "yaounde": {
+                "lead": "Yaoundé buys differently from Douala: more salaried, more administrative, more predictable in when it orders and where it wants things delivered.",
+                "context": "The political capital, in the Centre region, spread over its hills. Trade concentrates at Marché Mokolo and Marché Mfoundi, with commercial density through Mvog-Mbi and Nlongkak and a well-off residential market in Bastos.",
+                "angle": "The hills make routing matter more than raw distance — two neighbourhoods can be close on a map and far apart in practice. An agency that knows the city's actual routes is worth more here than one that only knows its addresses."
+            },
+            "bafoussam": {
+                "lead": "Bafoussam sits at the centre of a trading region rather than at the end of one, which changes what a seller there can reach.",
+                "context": "Capital of the West region and the commercial hub of the Grassfields, with a market that draws from Dschang, Mbouda, Bafang and Foumban. Agricultural trade and the region's long merchant tradition give it a density of small businesses out of proportion to its size.",
+                "angle": "The opportunity is regional, not municipal. A vendor in Bafoussam whose catalogue is discoverable can sell into the surrounding towns, and an agency covering the West region can serve all of them from one base."
+            },
+            "bamenda": {
+                "lead": "Bamenda is the largest Anglophone market in the country, and it is served far worse than its size deserves by platforms that launch in French only.",
+                "context": "Capital of the Northwest region, high in the Grassfields, with commerce centred on the Bamenda Main Market and Nkwen. It anchors a wider English-speaking trade area that reaches Kumbo, Bali and Ndop.",
+                "angle": "Language is the practical difference here. WiMall's assistant answers in the language the customer writes in, so a seller in Bamenda is not asking their customers to switch into French to buy something."
+            },
+            "garoua": {
+                "lead": "Garoua trades north and across borders as much as it trades with the south, and the distances involved make organised delivery worth more, not less.",
+                "context": "Capital of the North region on the Bénoué river, historically a river port and still the commercial centre for a large, thinly populated area that reaches Guider, Figuil and Poli.",
+                "angle": "Sparse coverage is the whole problem and the whole opening. An agency that registers the North region has very little competition for the orders routed there, and a vendor in Garoua reaches buyers who have almost no local alternative online."
+            }
+        }
     }
 }

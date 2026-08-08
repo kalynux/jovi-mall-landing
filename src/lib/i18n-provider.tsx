@@ -1,17 +1,21 @@
 "use client";
+import { useCallback, useTransition, type ReactNode } from "react";
 import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
-import { NextIntlClientProvider } from "next-intl";
+  NextIntlClientProvider,
+  useLocale as useActiveLocale,
+  type AbstractIntlMessages,
+} from "next-intl";
+import { usePathname, useRouter } from "@/i18n/navigation";
+import { LOCALE_CODES, localeDir, type Locale } from "@/i18n/routing";
 
-export type Locale = "en" | "fr" | "pt" | "es" | "ar";
+export type { Locale };
 
-const FALLBACK_LOCALE_LABELS: Record<Locale, string> = {
+/**
+ * Each language's own name. Static rather than read from the message bundles:
+ * a language's endonym does not change, and the old implementation fetched all
+ * five bundles on every page load purely to fill this list.
+ */
+const LOCALE_LABELS: Record<Locale, string> = {
   en: "English",
   fr: "Français",
   pt: "Português",
@@ -19,115 +23,64 @@ const FALLBACK_LOCALE_LABELS: Record<Locale, string> = {
   ar: "العربية",
 };
 
-export const LOCALES: { code: Locale; label: string; dir: "ltr" | "rtl" }[] = [
-  { code: "en", label: FALLBACK_LOCALE_LABELS.en, dir: "ltr" },
-  { code: "fr", label: FALLBACK_LOCALE_LABELS.fr, dir: "ltr" },
-  { code: "pt", label: FALLBACK_LOCALE_LABELS.pt, dir: "ltr" },
-  { code: "es", label: FALLBACK_LOCALE_LABELS.es, dir: "ltr" },
-  { code: "ar", label: FALLBACK_LOCALE_LABELS.ar, dir: "rtl" },
-];
+export const LOCALES: { code: Locale; label: string; dir: "ltr" | "rtl" }[] =
+  LOCALE_CODES.map((code) => ({
+    code,
+    label: LOCALE_LABELS[code],
+    dir: localeDir(code),
+  }));
 
-const STORAGE_KEY = "wimall-lang";
-
-type MessageBundle = Record<string, unknown> & {
-  meta?: {
-    langName?: string;
-    langCode?: string;
-  };
-};
-
-const I18nContext = createContext<{
+/**
+ * The locale now lives in the URL, so this is a thin pass-through: the server
+ * layout has already resolved both the locale and its messages from the route.
+ * It used to own that resolution, fetching a bundle in an effect and rendering
+ * `null` until it arrived — which is why every page served an empty body.
+ */
+export function I18nProvider({
+  locale,
+  messages,
+  children,
+}: {
   locale: Locale;
-  setLocale: (l: Locale) => void;
-  localeLabels: Record<Locale, string>;
-}>({ locale: "en", setLocale: () => {}, localeLabels: FALLBACK_LOCALE_LABELS });
-
-export function useLocale() {
-  return useContext(I18nContext);
-}
-
-async function loadMessages(locale: Locale) {
-  try {
-    const messages = await import(`../../messages/${locale}.json`);
-    return messages.default as MessageBundle;
-  } catch {
-    const fallback = await import(`../../messages/en.json`);
-    return fallback.default as MessageBundle;
-  }
-}
-
-function getLocaleLabel(locale: Locale, messages: MessageBundle | null | undefined) {
-  return messages?.meta?.langName ?? FALLBACK_LOCALE_LABELS[locale];
-}
-
-async function loadLocaleLabels() {
-  const labels = await Promise.all(
-    LOCALES.map(async (localeConfig) => {
-      const messages = await loadMessages(localeConfig.code);
-      return [localeConfig.code, getLocaleLabel(localeConfig.code, messages)] as const;
-    })
-  );
-
-  return Object.fromEntries(labels) as Record<Locale, string>;
-}
-
-export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("en");
-  const [messages, setMessages] = useState<MessageBundle | null>(null);
-  const [localeLabels, setLocaleLabels] = useState<Record<Locale, string>>(FALLBACK_LOCALE_LABELS);
-
-  const applyLocale = useCallback(async (newLocale: Locale) => {
-    const msgs = await loadMessages(newLocale);
-    const localeConfig = LOCALES.find((l) => l.code === newLocale)!;
-    const dir = localeConfig.dir;
-
-    // Apply dir + lang to <html>
-    document.documentElement.setAttribute("lang", newLocale);
-    document.documentElement.setAttribute("dir", dir);
-
-    setLocaleLabels((prev) => ({ ...prev, [newLocale]: getLocaleLabel(newLocale, msgs) }));
-    setLocaleState(newLocale);
-    setMessages(msgs);
-  }, []);
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function initializeLocale() {
-      const labels = await loadLocaleLabels();
-      if (!ignore) {
-        setLocaleLabels(labels);
-      }
-
-      const stored = (localStorage.getItem(STORAGE_KEY) as Locale) || "en";
-      const valid = LOCALES.some((l) => l.code === stored) ? stored : "en";
-      queueMicrotask(() => {
-        void applyLocale(valid);
-      });
-    }
-
-    void initializeLocale();
-
-    return () => {
-      ignore = true;
-    };
-  }, [applyLocale]);
-
-  function setLocale(newLocale: Locale) {
-    localStorage.setItem(STORAGE_KEY, newLocale);
-    void applyLocale(newLocale);
-  }
-
-  // Don't render until initial locale resolved
-  if (!messages) {
-    return null;
-  }
-
+  messages: AbstractIntlMessages;
+  children: ReactNode;
+}) {
   return (
-    <I18nContext.Provider value={{ locale, setLocale, localeLabels }}>
-      <NextIntlClientProvider locale={locale} messages={messages} timeZone="Africa/Lagos">
-        {children}
-      </NextIntlClientProvider>
-    </I18nContext.Provider>
+    // Africa/Douala, matching the backend's own default and the market the
+    // platform charges in. Same UTC offset as the Africa/Lagos this replaced, so
+    // nothing renders differently — it just no longer names the wrong country.
+    <NextIntlClientProvider locale={locale} messages={messages} timeZone="Africa/Douala">
+      {children}
+    </NextIntlClientProvider>
   );
+}
+
+/**
+ * Reads the active locale and switches it. Same shape the Navbar and
+ * AuthPageControls already consume; `setLocale` is now a navigation to the same
+ * route in another language rather than a localStorage write, so the address bar
+ * and the page always agree — and so a shared link carries its language.
+ *
+ * `pending` is true while the new locale's route loads, which callers can use to
+ * disable the picker mid-switch.
+ */
+export function useLocale() {
+  const locale = useActiveLocale() as Locale;
+  const router = useRouter();
+  // Locale-stripped: "/fr/shop" reads back as "/shop", which is what the router
+  // wants when re-issuing the same route under a different locale.
+  const pathname = usePathname();
+  const [pending, startTransition] = useTransition();
+
+  const setLocale = useCallback(
+    (next: Locale) => {
+      if (next === locale) return;
+      startTransition(() => {
+        router.replace(pathname, { locale: next });
+      });
+    },
+    [locale, pathname, router]
+  );
+
+  return { locale, setLocale, localeLabels: LOCALE_LABELS, pending };
 }

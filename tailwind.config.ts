@@ -79,11 +79,13 @@ const config: Config = {
           subtle: "var(--border-subtle)",
         },
       },
+      // The self-hosted faces carry a build-generated family name, exposed by
+      // next/font as these CSS variables on <html>. See src/lib/fonts.ts.
       fontFamily: {
-        display: ["Plus Jakarta Sans", "ui-sans-serif", "system-ui", "sans-serif"],
-        body: ["Plus Jakarta Sans", "ui-sans-serif", "system-ui", "sans-serif"],
-        sans: ["Plus Jakarta Sans", "ui-sans-serif", "system-ui", "sans-serif"],
-        mono: ["JetBrains Mono", "ui-monospace", "SFMono-Regular", "monospace"],
+        display: ["var(--font-jakarta)", "ui-sans-serif", "system-ui", "sans-serif"],
+        body: ["var(--font-jakarta)", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["var(--font-jakarta)", "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ["var(--font-jetbrains)", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       fontSize: {
         "hero-xl": ["clamp(2.5rem,6vw,5rem)", { lineHeight: "1.05", letterSpacing: "-0.03em" }],

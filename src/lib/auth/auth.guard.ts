@@ -1,6 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+// Deliberately mismatched pair: the router is the locale-aware one, so a
+// redirect from /fr/auth-me lands on /fr/login rather than the English page.
+// The pathname is not — the `return` param has to carry the full prefixed path
+// so the visitor comes back to the page they were actually on.
+import { usePathname } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import type { AuthUser, AuthStatus, Role, AuthRoleEntity } from "./auth.types";
 import { restoreSession } from "./auth.service";
 import { requiresWaVerification } from "./wa-verification-gate";

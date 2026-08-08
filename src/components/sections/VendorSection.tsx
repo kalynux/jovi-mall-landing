@@ -7,6 +7,7 @@ import SectionLabel from "@/components/ui/SectionLabel";
 import AnimatedSection from "@/components/ui/AnimatedSection";
 import SectionShell from "@/components/ui/SectionShell";
 import CTAButton from "@/components/ui/CTAButton";
+import LinkButton from "@/components/ui/LinkButton";
 import DashboardMockup from "@/components/ui/DashboardMockup";
 import { useTranslations } from "next-intl";
 
@@ -58,9 +59,15 @@ export default function VendorSection() {
             ))}
           </div>
 
-          <CTAButton variant="primary" size="md" showArrow href="#">
-            {t("ctaPrimary")}
-          </CTAButton>
+          <div className="flex flex-wrap items-center gap-3">
+            <CTAButton variant="primary" size="md" showArrow href="#">
+              {t("ctaPrimary")}
+            </CTAButton>
+            {/* The section is a summary; the page is the answer. */}
+            <LinkButton href="/vendors" variant="secondary" size="md" showArrow>
+              {t("ctaSecondary")}
+            </LinkButton>
+          </div>
         </AnimatedSection>
 
         {/* Right: Dashboard mockup */}

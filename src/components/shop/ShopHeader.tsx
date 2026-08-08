@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link } from "@/i18n/navigation";
+import { usePathname } from "@/i18n/navigation";
 import { useTheme } from "@/lib/theme";
 import { useCart, useFavorites } from "@/components/shop/providers";
 import { Icon } from "@/components/shop/ds";

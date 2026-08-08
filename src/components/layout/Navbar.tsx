@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link } from "@/i18n/navigation";
+import { usePathname } from "@/i18n/navigation";
 import { Menu, X, Sun, Moon, Globe, ChevronDown, LogIn } from "lucide-react";
 import WiMallMark from "@/components/brand/WiMallMark.generated";
 import { motion, useScroll, AnimatePresence } from "framer-motion";
@@ -171,12 +171,19 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
 
   // Nav links from translations. `route` links are real pages; the rest are
   // landing anchors (resolved to `/#…` when we're off the landing page).
+  //
+  // The three roles that have a page navigate to it rather than scrolling the
+  // landing: the page is the fuller answer, and a header link that only worked
+  // on one route was the reason those pages went unfound. Customers stay an
+  // anchor because there is no /customers page — the landing section, with its
+  // WhatsApp deep link, is the whole story for them.
   const NAV_LINKS: { label: string; href: string; route?: boolean }[] = [
     { label: t("shop"), href: "/shop", route: true },
-    { label: t("vendors"), href: "#vendors" },
-    { label: t("agencies"), href: "#agencies" },
-    { label: t("agents"), href: "#agents" },
+    { label: t("vendors"), href: "/vendors", route: true },
+    { label: t("agencies"), href: "/agencies", route: true },
+    { label: t("agents"), href: "/agents", route: true },
     { label: t("customers"), href: "#customers" },
+    { label: t("pricing"), href: "/pricing", route: true },
   ];
 
   const resolveHref = (link: { href: string; route?: boolean }) =>

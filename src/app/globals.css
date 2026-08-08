@@ -101,10 +101,13 @@
 
   --whatsapp: #25D366;
 
-  /* ---- Typography ---- */
-  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  /* ---- Typography ----
+     --font-jakarta / --font-jetbrains are set by next/font on <html>; see
+     lib/fonts.ts. The families are no longer named literally, because the
+     self-hosted faces carry a build-generated name. */
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, 'SFMono-Regular', Menlo, monospace;
   --fw-regular: 400; --fw-medium: 500; --fw-semibold: 600; --fw-bold: 700; --fw-extrabold: 800;
   --fs-price-lg: 26px;  --fs-price: 18px;  --fs-price-sm: 14px;
 

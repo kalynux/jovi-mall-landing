@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { Badge, Button, EmptyState, Icon, IconButton, ProductCard, QtyStepper } from "@/components/shop/ds";
 import { useCart } from "@/components/shop/providers";
 import { findProductById, findVendorById } from "@/lib/shop/shop.api";

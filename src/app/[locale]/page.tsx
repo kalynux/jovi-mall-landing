@@ -1,62 +1,32 @@
-"use client";
-import { useState } from "react";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import HeroSection from "@/components/sections/HeroSection";
-import HowItWorksSection from "@/components/sections/HowItWorksSection";
-import VendorSection from "@/components/sections/VendorSection";
-import AgencySection from "@/components/sections/AgencySection";
-import AgentSection from "@/components/sections/AgentSection";
-import CustomerSection from "@/components/sections/CustomerSection";
-import AfricaFirstSection from "@/components/sections/AfricaFirstSection";
-import TrustSection from "@/components/sections/TrustSection";
-import FinalCTASection from "@/components/sections/FinalCTASection";
-import RoleSelectorModal from "@/components/ui/RoleSelectorModal";
-import SectionProgressIndicator from "@/components/ui/SectionProgressIndicator";
-import AuroraBackground from "@/components/layout/AuroraBackground";
-import InteractiveNetwork from "@/components/layout/InteractiveNetwork";
-import OrbitalBackground from "@/components/layout/orbital";
-import GrainOverlay from "@/components/layout/GrainOverlay";
-import { SectionNavProvider } from "@/components/scroll/SectionNavProvider";
-import { SECTION_IDS } from "@/lib/constants";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { setRequestLocale } from "next-intl/server";
+import LandingPage from "@/components/LandingPage";
+import JsonLd from "@/components/seo/JsonLd";
+import { organizationJsonLd, webSiteJsonLd } from "@/lib/seo/jsonld";
+import { localeAlternates } from "@/lib/seo/alternates";
+import { isLocale } from "@/i18n/routing";
 
-export default function Home() {
-  const [modalOpen, setModalOpen] = useState(false);
+type PageProps = { params: Promise<{ locale: string }> };
+
+// Title/description/OG are inherited from the layout, which describes this page
+// in the request's language. Only the canonical + hreflang set belongs here.
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) notFound();
+
+  return { alternates: localeAlternates(locale, "/") };
+}
+
+export default async function Home({ params }: PageProps) {
+  const { locale } = await params;
+  if (!isLocale(locale)) notFound();
+  setRequestLocale(locale);
 
   return (
-    <SectionNavProvider sections={SECTION_IDS}>
-      {/* Ambient background layers (fixed, behind everything).
-          OrbitalBackground sits after the aurora + network so it paints on top
-          of them, and before the grain so the grain still tops the stack. */}
-      <AuroraBackground />
-      <InteractiveNetwork />
-      <OrbitalBackground />
-      <GrainOverlay />
-
-      {/* Sticky Navbar */}
-      <Navbar onGetStarted={() => setModalOpen(true)} />
-
-      {/* Section progress rail (desktop + mobile) */}
-      <SectionProgressIndicator />
-
-      {/* Role selector modal */}
-      <RoleSelectorModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
-
-      {/* Page sections — each fills one viewport */}
-      <main id="main-content">
-        <HeroSection onGetStarted={() => setModalOpen(true)} />
-        <CustomerSection />
-        <HowItWorksSection />
-        <VendorSection />
-        <AgencySection />
-        <AgentSection />
-        <AfricaFirstSection />
-        <TrustSection />
-        <FinalCTASection onGetStarted={() => setModalOpen(true)} />
-      </main>
-
-      {/* Footer */}
-      <Footer />
-    </SectionNavProvider>
+    <>
+      <JsonLd data={[organizationJsonLd(), webSiteJsonLd()]} />
+      <LandingPage />
+    </>
   );
 }

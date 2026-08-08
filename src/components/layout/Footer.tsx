@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Twitter, Linkedin, Instagram } from "lucide-react";
 import WiMallMark from "@/components/brand/WiMallMark.generated";
 import { BRAND } from "@/lib/constants";
@@ -25,15 +25,27 @@ export default function Footer() {
   const resolveHref = (href: string) =>
     href === "#" || !href.startsWith("#") || sectionNav ? href : `/${href}`;
 
+  // The role entries point at the standalone pages rather than at landing
+  // anchors. The header keeps the anchors because they drive the landing's
+  // full-page scroller; the footer is on every page, so it is where the real
+  // URLs belong — and sitewide links are what let those pages rank at all.
   const footerLinks = [
     {
       label: t("platform"),
       links: [
         { label: nav("shop"), href: "/shop" },
-        { label: nav("vendors"), href: "#vendors" },
-        { label: nav("agencies"), href: "#agencies" },
-        { label: nav("agents"), href: "#agents" },
+        { label: nav("vendors"), href: "/vendors" },
+        { label: nav("agencies"), href: "/agencies" },
+        { label: nav("agents"), href: "/agents" },
         { label: nav("customers"), href: "#customers" },
+      ],
+    },
+    {
+      label: t("learn"),
+      links: [
+        { label: nav("pricing"), href: "/pricing" },
+        { label: nav("faq"), href: "/faq" },
+        { label: nav("cameroon"), href: "/cameroon" },
       ],
     },
     {
@@ -58,7 +70,8 @@ export default function Footer() {
   return (
     <footer className="bg-[var(--bg-subtle)] border-t border-[var(--border-medium)] pt-16 pb-8">
       <div className="container-xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-[var(--border)]">
+        {/* Brand block spans two, then one column per link group. */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10 pb-12 border-b border-[var(--border)]">
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4 group" aria-label={t("logoAriaLabel")}>

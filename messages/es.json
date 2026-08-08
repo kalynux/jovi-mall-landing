@@ -12,7 +12,10 @@
     },
     "meta": {
         "langName": "Español",
-        "langCode": "es"
+        "langCode": "es",
+        "title": "WiMall — El comercio ocurre en la conversación",
+        "description": "Infraestructura de comercio electrónico con IA para negocios que venden por WhatsApp. Los vendedores venden sin sitio web. Los clientes compran conversando. Agencias y repartidores ganan en cada entrega.",
+        "shareDescription": "La plataforma de comercio electrónico con IA pensada para WhatsApp."
     },
     "navbar": {
         "shop": "Tienda",
@@ -35,7 +38,10 @@
         "switchRole": "Cambiar rol",
         "addRole": "Añadir rol",
         "logout": "Cerrar sesión",
-        "userMenuAriaLabel": "Usuario"
+        "userMenuAriaLabel": "Usuario",
+        "pricing": "Precios",
+        "faq": "Preguntas frecuentes",
+        "cameroon": "Camerún"
     },
     "hero": {
         "badge": "La plataforma de comercio WhatsApp",
@@ -109,7 +115,8 @@
             "aiDesc": "Nuestro motor conecta tus productos con clientes interesados en WhatsApp 24/7.",
             "revenueTitle": "Los ingresos van a ti",
             "revenueDesc": "Cobra por cada venta, automáticamente. Sin perseguir clientes."
-        }
+        },
+        "ctaSecondary": "Cómo funciona vender"
     },
     "agency": {
         "sectionLabel": "Para agencias",
@@ -127,7 +134,8 @@
             "tracking": "Seguimiento en tiempo real de cada entrega",
             "payout": "Cálculo y pago automático de comisiones"
         },
-        "ariaLabel": "Flujo de asignación de entrega"
+        "ariaLabel": "Flujo de asignación de entrega",
+        "ctaSecondary": "Cómo ganan las agencias"
     },
     "agent": {
         "sectionLabel": "Para repartidores",
@@ -144,7 +152,8 @@
             "step02Desc": "Navega hasta el punto de recogida y entrega al cliente.",
             "step03Title": "Recibe el pago",
             "step03Desc": "Ganancias acreditadas instantáneamente en la entrega."
-        }
+        },
+        "ctaSecondary": "Cómo cobran los repartidores"
     },
     "customer": {
         "sectionLabel": "Para clientes",
@@ -339,7 +348,8 @@
         "copyright": "Todos los derechos reservados.",
         "builtFor": "Hecho para el comercio moderno. Impulsado por WiMall.",
         "logoAriaLabel": "Inicio WiMall",
-        "socialAriaLabel": "Enlace social"
+        "socialAriaLabel": "Enlace social",
+        "learn": "Recursos"
     },
     "auth": {
         "forgotPassword": "¿Olvidaste tu contraseña?",
@@ -752,5 +762,481 @@
         "searchCountryLabel": "Buscar países",
         "searchCountryPlaceholder": "Buscar país o indicativo",
         "noCountryMatch": "Ningún país coincide con la búsqueda"
+    },
+    "pages": {
+        "nav": {
+            "vendors": "Para vendedores",
+            "agencies": "Para agencias",
+            "agents": "Para repartidores",
+            "pricing": "Precios",
+            "faq": "Preguntas frecuentes",
+            "cameroon": "Camerún"
+        },
+        "common": {
+            "breadcrumbLabel": "Ruta de navegación",
+            "home": "Inicio",
+            "ctaVendor": "Empieza a vender gratis",
+            "ctaAgency": "Registra tu agencia",
+            "ctaAgent": "Regístrate como repartidor",
+            "ctaCustomer": "Comprar por WhatsApp",
+            "ctaPricing": "Ver los planes",
+            "ctaFaq": "Leer las preguntas frecuentes",
+            "ctaHowItWorks": "Ver cómo funciona",
+            "keepReading": "Sigue leyendo",
+            "commonQuestions": "Preguntas frecuentes",
+            "allQuestions": "Ver todas las preguntas",
+            "currencyNote": "Los precios están en FCFA (XAF), la moneda del mercado al que WiMall sirve primero.",
+            "faqShort": "FAQ"
+        },
+        "plans": {
+            "free": "Gratis",
+            "perTerm": "/ {days} {days, plural, one {día} other {días}}",
+            "unlimited": "Ilimitados",
+            "cta": "Empezar",
+            "limits": {
+                "products": "productos activos",
+                "storage": "de almacenamiento de medios",
+                "commission": "de comisión por pedido pagado",
+                "credits": "créditos incluidos",
+                "openShipments": "entregas abiertas a la vez",
+                "concurrentDeliveries": "entregas a la vez"
+            },
+            "unavailable": "No está a la venta"
+        },
+        "regions": {
+            "adamaoua": "Adamaoua",
+            "centre": "Centro",
+            "east": "Este",
+            "far_north": "Extremo Norte",
+            "littoral": "Litoral",
+            "north": "Norte",
+            "northwest": "Noroeste",
+            "south": "Sur",
+            "southwest": "Suroeste",
+            "west": "Oeste"
+        },
+        "pricing": {
+            "metaTitle": "Precios de WiMall — empieza en cero, paga cuando te rinda",
+            "metaDescription": "Lo que cuesta WiMall a vendedores, agencias de reparto y repartidores. Planes gratuitos que nunca caducan, planes de vendedor desde 5.000 FCFA por 30 días, comisión del 7% hasta el 3%, y nada que se renueve solo.",
+            "eyebrow": "Planes, comisión y créditos",
+            "title": "Empieza en cero. Paga cuando te rinda.",
+            "lead": "Vendedores, agencias de reparto y repartidores tienen cada uno un plan gratuito que nunca caduca. Los planes de pago suben tus límites y, para los vendedores, bajan la comisión de cada pedido. Sin cuota de alta, sin contrato, y nada se renueva solo.",
+            "howWeEarn": {
+                "title": "Cómo gana dinero WiMall",
+                "lead": "Conviene decirlo claro, porque es lo que decide si el trato te sirve.",
+                "commission": {
+                    "title": "Una comisión por cada pedido pagado",
+                    "body": "Un porcentaje del total del pedido, cobrado en el momento en que el cliente paga. Lo fija el plan del vendedor: 7% en el plan gratuito, 5% en Growth, 3% en Business."
+                },
+                "plans": {
+                    "title": "Planes opcionales",
+                    "body": "Un periodo de 30 días que sube tus límites. Cualquier rol puede operar indefinidamente sin comprar ninguno."
+                },
+                "credits": {
+                    "title": "Créditos para lo que se mide",
+                    "body": "Indexar un producto para que la IA pueda recomendarlo, y enviar un mensaje de plantilla de WhatsApp facturable. Tu plan incluye una asignación; solo recargas si la agotas."
+                },
+                "delivery": {
+                    "title": "Nada de la tarifa de reparto",
+                    "body": "La tarifa de reparto la fija la agencia y se reparte entre ella y el repartidor que hizo el trayecto. WiMall no toma ninguna parte de ella."
+                },
+                "customerNote": "Los clientes pagan por lo que compran y nada más. No hay comisión, ni suscripción, ni cargo de cuenta por comprar en WiMall."
+            },
+            "vendor": {
+                "title": "Planes para vendedores",
+                "lead": "La comisión es la cifra que conviene comparar. En un mes de 400.000 FCFA en pedidos pagados, pasar de Starter a Growth ahorra 8.000 FCFA de comisión y cuesta 5.000.",
+                "note": "Los límites cuentan productos publicados. En el límite, crear otro se rechaza hasta que desactives uno o subas de nivel — nada de lo ya publicado se retira."
+            },
+            "agency": {
+                "title": "Planes para agencias de reparto",
+                "lead": "El límite de una agencia es cuántos envíos pueden estar abiertos al mismo tiempo, no cuántos haces al mes. Al terminar una entrega, la plaza se libera.",
+                "note": "Este límite es flexible. Superarlo genera un aviso, no un bloqueo — los repartos siguen mientras decides si subes de nivel."
+            },
+            "agent": {
+                "title": "Planes para repartidores",
+                "lead": "Misma idea que en las agencias: la cifra es cuántas entregas puedes tener en marcha a la vez, no una cuota mensual.",
+                "note": "Este límite es estricto. Aceptar una oferta más por encima de tu tope se rechaza hasta que termines una de las entregas que ya llevas."
+            },
+            "credits": {
+                "title": "Qué son los créditos",
+                "p1": "Dos cosas cuestan dinero de verdad cada vez que ocurren en WiMall, así que se miden en lugar de incluirse: indexar uno de tus productos para que el asistente de IA pueda encontrarlo y recomendarlo, y enviar un mensaje de plantilla de WhatsApp facturable a un cliente. Cada una cuesta 1 crédito.",
+                "p2": "Activar un plan concede su asignación una sola vez — 50 créditos en el plan gratuito de vendedor, 4.500 en Business. Si la agotas, recarga por paquetes. Cuanto mayor el paquete, menos cuesta cada crédito.",
+                "packsTitle": "Paquetes de créditos",
+                "packsCaption": "Paquetes de recarga de créditos y sus precios",
+                "creditsHead": "Créditos",
+                "priceHead": "Precio",
+                "perCreditHead": "Por crédito"
+            },
+            "payment": {
+                "title": "Cómo funciona el pago",
+                "p1": "Los planes y los paquetes de créditos se pagan con NotchPay o MyCoolPay para dinero móvil, o con Stripe para tarjetas. Nada se guarda para cobrarlo más adelante — no hay suscripción recurrente en ninguna parte de WiMall.",
+                "p2": "Un periodo pagado simplemente se agota a los 30 días. Si compraste otro plan mientras uno estaba en marcha, quedó en cola y toma el relevo en ese momento; si no lo hiciste, vuelves al plan gratuito de tu rol y sigues trabajando. Puedes tener un plan activo y otro en cola a la vez.",
+                "p3": "Si un pago con tarjeta se revierte después, el plan que compró vuelve al gratuito y los créditos que concedió se retiran con él — lo que puede dejar un saldo negativo hasta la siguiente recarga."
+            },
+            "faqTitle": "Preguntas sobre precios",
+            "cta": {
+                "title": "El plan gratuito no pide método de pago",
+                "body": "Monta tu catálogo, mira qué se vende, y sube de nivel solo cuando la cuenta de la comisión lo aconseje.",
+                "finePrint": "Los planes gratuitos nunca caducan. Los periodos de pago duran 30 días y no se renuevan automáticamente."
+            },
+            "unsoldTierNote": "Los niveles marcados como no disponibles para la venta aparecen a su precio de catálogo pero hoy no se pueden comprar aquí. El plan gratuito está siempre disponible."
+        },
+        "vendors": {
+            "metaTitle": "Vende por WhatsApp sin página web — WiMall para vendedores",
+            "metaDescription": "Sube tus productos una vez y deja que el asistente de IA de WiMall los venda dentro de WhatsApp. Sin tienda, sin app, sin programador. Plan gratuito: 15 productos, 7% de comisión, sin caducidad.",
+            "eyebrow": "Vender en WiMall",
+            "title": "Vende por WhatsApp sin página web",
+            "lead": "No necesitas tienda online, ni dominio, ni programador. Sube tus productos una vez, y el asistente de IA de WiMall los vende dentro de las conversaciones de WhatsApp que tus clientes ya están teniendo.",
+            "problem": {
+                "title": "Ya vendes por WhatsApp. Ese es justamente el problema.",
+                "p1": "La conversación funciona. La gente confía en ella, abrirla casi no gasta datos, y nadie tiene que crear una cuenta para hablar contigo. Lo que no funciona es que tú eres el catálogo, el vendedor y el despachador a la vez — y los tres solo existen mientras el teléfono está en tu mano.",
+                "p2": "Así que las mismas cinco preguntas vuelven todo el día. ¿Todavía hay? ¿Cuánto cuesta? ¿Qué colores? ¿Repartes en mi zona? ¿Puedo pagar cuando llegue? Piérdete una hora y perdiste la venta, porque el cliente ya preguntó en otro sitio.",
+                "p3": "WiMall no te saca de WhatsApp. Pone un catálogo de verdad y un asistente detrás de la conversación, para que esas cinco preguntas se respondan a las dos de la mañana igual que a las dos de la tarde."
+            },
+            "how": {
+                "title": "Cómo funciona",
+                "lead": "Seis pasos, y tú solo intervienes en el primero y en el último.",
+                "s1Title": "Sube tu catálogo",
+                "s1Body": "Fotos, precios, descripciones, variantes y existencias. Productos simples, productos con opciones, descargas digitales y servicios reservables funcionan todos.",
+                "s2Title": "Tus productos se indexan",
+                "s2Body": "Cada uno se indexa para que el asistente pueda relacionarlo con lo que el cliente describe, y no solo con las palabras exactas que escribió.",
+                "s3Title": "Un cliente empieza una conversación",
+                "s3Body": "Dice qué busca con sus propias palabras. El asistente responde con tus productos y tus existencias, no con consejos genéricos.",
+                "s4Title": "El pedido nace en la conversación",
+                "s4Body": "El cliente confirma y paga sin salir de WhatsApp — dinero móvil, tarjeta, o en efectivo al recibirlo.",
+                "s5Title": "Una agencia de reparto toma el relevo",
+                "s5Body": "El pedido se convierte en un envío, una agencia manda a uno de sus repartidores, y el cliente puede seguir dónde está.",
+                "s6Title": "Tu parte queda registrada y se paga",
+                "s6Body": "El total del pedido, menos la comisión de la plataforma y la tarifa de reparto, entra en tus ganancias, con cada parte del reparto escrita por extenso."
+            },
+            "included": {
+                "title": "Qué obtienes",
+                "i1": "Un catálogo con variantes, opciones, niveles de existencias y reglas de envío por producto",
+                "i2": "Un asistente de IA que responde en el idioma del cliente, a cualquier hora",
+                "i3": "Pedidos con un ciclo de vida real, en lugar de un hilo de chat que hay que releer",
+                "i4": "Reparto a través de las agencias que ya están en la plataforma, sin tener que poseer una moto",
+                "i5": "Productos digitales y servicios reservables junto a los bienes físicos",
+                "i6": "Un registro de ganancias que muestra comisión, tarifa de reparto y tu neto en cada pedido",
+                "i7": "Analíticas de lo que se vende, y solicitudes de reposición de lo que se acaba",
+                "i8": "Notificaciones en el panel, por push, por correo, en Telegram y en WhatsApp"
+            },
+            "cost": {
+                "title": "Cuánto cuesta",
+                "p1": "El plan gratuito no es una prueba. Starter te deja publicar 15 productos con 1 GB de medios, se lleva el 7% de cada pedido pagado, y nunca caduca.",
+                "p2": "Growth cuesta 5.000 FCFA por 30 días: 150 productos, 10 GB, y la comisión baja al 5%. Business cuesta 25.000 FCFA por 30 días con productos ilimitados, 100 GB y 3%. Nada se renueva solo — al terminar un periodo, o pasas al plan que dejaste en cola, o vuelves a Starter y sigues vendiendo."
+            },
+            "start": {
+                "title": "Qué necesitas para empezar",
+                "lead": "La configuración son cuatro pasos y solo el primero es obligatorio. Puedes estar publicando productos antes de haber decidido tu identidad visual o tu política de reparto.",
+                "i1": "Un número de WhatsApp que puedas verificar",
+                "i2": "Tu país y una forma de cobrar — eso es todo lo que pide el paso obligatorio",
+                "i3": "Productos con una foto, un precio y una descripción corta",
+                "i4": "Opcionalmente: una agencia de reparto con la que vincularte, tu identidad visual, y tus propias condiciones de devolución y envío"
+            },
+            "faqTitle": "Preguntas de vendedores",
+            "cta": {
+                "title": "Pon tu catálogo donde ya ocurre la conversación",
+                "body": "Starter no cuesta nada, no pide método de pago y no caduca. Si funciona, los planes de pago se amortizan en comisión.",
+                "finePrint": "15 productos, 1 GB y 7% de comisión en el plan gratuito. Sin tarjeta."
+            }
+        },
+        "agencies": {
+            "metaTitle": "Agencias de reparto en WiMall — pedidos que llegan pagados y con dirección",
+            "metaDescription": "Lleva un negocio de reparto sobre WiMall: pedidos pagados despachados a tus repartidores, cobertura por región, seguimiento en vivo, gestión del pago contra entrega. Tú fijas la tarifa de reparto y WiMall no se lleva nada de ella.",
+            "eyebrow": "Operaciones de reparto",
+            "title": "Pedidos que llegan ya pagados y con dirección",
+            "lead": "WiMall entrega a tu agencia envíos reales, con destino y tarifa incluidos. Tú los despachas a tus repartidores, ellos entregan, y la tarifa de reparto es tuya para repartirla — WiMall no toma ninguna parte.",
+            "money": {
+                "title": "De dónde sale el dinero de una agencia",
+                "p1": "Tú fijas tus propias tarifas de reparto en la política de tu agencia. Cuando se paga un pedido, la tarifa de cada uno de sus envíos queda reservada sobre ese envío y sale de la parte del vendedor — no se suma a lo que se te debe.",
+                "p2": "Cuando termina una entrega, esa tarifa reservada se divide entre tu agencia y el repartidor que la hizo, según el contrato acordado con él: un porcentaje de la tarifa, o una cantidad fija por entrega. Lo que queda tras la parte del repartidor es de tu agencia.",
+                "p3": "La comisión de WiMall sale de la parte del vendedor en el total del pedido. Nunca toca la tarifa de reparto. Si un envío no tiene contrato de repartidor asociado, la agencia se queda con la tarifa entera.",
+                "codNote": "El pago contra entrega tiene su propio circuito: el repartidor cobra, el cobro se registra a nombre de la agencia, y el mismo reparto se aplica al efectivo igual que se aplicaría al pago con tarjeta."
+            },
+            "run": {
+                "title": "Lo que de verdad gestionas",
+                "i1Title": "Una red de repartidores",
+                "i1Body": "Contacta repartidores o acepta a los que se postulan. Cada relación es un contrato propio, con su estado, su reparto de tarifa y su asignación de efectivo.",
+                "i2Title": "Cobertura por región",
+                "i2Body": "Tu agencia registra un país y las regiones que cubre. Las diez de Camerún están disponibles; los pedidos fuera de ellas no llegan a ti.",
+                "i3Title": "Despacho y asignación automática",
+                "i3Body": "Manda una oferta al repartidor que elijas, o deja que la asignación la enrute al más cercano disponible y quédate con la primera aceptación.",
+                "i4Title": "Seguimiento en vivo",
+                "i4Body": "Sigue una entrega mientras ocurre, y deja que el cliente la siga también. Activado en todos los niveles, incluido el gratuito.",
+                "i5Title": "Gestión del efectivo",
+                "i5Body": "Los cobros contra entrega se siguen por repartidor y se concilian con lo entregado, con una comisión de manejo tuya.",
+                "i6Title": "Ganancias y disputas",
+                "i6Body": "Un registro por cada envío: cuál fue la tarifa, cuánto se llevó el repartidor, cuánto te quedaste, y qué pasó cuando una entrega volvió."
+            },
+            "capacity": {
+                "title": "La capacidad, y qué pasa en el límite",
+                "p1": "El plan gratuito te deja mantener 1.000 envíos abiertos a la vez. Es un techo de trabajo, no una cuota mensual — cada entrega completada libera su plaza.",
+                "p2": "El límite es flexible a propósito. Si lo superas, recibes un aviso y la opción de subir de nivel; nada del pago, el despacho o la entrega deja de funcionar. Una agencia al límite está teniendo una buena semana, y la plataforma no debería castigarla por eso."
+            },
+            "start": {
+                "title": "Qué necesitas para registrarte",
+                "i1": "Un número de WhatsApp que puedas verificar",
+                "i2": "Al menos una dirección de sede, y las regiones que piensas cubrir",
+                "i3": "Los datos de cobro de tu agencia",
+                "i4": "Tu política de reparto — lo que cobras y las condiciones en que entregas"
+            },
+            "faqTitle": "Preguntas de agencias",
+            "cta": {
+                "title": "Lleva los pedidos a tu flota",
+                "body": "Registrarse no cuesta nada y el plan gratuito soporta mil entregas abiertas. Lo único que hay que decidir antes de empezar es cuánto cobras.",
+                "finePrint": "Plan gratuito: 1.000 envíos abiertos, 5 GB, seguimiento en vivo incluido."
+            }
+        },
+        "agents": {
+            "metaTitle": "Hazte repartidor — WiMall",
+            "metaDescription": "Reparte para WiMall con tu propio horario. Regístrate por tu cuenta, únete a una agencia o a varias, mira cuánto paga un trayecto antes de aceptarlo, y cobra tu parte de cada tarifa de reparto.",
+            "eyebrow": "Repartir con WiMall",
+            "title": "Reparte en tus términos. Mira la paga antes de aceptar.",
+            "lead": "Regístrate como repartidor, únete a una agencia — o a varias — y empieza a recibir ofertas de reparto en tu teléfono. Cada oferta dice cuánto paga el trayecto antes de que decidas.",
+            "how": {
+                "title": "Cómo funciona",
+                "s1Title": "Regístrate por tu cuenta",
+                "s1Body": "Te registras de forma independiente y al principio no estás ligado a ninguna agencia. Tu cuenta, tus datos, tu vehículo.",
+                "s2Title": "Únete a una agencia",
+                "s2Body": "Postúlate a una, o acepta la que te contacte. Puedes tener contratos con varias al mismo tiempo.",
+                "s3Title": "Recibe una oferta",
+                "s3Body": "Una entrega llega a tu teléfono con recogida, destino y lo que paga. Acéptala, o déjala para otra persona.",
+                "s4Title": "Recoge y entrega",
+                "s4Body": "Recoge en el vendedor, entrega al cliente, y confírmalo con el comprobante de entrega.",
+                "s5Title": "Cobra si es contra entrega",
+                "s5Body": "En los pedidos que se pagan al recibirlos, cobras en la puerta y le entregas el dinero a tu agencia, registrado a tu nombre.",
+                "s6Title": "Tu parte queda registrada",
+                "s6Body": "Tu porción de la tarifa de reparto se te asigna al terminar el trayecto, con el reparto que fija tu contrato."
+            },
+            "earnings": {
+                "title": "Qué ganas",
+                "p1": "Tus ganancias salen de la tarifa de reparto de cada envío. Cuánto de ella es tuya lo fija el contrato que tienes con esa agencia: un porcentaje de la tarifa, o una cantidad fija por entrega.",
+                "p2": "Como va por contrato, dos agencias pueden pagar distinto por el mismo tipo de trayecto — y ves cuánto paga un trabajo concreto antes de aceptarlo, no después. Una entrega que acaba en devolución se liquida con su propia regla en lugar de darse por perdida.",
+                "p3": "WiMall no se lleva nada de la tarifa de reparto. Se divide íntegra entre tu agencia y tú."
+            },
+            "capacity": {
+                "title": "Cuántas a la vez",
+                "p1": "El plan gratuito te deja llevar 20 entregas a la vez. Termina una y la plaza vuelve.",
+                "p2": "A diferencia del límite de las agencias, este es firme: aceptar una oferta por encima de tu tope se rechaza, no solo se señala. La idea es que un cliente esperando una entrega que no puedes hacer es peor que una oferta que no recibiste."
+            },
+            "start": {
+                "title": "Qué necesitas",
+                "i1": "Un teléfono inteligente y un número de WhatsApp que puedas verificar",
+                "i2": "Un vehículo — moto, coche, furgoneta o camión — con su tipo y color en tu perfil",
+                "i3": "Una agencia con la que tener contrato, a la que puedes postularte tras registrarte",
+                "i4": "Opcionalmente, un contacto de emergencia y una foto del vehículo"
+            },
+            "faqTitle": "Preguntas de repartidores",
+            "cta": {
+                "title": "Empieza con una agencia, o con cinco",
+                "body": "Registrarse es gratis e independiente. Nada te ata a una sola agencia, y ninguna oferta te compromete hasta que la aceptas.",
+                "finePrint": "Plan gratuito: 20 entregas a la vez. Sin cuota mensual."
+            }
+        },
+        "faq": {
+            "metaTitle": "Preguntas frecuentes de WiMall — vender, repartir y pagar por WhatsApp",
+            "metaDescription": "Respuestas claras sobre WiMall: cómo se compra por WhatsApp, cuánto cuesta vender, cómo cobran las agencias de reparto y los repartidores, qué métodos de pago funcionan, y dónde opera la plataforma.",
+            "eyebrow": "Preguntas y respuestas",
+            "title": "Preguntas, respondidas sin rodeos",
+            "lead": "Si algo aquí está desactualizado o falta, la respuesta honesta suele estar en el propio producto — pero estas son las preguntas que la gente hace de verdad antes de registrarse.",
+            "groups": {
+                "general": "Sobre WiMall",
+                "selling": "Vender en WiMall",
+                "delivering": "Repartir con WiMall",
+                "money": "Dinero y pagos"
+            },
+            "q": {
+                "whatIsWimall": {
+                    "q": "¿Qué es WiMall?",
+                    "a": "Una plataforma de comercio que funciona dentro de WhatsApp. Los vendedores suben un catálogo; los clientes hablan con un asistente de IA que entiende qué buscan, recomienda productos y crea el pedido en la conversación; las agencias de reparto y sus repartidores lo llevan. Nadie necesita una página web ni una app."
+                },
+                "howShopping": {
+                    "q": "¿Cómo compro algo?",
+                    "a": "Abres una conversación de WhatsApp y describes lo que quieres con tus propias palabras. El asistente responde con productos reales de vendedores reales, con precio y disponibilidad, y puede responder preguntas de seguimiento sobre ellos. Cuando estés listo, crea el pedido y cobra en el mismo hilo."
+                },
+                "needApp": {
+                    "q": "¿Tengo que descargar una app o crear una cuenta?",
+                    "a": "Como cliente, no. La compra ocurre en WhatsApp, que ya tienes. Los vendedores, las agencias y los repartidores sí tienen cuentas, porque necesitan paneles — pero los clientes no."
+                },
+                "whereAvailable": {
+                    "q": "¿Dónde opera WiMall?",
+                    "a": "Camerún primero. Las diez regiones están disponibles para que una agencia registre cobertura, y el reparto en un sitio concreto depende de que una agencia cubra esa región. Los precios están en FCFA y la plataforma está construida alrededor de los métodos de pago que allí se usan."
+                },
+                "languages": {
+                    "q": "¿En qué idiomas funciona WiMall?",
+                    "a": "El sitio y el producto están en francés, inglés, portugués, español y árabe, con maquetación de derecha a izquierda para el árabe. Para Camerún, los dos que más importan son el francés y el inglés, y el asistente le responde a un cliente en el idioma en que escribió."
+                },
+                "shopperCost": {
+                    "q": "¿Comprar en WiMall cuesta algo?",
+                    "a": "No. Los clientes pagan lo que compran, y el reparto donde el vendedor lo cobra. No hay comisión de plataforma, ni suscripción, ni cargo de cuenta del lado del comprador."
+                },
+                "vendorStart": {
+                    "q": "¿Qué necesito para empezar a vender?",
+                    "a": "Un número de WhatsApp que puedas verificar, tu país, y una forma de cobrar. Ese es el único paso obligatorio. Vincular una agencia de reparto, añadir tu identidad visual y escribir tus propias condiciones son opcionales y pueden esperar."
+                },
+                "vendorWebsite": {
+                    "q": "¿Necesito una página web o una tienda online?",
+                    "a": "No, y esa es la idea. Tu catálogo vive en WiMall y se vende a través de la conversación de WhatsApp. No hay escaparate que diseñar, ni dominio que comprar, ni programador al que pagar."
+                },
+                "vendorCost": {
+                    "q": "¿Cuánto cuesta vender?",
+                    "a": "El plan Starter es gratis y nunca caduca: 15 productos publicados, 1 GB de medios y 7% de comisión por cada pedido pagado. Growth cuesta 5.000 FCFA por 30 días para 150 productos y 5% de comisión; Business cuesta 25.000 FCFA por 30 días para productos ilimitados y 3%."
+                },
+                "vendorProductLimit": {
+                    "q": "¿Qué pasa cuando llego a mi límite de productos?",
+                    "a": "Crear otro producto se rechaza hasta que desactives uno que ya no vendes o subas de nivel. Nada de lo ya publicado se elimina, y ningún pedido en curso se ve afectado."
+                },
+                "vendorDigital": {
+                    "q": "¿Puedo vender productos digitales o servicios?",
+                    "a": "Sí. Junto a los bienes físicos puedes vender descargas digitales, y servicios reservables con sus propias reglas de disponibilidad y su calendario. Los pedidos digitales no tienen envío, así que no llevan tarifa de reparto."
+                },
+                "vendorDelivery": {
+                    "q": "¿Tengo que ocuparme yo del reparto?",
+                    "a": "No. El reparto lo hacen las agencias de la plataforma. Un pedido pagado se convierte en un envío, una agencia despacha a uno de sus repartidores, y la tarifa de reparto sale del pedido y se divide entre esa agencia y el repartidor. Puedes vincularte a una agencia concreta, o dejar que la plataforma enrute."
+                },
+                "vendorPayout": {
+                    "q": "¿Cuándo cobro?",
+                    "a": "Tu neto de un pedido queda retenido en cuanto se confirma el pago del cliente. Pasa a ser retirable cuando el pedido se completa — el cliente confirma la entrega, o se confirma sola siete días después — más una ventana de retención de siete días. A partir de ahí, solicitas el pago de tu saldo disponible. El registro muestra el bruto, la comisión, la tarifa de reparto y tu neto en cada pedido, así que la cifra nunca es un misterio."
+                },
+                "agencyEarn": {
+                    "q": "¿Cómo gana dinero una agencia de reparto?",
+                    "a": "Con la tarifa de reparto, que fijas tú misma en la política de tu agencia. Se reserva sobre cada envío cuando se paga el pedido y se divide cuando la entrega termina: el repartidor se lleva la parte que marca su contrato, y tu agencia se queda el resto. WiMall no toma ninguna parte de la tarifa de reparto."
+                },
+                "agencyCoverage": {
+                    "q": "¿Cómo elijo dónde reparte mi agencia?",
+                    "a": "Por región. Tu agencia registra un país y luego selecciona las regiones que cubre — Camerún tiene diez, desde Litoral y Centro hasta el Extremo Norte. Los pedidos fuera de tu cobertura no llegan a ti."
+                },
+                "agencySoftCap": {
+                    "q": "¿Qué pasa si mi agencia llega a su límite de envíos?",
+                    "a": "No se detiene nada. El límite de las agencias es flexible a propósito: superarlo genera un aviso y sugiere subir de nivel, pero el pago, el despacho y la entrega siguen funcionando. Cada entrega completada libera una plaza."
+                },
+                "agentEarn": {
+                    "q": "¿Cuánto gana un repartidor por entrega?",
+                    "a": "Depende del contrato que tengas con la agencia: un porcentaje de la tarifa de reparto de ese envío, o una cantidad fija por entrega. Ves cuánto paga un trabajo concreto antes de aceptarlo, y tener contratos con varias agencias a la vez es normal."
+                },
+                "agentJoin": {
+                    "q": "¿Puedo trabajar de repartidor sin unirme a una agencia?",
+                    "a": "Te registras por tu cuenta y al principio no perteneces a ninguna agencia, pero las entregas te llegan a través de un contrato de agencia. Puedes postularte a una agencia, o aceptar la que te contacte — y puedes tener varios contratos a la vez."
+                },
+                "agentCapacity": {
+                    "q": "¿Cuántas entregas puedo llevar a la vez?",
+                    "a": "Veinte en el plan gratuito. A diferencia del límite de las agencias, este sí se aplica: aceptar una oferta por encima de tu tope se rechaza hasta que termines una de las entregas que ya llevas."
+                },
+                "paymentMethods": {
+                    "q": "¿Cómo pueden pagar los clientes?",
+                    "a": "Dinero móvil con NotchPay o MyCoolPay, cubriendo MTN, Orange y Moov; tarjetas con Stripe; y pago contra entrega donde el vendedor y la agencia lo aceptan."
+                },
+                "cashOnDelivery": {
+                    "q": "¿Se admite el pago contra entrega?",
+                    "a": "Sí, y se trata como un circuito de primera clase, no como una excepción. El repartidor cobra en la puerta, el cobro se registra a su nombre y se concilia con su agencia, y la parte de cada uno sale del efectivo igual que saldría de un pago con tarjeta."
+                },
+                "credits": {
+                    "q": "¿Qué son los créditos, y tengo que comprarlos?",
+                    "a": "Los créditos miden dos cosas que cuestan dinero cada vez que ocurren: indexar un producto para que el asistente pueda recomendarlo, y enviar un mensaje de plantilla de WhatsApp facturable. Cada una cuesta un crédito. Todos los planes conceden una asignación al activarse, así que la mayoría de las cuentas nunca compra ninguno; si agotas la tuya, los paquetes empiezan en 600 FCFA por 100 créditos."
+                },
+                "renewal": {
+                    "q": "¿Los planes se renuevan automáticamente?",
+                    "a": "No. No hay tarjeta guardada ni cargo recurrente en ninguna parte de WiMall. Un plan de pago corre sus 30 días y después, o le pasa el relevo a un plan que dejaste en cola mientras estaba en marcha, o te devuelve al plan gratuito de tu rol."
+                },
+                "downgrade": {
+                    "q": "¿Qué pasa si dejo de pagar?",
+                    "a": "Vuelves al plan gratuito de tu rol y sigues trabajando con sus límites. No se borra nada ni se cierra ninguna cuenta. Si un pago con tarjeta se revierte después, el plan que compró se revierte y los créditos que concedió se retiran con él."
+                }
+            },
+            "cta": {
+                "title": "¿Aún lo estás pensando?",
+                "body": "Cada rol tiene un plan gratuito que nunca caduca, así que la forma más barata de responder a una pregunta sobre WiMall suele ser probarlo.",
+                "finePrint": "No hace falta método de pago para empezar."
+            }
+        },
+        "country": {
+            "metaTitle": "WiMall en Camerún — comercio por WhatsApp en FCFA",
+            "metaDescription": "WiMall está hecha para Camerún primero: precios en FCFA, francés e inglés, dinero móvil de MTN y Orange, pago contra entrega, y cobertura en las diez regiones.",
+            "eyebrow": "Dónde operamos",
+            "title": "Hecha para Camerún primero",
+            "lead": "No es una tienda occidental traducida al francés. WiMall pone sus precios en FCFA, habla francés e inglés, cobra por el dinero móvil que la gente usa de verdad, y organiza el reparto por región — porque así está organizado el país.",
+            "why": {
+                "title": "Por qué aquí primero",
+                "p1": "En Camerún el comercio ya ocurre en WhatsApp. Un vendedor publica un estado, un comprador responde, negocian en el hilo, y alguien consigue una moto. Nada de eso hay que reemplazarlo — le hace falta un catálogo detrás, una forma de cobrar en la que ambas partes confíen, y un tramo de reparto que no dependa de conocer a alguien.",
+                "p2": "Ese es todo el diseño. El asistente vende desde un catálogo real dentro de la conversación que el cliente iba a tener igualmente. El pago pasa por las cuentas de dinero móvil que la mayoría de los adultos ya tiene. El reparto va a una agencia que registró las regiones que cubre, y a un repartidor que cobra por trayecto.",
+                "p3": "También significa que las limitaciones son el encargo, no un ajuste posterior: teléfonos de gama de entrada, datos caros, y redes que se caen. El producto está construido para seguir funcionando pese a las tres."
+            },
+            "coverage": {
+                "title": "Dónde pueden circular las entregas",
+                "lead": "La cobertura de reparto sigue a las agencias de la plataforma. Una agencia registra un país y las regiones que cubre, y las diez regiones de Camerún están todas disponibles.",
+                "regionLabel": "Región",
+                "capitalLabel": "Capital regional",
+                "note": "Una región que aún no cubre ninguna agencia no es una región que WiMall rechace — es una en la que ninguna agencia se ha registrado. Si tú repartes allí, eso es una oportunidad más que un obstáculo."
+            },
+            "payments": {
+                "title": "Pagar como se paga aquí de verdad",
+                "mobileTitle": "Dinero móvil",
+                "mobileBody": "MTN, Orange y Moov, con NotchPay o MyCoolPay. El cliente confirma en su teléfono como siempre.",
+                "cardTitle": "Tarjetas",
+                "cardBody": "Visa y Mastercard con Stripe, para los clientes y negocios que las usan.",
+                "codTitle": "Pago contra entrega",
+                "codBody": "Cobrado en la puerta por el repartidor, conciliado con su agencia, y repartido igual que un pago con tarjeta.",
+                "currencyTitle": "Todo en FCFA",
+                "currencyBody": "Planes, créditos, comisiones y pagos están todos en XAF. Nada se cotiza en una moneda que luego haya que convertir."
+            },
+            "cities": {
+                "title": "Ciudad por ciudad",
+                "lead": "Donde hay algo que decir sobre el comercio de un sitio, tiene su propia página."
+            },
+            "faqTitle": "Preguntas sobre Camerún",
+            "cta": {
+                "title": "Vende donde ya ocurre la conversación",
+                "body": "Seas un vendedor con catálogo, una agencia con flota, o un repartidor con moto, el plan gratuito basta para averiguar si esto funciona.",
+                "finePrint": "Precios en FCFA. Francés e inglés en todo el sitio."
+            }
+        },
+        "city": {
+            "metaTitlePattern": "Vender por WhatsApp en {city} — WiMall",
+            "metaDescriptionPattern": "Cómo funcionan el comercio por WhatsApp y el reparto en {city}, región {region}: cuánto cuesta vender, cómo llegan los pedidos a una agencia de reparto, y cómo cobran los repartidores de {city}.",
+            "eyebrowPattern": "{city}, Camerún",
+            "titlePattern": "Vender y repartir en {city}",
+            "regionLabel": "Región",
+            "sellingTitle": "Vender en {city}",
+            "sellingP1": "El montaje es el mismo en todas partes: subes un catálogo, y el asistente vende a partir de él dentro de WhatsApp. Lo que cambia según la ciudad es quién compra y cuánto tiene que recorrer una entrega — y las dos cosas las deciden las agencias que cubren la región, no nosotros.",
+            "sellingP2": "Starter no cuesta nada, soporta 15 productos publicados, y se lleva el 7% de cada pedido pagado. Suele bastar para averiguar si la demanda en tu parte de la ciudad es real antes de gastar nada.",
+            "deliveryTitle": "Cómo funciona el reparto en {city}",
+            "deliveryP1": "Una agencia de reparto registra la región {region} entre sus zonas de cobertura. Los pedidos con destino a {city} se enrutan a las agencias que la cubren, y cada una despacha a un repartidor de su propia red.",
+            "deliveryP2": "La agencia fija la tarifa de reparto y la parte del repartidor queda fijada en su contrato — un porcentaje de la tarifa, o una tarifa plana por trayecto. El pago contra entrega lo cobra el repartidor y se concilia con la agencia, lo que pesa en un mercado donde muchos compradores todavía prefieren pagar en la puerta.",
+            "opportunityTitle": "Si repartes en {city}",
+            "opportunityBody": "Una agencia que registre la región {region} recibe los pedidos con destino allí. El plan gratuito soporta mil entregas abiertas, más de las que la mayoría de las flotas locales llevan a la vez, y la plataforma no se lleva nada de lo que cobras por el reparto.",
+            "relatedTitle": "En otros puntos de Camerún",
+            "ctaTitle": "Empieza en {city}",
+            "ctaBody": "Planes gratuitos para vendedores, agencias y repartidores. Nada que pagar antes de saber si funciona.",
+            "ctaFinePrint": "Precios en FCFA. No hace falta método de pago para empezar.",
+            "regionReach": "El mismo registro cubre el resto de la región {region}, así que una agencia con base aquí también llega a {towns}.",
+            "contextTitle": "Cómo es el comercio en {city}"
+        },
+        "cities": {
+            "douala": {
+                "lead": "Douala es donde llega la mayor parte de la mercancía del país y donde se cierra la mayor parte de su comercio — lo que la convierte en el sitio más difícil para un vendedor pequeño y en el mejor para dejar que otro se ocupe del descubrimiento y del reparto.",
+                "context": "Ciudad portuaria y capital económica de Camerún, en la región del Litoral. El comercio se concentra alrededor del mercado Mboppi y el mercado Central, con los distritos de negocios de Akwa y Bonanjo, un comercio residencial denso en New Bell y Deido, y toda una segunda mitad de la ciudad al otro lado del Wouri, en Bonabéri.",
+                "angle": "Aquí el coste real es la distancia. Un cliente en Bonabéri y un vendedor en Akwa están a veinte minutos un día bueno y a una hora uno malo, así que el tramo de reparto merece organizarse bien en lugar de improvisarse pedido a pedido."
+            },
+            "yaounde": {
+                "lead": "Yaundé compra distinto que Douala: más asalariada, más administrativa, más previsible en cuándo pide y dónde quiere recibirlo.",
+                "context": "La capital política, en la región del Centro, repartida sobre sus colinas. El comercio se concentra en el mercado Mokolo y el mercado del Mfoundi, con densidad comercial en Mvog-Mbi y Nlongkak y un mercado residencial acomodado en Bastos.",
+                "angle": "Las colinas hacen que importe más la ruta que la distancia bruta — dos barrios pueden estar cerca en el mapa y lejos en la práctica. Una agencia que conoce los trayectos reales de la ciudad vale aquí más que una que solo conoce sus direcciones."
+            },
+            "bafoussam": {
+                "lead": "Bafoussam está en el centro de una región comerciante, no al final de una carretera, y eso cambia lo que alcanza quien vende desde allí.",
+                "context": "Capital de la región Oeste y núcleo comercial de los Grassfields, con un mercado que atrae desde Dschang, Mbouda, Bafang y Foumban. El comercio agrícola y la larga tradición mercantil de la región le dan una densidad de pequeños negocios desproporcionada a su tamaño.",
+                "angle": "La oportunidad es regional, no municipal. Un vendedor de Bafoussam con un catálogo localizable puede vender a las ciudades de alrededor, y una agencia que cubra la región Oeste puede atenderlas todas desde una sola base."
+            },
+            "bamenda": {
+                "lead": "Bamenda es el mayor mercado anglófono del país, y está mucho peor atendido de lo que su tamaño merece por las plataformas que arrancan solo en francés.",
+                "context": "Capital de la región Noroeste, en lo alto de los Grassfields, con el comercio centrado en el Bamenda Main Market y en Nkwen. Ancla una zona de intercambio de habla inglesa más amplia que llega a Kumbo, Bali y Ndop.",
+                "angle": "Aquí la diferencia práctica es el idioma. El asistente de WiMall responde en el idioma en que escribe el cliente, así que un vendedor de Bamenda no le está pidiendo a sus clientes que se pasen al francés para comprar algo."
+            },
+            "garoua": {
+                "lead": "Garoua comercia tanto hacia el norte y cruzando fronteras como con el sur, y las distancias implicadas hacen que un reparto organizado valga más, no menos.",
+                "context": "Capital de la región Norte, a orillas del río Benué, históricamente un puerto fluvial y todavía el centro comercial de una zona amplia y poco poblada que alcanza Guider, Figuil y Poli.",
+                "angle": "La escasa cobertura es a la vez todo el problema y toda la oportunidad. Una agencia que registre la región Norte tiene muy poca competencia por los pedidos que se enrutan allí, y un vendedor de Garoua alcanza a compradores que casi no tienen alternativa local en línea."
+            }
+        }
     }
 }
