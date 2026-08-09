@@ -128,6 +128,7 @@ export default async function AgenciesPage({ params }: PageProps) {
           body={t("agencies.cta.body")}
           finePrint={t("agencies.cta.finePrint")}
           primary={{ href: "/register?role=agency", label: t("common.ctaAgency") }}
+          primaryRole="agency"
           secondary={{ href: "/pricing", label: t("common.ctaPricing") }}
         />
       </div>

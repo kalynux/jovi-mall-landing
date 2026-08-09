@@ -147,6 +147,7 @@ export default async function CameroonPage({ params }: PageProps) {
         body={t("country.cta.body")}
         finePrint={t("country.cta.finePrint")}
         primary={{ href: "/register?role=vendor", label: t("common.ctaVendor") }}
+        primaryRole="vendor"
         secondary={{ href: "/agencies", label: t("common.ctaAgency") }}
       />
     </>

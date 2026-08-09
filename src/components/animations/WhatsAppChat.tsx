@@ -1,11 +1,11 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { CheckCheck, Headphones, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BRAND } from "@/lib/constants";
 import { useCardTilt } from "@/components/ui/useCardTilt";
-import { useSignatureReducedMotion } from "@/lib/reduced-motion";
+import { useSignatureReducedMotion, useReducedMotionSafe } from "@/lib/reduced-motion";
 import { useTranslations } from "next-intl";
 
 /**
@@ -39,7 +39,7 @@ const REST_MS = 4600;
 
 export default function WhatsAppChat({ autoPlay = true, className }: WhatsAppChatProps) {
   const t = useTranslations("customer.chat");
-  const shouldReduce = useReducedMotion();
+  const shouldReduce = useReducedMotionSafe();
 
   const lines = useMemo<Line[]>(
     () => [

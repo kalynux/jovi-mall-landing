@@ -1,4 +1,4 @@
-import type { BackendErrorCode } from "./backend-error-codes";
+import type { BackendErrorCode, ErrorCode } from "./backend-error-codes";
 
 /**
  * System-level error codes — errors where the user cannot take a corrective
@@ -71,16 +71,16 @@ const SYSTEM_LEVEL_CODES = new Set<BackendErrorCode>([
  * Toggle-only → all user-actionable errors (wrong password, email taken,
  *               validation failures, not-found on own resources…).
  *
- * The sentinel value `"UNKNOWN_ERROR"` (used for non-ApiError throws such as
- * network failures or malformed responses) is always auto-exposed because
- * the user cannot diagnose the problem themselves.
+ * The client-side sentinels `"UNKNOWN_ERROR"` and `"NETWORK_ERROR"` are always
+ * auto-exposed because the user cannot diagnose either one themselves. In
+ * practice neither carries a requestId — a request that failed to reach the
+ * server was never assigned one — so the caller renders nothing regardless;
+ * they are classified here so the rule holds if that ever changes.
  *
- * @param code - A BackendErrorCode or the special sentinel "UNKNOWN_ERROR"
+ * @param code - A BackendErrorCode or one of the client-side sentinels
  */
-export function shouldExposeRequestId(
-    code: BackendErrorCode | "UNKNOWN_ERROR" | undefined
-): boolean {
+export function shouldExposeRequestId(code: ErrorCode | undefined): boolean {
     if (!code) return false;
-    if (code === "UNKNOWN_ERROR") return true;
+    if (code === "UNKNOWN_ERROR" || code === "NETWORK_ERROR") return true;
     return SYSTEM_LEVEL_CODES.has(code as BackendErrorCode);
 }

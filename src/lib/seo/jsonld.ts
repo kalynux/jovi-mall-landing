@@ -172,6 +172,89 @@ export function serviceAreaJsonLd(
   };
 }
 
+/* ─── Blog ────────────────────────────────────────────────────────────────── */
+
+/**
+ * One article.
+ *
+ * `author` takes its `@type` from the author record rather than defaulting to
+ * Person: a house byline is an Organization, and marking it as a Person asserts
+ * that a human by that name exists. Same rule as the omitted ratings above.
+ *
+ * No `aggregateRating`, no `commentCount`, no `interactionStatistic` — there is
+ * no comment system and no engagement data, and BlogPosting is exactly the kind
+ * of node where those get invented.
+ */
+export function blogPostingJsonLd(
+  locale: Locale,
+  article: {
+    path: string;
+    title: string;
+    excerpt: string;
+    publishedAt: string;
+    updatedAt?: string;
+    wordCount: number;
+    section: string;
+    author: { name: string; type: "Person" | "Organization" };
+    cover?: { url: string };
+  }
+): JsonLdNode {
+  const url = localeUrl(locale, article.path);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "@id": `${url}#article`,
+    // Google ignores headlines past ~110 characters. Every title here is well
+    // inside that; a longer one should be shortened in the CMS, not truncated
+    // here, so the page and its markup keep saying the same thing.
+    headline: article.title,
+    description: article.excerpt,
+    url,
+    mainEntityOfPage: { "@type": "WebPage", "@id": url },
+    datePublished: article.publishedAt,
+    // Falls back to the publish date: `dateModified` is a ranking-relevant
+    // freshness signal, and omitting it entirely is better than emitting today's
+    // build date, which would claim every article was revised on every deploy.
+    dateModified: article.updatedAt ?? article.publishedAt,
+    inLanguage: locale,
+    articleSection: article.section,
+    wordCount: article.wordCount,
+    isAccessibleForFree: true,
+    author: { "@type": article.author.type, name: article.author.name },
+    publisher: { "@id": ORG_ID },
+    image: article.cover?.url ?? absoluteUrl("/opengraph-image.png"),
+  };
+}
+
+/** The blog itself, for /blog and the category hubs. */
+export function blogJsonLd(
+  locale: Locale,
+  path: string,
+  blog: { name: string; description: string },
+  posts: { path: string; title: string; publishedAt: string }[]
+): JsonLdNode {
+  const url = localeUrl(locale, path);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "@id": `${url}#blog`,
+    name: blog.name,
+    description: blog.description,
+    url,
+    inLanguage: locale,
+    publisher: { "@id": ORG_ID },
+    blogPost: posts.map((post) => ({
+      "@type": "BlogPosting",
+      "@id": `${localeUrl(locale, post.path)}#article`,
+      headline: post.title,
+      url: localeUrl(locale, post.path),
+      datePublished: post.publishedAt,
+    })),
+  };
+}
+
 export function productJsonLd(locale: Locale, product: Product, vendor: Vendor): JsonLdNode {
   const url = localeUrl(locale, `/shop/products/${product.slug}`);
   const availability = product.inStock

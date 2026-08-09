@@ -30,6 +30,17 @@ export const MARKETING_ROUTES: MarketingRoute[] = [
   { path: "/cameroon", key: "cameroon", priority: 0.7, changeFrequency: "monthly" },
 ];
 
+/**
+ * The blog is deliberately not in this list.
+ *
+ * Its URLs are not a fixed registry: articles and category hubs exist per
+ * locale rather than in all five, they carry real `lastModified` dates, and the
+ * whole set is gated behind `BLOG_IS_PLACEHOLDER`. `app/sitemap.ts` reads them
+ * from `lib/blog/blog.api.ts` instead. The footer still links /blog sitewide,
+ * so the rule this file exists to enforce — nothing published without being
+ * linked — holds there too.
+ */
+
 /** Every marketing URL including the per-city pages — what the sitemap submits. */
 export const MARKETING_SITEMAP_ROUTES: MarketingRoute[] = [
   ...MARKETING_ROUTES,

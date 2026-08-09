@@ -1,11 +1,12 @@
 "use client";
-import { motion, useReducedMotion, useInView } from "framer-motion";
+import { motion, useInView } from "framer-motion";
+import { useReducedMotionSafe } from "@/lib/reduced-motion";
 import { useRef } from "react";
 import { Bell, MapPin, DollarSign } from "lucide-react";
 import SectionLabel from "@/components/ui/SectionLabel";
 import AnimatedSection from "@/components/ui/AnimatedSection";
 import SectionShell from "@/components/ui/SectionShell";
-import CTAButton from "@/components/ui/CTAButton";
+import RoleCtaButton from "@/components/ui/RoleCtaButton";
 import LinkButton from "@/components/ui/LinkButton";
 import DashboardMockup from "@/components/ui/DashboardMockup";
 import { useTranslations } from "next-intl";
@@ -22,7 +23,7 @@ const DELIVERY_STEPS: StepStub[] = [
 export default function AgentSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.15 });
-  const shouldReduce = useReducedMotion();
+  const shouldReduce = useReducedMotionSafe();
   const t = useTranslations("agent");
 
   return (
@@ -66,9 +67,7 @@ export default function AgentSection() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <CTAButton variant="primary" size="md" href="#" showArrow>
-              {t("ctaPrimary")}
-            </CTAButton>
+            <RoleCtaButton role="agent" fallbackLabel={t("ctaPrimary")} size="md" showArrow />
             {/* The section is a summary; the page is the answer. */}
             <LinkButton href="/agents" variant="secondary" size="md" showArrow>
               {t("ctaSecondary")}

@@ -41,7 +41,8 @@
         "userMenuAriaLabel": "User",
         "pricing": "Pricing",
         "faq": "FAQ",
-        "cameroon": "Cameroon"
+        "cameroon": "Cameroon",
+        "blog": "Blog"
     },
     "hero": {
         "badge": "The WhatsApp Commerce Platform",
@@ -308,6 +309,7 @@
         "title": "How are you joining?",
         "subtitle": "Choose your role to get started with the right onboarding.",
         "close": "Close modal",
+        "back": "Back",
         "signIn": "Already have an account?",
         "signInLink": "Sign in",
         "skipRoleSelection": "Skip role selection",
@@ -432,6 +434,22 @@
             "admin": "Admin"
         }
     },
+    "roleCta": {
+        "dashboardVendor": "Go to Vendor Dashboard",
+        "dashboardAgency": "Go to Agency Dashboard",
+        "dashboardAgent": "Go to Agent Dashboard",
+        "switching": "Switching…"
+    },
+    "agentApp": {
+        "title": "The Agent app is the better ride",
+        "body": "Live order alerts, turn-by-turn navigation and one-tap delivery confirmation — built for the road.",
+        "android": "Get it on Google Play",
+        "ios": "Download on the App Store",
+        "comingSoon": "Coming soon",
+        "appHint": "Everything else lives on the web dashboard.",
+        "continueWeb": "Continue on the web",
+        "close": "Close"
+    },
     "addRole": {
         "title": "Add a new role",
         "subtitle": "You currently have: {roles}",
@@ -497,6 +515,7 @@
     },
     "errors": {
         "UNKNOWN_ERROR": "An unexpected error occurred. Please try again.",
+        "NETWORK_ERROR": "We can't reach WiMall right now. Check your connection and try again.",
         "request_id": "Support ID: {id}",
         "fields": {
             "invalid_type": "This field contains an invalid value.",
@@ -748,6 +767,36 @@
         "COMMAND_ALREADY_REGISTERED": "This command is already registered.",
         "COMMAND_NOT_FOUND": "The command could not be found."
     },
+    "errorPage": {
+        "generic": {
+            "title": "Something went wrong",
+            "body": "We hit an unexpected problem loading this page. It's usually temporary — try again in a moment."
+        },
+        "pricing": {
+            "title": "We couldn't load the plans",
+            "body": "Our prices come straight from WiMall's servers, and we can't reach them right now. Nothing is wrong with your account — try again in a moment."
+        },
+        "blog": {
+            "title": "The blog isn't loading",
+            "body": "We can't reach the articles right now. This is usually temporary — try again in a moment."
+        },
+        "shop": {
+            "title": "The shop isn't loading",
+            "body": "We can't load this part of the shop right now. Your cart is safe — try again in a moment."
+        },
+        "auth": {
+            "title": "Something went wrong",
+            "body": "We couldn't load this page. Your account is unaffected — try again in a moment."
+        },
+        "notFound": {
+            "title": "We can't find that page",
+            "body": "The link may be broken, or the page may have moved. Let's get you back on track."
+        },
+        "retry": "Try again",
+        "home": "Back to home",
+        "reference": "Reference: {id}",
+        "devDetails": "Technical details (development only)"
+    },
     "phone": {
         "errors": {
             "required": "Phone number is required",
@@ -770,7 +819,8 @@
             "agents": "For agents",
             "pricing": "Pricing",
             "faq": "FAQ",
-            "cameroon": "Cameroon"
+            "cameroon": "Cameroon",
+            "blog": "Blog"
         },
         "common": {
             "breadcrumbLabel": "Breadcrumb",
@@ -1236,6 +1286,61 @@
                 "lead": "Garoua trades north and across borders as much as it trades with the south, and the distances involved make organised delivery worth more, not less.",
                 "context": "Capital of the North region on the Bénoué river, historically a river port and still the commercial centre for a large, thinly populated area that reaches Guider, Figuil and Poli.",
                 "angle": "Sparse coverage is the whole problem and the whole opening. An agency that registers the North region has very little competition for the orders routed there, and a vendor in Garoua reaches buyers who have almost no local alternative online."
+            }
+        },
+        "blog": {
+            "metaTitle": "The WiMall blog — selling on WhatsApp in Cameroon",
+            "metaDescription": "Practical guides on selling, getting paid and delivering over WhatsApp — written for vendors, delivery agencies and agents in Cameroon.",
+            "eyebrow": "Blog",
+            "title": "Guides for selling on WhatsApp",
+            "lead": "How to take orders, get paid and deliver without a storefront — written for the way commerce actually works in Cameroon.",
+            "allArticles": "All articles",
+            "latest": "Latest articles",
+            "readTime": "{minutes} min read",
+            "readArticle": "Read the article",
+            "tocLabel": "On this page",
+            "authorLabel": "Written by",
+            "related": "Related reading",
+            "moreArticles": "More articles",
+            "previous": "Previous",
+            "next": "Next",
+            "backToBlog": "Back to the blog",
+            "share": {
+                "label": "Share",
+                "whatsapp": "Share on WhatsApp",
+                "x": "Share on X",
+                "linkedin": "Share on LinkedIn",
+                "copy": "Copy link",
+                "copied": "Link copied"
+            },
+            "empty": {
+                "title": "Nothing here yet",
+                "body": "We have not published in this language yet. The articles are available in the languages we have translated so far.",
+                "readIn": "Read in {language}"
+            },
+            "categories": {
+                "selling": "Selling on WhatsApp",
+                "payments": "Payments & payouts",
+                "delivery": "Delivery & logistics",
+                "growth": "Growing your business",
+                "guides": "Product guides"
+            },
+            "category": {
+                "metaTitlePattern": "{category} — WiMall blog",
+                "metaDescriptionPattern": "Articles on {category}, written for vendors, delivery agencies and agents in Cameroon.",
+                "titlePattern": "{category}",
+                "leads": {
+                    "selling": "Taking orders, building a catalog and closing sales in a chat thread.",
+                    "payments": "Mobile money, cards, cash on delivery — and when the money actually reaches you.",
+                    "delivery": "Dispatch, coverage and what it costs to move a parcel across a city.",
+                    "growth": "Turning first orders into repeat customers, without becoming noise.",
+                    "guides": "How the platform behaves, explained before you have to rely on it."
+                }
+            },
+            "cta": {
+                "title": "Start selling where your customers already are",
+                "body": "A catalog, a way to get paid and a delivery agency. That is the whole setup.",
+                "finePrint": "Free tier available. No card required."
             }
         }
     }

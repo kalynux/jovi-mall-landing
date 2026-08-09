@@ -52,8 +52,9 @@ export function middleware(req: NextRequest) {
     if (!hasSession) {
       const loginUrl = new URL(localePath(locale, "/login"), req.url);
       // The return path keeps its locale prefix so the post-login redirect lands
-      // back where the visitor actually was.
-      loginUrl.searchParams.set("return", req.nextUrl.pathname);
+      // back where the visitor actually was — and its query string, since
+      // /add-role?role=vendor loses its preselected role without it.
+      loginUrl.searchParams.set("return", req.nextUrl.pathname + req.nextUrl.search);
       return NextResponse.redirect(loginUrl);
     }
   }

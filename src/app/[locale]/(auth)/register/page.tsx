@@ -14,7 +14,7 @@ import {
   type RegisterFormValues,
 } from "@/lib/auth/auth.schemas";
 import { registerAndGetAction, logoutAndRedirect } from "@/lib/auth/auth.service";
-import type { UiRole, AuthRoleEntity } from "@/lib/auth/auth.types";
+import { isUiRole, type UiRole, type AuthRoleEntity } from "@/lib/auth/auth.types";
 import { mapApiErrors, parseRootType } from "@/lib/auth/form-errors";
 import { sanitizePayload } from "@/lib/form/sanitize-payload";
 import AuthSplitShell from "@/components/auth/AuthSplitShell";
@@ -42,11 +42,8 @@ function RegisterFormContent() {
   const searchParams = useSearchParams();
   const roleParam = searchParams.get("role");
 
-  const isValidRole = (r: string | null): r is UiRole =>
-    r !== null && ["vendor", "agency", "agent", "customer"].includes(r);
-
-  const initialRole: UiRole = isValidRole(roleParam) ? roleParam : "vendor";
-  const initialStep: Step = isValidRole(roleParam)
+  const initialRole: UiRole = isUiRole(roleParam) ? roleParam : "vendor";
+  const initialStep: Step = isUiRole(roleParam)
     ? roleParam === "customer"
       ? "customer-wa"
       : "form"
@@ -76,6 +73,12 @@ function RegisterFormContent() {
     defaultValues: { role: initialRole, phone: "" },
   });
 
+  // NOTE: `initialRole` / `initialStep` are useState initialisers, so they run
+  // once at mount and never re-read the param. That is fine because there is no
+  // path from /register?role=x to /register?role=y without an unmount — the
+  // auth shell carries no Navbar and no role picker modal (AuthShell.tsx), so
+  // every link into this page comes from another route.
+  //
   // Vendor/agency give two distinct names: their own (stored on the role
   // profile as display_name) and their business name (stored on their Store /
   // Magazin). Every other role gives one name, so the extra labelling is dropped.

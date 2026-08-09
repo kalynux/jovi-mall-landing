@@ -21,3 +21,30 @@ export function localeAlternates(locale: Locale, path = "/"): Metadata["alternat
 
   return { canonical: localePath(locale, path), languages };
 }
+
+/**
+ * The same job for a route that does **not** exist in every locale, and whose
+ * path differs between the locales it does exist in.
+ *
+ * Articles are both: a post translated into English and French exists in two
+ * languages, and its French URL is `/fr/blog/comment-vendre-…`, not the English
+ * slug under a French prefix. `localeAlternates()` would advertise five
+ * alternates for it, three of which 404 — and a crawler that follows an
+ * hreflang to a 404 stops trusting the whole cluster.
+ *
+ * So the caller passes the map of locales to paths it actually has (for an
+ * article, `ResolvedArticle.pathByLocale`). `x-default` points at the default
+ * locale's version when there is one, and is simply omitted when there is not —
+ * an article that exists only in French should not nominate a fallback that
+ * does not exist.
+ */
+export function variantAlternates(
+  locale: Locale,
+  pathByLocale: Partial<Record<Locale, string>>
+): Metadata["alternates"] {
+  const languages: Record<string, string> = { ...pathByLocale };
+  const fallback = pathByLocale[DEFAULT_LOCALE];
+  if (fallback) languages["x-default"] = fallback;
+
+  return { canonical: pathByLocale[locale], languages };
+}

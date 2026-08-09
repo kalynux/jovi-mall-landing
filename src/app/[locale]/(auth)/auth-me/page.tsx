@@ -6,8 +6,10 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import { switchRoleAndGetAction, logoutAndRedirect } from "@/lib/auth/auth.service";
-import { AuthError } from "@/lib/auth/auth.types";
+import { ApiError } from "@/lib/auth/auth.types";
 import type { Role, AuthRoleEntity } from "@/lib/auth/auth.types";
+import { translateCode } from "@/lib/auth/error-translator";
+import { isNetworkError } from "@/lib/errors/is-network-error";
 import AuthCard from "@/components/auth/AuthCard";
 import { WhatsAppVerificationModal } from "@/components/auth/WhatsAppVerificationModal";
 import { cn } from "@/lib/utils";
@@ -22,6 +24,7 @@ const ROLE_ICONS: Record<string, React.ElementType> = {
 
 export default function AuthMePage() {
   const t = useTranslations("authMe");
+  const tErrors = useTranslations("errors");
   const { user, role, role_entity, status } = useAuthGuard();
 
   const [switching, setSwitching] = useState<Role | null>(null);
@@ -86,8 +89,14 @@ export default function AuthMePage() {
       }
     } catch (err) {
       setSwitching(null);
-      if (err instanceof AuthError) {
-        setError(err.message);
+      // Same resolution order the auth forms use via `mapApiErrors`: translate
+      // the backend's *code*, never its raw message. Testing `instanceof
+      // AuthError` here used to surface the untranslated English body — and,
+      // on a non-structured response, the literal "Request failed (500)".
+      if (err instanceof ApiError) {
+        setError(translateCode(tErrors, err.code, err.message));
+      } else if (isNetworkError(err)) {
+        setError(tErrors("NETWORK_ERROR"));
       } else {
         setError(t("switchError"));
       }

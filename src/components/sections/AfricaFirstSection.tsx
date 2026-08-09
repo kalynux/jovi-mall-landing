@@ -1,5 +1,5 @@
 "use client";
-import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useInView } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Smartphone, MessageCircle, Wifi } from "lucide-react";
 import SectionLabel from "@/components/ui/SectionLabel";
@@ -7,7 +7,7 @@ import AnimatedSection from "@/components/ui/AnimatedSection";
 import SectionShell from "@/components/ui/SectionShell";
 import CTAButton from "@/components/ui/CTAButton";
 import { useCardTilt } from "@/components/ui/useCardTilt";
-import { useSignatureReducedMotion } from "@/lib/reduced-motion";
+import { useSignatureReducedMotion, useReducedMotionSafe } from "@/lib/reduced-motion";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 
@@ -38,7 +38,7 @@ const NETWORK = [
 ] as const;
 
 function PhoneMockup() {
-  const shouldReduce = useReducedMotion();
+  const shouldReduce = useReducedMotionSafe();
   const t = useTranslations("africaFirst");
   const ph = useTranslations("africaFirst.phone");
 
@@ -248,7 +248,7 @@ function PhoneMockup() {
 export default function AfricaFirstSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.15 });
-  const shouldReduce = useReducedMotion();
+  const shouldReduce = useReducedMotionSafe();
   const t = useTranslations("africaFirst");
 
   return (

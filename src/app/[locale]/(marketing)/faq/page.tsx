@@ -102,6 +102,7 @@ export default async function FaqPage({ params }: PageProps) {
         body={t("faq.cta.body")}
         finePrint={t("faq.cta.finePrint")}
         primary={{ href: "/register?role=vendor", label: t("common.ctaVendor") }}
+        primaryRole="vendor"
         secondary={{ href: "/pricing", label: t("common.ctaPricing") }}
       />
     </>

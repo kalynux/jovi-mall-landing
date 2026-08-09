@@ -41,7 +41,8 @@
         "userMenuAriaLabel": "Utilisateur",
         "pricing": "Tarifs",
         "faq": "FAQ",
-        "cameroon": "Cameroun"
+        "cameroon": "Cameroun",
+        "blog": "Blog"
     },
     "hero": {
         "badge": "La plateforme de commerce WhatsApp",
@@ -308,6 +309,7 @@
         "title": "Comment vous rejoignez-nous ?",
         "subtitle": "Choisissez votre rôle pour démarrer avec le bon onboarding.",
         "close": "Fermer la fenêtre",
+        "back": "Retour",
         "signIn": "Vous avez déjà un compte ?",
         "signInLink": "Se connecter",
         "skipRoleSelection": "Ignorer la sélection de rôle",
@@ -432,6 +434,22 @@
             "admin": "Admin"
         }
     },
+    "roleCta": {
+        "dashboardVendor": "Accéder au tableau de bord Vendeur",
+        "dashboardAgency": "Accéder au tableau de bord Agence",
+        "dashboardAgent": "Accéder à l'espace Livreur",
+        "switching": "Changement…"
+    },
+    "agentApp": {
+        "title": "L'app Livreur, c'est mieux sur la route",
+        "body": "Alertes de commandes en direct, navigation guidée et confirmation de livraison en un geste — pensée pour le terrain.",
+        "android": "Disponible sur Google Play",
+        "ios": "Télécharger dans l'App Store",
+        "comingSoon": "Bientôt disponible",
+        "appHint": "Tout le reste se trouve sur le tableau de bord web.",
+        "continueWeb": "Continuer sur le web",
+        "close": "Fermer"
+    },
     "addRole": {
         "title": "Ajouter un nouveau rôle",
         "subtitle": "Vous avez actuellement : {roles}",
@@ -497,6 +515,7 @@
     },
     "errors": {
         "UNKNOWN_ERROR": "Une erreur inattendue s'est produite. Veuillez réessayer.",
+        "NETWORK_ERROR": "Impossible de joindre WiMall pour le moment. Vérifiez votre connexion et réessayez.",
         "request_id": "ID d'assistance : {id}",
         "fields": {
             "invalid_type": "Ce champ contient une valeur invalide.",
@@ -748,6 +767,36 @@
         "COMMAND_ALREADY_REGISTERED": "Cette commande est déjà enregistrée.",
         "COMMAND_NOT_FOUND": "La commande est introuvable."
     },
+    "errorPage": {
+        "generic": {
+            "title": "Une erreur est survenue",
+            "body": "Un problème inattendu nous a empêchés de charger cette page. C'est généralement temporaire — réessayez dans un instant."
+        },
+        "pricing": {
+            "title": "Impossible de charger les tarifs",
+            "body": "Nos prix proviennent directement des serveurs WiMall, que nous n'arrivons pas à joindre pour le moment. Votre compte n'est pas en cause — réessayez dans un instant."
+        },
+        "blog": {
+            "title": "Le blog ne se charge pas",
+            "body": "Nous n'arrivons pas à récupérer les articles pour le moment. C'est généralement temporaire — réessayez dans un instant."
+        },
+        "shop": {
+            "title": "La boutique ne se charge pas",
+            "body": "Nous n'arrivons pas à charger cette partie de la boutique. Votre panier est intact — réessayez dans un instant."
+        },
+        "auth": {
+            "title": "Une erreur est survenue",
+            "body": "Nous n'avons pas pu charger cette page. Votre compte n'est pas affecté — réessayez dans un instant."
+        },
+        "notFound": {
+            "title": "Page introuvable",
+            "body": "Le lien est peut-être rompu, ou la page a été déplacée. Reprenons depuis le début."
+        },
+        "retry": "Réessayer",
+        "home": "Retour à l'accueil",
+        "reference": "Référence : {id}",
+        "devDetails": "Détails techniques (développement uniquement)"
+    },
     "phone": {
         "errors": {
             "required": "Le numéro de téléphone est obligatoire",
@@ -770,7 +819,8 @@
             "agents": "Pour les livreurs",
             "pricing": "Tarifs",
             "faq": "FAQ",
-            "cameroon": "Cameroun"
+            "cameroon": "Cameroun",
+            "blog": "Blog"
         },
         "common": {
             "breadcrumbLabel": "Fil d'Ariane",
@@ -1236,6 +1286,61 @@
                 "lead": "Garoua commerce autant vers le nord et par-delà les frontières qu'avec le sud, et les distances en jeu rendent une livraison organisée plus précieuse, pas moins.",
                 "context": "Chef-lieu de la région du Nord, sur la Bénoué, historiquement un port fluvial et toujours le centre commercial d'une vaste zone peu peuplée qui s'étend jusqu'à Guider, Figuil et Poli.",
                 "angle": "La faible couverture est à la fois tout le problème et toute l'ouverture. Une agence qui enregistre la région du Nord a très peu de concurrence pour les commandes qui y sont transmises, et un vendeur de Garoua atteint des acheteurs qui n'ont presque aucune alternative locale en ligne."
+            }
+        },
+        "blog": {
+            "metaTitle": "Le blog WiMall — vendre sur WhatsApp au Cameroun",
+            "metaDescription": "Des guides pratiques pour vendre, se faire payer et livrer sur WhatsApp — écrits pour les vendeurs, les agences de livraison et les livreurs au Cameroun.",
+            "eyebrow": "Blog",
+            "title": "Guides pour vendre sur WhatsApp",
+            "lead": "Prendre des commandes, être payé et livrer sans boutique en ligne — écrit pour le commerce tel qu'il se pratique réellement au Cameroun.",
+            "allArticles": "Tous les articles",
+            "latest": "Derniers articles",
+            "readTime": "{minutes} min de lecture",
+            "readArticle": "Lire l'article",
+            "tocLabel": "Sur cette page",
+            "authorLabel": "Écrit par",
+            "related": "À lire aussi",
+            "moreArticles": "Plus d'articles",
+            "previous": "Précédent",
+            "next": "Suivant",
+            "backToBlog": "Retour au blog",
+            "share": {
+                "label": "Partager",
+                "whatsapp": "Partager sur WhatsApp",
+                "x": "Partager sur X",
+                "linkedin": "Partager sur LinkedIn",
+                "copy": "Copier le lien",
+                "copied": "Lien copié"
+            },
+            "empty": {
+                "title": "Rien pour l'instant",
+                "body": "Nous n'avons pas encore publié dans cette langue. Les articles sont disponibles dans les langues que nous avons traduites jusqu'ici.",
+                "readIn": "Lire en {language}"
+            },
+            "categories": {
+                "selling": "Vendre sur WhatsApp",
+                "payments": "Paiements et versements",
+                "delivery": "Livraison et logistique",
+                "growth": "Développer son activité",
+                "guides": "Guides produit"
+            },
+            "category": {
+                "metaTitlePattern": "{category} — blog WiMall",
+                "metaDescriptionPattern": "Articles sur {category}, écrits pour les vendeurs, les agences de livraison et les livreurs au Cameroun.",
+                "titlePattern": "{category}",
+                "leads": {
+                    "selling": "Prendre des commandes, construire un catalogue et conclure une vente dans une conversation.",
+                    "payments": "Mobile money, carte, paiement à la livraison — et quand l'argent vous parvient réellement.",
+                    "delivery": "Dispatch, couverture et ce que coûte le transport d'un colis à travers une ville.",
+                    "growth": "Transformer une première commande en client fidèle, sans devenir importun.",
+                    "guides": "Le fonctionnement de la plateforme, expliqué avant que vous ayez à vous y fier."
+                }
+            },
+            "cta": {
+                "title": "Vendez là où vos clients sont déjà",
+                "body": "Un catalogue, un moyen d'être payé et une agence de livraison. C'est toute l'installation.",
+                "finePrint": "Offre gratuite disponible. Sans carte bancaire."
             }
         }
     }

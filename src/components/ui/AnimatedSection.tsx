@@ -1,6 +1,7 @@
 "use client";
 import { useRef } from "react";
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
+import { useReducedMotionSafe } from "@/lib/reduced-motion";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeInUp } from "@/lib/utils";
 
@@ -25,7 +26,7 @@ export default function AnimatedSection({
 }: AnimatedSectionProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: threshold });
-  const shouldReduce = useReducedMotion();
+  const shouldReduce = useReducedMotionSafe();
 
   const directionVariants = {
     up: {

@@ -170,6 +170,7 @@ export default async function CityPage({ params }: PageProps) {
         body={t("city.ctaBody")}
         finePrint={t("city.ctaFinePrint")}
         primary={{ href: "/register?role=vendor", label: t("common.ctaVendor") }}
+        primaryRole="vendor"
         secondary={{ href: "/pricing", label: t("common.ctaPricing") }}
       />
     </>

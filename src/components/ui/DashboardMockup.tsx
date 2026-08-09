@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useInView } from "framer-motion";
 import {
   BarChart2,
   Bell,
@@ -20,7 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 import DeviceShell, { DEVICE_ORDER, type Device } from "@/components/ui/DeviceShell";
 import { useCardTilt } from "@/components/ui/useCardTilt";
-import { useSignatureReducedMotion } from "@/lib/reduced-motion";
+import { useSignatureReducedMotion, useReducedMotionSafe } from "@/lib/reduced-motion";
 import { useTranslations } from "next-intl";
 
 /**
@@ -80,7 +80,7 @@ export default function DashboardMockup({
 }) {
   const t = useTranslations("trust.dashboard");
   const { accent, title, address, tabs } = ROLE[variant];
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionSafe();
   const holder = useRef<HTMLDivElement>(null);
   // Not `once` — a card that scrolled away stops burning timers, and picks the
   // story back up from wherever it left off when you come back to it.

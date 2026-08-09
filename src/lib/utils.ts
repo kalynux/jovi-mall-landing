@@ -78,7 +78,7 @@ export const staggerItem: Variants = {
 // ─── Shared performance-first primitives ────────────────────────────────────
 // GPU-cheap (transform + opacity), exponential ease-out from a visible-by-default
 // resting state. Reduced-motion is handled globally (globals.css collapses
-// durations) and per-component via useReducedMotion; keep these as the vocabulary
+// durations) and per-component via useReducedMotionSafe; keep these as the vocabulary
 // so every surface animates with one accent, not fifteen bespoke curves.
 
 /** The house ease — confident deceleration, no bounce. */

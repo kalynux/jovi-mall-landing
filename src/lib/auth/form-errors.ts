@@ -1,7 +1,8 @@
 import type { UseFormSetError, FieldValues, Path } from "react-hook-form";
-import type { BackendErrorCode } from "./backend-error-codes";
+import type { BackendErrorCode, ErrorCode } from "./backend-error-codes";
 import { ApiError } from "./auth.types";
 import { translateCode, translateFieldCode } from "./error-translator";
+import { isNetworkError } from "@/lib/errors/is-network-error";
 
 /**
  * Translator function type — matches the signature returned by `useTranslations("errors")`.
@@ -29,7 +30,7 @@ const ROOT_TYPE_SEP = "|" as const;
  * @internal Used by mapApiErrors only.
  */
 function encodeRootType(
-    errorCode: BackendErrorCode | "UNKNOWN_ERROR",
+    errorCode: ErrorCode,
     requestId: string | undefined
 ): string {
     if (!requestId) return errorCode;
@@ -47,7 +48,7 @@ function encodeRootType(
  * ```
  */
 export function parseRootType(raw: string | undefined): {
-    errorCode: BackendErrorCode | "UNKNOWN_ERROR" | undefined;
+    errorCode: ErrorCode | undefined;
     requestId: string | undefined;
 } {
     if (!raw) return { errorCode: undefined, requestId: undefined };
@@ -57,13 +58,13 @@ export function parseRootType(raw: string | undefined): {
     if (sepIdx === -1) {
         // Only errorCode encoded (no requestId)
         return {
-            errorCode: raw as BackendErrorCode | "UNKNOWN_ERROR",
+            errorCode: raw as ErrorCode,
             requestId: undefined,
         };
     }
 
     return {
-        errorCode: raw.slice(0, sepIdx) as BackendErrorCode | "UNKNOWN_ERROR",
+        errorCode: raw.slice(0, sepIdx) as ErrorCode,
         requestId: raw.slice(sepIdx + 1) || undefined,
     };
 }
@@ -99,12 +100,24 @@ export function mapApiErrors<T extends FieldValues>(
     t: ErrorTranslator
 ): void {
     if (!(error instanceof ApiError)) {
-        // Network failure, malformed body, or non-API throw
-        const rawMessage =
-            error instanceof Error ? error.message : undefined;
+        // Network failure, malformed body, or non-API throw.
+        //
+        // The two are split because they are different problems for the person
+        // reading the banner: an unreachable server is something they can wait
+        // out or fix by reconnecting, while UNKNOWN_ERROR is "we don't know".
+        // Telling someone on a dropped connection that something unexpected
+        // happened sends them looking for a mistake they did not make.
+        //
+        // No requestId either way — a request that never arrived was never
+        // assigned one.
+        const code = isNetworkError(error) ? "NETWORK_ERROR" : "UNKNOWN_ERROR";
+        // Only used if the code has no translation; never shown for
+        // NETWORK_ERROR, whose raw text is "Failed to fetch".
+        const rawMessage = error instanceof Error ? error.message : undefined;
+
         setError("root" as Path<T>, {
-            type: encodeRootType("UNKNOWN_ERROR", undefined),
-            message: translateCode(t, "UNKNOWN_ERROR", rawMessage),
+            type: encodeRootType(code, undefined),
+            message: translateCode(t, code, rawMessage),
         });
         return;
     }

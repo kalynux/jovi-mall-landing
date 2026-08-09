@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, CheckCircle2 } from "lucide-react";
@@ -11,7 +12,7 @@ import {
   type AddRoleFormValues,
 } from "@/lib/auth/auth.schemas";
 import { addRoleAndGetAction, redirectToOnboarding, logoutAndRedirect } from "@/lib/auth/auth.service";
-import type { UiRole, AuthRoleEntity } from "@/lib/auth/auth.types";
+import { isUiRole, type UiRole, type AuthRoleEntity } from "@/lib/auth/auth.types";
 import { mapApiErrors, parseRootType } from "@/lib/auth/form-errors";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import AuthCard from "@/components/auth/AuthCard";
@@ -23,16 +24,19 @@ import { WhatsAppVerificationModal } from "@/components/auth/WhatsAppVerificatio
 
 type ConfirmState = { newRole: UiRole; redirectUrl: string } | null;
 
-export default function AddRolePage() {
+function AddRoleContent() {
   const t = useTranslations("addRole");
   const tRoles = useTranslations("modal");
   const tAuthMe = useTranslations("authMe");
   const tErrors = useTranslations("errors");
 
   const { user, role, role_entity, status, waGateRequired } = useAuthGuard();
+  const roleParam = useSearchParams().get("role");
 
-  const [selectedRole, setSelectedRole] = useState<UiRole | null>(null);
-  const [showCustomerCallout, setShowCustomerCallout] = useState(false);
+  // Both of these are `null` until the visitor acts, at which point their
+  // choice overrides whatever ?role= asked for — see the preselect below.
+  const [pickedRole, setPickedRole] = useState<UiRole | null>(null);
+  const [calloutOpen, setCalloutOpen] = useState<boolean | null>(null);
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
 
   // WA gate state — set after addRoleAndGetAction returns type === "wa_gate"
@@ -49,6 +53,28 @@ export default function AddRolePage() {
   } = useForm<AddRoleFormValues>({
     resolver: zodResolver(AddRoleSchema),
   });
+
+  // ── ?role= preselect ───────────────────────────────────────────────────────
+  // Role CTAs across the site send signed-in visitors who do not hold a role
+  // here with it already chosen, so the picker step can be skipped.
+  //
+  // Derived rather than pushed into state from an effect: useAuthGuard resolves
+  // `user.roles` asynchronously and the request has to be validated against
+  // them, so an effect would mean rendering the wrong thing first. Once the
+  // visitor picks anything themselves, their choice wins.
+  const requestedRole = isUiRole(roleParam) && status === "authenticated" ? roleParam : null;
+  const preselectRole =
+    requestedRole &&
+    requestedRole !== "customer" &&
+    // RolePicker renders already-held roles at 50% opacity but still lets them
+    // be clicked (RolePicker.tsx:101-108), so the guard has to live here.
+    // Preselecting one would reveal a form whose submit is bound to fail.
+    !(user?.roles ?? []).includes(requestedRole)
+      ? requestedRole
+      : null;
+
+  const selectedRole = pickedRole ?? preselectRole;
+  const showCustomerCallout = calloutOpen ?? requestedRole === "customer";
 
   // ── Loading / guard ────────────────────────────────────────────────────────
   if (status === "loading") {
@@ -179,7 +205,7 @@ export default function AddRolePage() {
           </p>
           <button
             type="button"
-            onClick={() => setShowCustomerCallout(false)}
+            onClick={() => setCalloutOpen(false)}
             className="btn-secondary w-full"
           >
             {t("customerCalloutBack")}
@@ -201,13 +227,13 @@ export default function AddRolePage() {
       <div className="flex flex-col gap-5">
         <RolePicker
           selected={selectedRole}
-          onSelect={setSelectedRole}
+          onSelect={setPickedRole}
           ownedRoles={heldRoles}
           disabledRole={activeRole}
           disabledRoleLabel={tAuthMe("currentBadge")}
           ownedRolesLabel={tAuthMe("ownedBadge")}
           customerCallout
-          onCustomerCallout={() => setShowCustomerCallout(true)}
+          onCustomerCallout={() => setCalloutOpen(true)}
         />
 
         <AnimatePresence mode="wait">
@@ -304,5 +330,21 @@ export default function AddRolePage() {
         </AnimatePresence>
       </div>
     </AuthCard>
+  );
+}
+
+// useSearchParams needs a Suspense boundary above it or the production build
+// fails — same split as register/page.tsx.
+export default function AddRolePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center p-8">
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--text-muted)]" />
+        </div>
+      }
+    >
+      <AddRoleContent />
+    </Suspense>
   );
 }

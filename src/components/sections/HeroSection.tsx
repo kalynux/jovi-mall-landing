@@ -5,7 +5,6 @@ import {
   AnimatePresence,
   useScroll,
   useTransform,
-  useReducedMotion,
   useMotionValue,
   useSpring,
   useMotionTemplate,
@@ -13,7 +12,7 @@ import {
 import { MessageCircle, Zap, Bot, CheckCheck } from "lucide-react";
 import CTAButton from "@/components/ui/CTAButton";
 import { BRAND } from "@/lib/constants";
-import { useSignatureReducedMotion } from "@/lib/reduced-motion";
+import { useSignatureReducedMotion, useReducedMotionSafe } from "@/lib/reduced-motion";
 import { useTranslations } from "next-intl";
 
 interface HeroSectionProps {
@@ -364,7 +363,7 @@ function HeroConversation() {
 
 export default function HeroSection({ onGetStarted }: HeroSectionProps) {
   const containerRef = useRef(null);
-  const shouldReduce = useReducedMotion();
+  const shouldReduce = useReducedMotionSafe();
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start start", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], shouldReduce ? [0, 0] : [0, -60]);
   const opacity = useTransform(scrollYProgress, [0.55, 0.95], [1, 0]);

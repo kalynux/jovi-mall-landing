@@ -1,6 +1,7 @@
 "use client";
 import { useRef } from "react";
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
+import { useReducedMotionSafe } from "@/lib/reduced-motion";
 import { MessageCircle, Sparkles, ShoppingCart, Building2, Bike, Banknote } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FLOW_STEPS } from "@/lib/constants";
@@ -96,7 +97,7 @@ function FlowNode({
 export default function FlowDiagram({ className }: FlowDiagramProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.2 });
-  const shouldReduce = useReducedMotion();
+  const shouldReduce = useReducedMotionSafe();
 
   return (
     <div ref={ref} className={cn("relative", className)}>

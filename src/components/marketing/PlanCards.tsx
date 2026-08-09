@@ -1,4 +1,4 @@
-import { Link } from "@/i18n/navigation";
+import RoleCtaButton from "@/components/ui/RoleCtaButton";
 import { cn } from "@/lib/utils";
 import { bytesToGb, PLAN_LIMITS, type PublicPlan, type PlanRole } from "@/lib/marketing/plans.api";
 
@@ -62,14 +62,12 @@ export function PlanCard({
   copy,
   formatNumber,
   formatPrice,
-  registerHref,
   highlight = false,
 }: {
   plan: PublicPlan;
   copy: PlanCopy;
   formatNumber: (value: number) => string;
   formatPrice: (value: number, currency: string) => string;
-  registerHref: string;
   highlight?: boolean;
 }) {
   const isFree = plan.price === 0;
@@ -123,20 +121,17 @@ export function PlanCard({
       </ul>
 
       {plan.is_active && (
-        <Link
-          href={registerHref}
-          className={cn(
-            "mt-7 inline-flex items-center justify-center rounded-xl px-5 py-2.5 font-display text-sm font-semibold transition-all",
-            highlight
-              ? "bg-gradient-to-r from-primary-700 to-primary-500 text-white shadow-[0_0_20px_rgba(13,160,107,0.35)] hover:shadow-[0_0_30px_rgba(13,160,107,0.55)]"
-              : "border border-[var(--border)] bg-[var(--surface-glass)] text-[var(--text-primary)] hover:border-primary-400 hover:bg-[var(--accent-light)]"
-          )}
-          aria-label={`${copy.cta} — ${plan.name}`}
-          data-plan-role={plan.role}
-          data-plan-code={plan.code}
-        >
-          {copy.cta}
-        </Link>
+        // `plan.role` is already the role this card sells, so the button can
+        // resolve itself: a signed-in vendor reading the vendor plans gets
+        // their dashboard rather than a second registration.
+        <RoleCtaButton
+          role={plan.role}
+          fallbackLabel={copy.cta}
+          variant={highlight ? "primary" : "secondary"}
+          size="sm"
+          className="mt-7"
+          dataAttrs={{ "data-plan-role": plan.role, "data-plan-code": plan.code }}
+        />
       )}
     </div>
   );
@@ -147,14 +142,12 @@ export function PlanGrid({
   copy,
   formatNumber,
   formatPrice,
-  registerHref,
   highlightCode,
 }: {
   plans: PublicPlan[];
   copy: PlanCopy;
   formatNumber: (value: number) => string;
   formatPrice: (value: number, currency: string) => string;
-  registerHref: string;
   highlightCode?: string;
 }) {
   return (
@@ -173,7 +166,6 @@ export function PlanGrid({
           copy={copy}
           formatNumber={formatNumber}
           formatPrice={formatPrice}
-          registerHref={registerHref}
           highlight={plan.code === highlightCode}
         />
       ))}

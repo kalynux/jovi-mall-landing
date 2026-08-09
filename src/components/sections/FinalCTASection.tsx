@@ -1,5 +1,6 @@
 "use client";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
+import { useReducedMotionSafe } from "@/lib/reduced-motion";
 import CTAButton from "@/components/ui/CTAButton";
 import { useTranslations } from "next-intl";
 
@@ -8,7 +9,7 @@ interface FinalCTASectionProps {
 }
 
 export default function FinalCTASection({ onGetStarted }: FinalCTASectionProps) {
-  const shouldReduce = useReducedMotion();
+  const shouldReduce = useReducedMotionSafe();
   const t = useTranslations("finalCta");
 
   return (

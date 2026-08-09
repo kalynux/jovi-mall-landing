@@ -43,16 +43,19 @@ export default function Footer() {
     {
       label: t("learn"),
       links: [
+        { label: nav("blog"), href: "/blog" },
         { label: nav("pricing"), href: "/pricing" },
         { label: nav("faq"), href: "/faq" },
         { label: nav("cameroon"), href: "/cameroon" },
       ],
     },
     {
+      // The blog moved up into "Learn" and became a real href. It sat here as a
+      // dead "#" beside About/Careers/Contact, which is the wrong company: it is
+      // something to read, and a sitewide link is what lets its articles rank.
       label: t("company"),
       links: [
         { label: t("about"), href: "#" },
-        { label: t("blog"), href: "#" },
         { label: t("careers"), href: "#" },
         { label: t("contact"), href: "#" },
       ],

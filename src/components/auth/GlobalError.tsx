@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useId } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronDown } from "lucide-react";
-import type { BackendErrorCode } from "@/lib/auth/backend-error-codes";
+import type { ErrorCode } from "@/lib/auth/backend-error-codes";
 import { shouldExposeRequestId } from "@/lib/auth/shouldExposeRequestId";
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -27,7 +27,7 @@ export interface GlobalErrorProps {
      * Pass `errors.root?.ref?.name as BackendErrorCode | undefined`
      * or provide it directly from mapApiErrors' error code.
      */
-    errorCode?: BackendErrorCode | "UNKNOWN_ERROR";
+    errorCode?: ErrorCode;
     /** Extra Tailwind classes for layout overrides. */
     className?: string;
 }

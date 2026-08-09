@@ -499,3 +499,20 @@ export type BackendErrorCode =
     | "INTERNAL_SERVER_ERROR"
     | "NOT_FOUND"
     | "VALIDATION_ERROR";
+
+/**
+ * Codes the *client* raises, which the backend never sends.
+ *
+ * They are deliberately not part of `BackendErrorCode` — that union mirrors the
+ * backend registry one-for-one and adding to it would break that guarantee —
+ * but they travel through the same translation and display path, so they need
+ * the same shape. Both have an `errors.<CODE>` key in every message bundle.
+ *
+ *   NETWORK_ERROR  the request never reached the server: no status, no body.
+ *                  Raised from `isNetworkError()`. See lib/errors.
+ *   UNKNOWN_ERROR  a throw we could not classify at all — the last resort.
+ */
+export type ClientErrorCode = "NETWORK_ERROR" | "UNKNOWN_ERROR";
+
+/** Anything that can end up in front of a person, whoever raised it. */
+export type ErrorCode = BackendErrorCode | ClientErrorCode;

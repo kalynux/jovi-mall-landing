@@ -14,6 +14,8 @@
 import type { ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
+import type { CtaRole } from "@/lib/auth/useRoleCta";
+import RoleCtaButton from "@/components/ui/RoleCtaButton";
 
 /** Role accent class for a page, driving `--role` for its children. */
 export type Accent = "role-accent" | "role-vendor" | "role-agency" | "role-agent" | "role-customer";
@@ -323,12 +325,21 @@ export function CtaBand({
   title,
   body,
   primary,
+  primaryRole,
   secondary,
   finePrint,
 }: {
   title: string;
   body: string;
   primary: { href: string; label: string };
+  /**
+   * Set this when the primary action is "sign up as <role>". The button becomes
+   * a small client island that knows who is reading: a signed-in vendor gets
+   * their dashboard instead of a registration form. Everything else on the band
+   * stays server-rendered, and the island's own server output is a link to
+   * `primary.href`, so the CTA is still in the HTML a crawler sees.
+   */
+  primaryRole?: CtaRole;
   secondary?: { href: string; label: string };
   finePrint?: string;
 }) {
@@ -349,13 +360,17 @@ export function CtaBand({
             <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-[var(--text-secondary)]">
               {body}
             </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link
-                href={primary.href}
-                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-primary-700 to-primary-500 px-6 py-3 font-display font-semibold text-white shadow-[0_0_20px_rgba(13,160,107,0.35)] transition-shadow hover:shadow-[0_0_34px_rgba(13,160,107,0.6)]"
-              >
-                {primary.label}
-              </Link>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              {primaryRole ? (
+                <RoleCtaButton role={primaryRole} fallbackLabel={primary.label} variant="primary" size="md" />
+              ) : (
+                <Link
+                  href={primary.href}
+                  className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-primary-700 to-primary-500 px-6 py-3 font-display font-semibold text-white shadow-[0_0_20px_rgba(13,160,107,0.35)] transition-shadow hover:shadow-[0_0_34px_rgba(13,160,107,0.6)]"
+                >
+                  {primary.label}
+                </Link>
+              )}
               {secondary && (
                 <Link
                   href={secondary.href}

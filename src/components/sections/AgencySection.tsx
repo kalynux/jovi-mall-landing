@@ -1,11 +1,12 @@
 "use client";
-import { motion, useReducedMotion, useInView } from "framer-motion";
+import { motion, useInView } from "framer-motion";
+import { useReducedMotionSafe } from "@/lib/reduced-motion";
 import { useRef } from "react";
 import { Package, User2, TrendingUp } from "lucide-react";
 import SectionLabel from "@/components/ui/SectionLabel";
 import AnimatedSection from "@/components/ui/AnimatedSection";
 import SectionShell from "@/components/ui/SectionShell";
-import CTAButton from "@/components/ui/CTAButton";
+import RoleCtaButton from "@/components/ui/RoleCtaButton";
 import LinkButton from "@/components/ui/LinkButton";
 import DashboardMockup from "@/components/ui/DashboardMockup";
 import { useTranslations } from "next-intl";
@@ -13,7 +14,7 @@ import { useTranslations } from "next-intl";
 export default function AgencySection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.15 });
-  const shouldReduce = useReducedMotion();
+  const shouldReduce = useReducedMotionSafe();
   const t = useTranslations("agency");
 
   const flow = [
@@ -80,9 +81,7 @@ export default function AgencySection() {
           </ul>
 
           <div className="flex flex-wrap items-center gap-3">
-            <CTAButton variant="primary" size="md" href="#" showArrow>
-              {t("ctaPrimary")}
-            </CTAButton>
+            <RoleCtaButton role="agency" fallbackLabel={t("ctaPrimary")} size="md" showArrow />
             {/* The section is a summary; the page is the answer. */}
             <LinkButton href="/agencies" variant="secondary" size="md" showArrow>
               {t("ctaSecondary")}

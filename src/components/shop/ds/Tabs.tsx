@@ -1,7 +1,8 @@
 "use client";
 
 import { useId } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
+import { useReducedMotionSafe } from "@/lib/reduced-motion";
 
 export interface TabItem {
   value: string;
@@ -20,7 +21,7 @@ const SPRING = { type: "spring", stiffness: 520, damping: 40, mass: 0.8 } as con
 
 export function Tabs({ value, onChange, tabs, variant = "underline" }: TabsProps) {
   const uid = useId();
-  const shouldReduce = useReducedMotion();
+  const shouldReduce = useReducedMotionSafe();
   const transition = shouldReduce ? { duration: 0 } : SPRING;
 
   if (variant === "pill") {

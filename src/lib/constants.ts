@@ -8,6 +8,33 @@ export const BRAND = {
     email: "hello@wimall.com",
 };
 
+// ─── Outward destinations ───────────────────────────────────────────────────
+/**
+ * Everything this app links to that it does not host.
+ *
+ * All three are env-overridable so the real values can land without a code
+ * change, and every consumer must treat an empty string as "not published yet"
+ * and render the affected control disabled rather than shipping a dead link.
+ *
+ * NOTE: `BRAND.whatsappNumber` is still a placeholder with a Nigerian prefix,
+ * while the product runs on Cameroon/FCFA. Until NEXT_PUBLIC_WHATSAPP_NUMBER is
+ * set to the real business line, every wa.me link reaches nobody.
+ */
+export const EXTERNAL_LINKS = {
+    /** WhatsApp bot number, E.164. */
+    whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? BRAND.whatsappNumber,
+    /** Agent app on Google Play. Empty until the listing is live. */
+    agentAndroidUrl: process.env.NEXT_PUBLIC_AGENT_APP_ANDROID_URL ?? "",
+    /** Agent app on the App Store. Empty until the listing is live. */
+    agentIosUrl: process.env.NEXT_PUBLIC_AGENT_APP_IOS_URL ?? "",
+};
+
+/** Builds a wa.me deep link to the bot with `text` prefilled. */
+export function buildWhatsAppUrl(text: string): string {
+    const digits = EXTERNAL_LINKS.whatsappNumber.replace(/\D/g, "");
+    return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+}
+
 // ─── Navigation ─────────────────────────────────────────────────────────────
 export const NAV_LINKS = [
     { label: "How It Works", href: "#how-it-works" },
@@ -152,5 +179,6 @@ export const API_BASE_URL =
 // a single source of truth — src/lib/auth/auth.redirect.ts. They used to be
 // duplicated here with divergent dev-port lists; import them from there instead.
 
-/** WhatsApp deep-link for the customer role registration callout */
-export const WHATSAPP_CUSTOMER_LINK = `https://wa.me/${BRAND.whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent("Hi, I want to shop on WiMall!")}`;
+// NOTE: `WHATSAPP_CUSTOMER_LINK` used to live here — an unimported second
+// wa.me builder with hardcoded English copy. Use `buildWhatsAppUrl()` above
+// with a translated message instead.

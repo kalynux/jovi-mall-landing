@@ -1,8 +1,9 @@
 "use client";
 import { forwardRef, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { motion, useMotionValue, useSpring, useReducedMotion, type MotionValue } from "framer-motion";
+import { motion, useMotionValue, useSpring, type MotionValue } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { useReducedMotionSafe } from "@/lib/reduced-motion";
 
 interface CTAButtonProps {
   variant?: "primary" | "secondary" | "ghost";
@@ -37,7 +38,7 @@ const CTAButton = forwardRef<HTMLButtonElement | HTMLAnchorElement, CTAButtonPro
     { variant = "primary", size = "md", href, onClick, children, className, showArrow = false, disabled, type = "button", ariaLabel, magnetic = false },
     ref
   ) {
-    const shouldReduce = useReducedMotion();
+    const shouldReduce = useReducedMotionSafe();
     const localRef = useRef<HTMLElement | null>(null);
     const active = magnetic && !shouldReduce;
 

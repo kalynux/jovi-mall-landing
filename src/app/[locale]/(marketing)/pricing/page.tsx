@@ -62,10 +62,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  * already link to `/pricing#agencies`, and `agency + "s"` would quietly break
  * every one of them.
  */
-const ROLE_SECTIONS: { role: PlanRole; anchor: string; href: string; accent: string }[] = [
-  { role: "vendor", anchor: "vendors", href: "/register?role=vendor", accent: "role-vendor" },
-  { role: "agency", anchor: "agencies", href: "/register?role=agency", accent: "role-agency" },
-  { role: "agent", anchor: "agents", href: "/register?role=agent", accent: "role-agent" },
+const ROLE_SECTIONS: { role: PlanRole; anchor: string; accent: string }[] = [
+  { role: "vendor", anchor: "vendors", accent: "role-vendor" },
+  { role: "agency", anchor: "agencies", accent: "role-agency" },
+  { role: "agent", anchor: "agents", accent: "role-agent" },
 ];
 
 export default async function PricingPage({ params }: PageProps) {
@@ -168,7 +168,7 @@ export default async function PricingPage({ params }: PageProps) {
         </p>
       </Section>
 
-      {ROLE_SECTIONS.map(({ role, anchor, href, accent }, i) => {
+      {ROLE_SECTIONS.map(({ role, anchor, accent }, i) => {
         const plans = plansByRole[role];
         const hasUnsoldTier = plans.some((plan) => !plan.is_active);
 
@@ -186,7 +186,6 @@ export default async function PricingPage({ params }: PageProps) {
                 copy={copy}
                 formatNumber={num}
                 formatPrice={price}
-                registerHref={href}
                 highlightCode={highlightCodeFor(plans)}
               />
             </div>
@@ -249,6 +248,7 @@ export default async function PricingPage({ params }: PageProps) {
         body={t("pricing.cta.body")}
         finePrint={t("pricing.cta.finePrint")}
         primary={{ href: "/register?role=vendor", label: t("common.ctaVendor") }}
+        primaryRole="vendor"
         secondary={{ href: "/faq", label: t("common.ctaFaq") }}
       />
     </>

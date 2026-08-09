@@ -7,6 +7,15 @@ export type UiRole = Exclude<Role, "admin">;
 
 export const UI_ROLES: UiRole[] = ["vendor", "agency", "agent", "customer"];
 
+/**
+ * Narrows an untrusted value (a `?role=` query param, most often) to a UiRole.
+ * Use this rather than re-spelling the role list — it had drifted into four
+ * separate inline copies before.
+ */
+export function isUiRole(value: unknown): value is UiRole {
+    return typeof value === "string" && (UI_ROLES as string[]).includes(value);
+}
+
 // ─── User ───────────────────────────────────────────────────────────────────
 
 /**
