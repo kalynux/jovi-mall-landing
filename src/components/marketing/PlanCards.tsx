@@ -76,11 +76,21 @@ export function PlanCard({
   return (
     <div
       className={cn(
-        "card flex flex-col p-6",
-        highlight && "ring-role border-role-soft",
+        "card relative flex flex-col p-6 transition-all duration-300",
+        highlight
+          ? "border-2 border-role-soft shadow-lg lg:scale-[1.03]"
+          : "hover:-translate-y-1 hover:border-role-soft hover:shadow-md",
         !plan.is_active && "opacity-90"
       )}
     >
+      {highlight && (
+        // The one tier that gets to shout: a brand-gradient crown strip over the
+        // top edge, so the recommended plan is the peak of the row.
+        <span
+          aria-hidden="true"
+          className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-600 via-primary-500 to-primary-400"
+        />
+      )}
       <div className="flex items-start justify-between gap-3">
         <h3 className="font-display text-lg font-bold text-[var(--text-primary)]">{plan.name}</h3>
         {!plan.is_active && (
@@ -90,12 +100,29 @@ export function PlanCard({
         )}
       </div>
 
-      <p className="mt-4 font-display text-3xl font-bold text-[var(--text-primary)]">
+      <p
+        className={cn(
+          "mt-4 font-display font-bold text-[var(--text-primary)]",
+          highlight ? "text-4xl" : "text-3xl"
+        )}
+      >
         {isFree ? (
-          copy.free
+          <span
+            className={cn(
+              highlight && "bg-gradient-to-r from-primary-700 to-primary-500 bg-clip-text text-transparent"
+            )}
+          >
+            {copy.free}
+          </span>
         ) : (
           <>
-            {formatPrice(plan.price, plan.currency)}
+            <span
+              className={cn(
+                highlight && "bg-gradient-to-r from-primary-700 to-primary-500 bg-clip-text text-transparent"
+              )}
+            >
+              {formatPrice(plan.price, plan.currency)}
+            </span>
             {plan.term_days !== null && (
               <span className="ms-1 align-middle text-sm font-medium text-[var(--text-muted)]">
                 {copy.perTerm(plan.term_days)}

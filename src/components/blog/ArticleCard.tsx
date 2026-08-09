@@ -63,7 +63,7 @@ function Cover({
         />
       )}
 
-      <span className="absolute start-3 top-3 inline-flex items-center rounded-pill border border-role-soft bg-[var(--surface)] px-2.5 py-1 font-display text-[11px] font-bold uppercase tracking-[0.1em] text-role">
+      <span className="absolute start-3 top-3 inline-flex items-center rounded-pill border border-role-soft bg-[var(--surface)] px-2.5 py-1 font-display text-[11px] font-bold uppercase tracking-[0.1em] text-role shadow-sm">
         {article.category.label}
       </span>
     </div>
@@ -117,7 +117,7 @@ export default async function ArticleCard({
       <Link
         href={href}
         className={cn(
-          "card group grid overflow-hidden lg:grid-cols-2",
+          "card group grid overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-role-soft hover:shadow-lg lg:grid-cols-2",
           article.category.accent
         )}
       >
@@ -162,7 +162,7 @@ export default async function ArticleCard({
     <Link
       href={href}
       className={cn(
-        "card group flex flex-col overflow-hidden",
+        "card group flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-role-soft hover:shadow-lg",
         article.category.accent
       )}
     >
