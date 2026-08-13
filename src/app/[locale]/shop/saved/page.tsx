@@ -3,7 +3,7 @@
 import { useRouter } from "@/i18n/navigation";
 import { EmptyState, ProductCard } from "@/components/shop/ds";
 import { useCart, useFavorites, useToast } from "@/components/shop/providers";
-import { products } from "@/lib/shop/shop.fixtures";
+import { allProducts } from "@/lib/shop/shop.api";
 import { findVendorById } from "@/lib/shop/shop.api";
 import type { Product } from "@/lib/shop/shop.types";
 
@@ -13,7 +13,7 @@ export default function SavedPage() {
   const { addToCart } = useCart();
   const { flash } = useToast();
 
-  const favs = products.filter((p) => favorites.has(p.id));
+  const favs = allProducts().filter((p) => favorites.has(p.id));
 
   const quickAdd = (p: Product) =>
     p.type === "service" ? router.push(`/shop/products/${p.slug}`) : (addToCart(p, p.variants[0]), flash("Added to cart"));

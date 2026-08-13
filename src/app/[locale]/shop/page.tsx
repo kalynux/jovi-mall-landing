@@ -15,8 +15,13 @@ import {
   VendorCard,
 } from "@/components/shop/ds";
 import { useCart, useFavorites, useToast } from "@/components/shop/providers";
-import { categories, products, sorts } from "@/lib/shop/shop.fixtures";
-import { findVendorById } from "@/lib/shop/shop.api";
+import {
+  CATALOG_IS_MOCK,
+  allCategories,
+  allProducts,
+  allSorts,
+  findVendorById,
+} from "@/lib/shop/shop.api";
 import { formatXAF } from "@/lib/shop/format";
 import type { Product, ProductType, SortKey } from "@/lib/shop/shop.types";
 
@@ -68,6 +73,10 @@ export default function CatalogPage() {
     window.history.replaceState(null, "", qs ? `/shop?${qs}` : "/shop");
   }, [cat, q, sort, filters.types]);
 
+  const products = allProducts();
+  const categories = allCategories();
+  const sorts = allSorts();
+
   const items = useMemo(() => {
     let out = products.filter((p) => cat === "All" || p.category === cat);
     if (q) {
@@ -84,7 +93,7 @@ export default function CatalogPage() {
     else if (sort === "Price: high to low") out = [...out].sort((a, b) => b.price - a.price);
     else if (sort === "Popularity") out = [...out].sort((a, b) => b.sales - a.sales);
     return out;
-  }, [cat, q, sort, filters]);
+  }, [products, cat, q, sort, filters]);
 
   const activeFilterCount =
     filters.types.length +
@@ -148,6 +157,36 @@ export default function CatalogPage() {
           Fashion, home, digital courses, e-books & services — pay with mobile money, delivered nationwide.
         </p>
       </div>
+
+      {/* The catalogue is invented until the public product endpoints exist.
+          Saying so plainly is the only honest option: these products are not
+          for sale, and a shopper must not learn that at checkout. */}
+      {CATALOG_IS_MOCK && (
+        <div
+          role="note"
+          className="mb-4"
+          style={{
+            display: "flex",
+            gap: 9,
+            alignItems: "flex-start",
+            border: "1px solid var(--warning-border)",
+            background: "var(--warning-bg)",
+            borderRadius: "var(--radius-md)",
+            padding: "11px 13px",
+          }}
+        >
+          <Icon
+            name="triangle-alert"
+            size={17}
+            style={{ color: "var(--warning)", flexShrink: 0, marginTop: 1 }}
+          />
+          <p style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--text-body)", margin: 0 }}>
+            <strong>Demo catalogue.</strong> These products are placeholders for previewing the
+            shop — they are not real listings and cannot be bought. Real vendor stock appears here
+            once the catalogue goes live.
+          </p>
+        </div>
+      )}
 
       {/* Search */}
       <div className="mb-3 max-w-2xl">

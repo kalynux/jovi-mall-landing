@@ -32,6 +32,20 @@ const handleI18n = createMiddleware(routing);
 /** Routes that require a session, as authored — without any locale prefix. */
 const PROTECTED_PATHS = ["/add-role", "/auth-me"];
 
+/**
+ * Subtrees that require a session — matched by prefix, so a page added under
+ * one is covered without editing this file.
+ *
+ * `/shop/account` is every owner-scoped surface in the shop: profile, saved
+ * addresses, payment methods, the notification inbox, order history and the
+ * digital library. All of it is `requireRole(['customer'])` server-side, so an
+ * anonymous visitor would only ever see a page of 401s — better to send them to
+ * login before the request than after it.
+ *
+ * The rest of /shop stays public on purpose: browsing must not need an account.
+ */
+const PROTECTED_PREFIXES = ["/shop/account"];
+
 /** Splits "/fr/add-role" into its locale and "/add-role". */
 function splitLocale(pathname: string): { locale: Locale; rest: string } {
   const [, maybeLocale, ...segments] = pathname.split("/");
@@ -44,7 +58,11 @@ function splitLocale(pathname: string): { locale: Locale; rest: string } {
 export function middleware(req: NextRequest) {
   const { locale, rest } = splitLocale(req.nextUrl.pathname);
 
-  if (PROTECTED_PATHS.includes(rest)) {
+  const isProtected =
+    PROTECTED_PATHS.includes(rest) ||
+    PROTECTED_PREFIXES.some((p) => rest === p || rest.startsWith(`${p}/`));
+
+  if (isProtected) {
     const hasSession = Boolean(
       req.cookies.get("access_token")?.value || req.cookies.get("refresh_token")?.value
     );

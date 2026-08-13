@@ -4,80 +4,12 @@ import type {
     AddRolePayload,
     AuthApiResponse,
     Role,
-    ApiErrorBody,
     WaVerificationCodeResponse,
     WaLinkStatusResponse,
     BrowserRefreshResponse,
     MessageResponse,
 } from "./auth.types";
-import { AuthError, ApiError } from "./auth.types";
-
-const API_BASE =
-    process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8022";
-
-// ─── Helper ──────────────────────────────────────────────────────────────────
-async function apiFetch<T>(
-    path: string,
-    options: RequestInit = {}
-): Promise<T> {
-    const res = await fetch(`${API_BASE}${path}`, {
-        ...options,
-        credentials: "include", // always send both cookies
-        headers: {
-            "Content-Type": "application/json",
-            ...(options.headers ?? {}),
-        },
-    });
-
-    let body: Record<string, unknown> = {};
-    try {
-        body = await res.json();
-    } catch {
-        // empty body — fall through to generic error below
-    }
-
-    if (!res.ok) {
-        // Try to conform to the structured backend error contract first.
-        // See: api-doc/errors/README.md
-        const structured = body as Partial<ApiErrorBody>;
-        if (structured?.error?.code) {
-            throw new ApiError(
-                structured.error.message,
-                structured.error.statusCode ?? res.status,
-                structured.error.code,
-                structured.error.details,
-                structured.requestId  // propagate request trace ID for support display
-            );
-        }
-
-        // Fallback for non-structured responses (network layer, proxies, etc.)
-        throw new AuthError(
-            (body?.message as string) ||
-            (body?.error as string) ||
-            `Request failed (${res.status})`,
-            res.status
-        );
-    }
-
-    // ── Success envelope unwrap ──────────────────────────────────────────────
-    // Breaking change (api-doc/README.md, 2026-07-17): every endpoint now wraps
-    // its payload in `{ success, data, meta }`. Callers want `data`, not the
-    // envelope. We stay defensive: only unwrap when the standard envelope is
-    // actually present (`success === true` and a `data` key exists — `data` may
-    // legitimately be `null`, e.g. logout). Anything else (a bare body from a
-    // provider webhook, a proxy, etc.) is returned as-is.
-    const envelope = body as { success?: boolean; data?: unknown };
-    if (
-        envelope &&
-        typeof envelope === "object" &&
-        envelope.success === true &&
-        "data" in envelope
-    ) {
-        return envelope.data as T;
-    }
-
-    return body as T;
-}
+import { apiFetch } from "@/lib/api/client";
 
 // ─── Auth API ────────────────────────────────────────────────────────────────
 
@@ -154,18 +86,19 @@ export async function requestWaVerification(
 }
 
 /**
- * GET /api/whatsapp/link/status
+ * GET /api/webhooks/whatsapp/link/status
  * Polls whether the authenticated user's WhatsApp number has been linked.
- * Returns { linked, wa_phone_id?, name?, bound_at? } — api-doc/whatsapp/README.md §2,
- * which also confirms this path is on the `/api/whatsapp` router, NOT under `/webhooks/`.
+ * Returns { linked, wa_phone_id?, name?, bound_at? } — api-doc/whatsapp/README.md §2.
  *
- * Envelope note: whatsapp/README.md shows a bare body, while api-doc/README.md
- * lists link-status among the endpoints moved to `{ success, data }` on 2026-07-17.
- * No code change needed either way — `apiFetch` unwraps only when the envelope is
- * actually present, so both shapes arrive here as `{ linked, ... }`.
+ * The whole WhatsApp module is mounted under `/api/webhooks/whatsapp`; there is
+ * **no `/api/whatsapp` prefix** (whatsapp/README.md:3-11). The two authenticated
+ * link routes share that prefix with the public inbound webhook, which has one
+ * useful consequence here: `/api/webhooks` is exempt from rate limiting
+ * (rate-limits.md § "Never limited"), so the verification modal's poll never
+ * spends the caller's 1200/min IP budget.
  */
 export async function getWaLinkStatus(): Promise<WaLinkStatusResponse> {
-    return apiFetch<WaLinkStatusResponse>("/api/whatsapp/link/status");
+    return apiFetch<WaLinkStatusResponse>("/api/webhooks/whatsapp/link/status");
 }
 
 // ─── Session / Email Verification API ─────────────────────────────────────────

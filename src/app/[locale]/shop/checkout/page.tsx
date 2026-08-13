@@ -79,6 +79,37 @@ export default function CheckoutPage() {
       </button>
       <h1 style={{ fontSize: 22, fontWeight: 800, color: "var(--text-strong)", marginBottom: 18 }}>Checkout</h1>
 
+      {/* This page takes no money and creates no order. It cannot yet: the
+          real flow is POST /api/customer/orders/checkout followed by
+          POST /api/payments/initiate, and both need a server cart built from
+          real product and variant ids — which needs the catalog API that does
+          not exist. Saying so here is not optional; a checkout screen that
+          looks real and silently does nothing is the single most misleading
+          thing in this tree. */}
+      <div
+        role="note"
+        style={{
+          display: "flex",
+          gap: 9,
+          alignItems: "flex-start",
+          border: "1px solid var(--warning-border)",
+          background: "var(--warning-bg)",
+          borderRadius: "var(--radius-md)",
+          padding: "11px 13px",
+          marginBottom: 20,
+        }}
+      >
+        <Icon
+          name="triangle-alert"
+          size={17}
+          style={{ color: "var(--warning)", flexShrink: 0, marginTop: 1 }}
+        />
+        <p style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--text-body)", margin: 0 }}>
+          <strong>Demo checkout.</strong> No payment is taken and no order is placed — this is a
+          preview of the flow while the marketplace catalogue is being connected.
+        </p>
+      </div>
+
       {/* Address */}
       <p className="overline" style={{ marginBottom: 8 }}>
         Delivery address
@@ -205,7 +236,7 @@ export default function CheckoutPage() {
         <Button
           size="lg"
           elevated
-          leadingIcon="lock"
+          leadingIcon="eye"
           // Mobile money charges the number typed here, so an incomplete one
           // must not be payable. Card has its own fields and no phone.
           disabled={needsPhone && !isValidPhone(phone)}
@@ -220,7 +251,7 @@ export default function CheckoutPage() {
             router.push(`/shop/checkout/success?orders=${orders.length}&total=${total}`);
           }}
         >
-          Pay {formatXAF(total)}
+          Preview order · {formatXAF(total)}
         </Button>
       </div>
     </div>

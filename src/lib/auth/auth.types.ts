@@ -1,3 +1,5 @@
+import type { ErrorCategory } from "./error-categories";
+
 // ─── Roles ─────────────────────────────────────────────────────────────────
 /** Full role type — includes all backend roles */
 export type Role = "customer" | "vendor" | "agency" | "agent" | "admin";
@@ -235,7 +237,7 @@ export interface WaVerificationCodeResponse {
 }
 
 /**
- * Response from GET /api/whatsapp/link/status (api-doc/whatsapp/README.md §2).
+ * Response from GET /api/webhooks/whatsapp/link/status (api-doc/whatsapp/README.md §2).
  *
  * Not linked → `{ linked: false }` alone; every other field is present only
  * once the account is linked.
@@ -278,6 +280,15 @@ export interface ApiErrorBody {
         code: string;
         message: string;
         statusCode: number;
+        /**
+         * The nine-value taxonomy — **always present** since Phase 16, on every
+         * error from every backend service (api-doc/errors/README.md).
+         *
+         * Required here because that is the contract. `apiFetch` still
+         * validates it at runtime, since it parses this shape out of an
+         * untrusted body.
+         */
+        category: ErrorCategory;
         details?: {
             // VALIDATION_ERROR
             fields?: ValidationFieldError[];
@@ -334,7 +345,16 @@ export class ApiError extends AuthError {
         public readonly code: string,
         public readonly details?: ApiErrorBody["error"]["details"],
         /** Top-level requestId from the response envelope. Display to user for support tracing. */
-        public readonly requestId?: string
+        public readonly requestId?: string,
+        /**
+         * The nine-value taxonomy — the default branch for any code without
+         * specific handling (api-doc/errors/README.md § "Best Practices" §3).
+         *
+         * Optional here, unlike on `ApiErrorBody`, because this class is built
+         * from a parsed response: `undefined` means the body carried no valid
+         * category, not that the contract permits its absence.
+         */
+        public readonly category?: ErrorCategory
     ) {
         super(message, statusCode);
         this.name = "ApiError";

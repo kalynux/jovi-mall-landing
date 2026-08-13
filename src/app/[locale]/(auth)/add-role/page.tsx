@@ -303,7 +303,7 @@ function AddRoleContent() {
               )}
 
               {(() => {
-                const { errorCode, requestId } = parseRootType(
+                const { errorCode, requestId, category } = parseRootType(
                   errors.root?.type as string | undefined
                 );
                 return (
@@ -311,6 +311,7 @@ function AddRoleContent() {
                     message={errors.root?.message}
                     requestId={requestId}
                     errorCode={errorCode}
+                    category={category}
                   />
                 );
               })()}

@@ -12,6 +12,22 @@ export function formatXAF(n: number): string {
   return value.toLocaleString("fr-FR").replace(GROUP_SEP, " ") + " FCFA";
 }
 
+/**
+ * Format an amount in the currency the record actually carries.
+ *
+ * `formatXAF` hardcodes FCFA, which is right for the catalogue — XAF is the
+ * platform default and what every seeded price is in. Orders, cart lines and
+ * COD collections each carry their own `currency` field though, and printing an
+ * order in FCFA because that is the usual case would misstate what someone was
+ * charged. Amounts are whole units; XAF has no minor unit, so nothing is
+ * divided by 100.
+ */
+export function formatMoney(amount: number, currency: string): string {
+  if (!currency || currency.toUpperCase() === "XAF") return formatXAF(amount);
+  const value = Math.round(Number(amount) || 0);
+  return `${value.toLocaleString("fr-FR").replace(GROUP_SEP, " ")} ${currency.toUpperCase()}`;
+}
+
 /** Discount percentage from a compare-at price, rounded. */
 export function discountPct(price: number, compareAt?: number | null): number | null {
   if (!compareAt || compareAt <= price) return null;

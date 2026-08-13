@@ -8,6 +8,7 @@ import {
   BottomSheet,
   Button,
   Chip,
+  EmptyState,
   Icon,
   IconButton,
   PriceDisplay,
@@ -17,16 +18,9 @@ import {
   Tabs,
 } from "@/components/shop/ds";
 import { useCart, useFavorites, useToast } from "@/components/shop/providers";
-import { products } from "@/lib/shop/shop.fixtures";
-import { findVendorById } from "@/lib/shop/shop.api";
+import { allProducts, findVendorById } from "@/lib/shop/shop.api";
 import { discountPct, formatXAF } from "@/lib/shop/format";
 import type { Product, Vendor } from "@/lib/shop/shop.types";
-
-const REVIEWS: [string, number, string][] = [
-  ["Aïcha N.", 5, "Exactly as described, fast delivery to Douala. Will buy again."],
-  ["Samuel T.", 4, "Great quality. Sizing runs slightly large."],
-  ["Fatou B.", 5, "Beautiful craftsmanship and the vendor answered on WhatsApp quickly."],
-];
 
 export function ProductDetail({ product: p, vendor: v }: { product: Product; vendor: Vendor }) {
   const router = useRouter();
@@ -44,14 +38,20 @@ export function ProductDetail({ product: p, vendor: v }: { product: Product; ven
   const variant = p.variants[vi];
   const isService = p.type === "service";
   const isDigital = p.type === "digital";
-  const deliveryFee = p.type === "physical" ? 1000 : 0;
-  const serviceFee = Math.round(variant.price * 0.02);
-  const total = variant.price * (isService ? 1 : qty) + deliveryFee + serviceFee;
+  // No delivery fee, tax or service fee is added here, because none is added at
+  // checkout either: `order.service.ts` builds `price_breakdown` as
+  // `base + 0 - 0`, and delivery is settled through the agency earnings split
+  // rather than quoted to the customer. The 1 000 FCFA delivery fee and 2%
+  // service fee this page used to show were invented, and quoting a total
+  // nobody will be charged is worse than quoting only the line items.
+  // A real total needs a server-side quote endpoint — see B9/B10 in the plan.
+  const total = variant.price * (isService ? 1 : qty);
   const pct = discountPct(p.price, p.compareAt);
 
   const related = useMemo(() => {
-    const same = products.filter((x) => x.vendorId === p.vendorId && x.id !== p.id);
-    const others = products.filter((x) => x.vendorId !== p.vendorId);
+    const catalog = allProducts();
+    const same = catalog.filter((x) => x.vendorId === p.vendorId && x.id !== p.id);
+    const others = catalog.filter((x) => x.vendorId !== p.vendorId);
     return same.concat(others).slice(0, 6);
   }, [p]);
 
@@ -247,9 +247,6 @@ export function ProductDetail({ product: p, vendor: v }: { product: Product; ven
                   [
                     [isService ? "Service price" : "Product price", variant.price],
                     !isService && qty > 1 ? [`Quantity × ${qty}`, variant.price * (qty - 1)] : null,
-                    deliveryFee ? ["Delivery fee", deliveryFee] : null,
-                    ["Taxes", 0],
-                    ["Service fee", serviceFee],
                   ].filter(Boolean) as [string, number][]
                 ).map(([l, val], i) => (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", fontSize: 13.5, color: "var(--text-body)" }}>
@@ -312,7 +309,11 @@ export function ProductDetail({ product: p, vendor: v }: { product: Product; ven
             {p.type === "physical" && (
               <InfoCard title="Delivery" icon="truck">
                 <InfoRow icon="building-2" label="Delivery agency" value={v.agency || "WiExpress"} />
-                <InfoRow icon="coins" label="Delivery fee" value={formatXAF(deliveryFee)} />
+                <InfoRow
+                  icon="coins"
+                  label="Delivery fee"
+                  value={p.delivery ? "Included" : "Confirmed at checkout"}
+                />
                 <InfoRow icon="clock" label="Estimated time" value="2–4 business days" />
                 <InfoRow icon="map-pin" label="Regions" value="Douala, Yaoundé + nationwide" />
                 <InfoRow icon="package-check" label="Options" value="Home delivery · Pickup available" />
@@ -355,7 +356,7 @@ export function ProductDetail({ product: p, vendor: v }: { product: Product; ven
               )}
             </div>
           )}
-          {tab === "reviews" && <ReviewsBlock rating={p.rating} count={p.reviews} />}
+          {tab === "reviews" && <ReviewsBlock />}
           {tab === "delivery" && (
             <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--text-body)", margin: 0 }}>
               {isService
@@ -435,31 +436,24 @@ function InfoCard({ title, icon, children }: { title: string; icon: string; chil
   );
 }
 
-function ReviewsBlock({ rating, count }: { rating: number; count: number }) {
+/**
+ * Reviews have no backend at all — there is no review or rating model anywhere
+ * in `jovi-mall`, so `product.rating` / `product.reviews` are invented along
+ * with the rest of the mock catalogue, and the three "customer reviews" this
+ * block used to print were written by nobody.
+ *
+ * Fabricated testimonials are the one kind of mock data that keeps doing damage
+ * after launch, so they are gone rather than restyled. The tab stays, and says
+ * what is true. `seo/jsonld.ts` already refuses to emit `aggregateRating` for
+ * the same reason.
+ */
+function ReviewsBlock() {
   return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "4px 0 14px" }}>
-        <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: "-0.02em", color: "var(--text-strong)" }}>{rating.toFixed(1)}</div>
-        <div>
-          <Rating value={rating} showValue={false} />
-          <div className="muted" style={{ marginTop: 3 }}>
-            {count} reviews
-          </div>
-        </div>
-      </div>
-      {REVIEWS.map(([n, r, t], i) => (
-        <div key={i} style={{ padding: "12px 0", borderTop: "1px solid var(--border-subtle)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Avatar name={n} size={30} />
-            <span style={{ fontWeight: 700, fontSize: 14 }}>{n}</span>
-            <span style={{ marginLeft: "auto" }}>
-              <Rating value={r} showValue={false} size={12} />
-            </span>
-          </div>
-          <p style={{ margin: "7px 0 0", fontSize: 13.5, color: "var(--text-body)", lineHeight: 1.5 }}>{t}</p>
-        </div>
-      ))}
-    </div>
+    <EmptyState
+      icon="message-square"
+      title="No reviews yet"
+      description="Ratings and reviews are coming to WiMall. Nothing here is invented in the meantime."
+    />
   );
 }
 

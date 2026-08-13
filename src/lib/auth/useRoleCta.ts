@@ -23,7 +23,8 @@ import { useTranslations } from "next-intl";
 import { useAuth } from "./useAuth";
 import { switchRoleAndGetAction } from "./auth.service";
 import { getRoleUrl } from "./auth.redirect";
-import { AuthError, type AuthRoleEntity, type UiRole } from "./auth.types";
+import type { AuthRoleEntity, UiRole } from "./auth.types";
+import { translateError } from "./error-translator";
 
 /** Roles that own a dashboard and can therefore be signed into. */
 export type CtaRole = Exclude<UiRole, "customer">;
@@ -91,6 +92,7 @@ const switchInFlight = { current: false };
  */
 export function useRoleCta(role: CtaRole): RoleCta {
     const t = useTranslations("authMe");
+    const tErrors = useTranslations("errors");
     const { user, role: activeRole, status } = useAuth();
 
     const [pending, setPending] = useState(false);
@@ -127,9 +129,12 @@ export function useRoleCta(role: CtaRole): RoleCta {
         } catch (err) {
             switchInFlight.current = false;
             setPending(false);
-            setError(err instanceof AuthError ? err.message : t("switchError"));
+            // `translateError` resolves the backend code/category against the
+            // shared `errors` catalogue; `switchError` is the role-specific
+            // last resort for a throw that carries neither.
+            setError(translateError(tErrors, err, t("switchError")));
         }
-    }, [mode, role, t]);
+    }, [mode, role, t, tErrors]);
 
     const isDashboard = mode === "dashboard" || mode === "switch";
 

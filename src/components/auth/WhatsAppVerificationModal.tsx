@@ -33,7 +33,9 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as api from "@/lib/auth/auth.api";
+import { ApiError } from "@/lib/auth/auth.types";
 import type { AuthRoleEntity, WaVerificationCodeResponse } from "@/lib/auth/auth.types";
+import { translateError } from "@/lib/auth/error-translator";
 
 // ─── State Machine ────────────────────────────────────────────────────────────
 
@@ -43,11 +45,20 @@ type VerificationState =
     | "requesting"      // POSTing /auth/request-wa-verification
     | "code_generated"  // code/command/wa_link displayed; countdown running
     | "checking"        // first GET /link/status after "I Have Sent the Code"
-    | "polling"         // setInterval running (up to 3 × 5 s)
+    | "polling"         // setInterval running (up to MAX_POLL_ATTEMPTS × 5 s)
     | "success"         // linked=true → calling onSuccess()
     | "expired"         // countdown hit 0
     | "failed"          // polling max attempts reached
-    | "error";          // unrecoverable network error
+    | "error";          // unrecoverable error (network, or a terminal API answer)
+
+/**
+ * The result of one link-status read. `fatal` carries copy because the message
+ * is resolved where the error still has its code and category.
+ */
+type LinkCheck =
+    | { status: "linked" }
+    | { status: "not_linked" }
+    | { status: "fatal"; message: string };
 
 const MAX_POLL_ATTEMPTS = 5;
 const POLL_INTERVAL_MS = 5_000;
@@ -70,6 +81,9 @@ export function WhatsAppVerificationModal({
     onLogout,
 }: WhatsAppVerificationModalProps) {
     const t = useTranslations("waVerification");
+    // Backend codes/categories resolve against the shared `errors` catalogue,
+    // the same one every auth form uses — never the raw English message.
+    const tErrors = useTranslations("errors");
 
     // Accessibility IDs
     const titleId = useId();
@@ -154,14 +168,38 @@ export function WhatsAppVerificationModal({
     };
 
     // ── Status check (shared between pre_checking and polling) ───────────────
-    const checkStatus = useCallback(async (): Promise<boolean> => {
+    /**
+     * Three outcomes, not two.
+     *
+     * This used to swallow every throw into `false`, which made a failure
+     * indistinguishable from "not linked yet" — so a dead session or a wrong
+     * path presented as the user failing verification, 25 seconds later. The
+     * category is what separates the two: `authentication`, `authorization`
+     * and `rate_limit` are answers about the *caller*, not about whether the
+     * number is linked, and polling through them can only end in a false
+     * "Verification failed".
+     *
+     * A network blip or a 5xx deliberately stays `not_linked` — those may
+     * still resolve within the remaining attempts.
+     */
+    const checkStatus = useCallback(async (): Promise<LinkCheck> => {
         try {
             const status = await api.getWaLinkStatus();
-            return status.linked && Boolean(status.wa_phone_id);
-        } catch {
-            return false;
+            return status.linked && Boolean(status.wa_phone_id)
+                ? { status: "linked" }
+                : { status: "not_linked" };
+        } catch (err) {
+            if (
+                err instanceof ApiError &&
+                (err.category === "authentication" ||
+                    err.category === "authorization" ||
+                    err.category === "rate_limit")
+            ) {
+                return { status: "fatal", message: translateError(tErrors, err) };
+            }
+            return { status: "not_linked" };
         }
-    }, []);
+    }, [tErrors]);
 
     // ── Start countdown timer ────────────────────────────────────────────────
     const startCountdown = useCallback(
@@ -196,13 +234,24 @@ export function WhatsAppVerificationModal({
 
         pollIntervalRef.current = setInterval(async () => {
             pollAttemptsRef.current += 1;
-            const linked = await checkStatus();
+            const result = await checkStatus();
 
-            if (linked) {
+            if (result.status === "linked") {
                 clearPollInterval();
                 clearCountdownInterval();
                 setVerState("success");
                 onSuccess();
+                return;
+            }
+
+            // Terminal: continuing would burn the remaining attempts and end in
+            // "Verification failed", which blames the user for our problem.
+            if (result.status === "fatal") {
+                clearPollInterval();
+                clearCountdownInterval();
+                setSecondsLeft(0);
+                setErrorMessage(result.message);
+                setVerState("error");
                 return;
             }
 
@@ -220,12 +269,18 @@ export function WhatsAppVerificationModal({
         let alive = true;
 
         (async () => {
-            const linked = await checkStatus();
+            const result = await checkStatus();
             if (!alive) return;
 
-            if (linked) {
+            if (result.status === "linked") {
                 setVerState("success");
                 onSuccess();
+            } else if (result.status === "fatal") {
+                // The pre-check is the one place a fatal answer is worth
+                // showing immediately: the session is already gone, so the
+                // request-a-code button below would only fail the same way.
+                setErrorMessage(result.message);
+                setVerState("error");
             } else {
                 setVerState("idle");
             }
@@ -250,9 +305,11 @@ export function WhatsAppVerificationModal({
             setVerState("code_generated");
             startCountdown(data.expires_in_seconds);
         } catch (err) {
-            const msg =
-                err instanceof Error ? err.message : t("genericError");
-            setErrorMessage(msg);
+            // Resolved from the code and category, not from `err.message` —
+            // the raw text is the backend's English. This is also the path a
+            // user hits when they exhaust the /api/auth 20/min credential
+            // bucket, so RATE_LIMIT_EXCEEDED lands here.
+            setErrorMessage(translateError(tErrors, err, t("genericError")));
             setVerState("error");
         }
     };
@@ -261,13 +318,23 @@ export function WhatsAppVerificationModal({
     const handleSentCode = async () => {
         setVerState("checking");
 
-        const linked = await checkStatus();
+        const result = await checkStatus();
 
-        if (linked) {
+        if (result.status === "linked") {
             clearPollInterval();
             clearCountdownInterval();
             setVerState("success");
             onSuccess();
+            return;
+        }
+
+        // Don't start a 25-second poll against an answer that will not change.
+        if (result.status === "fatal") {
+            clearPollInterval();
+            clearCountdownInterval();
+            setSecondsLeft(0);
+            setErrorMessage(result.message);
+            setVerState("error");
             return;
         }
 

@@ -1,10 +1,16 @@
 /**
  * Typed union of every error code defined by the backend.
  *
- * Source of truth: api-doc/errors/error-codes.ts (the frozen ERROR_CODES registry).
+ * Source of truth: the backend's frozen ERROR_CODES registry
+ * (`jovi-mall/src/core/error-codes.ts`), as documented in api-doc/errors/README.md.
+ *
+ * This union mirrors the codes documented in api-doc — **not** the registry in
+ * full. api-doc/errors/README.md puts the registry at 547 codes; the ones
+ * absent here are on surfaces this app never calls and are not enumerated
+ * anywhere in the api-doc checkout.
  *
  * When the backend adds a new code:
- *   1. Add it to error-codes.ts (backend) / it appears in the registry
+ *   1. It appears in the backend registry / api-doc
  *   2. Add it here to this union
  *   3. TypeScript will surface any mapping gaps at compile time
  *
@@ -43,6 +49,14 @@ export type BackendErrorCode =
     | "AUTH_FORBIDDEN"
     | "AUTH_OAUTH_STATE_INVALID"
     | "AUTH_OAUTH_STATE_EXPIRED"
+    /**
+     * 401. **Terminal — do not retry and do not refresh.** Changing the account
+     * password stamps a per-account instant, and both credential paths refuse
+     * any token whose `iat` predates it, so the refresh cookie is refused by
+     * the same rule (api-doc/auth/README.md § "Revocation — `iat` is
+     * load-bearing"). Clear local state and send the user to sign-in.
+     */
+    | "AUTH_PASSWORD_CHANGED"
     // ─── Payment ───────────────────────────────────────────────────────────────
     | "PAYMENT_ORDER_NOT_FOUND"
     | "PAYMENT_ORDER_ALREADY_PAID"
@@ -495,6 +509,47 @@ export type BackendErrorCode =
     // ─── Command bus ───────────────────────────────────────────────────────────
     | "COMMAND_ALREADY_REGISTERED"
     | "COMMAND_NOT_FOUND"
+    // ─── Blog / editorial ──────────────────────────────────────────────────────
+    // Public reads produce only the first three; the rest belong to the admin
+    // editor, which this app does not call. See api-doc/public/articles.md
+    // § "The four outcomes" and api-doc/errors/README.md § "Blog / editorial".
+    | "BLOG_ARTICLE_NOT_FOUND"
+    /** 404 + `details.slug` — a retired slug. The *frontend* owes the 301. */
+    | "BLOG_ARTICLE_MOVED"
+    /** 410 + `details.categoryKey` — archived. Send the reader to the hub. */
+    | "BLOG_ARTICLE_GONE"
+    | "BLOG_ARTICLE_KEY_TAKEN"
+    | "BLOG_ARTICLE_NOT_PUBLISHABLE"
+    | "BLOG_ARTICLE_ALREADY_PUBLISHED"
+    | "BLOG_ARTICLE_DELETE_NOT_ALLOWED"
+    | "BLOG_SLUG_TAKEN"
+    | "BLOG_SLUG_RESERVED"
+    | "BLOG_AUTHOR_NOT_FOUND"
+    | "BLOG_AUTHOR_KEY_TAKEN"
+    | "BLOG_AUTHOR_IN_USE"
+    // ─── Request-level rejections (malformed before any schema ran) ────────────
+    // All three are `category: "validation"` and carry no `details`.
+    //
+    // ⚠️ These previously came back as `500 INTERNAL_SERVER_ERROR` — the server
+    // blaming itself for the caller's payload. If a workaround keyed on that
+    // ever appears here, it is now wrong (api-doc/errors/README.md §1b).
+    /** The body is not parseable JSON at all. */
+    | "REQUEST_BODY_INVALID"
+    /** 413 — the body exceeds the ceiling set on the server's JSON parser. */
+    | "REQUEST_BODY_TOO_LARGE"
+    /** 415 — an unsupported `Content-Type` or charset. */
+    | "REQUEST_MEDIA_TYPE_UNSUPPORTED"
+    // ─── Rate limiting ─────────────────────────────────────────────────────────
+    /**
+     * 429, `category: "rate_limit"`, `details.retryAfterSeconds`. Raised by the
+     * rate-limit middleware only — always safe to retry after the window
+     * (api-doc/rate-limits.md).
+     *
+     * Distinct from `COD_CODE_RESEND_TOO_SOON`, which is also a 429 but is a
+     * per-resource cooldown on one delivery code rather than a request-volume
+     * ceiling; the two clear differently.
+     */
+    | "RATE_LIMIT_EXCEEDED"
     // ─── Generic (middleware / router fallbacks) ───────────────────────────────
     | "INTERNAL_SERVER_ERROR"
     | "NOT_FOUND"

@@ -531,6 +531,10 @@
             "not_finite": "Este campo debe ser un número finito.",
             "invalid_date": "Por favor, introduce una fecha válida."
         },
+        "category": {
+            "internal": "Algo salió mal por nuestra parte. Por favor, inténtalo de nuevo en un momento.",
+            "external_service": "Un servicio del que dependemos no responde. Por favor, inténtalo de nuevo en un momento."
+        },
         "AUTH_INVALID_CREDENTIALS": "Número de teléfono o contraseña no válidos. Por favor, inténtalo de nuevo.",
         "AUTH_TOKEN_EXPIRED": "Tu sesión ha expirado. Por favor, inicia sesión de nuevo.",
         "AUTH_TOKEN_INVALID": "Tu sesión no es válida. Por favor, inicia sesión de nuevo.",
@@ -556,12 +560,17 @@
         "AUTH_FORBIDDEN": "No tienes permiso para realizar esta acción.",
         "AUTH_OAUTH_STATE_INVALID": "La solicitud de autenticación no es válida. Por favor, inténtalo de nuevo.",
         "AUTH_OAUTH_STATE_EXPIRED": "El enlace de autenticación ha expirado. Por favor, inténtalo de nuevo.",
+        "AUTH_PASSWORD_CHANGED": "Tu contraseña ha cambiado, por lo que se cerró tu sesión. Por favor, inicia sesión de nuevo — y contacta con soporte si no fuiste tú.",
         "DATABASE_UNIQUE_CONSTRAINT_VIOLATION": "Esta información ya está en uso por otra cuenta.",
         "DATABASE_UNAVAILABLE": "El servicio no está disponible temporalmente. Por favor, inténtalo más tarde.",
         "DATABASE_CONNECTION_ERROR": "Ocurrió un error de conexión. Por favor, inténtalo más tarde.",
         "VALIDATION_ERROR": "Por favor, revisa los campos indicados e inténtalo de nuevo.",
         "INTERNAL_SERVER_ERROR": "Ocurrió un error en el servidor. Por favor, inténtalo más tarde.",
         "NOT_FOUND": "El recurso solicitado no se encontró.",
+        "RATE_LIMIT_EXCEEDED": "Demasiados intentos. Por favor, espera un momento e inténtalo de nuevo.",
+        "REQUEST_BODY_INVALID": "No pudimos leer esa solicitud. Por favor, inténtalo de nuevo.",
+        "REQUEST_BODY_TOO_LARGE": "Esa solicitud es demasiado grande. Por favor, redúcela e inténtalo de nuevo.",
+        "REQUEST_MEDIA_TYPE_UNSUPPORTED": "Ese formato de solicitud no está soportado. Por favor, inténtalo de nuevo.",
         "PAYMENT_ORDER_NOT_FOUND": "No se encontró el pedido.",
         "PAYMENT_ORDER_ALREADY_PAID": "Este pedido ya ha sido pagado.",
         "PAYMENT_INVALID_ORDER_STATUS": "Este pedido no puede pagarse en este momento.",

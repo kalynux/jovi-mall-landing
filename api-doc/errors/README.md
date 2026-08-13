@@ -1,6 +1,6 @@
 # API Error Handling Guide
 
-This guide explains how frontend applications should handle and parse error responses from the WiMall API. By standardizing our error formats, the frontend can reliably display appropriate feedback to users and trigger specific client-side UI flows based on explicit error codes.
+This guide explains how frontend applications should handle and parse error responses from the Jovi Mall API. By standardizing our error formats, the frontend can reliably display appropriate feedback to users and trigger specific client-side UI flows based on explicit error codes.
 
 ## Standard Error Response Structure
 
@@ -14,10 +14,53 @@ Whenever an API request fails (e.g., due to validation, business logic violation
     "code": "string",       // e.g., "AUTH_INVALID_CREDENTIALS"
     "message": "string",    // Human-readable fallback message
     "statusCode": number,   // HTTP status code (e.g., 400, 401, 404)
+    "category": "string",   // NEW — one of nine values, see below. Always present.
     "details"?: {}          // Optional object with supplemental error data
   }
 }
 ```
+
+---
+
+## `error.category` — the nine-value taxonomy
+
+**New in Phase 16.** Always present, on every error, from all three backend services
+(jovi-mall, wi-admin and geo-tracker emit the same nine strings).
+
+It exists so a client can behave sensibly about an error it has **no specific handling
+for** — which is most of them, since the registry has 547 codes. Branch on `code` when you
+have something particular to do; fall back to `category` for everything else.
+
+| `category` | Means | What a client should generally do |
+|---|---|---|
+| `authentication` | Not signed in, session ended, or the account cannot sign in at all | Send them to sign in. Do **not** retry |
+| `authorization` | Signed in, but this is not theirs | Show a "no access" state. Do not retry |
+| `validation` | The request was malformed or failed a field rule | Surface it against the form. `details.fields` is populated for schema failures |
+| `not_found` | No such record — **or** it exists and is not yours | Treat as absent. Never infer existence from a 404 |
+| `conflict` | The state moved underneath you | **Reload, then retry** — do not resend the same intent |
+| `business_rule` | Well-formed and refused on purpose | Show `message`; it explains which rule. This is not a fault |
+| `rate_limit` | Too many requests | Back off. Respect `Retry-After`; see [rate-limits.md](../rate-limits.md) |
+| `external_service` | A third party (gateway, maps, messaging) did not respond | Offer a retry. Not the user's fault and not fixable by them |
+| `internal` | Our fault | Show the generic message **and the `requestId`**. Offer a retry |
+
+### Two categories are deliberately opaque
+
+For **`external_service`** and **`internal`**:
+
+- `message` is a fixed, generic sentence — never the underlying failure.
+- **`details` is omitted entirely.**
+
+This is **permanent and applies in every environment**, including development. Do not build
+a client that expects to read a cause out of a 5xx: it was never a stable contract, and as
+of Phase 16 it is not sent at all. The information still exists — it is journaled internally
+against the `requestId`, and support staff and administrators can look it up.
+
+`code` is still real on a 5xx (`PAYMENT_INITIATION_FAILED`, not a generic stand-in), so
+specific handling remains possible.
+
+> **This is what makes `requestId` matter.** On a 5xx it is the only handle anyone has.
+> Show it. A user who can quote `req_abc123` turns an unactionable "something went wrong"
+> into a support conversation that resolves.
 
 ### Field Descriptions
 
@@ -56,6 +99,33 @@ Occurs when the request payload (body, query, or params) fails base schema valid
 }
 ```
 *Frontend usage:* Map the `fields` array to the appropriate form input elements to display inline validation errors.
+
+### 1b. Request-Level Rejections (malformed before any schema ran)
+
+**Codes:** `REQUEST_BODY_INVALID` (400) · `REQUEST_BODY_TOO_LARGE` (413) ·
+`REQUEST_MEDIA_TYPE_UNSUPPORTED` (415)
+
+Raised when the body could not be parsed at all, so no route and no schema was reached. All
+three are `category: "validation"` and carry no `details`.
+
+Previously these returned **`500 INTERNAL_SERVER_ERROR`** — the server blaming itself for
+the caller's payload. If you have a workaround keyed on that, remove it. The three are
+distinct because the remedies are: fix the JSON, send less, send a different `Content-Type`.
+
+### 1c. Rate Limiting
+
+**Code:** `RATE_LIMIT_EXCEEDED` (429), `category: "rate_limit"`
+
+```json
+{ "details": { "retryAfterSeconds": 60 } }
+```
+
+Also carries `RateLimit`, `RateLimit-Policy` and `Retry-After` headers (IETF draft-7).
+**Prefer the headers**; the body field is a convenience. Full policy:
+[rate-limits.md](../rate-limits.md).
+
+Distinct from `COD_CODE_RESEND_TOO_SOON`, which is also a 429 but is a per-resource cooldown
+on one delivery code rather than a request-volume ceiling — and clears differently.
 
 ### 2. Database Constraint Violations (Duplicate Keys)
 **Code:** `DATABASE_UNIQUE_CONSTRAINT_VIOLATION` (Status `409`)
@@ -123,10 +193,12 @@ Occurs when a bulk operation payload has too many rows.
 ```
 
 ### 7. File Upload Policy Violations
-**Code:** `UPLOAD_POLICY_VIOLATION` (Status `400`)
-Returned by `POST /api/files/upload` when one or more files fail the upload
-security/policy pipeline (MIME sniffing, size, duplicate detection, virus scan,
-etc.). Because several files are validated in one request, the `details.violations`
+**Code:** `UPLOAD_POLICY_VIOLATION` (Status `400`, or `413` for `FILE_TOO_LARGE`)
+Returned by `POST /api/files/upload` and `POST /api/files/upload/video` when one or more
+files fail the upload security/policy pipeline (MIME sniffing, size, duplicate detection,
+virus scan, etc.) **or one of the four cheap pre-pipeline gates** (no files, too many files,
+too large, unsupported claimed type). It is the **only** top-level code either route
+produces for a refusal. Because several files are validated in one request, the `details.violations`
 array can contain **multiple entries**, each scoped to a file via `fileIndex`.
 
 ```json
@@ -145,19 +217,22 @@ array can contain **multiple entries**, each scoped to a file via `fileIndex`.
 ```
 
 *Frontend usage:* Map each `violation.fileIndex` back to the corresponding file in
-your upload list and show the per-file reason inline. `violation.code` is one of:
-`FILE_TOO_LARGE`, `MIME_NOT_ALLOWED`, `TOO_MANY_FILES`, `QUOTA_EXCEEDED`,
+your upload list and show the per-file reason inline. `violation.code` is one of the eleven
+pipeline codes — `FILE_TOO_LARGE`, `MIME_NOT_ALLOWED`, `TOO_MANY_FILES`, `QUOTA_EXCEEDED`,
 `VIRUS_DETECTED`, `PERMISSION_DENIED`, `TOTAL_SIZE_EXCEEDED`, `DUPLICATE_FILE`,
-`MIME_TYPE_MISMATCH`, `POLYGLOT_DETECTED`, `UNDETECTABLE_TYPE`. See the
+`MIME_TYPE_MISMATCH`, `POLYGLOT_DETECTED`, `UNDETECTABLE_TYPE` — **or `NO_FILES_UPLOADED`**,
+which the controller's cheap pre-pipeline gate raises through the same shape. See the
 [File Management API](../vendor/file-management.md#post-apifilesupload) for the full
 per-code reference.
 
-Always read `details.violations[]`, never the top-level `message` — it is
-`"Upload policy permissions violated"` only when a `PERMISSION_DENIED` rule fired,
-and `"Upload policy violations found"` for everything else. `PERMISSION_DENIED` is
-not expected from `POST /api/files/upload`, which is open to every authenticated
-role; it belongs to the purpose-scoped upload routes (digital assets, delivery
-proof, system files).
+Always read `details.violations[]`, never the top-level `message` — it is the fixed string
+`"Upload policy violations found"` for **every** case, whichever rule fired, so it tells a
+caller nothing. (It used to vary; it no longer does.) `PERMISSION_DENIED` is not expected
+from `POST /api/files/upload`, which is open to every authenticated role; it belongs to the
+purpose-scoped upload routes (digital assets, delivery proof, system files).
+
+The **statusCode varies** on this code: `413` when the violation is `FILE_TOO_LARGE`,
+`400` otherwise. Branch on the violation, not on the status.
 
 ### 8. Other Contextual Domain Errors
 The backend frequently includes context variables inside the `details` object for general domain errors. For example:
@@ -267,6 +342,7 @@ Full documentation: [agency/agent-roster.md](../agency/agent-roster.md) (canonic
 | `CONTRACT_COD_THRESHOLD_BELOW_OUTSTANDING` | 422 | Cannot set a threshold beneath cash already held under the contract | `{ requested, outstandingBalance, hint }` |
 | `CONTRACT_COVERAGE_OUTSIDE_AGENT_RADIUS` | 422 | An agency cannot grant coverage the agent never agreed to work | — |
 | `CONTRACT_COVERAGE_REGION_NOT_COVERED` | 422 | **Assignment gate.** The delivery region is outside the regions this contract covers | `{ deliveryRegion, coveredRegions, hint }` |
+| `CONTRACT_COVERAGE_REGION_INVALID` | 400 | **Terms-write gate.** A proposed `coverage.regions` entry is not a region of the agency's country — a city, or a typo. Region keys come from `locations.json`, the same catalogue the agency's own coverage areas use; a localized name (`"Extrême-Nord"`) is accepted and canonicalised. `allowedRegions` is the full catalogue, so a picker can be repaired from the error | `{ invalid, requiredCountry, allowedRegions }` |
 | `CONTRACT_SHIPMENT_VALUE_EXCEEDED` | 422 | **Assignment gate.** The shipment is worth more than this contract's per-shipment ceiling | `{ shipmentValue, ceiling, hint }` |
 | `CONTRACT_SETTLEMENT_EXCEEDS_OUTSTANDING` | 422 | A settlement larger than the balance it discharges | — |
 
@@ -295,8 +371,88 @@ means "not **active**"; the code predates the status rename), `AGENT_MEMBERSHIP_
 
 ---
 
+## Agency storage: warehoused products and their stock
+
+The agency-facing product actions
+([Agency → Inventory](../agency/inventory.md)) and the two-sided stock flow
+([Agency](../agency/stock-requests.md) · [Vendor](../vendor/stock-requests.md)).
+
+| Code | HTTP | Meaning | `details` |
+|---|---|---|---|
+| `INVENTORY_STOCK_LEVEL_NOT_FOUND` | 404 | No such stock row for this agency — another agency's row 404s, never 403s | — |
+| `INVENTORY_LOCATION_UNKNOWN` | 422 | The depot named is not one of the caller's own | `{ locationId }` |
+| `INVENTORY_PRODUCT_NOT_STORED_HERE` | 404 | The caller does not warehouse this product. Same 404-not-403 rule | — |
+| `INVENTORY_PRODUCT_NOT_SUSPENDABLE` | 422 | Only an `active` product can be storage-suspended. A draft or archived one is not on sale, so suspending it would achieve nothing but block editing | — |
+| `INVENTORY_PRODUCT_NOT_AGENCY_SUSPENDED` | 422 | Unsuspend target is not suspended, or was suspended **by someone else / for another reason** — a system delivery-agency suspension is not an agency's to lift | `{ status, reason }` |
+| `INVENTORY_PRODUCT_UNSUSPEND_BLOCKED` | 422 | The product cannot go back on sale: the activation gate still fails | `{ blockers: [{ code, message, details }] }` |
+
+> **`INVENTORY_PRODUCT_UNSUSPEND_BLOCKED` carries a checklist, not a single cause.**
+> Render `details.blockers` as a list — each `message` is written to be shown, and it is
+> what tells the agency what to raise with the vendor. The product stays suspended.
+
+| Code | HTTP | Meaning | `details` |
+|---|---|---|---|
+| `STOCK_REQUEST_NOT_FOUND` | 404 | Unknown, **or** not a request the caller is party to — never 403 | — |
+| `STOCK_REQUEST_ALREADY_PENDING` | 409 | One open request per SKU. Withdraw yours, or answer theirs | `{ requestId, requestedByRole, hint }` |
+| `STOCK_REQUEST_NOT_PENDING` | 409 | Already approved, rejected or withdrawn — possibly by the other party a moment ago | `{ status }` |
+| `STOCK_REQUEST_NOT_YOURS` | 403 | Wrong verb for your side: `approve`/`reject` belong to the counterparty, `withdraw` to the author | `{ availableActions }` |
+| `STOCK_REQUEST_STALE` | 409 | The product stopped being warehoused by that agency while the request stood | — |
+| `STOCK_REQUEST_NO_CHANGE` | 422 | The requested quantity is already the recorded one | `{ quantity }` |
+| `CATALOG_PRODUCT_AGENCY_STORAGE_INFINITE_STOCK` | 422 | A warehoused product cannot have unlimited stock. Fires as an activation blocker, on a `PATCH /products/:id` moving pickup to `agency_storage`, and on a request asking to go unlimited | `{ variant }` or `{ variant, variants }` |
+
+> **`STOCK_REQUEST_NOT_PENDING` means reload, not retry.** It is a compare-and-set miss:
+> the row exists and somebody resolved it first. Re-sending would apply an intent formed
+> against a state that no longer holds. Refetch the request and show its outcome.
+
+> **Never re-implement the authority table behind `STOCK_REQUEST_NOT_YOURS`.** Every
+> request DTO carries `availableActions` — the server's verdict for the current viewer —
+> and rendering buttons from anything else is how a client offers a verb the API refuses.
+
+---
+
+## Blog / editorial
+
+The public reader ([public/articles.md](../public/articles.md)) and the editor
+([admin/articles.md](../admin/articles.md)).
+
+The first three are reachable by a **logged-out visitor**, so their `message` is written to be shown.
+
+| Code | HTTP | Meaning | `details` |
+|---|---|---|---|
+| `BLOG_ARTICLE_NOT_FOUND` | 404 | No published article at this `(locale, slug)` — including when the article exists but not in that language. **No fallback to another locale, ever** | `{ locale, slug }` |
+| `BLOG_ARTICLE_MOVED` | 404 | The slug is a **retired** one. The article is at `details.slug` | `{ locale, slug, previousSlug, id }` |
+| `BLOG_ARTICLE_GONE` | 410 | Archived on purpose. Send the reader to the category hub | `{ locale, slug, categoryKey }` |
+| `BLOG_SLUG_RESERVED` | 400 | Slug is `category`, `page` or `index` — each collides with a route | `{ locale, slug, reserved }` |
+| `BLOG_AUTHOR_NOT_FOUND` | 404 | `authorId` does not exist | `{ id }` or `{ authorId }` |
+| `BLOG_ARTICLE_KEY_TAKEN` | 409 | Article `id` already used | `{ id }` |
+| `BLOG_SLUG_TAKEN` | 409 | Another article holds this `(locale, slug)` — **including as a retired slug** | `{ locale, slug }` |
+| `BLOG_ARTICLE_ALREADY_PUBLISHED` | 409 | Publishing an already-published article | `{ id }` |
+| `BLOG_ARTICLE_DELETE_NOT_ALLOWED` | 409 | The article has been live; its URL may have inbound links. **Archive it instead** | `{ id, publishedAt }` |
+| `BLOG_AUTHOR_KEY_TAKEN` | 409 | Author `id` already used | `{ id }` |
+| `BLOG_AUTHOR_IN_USE` | 409 | The byline is credited on articles. Re-point them first | `{ id, articleCount }` |
+| `BLOG_ARTICLE_NOT_PUBLISHABLE` | 422 | Publish checklist failed | `{ id, blockers: string[] }` |
+
+> **`BLOG_ARTICLE_MOVED` is a 404 the frontend turns into a 301.** The API can only redirect its own
+> URL; the address that needs the permanent redirect is the *page*. Read `details.slug` and call
+> `permanentRedirect(...)` — a `fetch` that followed an HTTP redirect would render the article at the
+> stale URL, which is the duplicate-content problem the redirect exists to prevent.
+
+> **`BLOG_ARTICLE_NOT_PUBLISHABLE` carries a checklist, not a single cause** — the same convention as
+> `INVENTORY_PRODUCT_UNSUSPEND_BLOCKED`. Render every `details.blockers[]` entry.
+
+> **Malformed article bodies are `VALIDATION_ERROR`, not a blog-specific code.** A locale-prefixed
+> `href`, a duplicate heading id, an image without dimensions, an unknown block type and an unknown
+> key on a known block all fail the Zod schema — `details.fields[]` gives the path
+> (`translations.0.body.3.href`).
+
+---
+
 ## Best Practices for Frontend Error Handling
 
 1. **Always default to parsing `error.code`.** Do not write business logic dependent on `statusCode` limits (e.g., `if (statusCode === 400)`) unless parsing a generic networking failure. Use `if (error.code === 'AUTH_TOKEN_EXPIRED') { triggerLogout(); }`.
 2. **Use `error.message` as a fallback.** If your application supports full i18n, map the backend `error.code` directly to a translation key. If the key is missing in your dictionary, display the backend's `error.message` directly to the user.
-3. **Log the `requestId`.** If the error is an unexpected `INTERNAL_SERVER_ERROR`, present the `requestId` in the UI to help the user report it: *"An unexpected error occurred. If you contact support, please provide this ID: req-1234abc"*.
+3. **Use `error.category` as your default branch.** You will never have specific handling for
+   all 547 codes. The category tells you the four things that actually change client
+   behaviour: is it worth retrying, should the user re-authenticate, is it their input, or is
+   it ours.
+4. **Log the `requestId`.** If the error is an unexpected `INTERNAL_SERVER_ERROR`, present the `requestId` in the UI to help the user report it: *"An unexpected error occurred. If you contact support, please provide this ID: req-1234abc"*.

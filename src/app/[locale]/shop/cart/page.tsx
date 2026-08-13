@@ -3,8 +3,7 @@
 import { useRouter } from "@/i18n/navigation";
 import { Badge, Button, EmptyState, Icon, IconButton, ProductCard, QtyStepper } from "@/components/shop/ds";
 import { useCart } from "@/components/shop/providers";
-import { findProductById, findVendorById } from "@/lib/shop/shop.api";
-import { products } from "@/lib/shop/shop.fixtures";
+import { allProducts, findProductById, findVendorById } from "@/lib/shop/shop.api";
 import { formatXAF } from "@/lib/shop/format";
 import type { CartItem } from "@/lib/shop/shop.types";
 
@@ -13,8 +12,6 @@ function line(item: CartItem) {
   const vr = p.variants.find((x) => x.id === item.variantId)!;
   return { p, vr };
 }
-
-const DELIVERY_FEE = 1000;
 
 export default function CartPage() {
   const router = useRouter();
@@ -29,11 +26,15 @@ export default function CartPage() {
     .map(([key, label, icon]) => ({ key, label, icon, items: carts[key] }))
     .filter((g) => g.items.length);
 
-  const grandTotal =
-    groups.reduce(
-      (sum, g) => sum + g.items.reduce((s, it) => s + line(it).vr.price * it.qty, 0),
-      0,
-    ) + (carts.physical.length ? DELIVERY_FEE : 0);
+  // Items only. No delivery fee is added because the backend adds none:
+  // `price_breakdown.total` is `base + 0 tax - 0 discount`, and delivery is
+  // settled between the platform and the agency rather than quoted here. The
+  // flat 1 000 FCFA this page used to add was invented and would not have
+  // matched the charge. A real figure needs a server-side quote — see B9/B10.
+  const grandTotal = groups.reduce(
+    (sum, g) => sum + g.items.reduce((s, it) => s + line(it).vr.price * it.qty, 0),
+    0,
+  );
 
   if (groups.length === 0) {
     return (
@@ -47,11 +48,15 @@ export default function CartPage() {
           actionIcon="arrow-left"
           onAction={() => router.push("/shop")}
         />
+        {/* Relabelled from "Recently viewed": nothing here tracks what the
+            visitor looked at, and there is no endpoint that could — the
+            backend's `recent_product_code` is a lone unused field. This is
+            simply the top of the catalogue, so it says so. */}
         <p className="overline" style={{ marginBottom: 12, marginTop: 8 }}>
-          Recently viewed
+          From the marketplace
         </p>
         <div style={{ display: "flex", gap: 16, overflowX: "auto", paddingBottom: 16, scrollbarWidth: "none" }}>
-          {products.slice(0, 5).map((p) => (
+          {allProducts().slice(0, 5).map((p) => (
             <div key={p.id} style={{ width: 190, flexShrink: 0 }}>
               <ProductCard
                 title={p.title}
@@ -186,7 +191,7 @@ export default function CartPage() {
             {carts.physical.length > 0 && (
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13.5, padding: "5px 0", color: "var(--text-body)" }}>
                 <span>Delivery</span>
-                <span style={{ fontVariantNumeric: "tabular-nums" }}>{formatXAF(DELIVERY_FEE)}</span>
+                <span className="muted">Confirmed at checkout</span>
               </div>
             )}
             <div

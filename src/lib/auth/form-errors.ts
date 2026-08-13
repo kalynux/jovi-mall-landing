@@ -1,8 +1,13 @@
 import type { UseFormSetError, FieldValues, Path } from "react-hook-form";
 import type { BackendErrorCode, ErrorCode } from "./backend-error-codes";
 import { ApiError } from "./auth.types";
-import { translateCode, translateFieldCode } from "./error-translator";
-import { isNetworkError } from "@/lib/errors/is-network-error";
+import {
+    errorCodeOf,
+    translateCode,
+    translateError,
+    translateFieldCode,
+} from "./error-translator";
+import { isErrorCategory, type ErrorCategory } from "./error-categories";
 
 /**
  * Translator function type — matches the signature returned by `useTranslations("errors")`.
@@ -13,59 +18,69 @@ type ErrorTranslator = (key: string) => string;
 
 // ─── Root type encoding ───────────────────────────────────────────────────────
 //
-// RHF's FieldError.type is a plain string. We encode two pieces of data in it:
+// RHF's FieldError.type is a plain string. We encode three pieces of data in it:
 //
-//   `${errorCode}|${requestId}`
+//   `${errorCode}|${requestId}|${category}`
 //
 // The pipe ( | ) is safe because:
 //   - BackendErrorCode values are SCREAMING_SNAKE_CASE — no pipes
 //   - requestId values are UUIDs / alphanumeric — no pipes
+//   - ErrorCategory values are lowercase [a-z_] — no pipes
 //
-// Consumers call parseRootType() to recover both fields without guessing.
+// Trailing empty segments are trimmed, so the common case stays a bare "CODE"
+// and a two-segment "CODE|req" from before the category existed still decodes
+// correctly. A category with no requestId encodes the middle slot as empty:
+// "CODE||internal".
+//
+// Consumers call parseRootType() to recover all three without guessing.
 
 const ROOT_TYPE_SEP = "|" as const;
 
 /**
- * Encode an errorCode and optional requestId into a single root.type string.
+ * Encode an errorCode plus optional requestId and category into one root.type.
  * @internal Used by mapApiErrors only.
  */
 function encodeRootType(
     errorCode: ErrorCode,
-    requestId: string | undefined
+    requestId: string | undefined,
+    category: ErrorCategory | undefined
 ): string {
-    if (!requestId) return errorCode;
-    return `${errorCode}${ROOT_TYPE_SEP}${requestId}`;
+    return [errorCode, requestId ?? "", category ?? ""]
+        .join(ROOT_TYPE_SEP)
+        .replace(/\|+$/, "");
 }
 
 /**
- * Decode the errorCode and requestId from a RHF root.type value.
+ * Decode the errorCode, requestId and category from a RHF root.type value.
  *
- * Returns `undefined` for both if the string is absent or malformed.
+ * Returns `undefined` for any field the string does not carry.
  *
  * Usage in a page component:
  * ```tsx
- * const { errorCode, requestId } = parseRootType(errors.root?.type as string | undefined);
+ * const { errorCode, requestId, category } = parseRootType(
+ *   errors.root?.type as string | undefined
+ * );
  * ```
  */
 export function parseRootType(raw: string | undefined): {
     errorCode: ErrorCode | undefined;
     requestId: string | undefined;
+    category: ErrorCategory | undefined;
 } {
-    if (!raw) return { errorCode: undefined, requestId: undefined };
-
-    const sepIdx = raw.indexOf(ROOT_TYPE_SEP);
-
-    if (sepIdx === -1) {
-        // Only errorCode encoded (no requestId)
-        return {
-            errorCode: raw as ErrorCode,
-            requestId: undefined,
-        };
+    if (!raw) {
+        return { errorCode: undefined, requestId: undefined, category: undefined };
     }
 
+    // split() rather than indexOf(): the requestId sits between two separators,
+    // so slicing at the FIRST pipe would fold the category into it.
+    const [code, requestId, category] = raw.split(ROOT_TYPE_SEP);
+
     return {
-        errorCode: raw.slice(0, sepIdx) as ErrorCode,
-        requestId: raw.slice(sepIdx + 1) || undefined,
+        errorCode: (code || undefined) as ErrorCode | undefined,
+        // `|| undefined` matters — the middle slot is legitimately empty when
+        // there is a category but no requestId.
+        requestId: requestId || undefined,
+        category: isErrorCategory(category) ? category : undefined,
     };
 }
 
@@ -75,10 +90,11 @@ export function parseRootType(raw: string | undefined): {
  * Contract alignment: api-doc/errors/README.md
  *
  * Translation strategy (code-driven, never message-string-dependent):
- *   - ALL messages resolved via translateCode(t, code, fallback)
+ *   - Global messages resolved via translateError(t, error) — code, then the
+ *     category for the two opaque ones, then the backend message
  *   - Field errors translate using fieldError.code (Zod code), fallback to fieldError.message
- *   - Global errors translate using error.code, fallback to error.message
- *   - root.type encodes "errorCode|requestId" for GlobalError to consume via parseRootType()
+ *   - root.type encodes "errorCode|requestId|category" for GlobalError to
+ *     consume via parseRootType()
  *
  * Mapping rules:
  *   - VALIDATION_ERROR                    → details.fields[] → per-field setError(path)
@@ -100,24 +116,15 @@ export function mapApiErrors<T extends FieldValues>(
     t: ErrorTranslator
 ): void {
     if (!(error instanceof ApiError)) {
-        // Network failure, malformed body, or non-API throw.
+        // Network failure, malformed body, or non-API throw. `errorCodeOf`
+        // splits the two sentinels apart — see its doc comment for why that
+        // distinction matters to the person reading the banner.
         //
-        // The two are split because they are different problems for the person
-        // reading the banner: an unreachable server is something they can wait
-        // out or fix by reconnecting, while UNKNOWN_ERROR is "we don't know".
-        // Telling someone on a dropped connection that something unexpected
-        // happened sends them looking for a mistake they did not make.
-        //
-        // No requestId either way — a request that never arrived was never
-        // assigned one.
-        const code = isNetworkError(error) ? "NETWORK_ERROR" : "UNKNOWN_ERROR";
-        // Only used if the code has no translation; never shown for
-        // NETWORK_ERROR, whose raw text is "Failed to fetch".
-        const rawMessage = error instanceof Error ? error.message : undefined;
-
+        // No requestId and no category either way — a request that never
+        // arrived was never assigned one, and never got an envelope back.
         setError("root" as Path<T>, {
-            type: encodeRootType(code, undefined),
-            message: translateCode(t, code, rawMessage),
+            type: encodeRootType(errorCodeOf(error), undefined, undefined),
+            message: translateError(t, error),
         });
         return;
     }
@@ -143,8 +150,8 @@ export function mapApiErrors<T extends FieldValues>(
             } else {
                 // Structural VALIDATION_ERROR but no fields array — treat as global
                 setError("root" as Path<T>, {
-                    type: encodeRootType(error.code, error.requestId),
-                    message: translateCode(t, error.code, error.message),
+                    type: encodeRootType(error.code, error.requestId, error.category),
+                    message: translateError(t, error),
                 });
             }
             break;
@@ -165,8 +172,8 @@ export function mapApiErrors<T extends FieldValues>(
                 }
             } else {
                 setError("root" as Path<T>, {
-                    type: encodeRootType(error.code, error.requestId),
-                    message: translateCode(t, error.code, error.message),
+                    type: encodeRootType(error.code, error.requestId, error.category),
+                    message: translateError(t, error),
                 });
             }
             break;
@@ -179,9 +186,10 @@ export function mapApiErrors<T extends FieldValues>(
             setError("root" as Path<T>, {
                 type: encodeRootType(
                     error.code as BackendErrorCode,
-                    error.requestId
+                    error.requestId,
+                    error.category
                 ),
-                message: translateCode(t, error.code, error.message),
+                message: translateError(t, error),
             });
     }
 }

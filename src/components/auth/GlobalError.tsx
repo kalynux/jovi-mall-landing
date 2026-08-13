@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useId } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronDown } from "lucide-react";
 import type { ErrorCode } from "@/lib/auth/backend-error-codes";
+import type { ErrorCategory } from "@/lib/auth/error-categories";
 import { shouldExposeRequestId } from "@/lib/auth/shouldExposeRequestId";
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -17,17 +18,21 @@ export interface GlobalErrorProps {
     message: string | undefined;
     /**
      * Support trace ID from the API response envelope.
-     * Pass `errors.root?.type as string | undefined`
-     * (we store requestId in root.type to avoid extending RHF types).
+     * Pass `parseRootType(errors.root?.type as string | undefined).requestId`
+     * (we pack it into root.type to avoid extending RHF's types).
      */
     requestId?: string;
     /**
      * The backend error code that produced this error.
-     * Drives automatic vs. toggle-only requestId visibility.
-     * Pass `errors.root?.ref?.name as BackendErrorCode | undefined`
-     * or provide it directly from mapApiErrors' error code.
+     * Pass `parseRootType(...).errorCode`.
      */
     errorCode?: ErrorCode;
+    /**
+     * The error envelope's nine-value category. Together with `errorCode` this
+     * drives automatic vs. toggle-only requestId visibility — and it is the
+     * authoritative half. Pass `parseRootType(...).category`.
+     */
+    category?: ErrorCategory;
     /** Extra Tailwind classes for layout overrides. */
     className?: string;
 }
@@ -57,6 +62,7 @@ export function GlobalError({
     message,
     requestId,
     errorCode,
+    category,
     className = "",
 }: GlobalErrorProps) {
     const tErrors = useTranslations("errors");
@@ -70,7 +76,7 @@ export function GlobalError({
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Resolve display mode
-    const autoShow = shouldExposeRequestId(errorCode);
+    const autoShow = shouldExposeRequestId(errorCode, category);
     const hasToggle = Boolean(requestId) && !autoShow;
 
     // Close on Escape

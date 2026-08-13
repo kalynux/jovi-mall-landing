@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getVendors, listProducts } from "@/lib/shop/shop.api";
+import { CATALOG_IS_MOCK, getVendors, listProducts } from "@/lib/shop/shop.api";
 import { blogSitemapEntries } from "@/lib/blog/blog.api";
 import { absoluteUrl } from "@/lib/site";
 import { DEFAULT_LOCALE, LOCALE_CODES, localePath, type Locale } from "@/i18n/routing";
@@ -67,7 +67,18 @@ function variantEntry(
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [{ data: products }, vendors] = await Promise.all([listProducts(), getVendors()]);
+  /**
+   * Product and store URLs are submitted only once the catalogue is real.
+   *
+   * While `CATALOG_IS_MOCK` holds, every one of them renders an invented
+   * product at a price nobody charges, from a vendor that does not exist.
+   * Submitting those is asking Google to index fabricated commercial listings —
+   * worse than leaving them out, and hard to undo once they rank. `/shop`
+   * itself still ships: it is a real page that carries its own demo notice.
+   */
+  const [{ data: products }, vendors] = CATALOG_IS_MOCK
+    ? [{ data: [] as Awaited<ReturnType<typeof listProducts>>["data"] }, []]
+    : await Promise.all([listProducts(), getVendors()]);
 
   // Empty while the blog is unlaunched — see BLOG_IS_PLACEHOLDER.
   const blog = await blogSitemapEntries();

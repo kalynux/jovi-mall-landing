@@ -4,7 +4,7 @@
  * The alternative was stock photography, and it is worth saying why it lost. A
  * generic photo of a smiling person holding a phone tells the reader nothing,
  * costs a network round-trip on the thin connections this product is built for,
- * and — if pulled from a placeholder service the way `shop.fixtures.ts` does —
+ * and — if pulled from a placeholder service the way `catalog.mock.ts` does —
  * puts a third-party host in the critical path of the page's largest paint.
  *
  * This is an inline SVG: no request, no layout shift, no `remotePatterns` entry

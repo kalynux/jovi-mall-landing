@@ -4,6 +4,29 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from "react";
 import type { CartItem, CartKey, Carts, Product, Variant } from "@/lib/shop/shop.types";
 
+/**
+ * A localStorage cart, not the server cart — and the two do not have the same
+ * shape, which is worth knowing before anyone tries a quick swap.
+ *
+ * `/api/customer/cart` exists and is documented, but it cannot be used yet:
+ * `POST /cart/items` takes a real `productId` + `variantId`, and the catalogue
+ * on screen is `catalog.mock` (ids `p1`, `v1`). Cart is downstream of the
+ * missing catalog API, not independently blocked.
+ *
+ * Three differences to reconcile when it is wired:
+ *
+ *  1. **One cart, one type.** This provider holds `physical` and `digital`
+ *     lists simultaneously. The server allows a single `productType` per cart
+ *     and answers `409 CART_MIXED_PRODUCT_TYPES` otherwise, so the two lists
+ *     have to become one — or two carts the user switches between.
+ *  2. **No quantity update, no per-variant delete.** The server offers add
+ *     (which only ever *increments*), delete-by-`productId` (which drops every
+ *     variant of that product) and clear. `setQty` and a per-line `removeItem`
+ *     below have no endpoint behind them — see B5 in the integration plan.
+ *  3. **Digital is capped.** Quantity must be 1, and only one digital product
+ *     may be in the cart at a time.
+ */
+
 interface CartContextValue {
   carts: Carts;
   addToCart: (product: Product, variant: Variant, qty?: number) => void;

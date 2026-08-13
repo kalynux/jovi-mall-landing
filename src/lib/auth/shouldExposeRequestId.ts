@@ -1,21 +1,22 @@
 import type { BackendErrorCode, ErrorCode } from "./backend-error-codes";
+import { isOpaqueCategory, type ErrorCategory } from "./error-categories";
 
 /**
- * System-level error codes — errors where the user cannot take a corrective
- * action and where a requestId is directly useful for support escalation.
+ * **Fallback only** — used when a response carries no `error.category`.
  *
- * Classification criteria (from api-doc/errors/README.md):
- *   - Server or infrastructure failures (5xx equivalent)
- *   - Database unreachability / connection failures
- *   - Misconfiguration codes that signal a platform-level problem
- *   - Codes that imply no user-actionable resolution
+ * Since Phase 16 the category is the real rule: `internal` and
+ * `external_service` are exactly the errors where the message is generic,
+ * `details` is omitted, and the requestId is the only handle anyone has
+ * (api-doc/errors/README.md). This hand-maintained set predates that field and
+ * survives only for a response that has none — a proxy, or a pre-Phase-16
+ * deploy.
  *
- * All other codes are user-actionable (credential errors, validation errors,
- * duplicate field errors, not-found on resources the user controls, etc.)
- * and should NOT auto-expose requestId — a manual toggle is available instead.
- *
- * ⚠️  Maintain this set whenever new codes are added to BackendErrorCode.
- *     Any code NOT in this set will default to the toggle-only behaviour.
+ * ⚠️  Do **not** grow this set as codes are added. It is known to disagree with
+ *     the backend's own classification in places (the category is derived from
+ *     `(code, statusCode)`, so a single code can be `external_service` at 5xx
+ *     and something else at 4xx — a distinction a flat code set cannot make).
+ *     Anything it gets wrong is corrected by the category branch below whenever
+ *     one is present, which is every current response.
  */
 const SYSTEM_LEVEL_CODES = new Set<BackendErrorCode>([
     // ─── Core infrastructure ─────────────────────────────────────────────────
@@ -77,10 +78,20 @@ const SYSTEM_LEVEL_CODES = new Set<BackendErrorCode>([
  * server was never assigned one — so the caller renders nothing regardless;
  * they are classified here so the rule holds if that ever changes.
  *
- * @param code - A BackendErrorCode or one of the client-side sentinels
+ * @param code     - A BackendErrorCode or one of the client-side sentinels
+ * @param category - The error envelope's nine-value category, when present.
+ *                   This is the authoritative signal; `code` is the fallback.
  */
-export function shouldExposeRequestId(code: ErrorCode | undefined): boolean {
+export function shouldExposeRequestId(
+    code: ErrorCode | undefined,
+    category?: ErrorCategory
+): boolean {
     if (!code) return false;
     if (code === "UNKNOWN_ERROR" || code === "NETWORK_ERROR") return true;
+
+    // The rule as the backend actually states it.
+    if (category) return isOpaqueCategory(category);
+
+    // No category on the response — fall back to the legacy code set.
     return SYSTEM_LEVEL_CODES.has(code as BackendErrorCode);
 }

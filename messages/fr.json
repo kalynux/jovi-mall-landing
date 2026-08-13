@@ -531,6 +531,10 @@
             "not_finite": "Ce champ doit être un nombre fini.",
             "invalid_date": "Veuillez saisir une date valide."
         },
+        "category": {
+            "internal": "Un problème est survenu de notre côté. Veuillez réessayer dans un instant.",
+            "external_service": "Un service dont nous dépendons ne répond pas. Veuillez réessayer dans un instant."
+        },
         "AUTH_INVALID_CREDENTIALS": "Numéro de téléphone ou mot de passe invalide. Veuillez réessayer.",
         "AUTH_TOKEN_EXPIRED": "Votre session a expiré. Veuillez vous reconnecter.",
         "AUTH_TOKEN_INVALID": "Votre session est invalide. Veuillez vous reconnecter.",
@@ -556,12 +560,17 @@
         "AUTH_FORBIDDEN": "Vous n'avez pas la permission d'effectuer cette action.",
         "AUTH_OAUTH_STATE_INVALID": "La demande d'authentification est invalide. Veuillez réessayer.",
         "AUTH_OAUTH_STATE_EXPIRED": "Le lien d'authentification a expiré. Veuillez réessayer.",
+        "AUTH_PASSWORD_CHANGED": "Votre mot de passe a été modifié, vous avez donc été déconnecté. Veuillez vous reconnecter — et contactez l'assistance si ce n'était pas vous.",
         "DATABASE_UNIQUE_CONSTRAINT_VIOLATION": "Ces informations sont déjà utilisées par un autre compte.",
         "DATABASE_UNAVAILABLE": "Le service est temporairement indisponible. Veuillez réessayer plus tard.",
         "DATABASE_CONNECTION_ERROR": "Une erreur de connexion s'est produite. Veuillez réessayer plus tard.",
         "VALIDATION_ERROR": "Veuillez vérifier les champs en surbrillance et réessayer.",
         "INTERNAL_SERVER_ERROR": "Une erreur serveur s'est produite. Veuillez réessayer plus tard.",
         "NOT_FOUND": "La ressource demandée est introuvable.",
+        "RATE_LIMIT_EXCEEDED": "Trop de tentatives. Veuillez patienter un instant et réessayer.",
+        "REQUEST_BODY_INVALID": "Nous n'avons pas pu lire cette requête. Veuillez réessayer.",
+        "REQUEST_BODY_TOO_LARGE": "Cette requête est trop volumineuse. Veuillez la raccourcir et réessayer.",
+        "REQUEST_MEDIA_TYPE_UNSUPPORTED": "Ce format de requête n'est pas pris en charge. Veuillez réessayer.",
         "PAYMENT_ORDER_NOT_FOUND": "La commande est introuvable.",
         "PAYMENT_ORDER_ALREADY_PAID": "Cette commande a déjà été payée.",
         "PAYMENT_INVALID_ORDER_STATUS": "Cette commande ne peut pas être payée pour le moment.",

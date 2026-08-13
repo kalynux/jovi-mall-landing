@@ -1,7 +1,31 @@
 /**
- * Mock catalog data for the Shop — ported from the Claude Design bundle
- * (WiMallDesignSystem_cc21b6). Shapes mirror the backend; images use the
- * design's Picsum placeholder seeds. Swap this module for real API calls later.
+ * ⚠️ INVENTED CATALOG DATA. Not a single product, vendor, price or rating in
+ * this file is real, and none of it comes from the backend.
+ *
+ * It exists for exactly one reason: **the backend has no catalog-browse API.**
+ * `/api/products/*` is service-booking only, `/api/public/*` serves the plan
+ * catalogue and the blog, and every product read under `modules/catalog` is
+ * `requireRole(['vendor'])` and scoped to the caller's own products. There is no
+ * endpoint a shopper can call to list, search, or open a product — so the
+ * discovery half of the shop has nothing to render but this.
+ *
+ * What is needed to delete this file (see the shop integration plan):
+ *   - `GET /api/public/products`            — list, search, filter, sort
+ *   - `GET /api/public/products/:idOrSlug`  — detail with options + variants
+ *   - `GET /api/public/categories`          — `category` is free text, no taxonomy
+ *   - `GET /api/public/stores/:slug`        — public vendor store
+ *
+ * Until then:
+ *   - **Import this module only from `shop.api.ts`.** That is the seam the real
+ *     endpoints land on; anything importing it directly has to be rewritten
+ *     twice. The four pages that used to do so were changed for this reason.
+ *   - Nothing here may be indexed. `/shop` product and store URLs are kept out
+ *     of `sitemap.ts` while the catalogue is fake.
+ *   - The cart/checkout chain is blocked on the same gap: the real cart wants
+ *     ObjectIds, and `p1`/`v1` are not.
+ *
+ * Ported from the Claude Design bundle (WiMallDesignSystem_cc21b6); images are
+ * the design's Picsum placeholder seeds.
  */
 import { slugify } from "./format";
 import type { Product, ProductType, SortKey, Vendor } from "./shop.types";

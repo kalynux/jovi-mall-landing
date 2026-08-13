@@ -3,7 +3,7 @@
 import { Link } from "@/i18n/navigation";
 import { usePathname } from "@/i18n/navigation";
 import { useTheme } from "@/lib/theme";
-import { useCart, useFavorites } from "@/components/shop/providers";
+import { useCart, useFavorites, useNotifications } from "@/components/shop/providers";
 import { Icon } from "@/components/shop/ds";
 import WiMallMark from "@/components/brand/WiMallMark.generated";
 
@@ -39,6 +39,7 @@ export function ShopHeader() {
   const { theme, toggle } = useTheme();
   const { count: cartCount } = useCart();
   const { count: favCount } = useFavorites();
+  const { unread } = useNotifications();
 
   const iconLink = (href: string, icon: string, label: string, badge?: number) => {
     const active = pathname === href;
@@ -106,6 +107,10 @@ export function ShopHeader() {
         >
           <Icon name={theme === "dark" ? "sun" : "moon"} size={20} />
         </button>
+        {/* Only shown once there is something to show: the count is 0 for
+            anonymous visitors, and an always-empty bell reads as broken. */}
+        {unread > 0 &&
+          iconLink("/shop/account/notifications", "bell", "Notifications", unread)}
         {iconLink("/shop/saved", "heart", "Saved", favCount)}
         {iconLink("/shop/cart", "shopping-cart", "Cart", cartCount)}
         <Link

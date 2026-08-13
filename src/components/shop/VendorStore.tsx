@@ -4,8 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Avatar, Badge, Button, Icon, ProductCard, Rating, Tabs } from "@/components/shop/ds";
 import { useCart, useFavorites, useToast } from "@/components/shop/providers";
-import { products } from "@/lib/shop/shop.fixtures";
-import { findVendorById } from "@/lib/shop/shop.api";
+import { allProducts, findVendorById } from "@/lib/shop/shop.api";
 import type { Product, Vendor } from "@/lib/shop/shop.types";
 
 export function VendorStore({ vendor: v }: { vendor: Vendor }) {
@@ -15,7 +14,8 @@ export function VendorStore({ vendor: v }: { vendor: Vendor }) {
   const { flash } = useToast();
   const [tab, setTab] = useState("products");
 
-  const vproducts = useMemo(() => products.filter((p) => p.vendorId === v.id), [v.id]);
+  const products = allProducts();
+  const vproducts = useMemo(() => products.filter((p) => p.vendorId === v.id), [products, v.id]);
   const counts = {
     products: vproducts.filter((p) => p.type === "physical").length,
     services: vproducts.filter((p) => p.type === "service").length,

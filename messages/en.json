@@ -531,6 +531,10 @@
             "not_finite": "This field must be a finite number.",
             "invalid_date": "Please enter a valid date."
         },
+        "category": {
+            "internal": "Something went wrong on our side. Please try again in a moment.",
+            "external_service": "A service we rely on isn't responding. Please try again in a moment."
+        },
         "AUTH_INVALID_CREDENTIALS": "Invalid phone number or password. Please try again.",
         "AUTH_TOKEN_EXPIRED": "Your session has expired. Please sign in again.",
         "AUTH_TOKEN_INVALID": "Your session is invalid. Please sign in again.",
@@ -556,12 +560,17 @@
         "AUTH_FORBIDDEN": "You do not have permission to perform this action.",
         "AUTH_OAUTH_STATE_INVALID": "The authentication request is invalid. Please try again.",
         "AUTH_OAUTH_STATE_EXPIRED": "The authentication link has expired. Please try again.",
+        "AUTH_PASSWORD_CHANGED": "Your password was changed, so you've been signed out. Please sign in again — and contact support if this wasn't you.",
         "DATABASE_UNIQUE_CONSTRAINT_VIOLATION": "This information is already in use by another account.",
         "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again later.",
         "DATABASE_CONNECTION_ERROR": "A connection error occurred. Please try again later.",
         "VALIDATION_ERROR": "Please review the highlighted fields and try again.",
         "INTERNAL_SERVER_ERROR": "A server error occurred. Please try again later.",
         "NOT_FOUND": "The requested resource was not found.",
+        "RATE_LIMIT_EXCEEDED": "Too many attempts. Please wait a moment and try again.",
+        "REQUEST_BODY_INVALID": "We couldn't read that request. Please try again.",
+        "REQUEST_BODY_TOO_LARGE": "That request was too large. Please shorten it and try again.",
+        "REQUEST_MEDIA_TYPE_UNSUPPORTED": "That request format isn't supported. Please try again.",
         "PAYMENT_ORDER_NOT_FOUND": "The order could not be found.",
         "PAYMENT_ORDER_ALREADY_PAID": "This order has already been paid.",
         "PAYMENT_INVALID_ORDER_STATUS": "This order cannot be paid at this time.",

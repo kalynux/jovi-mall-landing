@@ -5,11 +5,34 @@ import { createContext, useCallback, useContext, useRef, useState } from "react"
 import type { ReactNode } from "react";
 import { Icon } from "@/components/shop/ds";
 
+export type ToastVariant = "success" | "error";
+
 interface ToastContextValue {
+  /** Confirm something worked. */
   flash: (message: string) => void;
+  /**
+   * Report a failure. Held longer than a success toast — a message you need to
+   * read and act on should not vanish at the same speed as "Added to cart".
+   */
+  flashError: (message: string) => void;
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null);
+
+const DURATION: Record<ToastVariant, number> = { success: 2200, error: 4500 };
+
+const STYLE: Record<ToastVariant, { icon: string; iconColor: string; background: string }> = {
+  success: {
+    icon: "circle-check-big",
+    iconColor: "var(--green-400)",
+    background: "var(--gray-900)",
+  },
+  error: {
+    icon: "circle-alert",
+    iconColor: "#fff",
+    background: "var(--danger)",
+  },
+};
 
 export function useToast(): ToastContextValue {
   const ctx = useContext(ToastContext);
@@ -18,21 +41,30 @@ export function useToast(): ToastContextValue {
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [message, setMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; variant: ToastVariant } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const flash = useCallback((msg: string) => {
-    setMessage(msg);
+  const show = useCallback((message: string, variant: ToastVariant) => {
+    setToast({ message, variant });
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => setMessage(null), 2200);
+    timer.current = setTimeout(() => setToast(null), DURATION[variant]);
   }, []);
 
+  const flash = useCallback((message: string) => show(message, "success"), [show]);
+  const flashError = useCallback((message: string) => show(message, "error"), [show]);
+
+  const style = toast ? STYLE[toast.variant] : STYLE.success;
+
   return (
-    <ToastContext.Provider value={{ flash }}>
+    <ToastContext.Provider value={{ flash, flashError }}>
       {children}
       <AnimatePresence>
-        {message && (
+        {toast && (
           <motion.div
+            // Failures are announced assertively so a screen-reader user is not
+            // told the save failed only after they have moved on.
+            role={toast.variant === "error" ? "alert" : "status"}
+            aria-live={toast.variant === "error" ? "assertive" : "polite"}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12 }}
@@ -45,7 +77,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               display: "flex",
               alignItems: "center",
               gap: 9,
-              background: "var(--gray-900)",
+              background: style.background,
               color: "#fff",
               borderRadius: "var(--radius-md)",
               padding: "11px 16px",
@@ -55,8 +87,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               maxWidth: "calc(100vw - 32px)",
             }}
           >
-            <Icon name="circle-check-big" size={18} style={{ color: "var(--green-400)" }} />
-            {message}
+            <Icon name={style.icon} size={18} style={{ color: style.iconColor, flexShrink: 0 }} />
+            {toast.message}
           </motion.div>
         )}
       </AnimatePresence>
