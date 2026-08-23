@@ -22,7 +22,9 @@ import { DEFAULT_COUNTRY, isSupportedCountry, resolveCountry, type CountryCode }
  * change the moment it is made.
  */
 
-const STORAGE_KEY = "wimall-phone-country";
+const STORAGE_KEY = "wi-mall-phone-country";
+/** The key from before the brand became `wi-mall`. Still read, never written. */
+const PRE_RENAME_STORAGE_KEY = "wimall-phone-country";
 
 const listeners = new Set<() => void>();
 
@@ -42,7 +44,10 @@ function subscribe(onStoreChange: () => void) {
 
 function getSnapshot(): string | null {
     try {
-        return localStorage.getItem(STORAGE_KEY);
+        // Must stay pure — useSyncExternalStore calls this on every render, so
+        // the old key is read through rather than migrated here. `rememberCountry`
+        // clears it the next time the user picks a country.
+        return localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(PRE_RENAME_STORAGE_KEY);
     } catch {
         // Private mode / storage disabled — the preference is a nicety, not a
         // requirement. The profile country and the default still apply.
@@ -56,6 +61,7 @@ const getServerSnapshot = (): string | null => null;
 export function rememberCountry(country: CountryCode) {
     try {
         localStorage.setItem(STORAGE_KEY, country);
+        localStorage.removeItem(PRE_RENAME_STORAGE_KEY);
     } catch {
         // See getSnapshot.
     }

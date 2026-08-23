@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import JsonLd from "@/components/seo/JsonLd";
 import Breadcrumbs from "@/components/marketing/Breadcrumbs";
+import PricingIllustration from "@/components/illustrations/PricingIllustration.generated";
 import FaqList from "@/components/marketing/FaqList";
 import { PlanGrid, type PlanCopy } from "@/components/marketing/PlanCards";
 import {
@@ -142,6 +143,7 @@ export default async function PricingPage({ params }: PageProps) {
             {t("common.currencyNote")}
           </p>
         }
+        illustration={<PricingIllustration />}
       />
 
       <Section title={t("pricing.howWeEarn.title")} lead={t("pricing.howWeEarn.lead")}>

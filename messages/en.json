@@ -13,7 +13,7 @@
     "meta": {
         "langName": "English",
         "langCode": "en",
-        "title": "WiMall — Commerce Runs on Conversation",
+        "title": "Wi-Mall — Commerce Runs on Conversation",
         "description": "AI-powered ecommerce infrastructure for WhatsApp-first businesses. Vendors sell without a website. Customers shop by chatting. Agencies and agents earn on every delivery.",
         "shareDescription": "The WhatsApp-first AI ecommerce platform for modern businesses."
     },
@@ -31,7 +31,7 @@
         "toggleLight": "Switch to light mode",
         "openMenu": "Open menu",
         "closeMenu": "Close menu",
-        "logoAriaLabel": "WiMall Home",
+        "logoAriaLabel": "Wi-Mall Home",
         "mainNavAriaLabel": "Main navigation",
         "languageSwitcher": "Select language",
         "dashboard": "Dashboard",
@@ -42,7 +42,12 @@
         "pricing": "Pricing",
         "faq": "FAQ",
         "cameroon": "Cameroon",
-        "blog": "Blog"
+        "blog": "Blog",
+        "solutions": "Solutions",
+        "company": "Company",
+        "about": "About",
+        "careers": "Careers",
+        "contact": "Contact"
     },
     "hero": {
         "badge": "The WhatsApp Commerce Platform",
@@ -62,13 +67,13 @@
         "socialProof": "Be one of our founding vendors",
         "aiLabel": "AI Active",
         "orderConfirmed": "Order Confirmed!",
-        "orderDetail": "₦ 12,500 · Arriving today 🚚",
-        "chatCustomer1": "I need wireless earbuds under ₦15k 🎧",
-        "chatAI1": "Found 3 perfect matches! The WiBuds Pro (₦12,500) is our bestseller ⭐",
+        "orderDetail": "12,500 FCFA · Arriving today 🚚",
+        "chatCustomer1": "I need wireless earbuds under 15,000 FCFA 🎧",
+        "chatAI1": "Found 3 perfect matches! The WiBuds Pro (12,500 FCFA) is our bestseller ⭐",
         "chatCustomer2": "How long does the battery last?",
         "chatAI2": "7 hours on one charge, 28 with the case — and it ships with a 1-year warranty 🔋",
-        "chatCustomer3": "Nice 👌 Can you deliver to Lagos today?",
-        "chatAI3": "Yes — same-day anywhere in Lagos for ₦1,000 if you order before 1PM 🛵",
+        "chatCustomer3": "Nice 👌 Can you deliver to Douala today?",
+        "chatAI3": "Yes — same-day anywhere in Douala for 1,000 FCFA if you order before 1PM 🛵",
         "chatCustomer4": "Yes! Order the WiBuds Pro please",
         "chatAI4": "Perfect 🎉 Mobile Money or pay on delivery?",
         "chatCustomer5": "Mobile Money",
@@ -81,7 +86,7 @@
         "title1": "One platform.",
         "title2": "Every role.",
         "title3": "Connected.",
-        "subtitle": "From a WhatsApp message to a delivered product and payout — every step runs on WiMall automatically.",
+        "subtitle": "From a WhatsApp message to a delivered product and payout — every step runs on Wi-Mall automatically.",
         "stats": {
             "aiResponse": "AI response time",
             "uptime": "Platform uptime",
@@ -123,7 +128,7 @@
         "sectionLabel": "For Agencies",
         "title1": "Turn logistics",
         "title2": "into revenue.",
-        "subtitle": "Build a delivery business on top of WiMall. Receive orders, coordinate your agent network, and earn commission on every successful delivery — with zero customer acquisition cost.",
+        "subtitle": "Build a delivery business on top of Wi-Mall. Receive orders, coordinate your agent network, and earn commission on every successful delivery — with zero customer acquisition cost.",
         "ctaPrimary": "Join as Agency",
         "flow": {
             "orderIn": "Order In",
@@ -143,7 +148,7 @@
         "title1": "Deliver.",
         "title2": "Earn.",
         "title3": "Repeat.",
-        "subtitle": "Join a delivery network powered by WiMall. Set your hours, pick up assignments, deliver orders, and get paid per delivery — all from your phone.",
+        "subtitle": "Join a delivery network powered by Wi-Mall. Set your hours, pick up assignments, deliver orders, and get paid per delivery — all from your phone.",
         "ctaPrimary": "Become an Agent",
         "steps": {
             "stepLabel": "Step",
@@ -173,9 +178,9 @@
             "headerRole": "AI Shopping Assistant",
             "placeholder": "Type a message...",
             "you": "You",
-            "ai": "WiMall AI",
+            "ai": "Wi-Mall AI",
             "now": "now",
-            "m1": "Hi! I need wireless earbuds under ₦15,000 🎧",
+            "m1": "Hi! I need wireless earbuds under 15,000 FCFA 🎧",
             "m2": "Three great matches — this one is our bestseller ⭐",
             "m3": "How long does the battery last?",
             "m4": "7 hours on one charge, 28 with the case — and a 1-year warranty 🔋",
@@ -183,16 +188,16 @@
             "m6": "Order placed! Arriving today between 2–5 PM. Track it right here 📦",
             "productName": "WiBuds Pro",
             "productMeta": "Free delivery · In stock",
-            "productPrice": "₦ 12,500",
+            "productPrice": "12,500 FCFA",
             "orderBadge": "Arriving today",
-            "orderDetail": "₦ 12,500 · 2–5 PM 🛵"
+            "orderDetail": "12,500 FCFA · 2–5 PM 🛵"
         },
         "whatsapp": {
             "cta": "Start Shopping on WhatsApp",
-            "previewWelcome": "👋 Welcome to WiMall!",
+            "previewWelcome": "👋 Welcome to Wi-Mall!",
             "previewMsg": "Tell us what you're looking for and our AI will find the best deals for you. What do you need today?",
-            "previewTime": "WiMall AI · now",
-            "previewUserMsg": "Hi WiMall! I'd like to start shopping.",
+            "previewTime": "Wi-Mall AI · now",
+            "previewUserMsg": "Hi Wi-Mall! I'd like to start shopping.",
             "trust": "Verified Business · Secure",
             "openWhatsApp": "Open WhatsApp",
             "closePreview": "Close preview",
@@ -204,7 +209,7 @@
         "title1": "Built for how",
         "title2": "you",
         "title3": "actually shop.",
-        "subtitle": "We didn't just repackage a Western ecommerce model. WiMall is built from the ground up for mobile-dominant, WhatsApp-native, data-conscious shoppers and businesses.",
+        "subtitle": "We didn't just repackage a Western ecommerce model. Wi-Mall is built from the ground up for mobile-dominant, WhatsApp-native, data-conscious shoppers and businesses.",
         "ctaPrimary": "Learn Our Story",
         "features": {
             "mobileTitle": "Mobile-native by design",
@@ -216,15 +221,15 @@
         },
         "phone": {
             "status": "9:41",
-            "assistantName": "WiMall",
+            "assistantName": "Wi-Mall",
             "assistantSub": "AI Shopping Assistant",
             "onlineLabel": "online",
             "chat1Customer": "I need a birthday gift 🎁",
             "chat1AI": "Great! Budget range? 💜",
-            "chat2Customer": "₦5,000 - ₦15,000",
-            "chat2AI": "Here are 5 perfect gifts under ₦15k — featuring top sellers! 🎉",
+            "chat2Customer": "5,000 - 15,000 FCFA",
+            "chat2AI": "Here are 5 perfect gifts under 15,000 FCFA — featuring top sellers! 🎉",
             "inputPlaceholder": "Message...",
-            "earnedBadge": "+₦12,500 earned",
+            "earnedBadge": "+12,500 FCFA earned",
             "aiActiveBadge": "AI Active ✦",
             "lowSignalNote": "Still sending on 2G"
         }
@@ -252,7 +257,7 @@
             "revenueTitle": "Multi-Actor Revenue",
             "revenueDesc": "Every transaction creates value for vendors, agencies, and agents simultaneously — a true shared economy.",
             "scaleTitle": "Built for Regional Scale",
-            "scaleDesc": "Multi-city, multi-currency, and multi-language ready. Expand from Lagos to Nairobi to Accra without rebuilding."
+            "scaleDesc": "Multi-city, multi-currency, and multi-language ready. Expand from Douala to Yaoundé to Garoua — and beyond Cameroon when you are ready — without rebuilding."
         },
         "stats": {
             "vendors": "Vendors",
@@ -263,7 +268,7 @@
         "dashboard": {
             "recentActivity1": "New order #4821 assigned",
             "recentActivity2": "Agent Chidi confirmed pickup",
-            "recentActivity3": "₦ 12,500 credited to wallet",
+            "recentActivity3": "12,500 FCFA credited to wallet",
             "performance": "30-Day Performance",
             "stable": "Stable",
             "up": "↑ +12%",
@@ -284,9 +289,9 @@
             "capTablet": "Reflows all the way down to tablet",
             "capPhone": "And a native app for iOS & Android",
             "live": "Live",
-            "toastOrder": "New order · ₦ 2,450",
+            "toastOrder": "New order · 2,450 FCFA",
             "toastDispatch": "Dispatched to nearest agent",
-            "toastDelivered": "Delivered · +₦ 1,200",
+            "toastDelivered": "Delivered · +1,200 FCFA",
             "stRevenue": "Revenue",
             "stOrders": "Orders",
             "stProducts": "Products",
@@ -298,7 +303,7 @@
         }
     },
     "finalCta": {
-        "badge": "✦ Become a founding business on WiMall",
+        "badge": "✦ Become a founding business on Wi-Mall",
         "title1": "Your business,",
         "title2": "powered by conversation.",
         "subtitle": "Get started in minutes. No credit card required. No tech team needed. Your first 30 days are completely free.",
@@ -348,8 +353,8 @@
         "terms": "Terms of Service",
         "cookies": "Cookie Policy",
         "copyright": "All rights reserved.",
-        "builtFor": "Built for modern commerce. Powered by WiMall.",
-        "logoAriaLabel": "WiMall Home",
+        "builtFor": "Built for modern commerce. Powered by Wi-Mall.",
+        "logoAriaLabel": "Wi-Mall Home",
         "socialAriaLabel": "Social link",
         "learn": "Learn"
     },
@@ -361,11 +366,11 @@
         "showcaseEyebrow": "Commerce runs on conversation",
         "showcaseTitleLogin": "Your storefront is a chat window.",
         "showcaseTitleRegister": "Start selling where your customers already are.",
-        "showcaseBody": "WiMall turns WhatsApp into a full storefront — AI answers questions, takes orders, and hands delivery to an agent near your customer.",
+        "showcaseBody": "Wi-Mall turns WhatsApp into a full storefront — AI answers questions, takes orders, and hands delivery to an agent near your customer.",
         "showcasePoint1": "AI that replies in seconds, day and night",
         "showcasePoint2": "Orders and payments settled inside the chat",
         "showcasePoint3": "Delivery dispatched and tracked to the door",
-        "loginTitle": "Sign in to WiMall",
+        "loginTitle": "Sign in to Wi-Mall",
         "loginSubtitle": "Choose the role you want to sign in with",
         "loginSubtitleForm": "Enter your credentials to continue",
         "registerTitle": "Create your account",
@@ -390,7 +395,7 @@
         "passwordPlaceholder": "••••••••",
         "newPasswordPlaceholder": "Min. 8 characters",
         "forgotPassword": "Forgot password?",
-        "forgotPasswordAria": "Forgot password — not yet available",
+        "forgotPasswordAria": "Forgot password — reset it",
         "signIn": "Sign in",
         "signingIn": "Signing in…",
         "createAccount": "Create account",
@@ -402,15 +407,28 @@
         "alreadyAccount": "Already have an account?",
         "signInLink": "Sign in",
         "genericError": "Something went wrong. Please try again.",
-        "customerWaTitle": "Customers shop via WhatsApp",
-        "customerWaSubtitle": "No account needed — just start a chat.",
-        "customerWaBody": "Customers don't need to create an account. Continue on WhatsApp to access your profile.",
+        "customerWaTitle": "Shoppers start in the chat",
+        "customerWaSubtitle": "No form to fill in.",
         "customerWaCta": "Continue on WhatsApp",
         "customerWaBack": "Choose a different role",
         "identifierTypeLabel": "Sign in with",
         "identifierTypePhone": "Phone",
         "identifierTypeEmail": "Email",
-        "emailLabelLogin": "Email"
+        "emailLabelLogin": "Email",
+        "fieldInfoAria": "More information",
+        "customerSignInTitle": "No password needed",
+        "customerSignInWaCta": "Open WhatsApp",
+        "customerSignInTgCta": "Open Telegram",
+        "customerSignInIdentifierHint": "The number or email you use with the bot.",
+        "customerCodeLabel": "Sign-in code",
+        "customerCodePlaceholder": "4B2K91QN",
+        "signInOtherRole": "Sign in as a vendor, agency or agent",
+        "customerSignInCodeIntroWeb": "Tap the bot's link, or enter its code.",
+        "customerSignInCodeIntroApp": "Enter the code the bot sent you.",
+        "customerGetCode": "Get code",
+        "customerGetCodeTitle": "Get a sign-in code",
+        "customerGetCodeBody": "Send the <code>{command}</code> command to the bot.",
+        "customerCodeExpiryNote": "Codes last ten minutes and work once. If yours no longer works, send the command again for a new one."
     },
     "authMe": {
         "title": "Switch Role",
@@ -453,7 +471,7 @@
     "addRole": {
         "title": "Add a new role",
         "subtitle": "You currently have: {roles}",
-        "subtitleEmpty": "Expand what you can do on WiMall",
+        "subtitleEmpty": "Expand what you can do on Wi-Mall",
         "nameLabel": "Full Name",
         "namePlaceholder": "Your full name",
         "personalNameLabel": "Your Name",
@@ -477,45 +495,9 @@
         "confirmStay": "Stay with current role",
         "serverError": "Something went wrong. Please try again."
     },
-    "waVerification": {
-        "title": "Verify your WhatsApp",
-        "subtitle": "Required before accessing your dashboard",
-        "description": "To protect your account and enable WhatsApp notifications, you must verify your phone number. Follow the steps below.",
-        "updateOtherRolesLabel": "Verify this number for all my unverified roles",
-        "updateOtherRolesDesc": "If you have other roles that are not yet verified, this will link them all to this WhatsApp number in one step.",
-        "requestCodeBtn": "Request Verification Code",
-        "instructionsHeader": "How to verify",
-        "commandInstructionPart1": "To verify, ",
-        "commandInstructionLinkText": "click here",
-        "commandInstructionPart2": " to message our bot, or copy and send the command to ",
-        "commandInstructionPart3": "",
-        "commandLabel": "Send this command on WhatsApp",
-        "copyBtn": "Copy",
-        "copyAriaLabel": "Copy verification command to clipboard",
-        "copied": "Copied!",
-        "openWhatsApp": "Open WhatsApp",
-        "expiresIn": "Code expires in {time}",
-        "sentCodeBtn": "I Have Sent the Code",
-        "checkingStatus": "Checking…",
-        "pollingStatus": "Still checking…",
-        "pollingAttempt": "Attempt {current} of {max}",
-        "checking": "Checking verification status…",
-        "expiredTitle": "Code expired",
-        "expiredDesc": "Your verification code has expired. Request a new one to continue.",
-        "failedTitle": "Verification failed",
-        "failedDesc": "We couldn't verify your WhatsApp number. Please request a new code and try again.",
-        "requestNewCode": "Request a new code instead",
-        "requestNewCodeBtn": "Request New Code",
-        "successTitle": "WhatsApp Verified!",
-        "successDesc": "Redirecting you to your dashboard…",
-        "errorTitle": "Something went wrong",
-        "genericError": "An error occurred. Please try again.",
-        "tryAgain": "Try Again",
-        "logoutLink": "Sign out and try a different account"
-    },
     "errors": {
         "UNKNOWN_ERROR": "An unexpected error occurred. Please try again.",
-        "NETWORK_ERROR": "We can't reach WiMall right now. Check your connection and try again.",
+        "NETWORK_ERROR": "We can't reach Wi-Mall right now. Check your connection and try again.",
         "request_id": "Support ID: {id}",
         "fields": {
             "invalid_type": "This field contains an invalid value.",
@@ -548,15 +530,13 @@
         "AUTH_EMAIL_ALREADY_VERIFIED": "This email has already been verified.",
         "AUTH_EMAIL_MISSING": "An email address is required for this action.",
         "AUTH_VERIFY_TOKEN_INVALID": "The verification link is invalid or has expired.",
-        "AUTH_WA_ALREADY_VERIFIED": "Your WhatsApp number has already been verified.",
+        "AUTH_RESET_TOKEN_INVALID": "This password reset link is invalid or has expired. Request a new one.",
         "AUTH_PROFILE_NOT_FOUND": "Your profile could not be found.",
-        "AUTH_PHONE_REQUIRED_FOR_WA": "A phone number is required to link WhatsApp.",
         "AUTH_UNSUPPORTED_ROLE": "This role is not supported.",
         "AUTH_REFRESH_TOKEN_INVALID": "Your session could not be renewed. Please sign in again.",
         "AUTH_SESSION_EXPIRED": "Your session has expired. Please sign in again.",
         "AUTH_USER_NOT_FOUND": "No user was found with this information.",
         "AUTH_ROLE_PROFILE_NOT_FOUND": "Your role profile could not be found.",
-        "AUTH_WA_PHONE_ID_REQUIRED": "A WhatsApp Phone ID is required.",
         "AUTH_FORBIDDEN": "You do not have permission to perform this action.",
         "AUTH_OAUTH_STATE_INVALID": "The authentication request is invalid. Please try again.",
         "AUTH_OAUTH_STATE_EXPIRED": "The authentication link has expired. Please try again.",
@@ -573,6 +553,12 @@
         "REQUEST_MEDIA_TYPE_UNSUPPORTED": "That request format isn't supported. Please try again.",
         "PAYMENT_ORDER_NOT_FOUND": "The order could not be found.",
         "PAYMENT_ORDER_ALREADY_PAID": "This order has already been paid.",
+        "PAYMENT_ORDER_IS_COD": "This order is paid in cash on delivery — there is nothing to pay online.",
+        "PAYMENT_OPERATOR_UNDETERMINED": "We could not tell which mobile network this number is on. Mobile money works on MTN and Orange numbers in Cameroon.",
+        "PAYMENT_CURRENCY_NOT_SUPPORTED": "This payment method cannot be used for this currency.",
+        "PAYMENT_CART_NOT_FOUND": "We could not find this order.",
+        "PAYMENT_CART_NO_PAYABLE_ORDERS": "There is nothing left to pay on this order.",
+        "PAYMENT_CART_MIXED_CURRENCY": "This order mixes currencies and cannot be settled in one payment. Please contact support.",
         "PAYMENT_INVALID_ORDER_STATUS": "This order cannot be paid at this time.",
         "PAYMENT_GATEWAY_NOT_SUPPORTED": "This payment gateway is not supported.",
         "PAYMENT_INITIATION_FAILED": "Payment could not be initiated. Please try again.",
@@ -615,8 +601,6 @@
         "DIGITAL_ASSET_IN_USE": "This digital asset is currently in use and cannot be modified.",
         "DIGITAL_ENTITLEMENT_CONFIG_MISSING": "The entitlement configuration is missing.",
         "DIGITAL_ENTITLEMENT_CONFIG_INACTIVE": "The entitlement configuration is inactive.",
-        "WHATSAPP_ROLE_NOT_SUPPORTED": "WhatsApp is not available for this role.",
-        "WHATSAPP_NOT_LINKED": "Your WhatsApp account is not linked.",
         "WHATSAPP_LINK_FAILED": "WhatsApp linking failed. Please try again.",
         "WHATSAPP_INVALID_PAYLOAD": "An invalid WhatsApp message was received.",
         "WHATSAPP_POLICY_VIOLATION": "This message violates WhatsApp policy.",
@@ -742,6 +726,7 @@
         "DELIVERY_AGENT_NOT_FOUND": "The delivery agent could not be found.",
         "CUSTOMER_NOT_FOUND": "The customer account could not be found.",
         "CUSTOMER_ADDRESS_NOT_FOUND": "The delivery address could not be found.",
+        "ORDER_DELIVERY_ADDRESS_REQUIRED": "We need a delivery address we can locate before this order can be placed.",
         "CUSTOMER_PAYMENT_METHOD_NOT_FOUND": "The payment method could not be found.",
         "USER_NOT_FOUND": "The user account could not be found.",
         "USER_INVALID_PASSWORD": "The current password is incorrect.",
@@ -751,6 +736,7 @@
         "CART_PRODUCT_NOT_FOUND": "A product in your cart could not be found.",
         "CART_SERVICE_PRODUCT_NOT_ALLOWED": "Service products cannot be added to the cart.",
         "CART_VARIANT_NOT_FOUND": "The selected product variant could not be found.",
+        "CART_ITEM_NOT_FOUND": "That item is no longer in your cart. Refresh to see the latest version.",
         "CART_VARIANT_PRODUCT_MISMATCH": "The selected variant does not match the product.",
         "CART_DIGITAL_QUANTITY_MUST_BE_ONE": "Digital products can only be purchased one at a time.",
         "CART_MIXED_PRODUCT_TYPES": "Your cart cannot mix different product types.",
@@ -774,7 +760,21 @@
         "ADMIN_NOT_FOUND": "The admin account could not be found.",
         "ADMIN_FORBIDDEN": "Admin access is required for this action.",
         "COMMAND_ALREADY_REGISTERED": "This command is already registered.",
-        "COMMAND_NOT_FOUND": "The command could not be found."
+        "COMMAND_NOT_FOUND": "The command could not be found.",
+        "AUTH_SESSION_CAP_REACHED": "It has been a while — please sign in again.",
+        "AUTH_ACCOUNT_SUSPENDED": "This account is suspended. Please contact support.",
+        "AUTH_VENDOR_SUSPENDED": "This seller profile is inactive. Please contact support.",
+        "MAGIC_LINK_INVALID": "This sign-in link is no longer valid. Send the command to the bot again for a new one.",
+        "MAGIC_LINK_EXPIRED": "This sign-in link has expired. Send the command to the bot again for a new one.",
+        "MAGIC_CODE_INVALID": "That code did not work. Send the command to the bot again for a new one.",
+        "MAGIC_CODE_EXPIRED": "That code has expired. Send the command to the bot again for a new one.",
+        "MAGIC_ATTEMPTS_EXCEEDED": "Too many attempts. Wait a few minutes, then ask the bot for a new code.",
+        "MAGIC_CONTACT_UNVERIFIED": "Please share your own contact card, not someone else’s.",
+        "CONNECTION_CODE_INVALID": "That code did not work. Check what you typed, or send the command again for a new one.",
+        "CONNECTION_CODE_EXPIRED": "That code has expired. Send the command to the bot again for a new one.",
+        "CONNECTION_CODE_ATTEMPTS_EXCEEDED": "Too many attempts. Wait a few minutes before trying again.",
+        "MESSAGING_IDENTITY_ALREADY_LINKED": "That chat account is already connected to a different Wi-Mall account. Disconnect it there first, or contact support.",
+        "MESSAGING_CONNECTION_NOT_FOUND": "That channel is not connected."
     },
     "errorPage": {
         "generic": {
@@ -783,7 +783,7 @@
         },
         "pricing": {
             "title": "We couldn't load the plans",
-            "body": "Our prices come straight from WiMall's servers, and we can't reach them right now. Nothing is wrong with your account — try again in a moment."
+            "body": "Our prices come straight from Wi-Mall's servers, and we can't reach them right now. Nothing is wrong with your account — try again in a moment."
         },
         "blog": {
             "title": "The blog isn't loading",
@@ -829,7 +829,11 @@
             "pricing": "Pricing",
             "faq": "FAQ",
             "cameroon": "Cameroon",
-            "blog": "Blog"
+            "blog": "Blog",
+            "customers": "For customers",
+            "about": "About",
+            "careers": "Careers",
+            "contact": "Contact"
         },
         "common": {
             "breadcrumbLabel": "Breadcrumb",
@@ -844,8 +848,9 @@
             "keepReading": "Keep reading",
             "commonQuestions": "Common questions",
             "allQuestions": "See all the questions",
-            "currencyNote": "Prices are in FCFA (XAF), the currency of the market WiMall serves first.",
-            "faqShort": "FAQ"
+            "currencyNote": "Prices are in FCFA (XAF), the currency of the market Wi-Mall serves first.",
+            "faqShort": "FAQ",
+            "openFormNewTab": "Open the form in a new tab"
         },
         "plans": {
             "free": "Free",
@@ -875,13 +880,13 @@
             "west": "West"
         },
         "pricing": {
-            "metaTitle": "WiMall pricing — start free, pay when it pays you back",
-            "metaDescription": "What WiMall costs for vendors, delivery agencies and delivery agents. Free tiers that never expire, vendor plans from 5,000 FCFA per 30 days, commission from 7% down to 3%, and nothing that renews itself.",
+            "metaTitle": "Wi-Mall pricing — start free, pay when it pays you back",
+            "metaDescription": "What Wi-Mall costs for vendors, delivery agencies and delivery agents. Free tiers that never expire, vendor plans from 5,000 FCFA per 30 days, commission from 7% down to 3%, and nothing that renews itself.",
             "eyebrow": "Plans, commission and credits",
             "title": "Start at zero. Pay when it pays you back.",
             "lead": "Vendors, delivery agencies and delivery agents each get a free tier that never expires. Paid plans raise your limits and, for vendors, cut the commission on every order. No setup fee, no contract, and nothing renews itself.",
             "howWeEarn": {
-                "title": "How WiMall makes money",
+                "title": "How Wi-Mall makes money",
                 "lead": "Worth stating plainly, because it is what decides whether this arrangement works for you.",
                 "commission": {
                     "title": "A commission on each paid order",
@@ -897,9 +902,9 @@
                 },
                 "delivery": {
                     "title": "Nothing out of the delivery fee",
-                    "body": "The delivery fee is set by the delivery agency and divided between that agency and the agent who ran the delivery. WiMall takes no share of it."
+                    "body": "The delivery fee is set by the delivery agency and divided between that agency and the agent who ran the delivery. Wi-Mall takes no share of it."
                 },
-                "customerNote": "Customers pay for what they buy and nothing else. There is no fee, no subscription and no account charge for shopping on WiMall."
+                "customerNote": "Customers pay for what they buy and nothing else. There is no fee, no subscription and no account charge for shopping on Wi-Mall."
             },
             "vendor": {
                 "title": "Vendor plans",
@@ -918,7 +923,7 @@
             },
             "credits": {
                 "title": "What credits are",
-                "p1": "Two things on WiMall cost real money every time they happen, so they are metered rather than bundled: indexing one of your products so the AI assistant can find and recommend it, and sending one billable WhatsApp template message to a customer. Each costs 1 credit.",
+                "p1": "Two things on Wi-Mall cost real money every time they happen, so they are metered rather than bundled: indexing one of your products so the AI assistant can find and recommend it, and sending one billable WhatsApp template message to a customer. Each costs 1 credit.",
                 "p2": "Activating a plan grants its allowance once — 50 credits on the vendor free tier, 4,500 on Business. If you use it all, top up in packs. The larger the pack, the less each credit costs.",
                 "packsTitle": "Credit packs",
                 "packsCaption": "Credit top-up packs and their prices",
@@ -928,7 +933,7 @@
             },
             "payment": {
                 "title": "How paying works",
-                "p1": "Plans and credit packs are paid through NotchPay or MyCoolPay for mobile money, or Stripe for cards. Nothing is stored and charged again later — there is no recurring subscription anywhere on WiMall.",
+                "p1": "Plans and credit packs are paid through NotchPay or MyCoolPay for mobile money, or Stripe for cards. Nothing is stored and charged again later — there is no recurring subscription anywhere on Wi-Mall.",
                 "p2": "A paid term simply runs out after 30 days. If you bought another plan while one was still running, it was queued and takes over at that moment; if you did not, you drop back to your role's free tier and carry on working. You can hold one active plan and one queued plan at a time.",
                 "p3": "If a card payment is reversed after the fact, the plan it bought rolls back to the free tier and any credits it granted are taken back — which can leave a balance negative until it is topped up."
             },
@@ -941,16 +946,16 @@
             "unsoldTierNote": "Tiers marked as not on sale are listed at their catalogue price but cannot be bought here today. The free tier is always available."
         },
         "vendors": {
-            "metaTitle": "Sell on WhatsApp without a website — WiMall for vendors",
-            "metaDescription": "Upload your products once and let WiMall's AI assistant sell them inside WhatsApp. No storefront, no app, no developer. Free tier: 15 products, 7% commission, no expiry.",
-            "eyebrow": "Selling on WiMall",
+            "metaTitle": "Sell on WhatsApp without a website — Wi-Mall for vendors",
+            "metaDescription": "Upload your products once and let Wi-Mall's AI assistant sell them inside WhatsApp. No storefront, no app, no developer. Free tier: 15 products, 7% commission, no expiry.",
+            "eyebrow": "Selling on Wi-Mall",
             "title": "Sell on WhatsApp without a website",
-            "lead": "You do not need a storefront, a domain or a developer. Upload your products once, and WiMall's AI assistant sells them inside the WhatsApp conversations your customers are already having.",
+            "lead": "You do not need a storefront, a domain or a developer. Upload your products once, and Wi-Mall's AI assistant sells them inside the WhatsApp conversations your customers are already having.",
             "problem": {
                 "title": "You already sell on WhatsApp. That is the problem.",
                 "p1": "The conversation itself works. People trust it, it costs almost nothing in data to open, and nobody has to create an account to talk to you. What does not work is that you are the catalogue, the salesperson and the dispatcher — and all three only exist while your phone is in your hand.",
                 "p2": "So the same five questions come back all day. Is it still available. How much. What colours. Do you deliver to my area. Can I pay when it arrives. Miss an hour and you have missed the sale, because the customer has already asked somebody else.",
-                "p3": "WiMall does not move you off WhatsApp. It puts a real catalogue and an assistant behind the chat, so those five questions get answered at two in the morning the same way they would be answered at two in the afternoon."
+                "p3": "Wi-Mall does not move you off WhatsApp. It puts a real catalogue and an assistant behind the chat, so those five questions get answered at two in the morning the same way they would be answered at two in the afternoon."
             },
             "how": {
                 "title": "How it works",
@@ -1000,16 +1005,16 @@
             }
         },
         "agencies": {
-            "metaTitle": "Delivery agencies on WiMall — orders that arrive paid and addressed",
-            "metaDescription": "Run a delivery business on WiMall: paid orders dispatched to your agents, coverage by region, live tracking, cash-on-delivery reconciliation. You set the delivery fee and WiMall takes none of it.",
+            "metaTitle": "Delivery agencies on Wi-Mall — orders that arrive paid and addressed",
+            "metaDescription": "Run a delivery business on Wi-Mall: paid orders dispatched to your agents, coverage by region, live tracking, cash-on-delivery reconciliation. You set the delivery fee and Wi-Mall takes none of it.",
             "eyebrow": "Delivery operations",
             "title": "Orders that arrive already paid and already addressed",
-            "lead": "WiMall hands your agency real shipments with a destination and a fee attached. You dispatch them to your agents, your agents deliver, and the delivery fee is yours to split — WiMall takes no part of it.",
+            "lead": "Wi-Mall hands your agency real shipments with a destination and a fee attached. You dispatch them to your agents, your agents deliver, and the delivery fee is yours to split — Wi-Mall takes no part of it.",
             "money": {
                 "title": "Where an agency's money comes from",
                 "p1": "You set your own delivery pricing in your agency policy. When an order is paid, the fee for each of its shipments is reserved against that shipment and taken out of the vendor's side of the order — not added on top of what you are owed.",
                 "p2": "When a delivery finishes, that reserved fee is divided between your agency and the agent who ran it, following the contract you agreed with that agent: either a percentage of the fee, or a flat amount per delivery. Whatever is left after the agent's cut is your agency's.",
-                "p3": "WiMall's commission comes out of the vendor's share of the order total. It never touches the delivery fee. If a shipment has no agent contract attached, the agency keeps the whole fee.",
+                "p3": "Wi-Mall's commission comes out of the vendor's share of the order total. It never touches the delivery fee. If a shipment has no agent contract attached, the agency keeps the whole fee.",
                 "codNote": "Cash on delivery is handled as its own flow: the agent collects, the collection is recorded against the agency, and the same split runs on the cash instead of on the card payment."
             },
             "run": {
@@ -1047,9 +1052,9 @@
             }
         },
         "agents": {
-            "metaTitle": "Become a delivery agent — WiMall",
-            "metaDescription": "Deliver for WiMall on your own schedule. Sign up independently, join one agency or several, see what a run pays before you accept it, and get your share of every delivery fee.",
-            "eyebrow": "Delivering on WiMall",
+            "metaTitle": "Become a delivery agent — Wi-Mall",
+            "metaDescription": "Deliver for Wi-Mall on your own schedule. Sign up independently, join one agency or several, see what a run pays before you accept it, and get your share of every delivery fee.",
+            "eyebrow": "Delivering on Wi-Mall",
             "title": "Deliver on your own terms. See the pay before you accept.",
             "lead": "Sign up as a delivery agent, join an agency — or several — and start receiving delivery offers on your phone. Every offer tells you what the run pays before you decide.",
             "how": {
@@ -1071,7 +1076,7 @@
                 "title": "What you earn",
                 "p1": "Your earnings come out of the delivery fee on each shipment. How much of it is yours is set in the contract you hold with that agency: either a percentage of the fee, or a flat amount per delivery.",
                 "p2": "Because it is per contract, two agencies can pay differently for the same kind of run — and you can see what a specific job pays before accepting it rather than after. A delivery that ends in a return is settled under its own rule rather than being written off.",
-                "p3": "WiMall takes nothing from the delivery fee. The whole of it is divided between your agency and you."
+                "p3": "Wi-Mall takes nothing from the delivery fee. The whole of it is divided between your agency and you."
             },
             "capacity": {
                 "title": "How many at once",
@@ -1092,21 +1097,99 @@
                 "finePrint": "Free tier: 20 deliveries held at once. No monthly quota."
             }
         },
+        "customers": {
+            "metaTitle": "Shop on WhatsApp — Wi-Mall for customers",
+            "metaDescription": "Buy from local vendors inside a WhatsApp conversation. No app to install and no account to create: describe what you want, get real products at real prices, pay by mobile money, card or cash on delivery, and have it brought to your door.",
+            "eyebrow": "Shopping on Wi-Mall",
+            "title": "Shopping is a conversation. There is nothing to install.",
+            "lead": "Open WhatsApp, say what you are looking for, and an assistant answers with real products from real vendors. You order and pay in the same thread, and a delivery agent brings it to you.",
+            "problem": {
+                "title": "Why buying works this way",
+                "p1": "Most of the shops worth buying from here have no website. They have a WhatsApp number, a few photos and someone answering messages between other jobs. Buying means asking whether an item is still available, waiting for the reply, agreeing a price, and then arranging delivery in a separate conversation.",
+                "p2": "The usual fix is an app: a download, an account, a password and a card form — a lot of steps to buy a phone charger, over a connection that may not survive them.",
+                "p3": "Wi-Mall keeps the conversation and takes out the waiting. Behind the chat is a real catalogue: vendors keep their stock and their prices current in their own dashboard, so what the assistant quotes you is what the vendor is selling today."
+            },
+            "how": {
+                "title": "How buying works",
+                "lead": "Six steps, all of them inside one chat.",
+                "s1Title": "Open the chat",
+                "s1Body": "Tap the WhatsApp link, or save the Wi-Mall number and message it. There is no sign-up screen — the number you are writing from is your identity.",
+                "s2Title": "Say what you want",
+                "s2Body": "Write it the way you would say it to a friend: “wireless earbuds under 15,000 FCFA”, “a school bag for a six-year-old”. The assistant reads your language and replies in it.",
+                "s3Title": "Look at what comes back",
+                "s3Body": "You get real products with photos, prices and whether they are in stock. Ask about a specific one — size, colour, battery, warranty — and the answer is about that product, not a brochure.",
+                "s4Title": "Confirm the order",
+                "s4Body": "Once you have chosen, the order is created in the conversation. You confirm the quantity and the address, and you see the delivery fee before anything is charged.",
+                "s5Title": "Pay the way you already pay",
+                "s5Body": "Mobile money, card, or cash handed to the agent at the door where the vendor and the agency accept it.",
+                "s6Title": "Follow it to your door",
+                "s6Body": "The vendor packs it, a delivery agency takes it on and one of its agents brings it to you. The updates arrive in the thread you ordered in."
+            },
+            "ask": {
+                "title": "What you can ask for",
+                "lead": "The assistant is there to be talked to, not searched. Everything on this list is a normal message to send it.",
+                "i1": "Describe a product instead of knowing what it is called",
+                "i2": "Set a budget and only be shown what fits inside it",
+                "i3": "Ask about one item — size, colour, condition, what is in the box",
+                "i4": "Compare two of the products it has just shown you",
+                "i5": "Ask what delivery to your area costs and how long it takes",
+                "i6": "Change the quantity or the address before you confirm",
+                "i7": "Ask where an order has got to after you have paid for it",
+                "i8": "Write in French, English, Portuguese, Spanish or Arabic"
+            },
+            "pay": {
+                "title": "How you pay",
+                "lead": "All three run through the same conversation. Which ones a given order offers depends on the vendor and, for cash, on the agency delivering it.",
+                "mobileTitle": "Mobile money",
+                "mobileBody": "MTN, Orange and Moov, through NotchPay or MyCoolPay. You approve it on your own phone, as you would any other transfer.",
+                "cardTitle": "Card",
+                "cardBody": "Visa and Mastercard through Stripe, for anyone who would rather pay that way or is paying from abroad.",
+                "codTitle": "Cash on delivery",
+                "codBody": "Hand the money to the agent at the door. Here that is a first-class way to pay rather than an exception, and the collection is recorded against the agent who took it."
+            },
+            "delivery": {
+                "title": "Getting it to you",
+                "p1": "Deliveries are handled by local agencies and the agents who work with them, not by Wi-Mall itself. An agency registers the regions it covers, so whether an order can reach you depends on an agency working where you are.",
+                "p2": "The delivery fee is set by the vendor and shown to you before you confirm, not added at the end. Where a vendor delivers free, you see that in the same place.",
+                "p3": "Cameroon is the first market. All ten regions can be covered, and the cities with the most vendors and agencies today are Douala, Yaoundé, Bafoussam, Bamenda and Garoua.",
+                "link": "See how Wi-Mall works in Cameroon"
+            },
+            "cost": {
+                "title": "What it costs you",
+                "p1": "Nothing. There is no platform fee for buying, no subscription and no account to pay for. You pay the vendor for the product, and the delivery fee where one applies.",
+                "p2": "The money comes from the selling side instead: vendors pay for their plan and a commission on what they sell. It is worth knowing, because it is the reason nobody is trying to charge you for the conversation."
+            },
+            "need": {
+                "title": "What you need",
+                "lead": "Almost certainly all of it already.",
+                "i1": "A phone with WhatsApp — the one you use every day",
+                "i2": "An address, or a landmark an agent can actually find",
+                "i3": "Mobile money, a card, or cash for the agent at the door",
+                "i4": "Nothing else: no app to install, no account, no password"
+            },
+            "faqTitle": "Questions customers ask",
+            "sellToo": "Selling runs the other way round but the same way: your catalogue lives in the chat, and you never build a storefront.",
+            "cta": {
+                "title": "Your next order starts with a message",
+                "body": "Open the conversation, describe what you need, and see what comes back. Nothing to install, nothing to sign up for, and no obligation to buy what you are shown.",
+                "finePrint": "Free for customers. You pay the vendor for the product and the delivery fee where it applies."
+            }
+        },
         "faq": {
-            "metaTitle": "WiMall FAQ — selling, delivering and paying on WhatsApp",
-            "metaDescription": "Straight answers about WiMall: how buying on WhatsApp works, what selling costs, how delivery agencies and agents are paid, which payment methods work, and where the platform operates.",
+            "metaTitle": "Wi-Mall FAQ — selling, delivering and paying on WhatsApp",
+            "metaDescription": "Straight answers about Wi-Mall: how buying on WhatsApp works, what selling costs, how delivery agencies and agents are paid, which payment methods work, and where the platform operates.",
             "eyebrow": "Questions and answers",
             "title": "Questions, answered plainly",
             "lead": "If something here is out of date or missing, the honest answer is usually in the product itself — but these are the questions people actually ask before they sign up.",
             "groups": {
-                "general": "About WiMall",
-                "selling": "Selling on WiMall",
-                "delivering": "Delivering on WiMall",
+                "general": "About Wi-Mall",
+                "selling": "Selling on Wi-Mall",
+                "delivering": "Delivering on Wi-Mall",
                 "money": "Money and payments"
             },
             "q": {
-                "whatIsWimall": {
-                    "q": "What is WiMall?",
+                "whatIsWiMall": {
+                    "q": "What is Wi-Mall?",
                     "a": "A commerce platform that runs inside WhatsApp. Vendors upload a catalogue; customers chat with an AI assistant that understands what they are looking for, recommends products and creates the order in the conversation; delivery agencies and their agents deliver it. Nobody involved needs a website or an app."
                 },
                 "howShopping": {
@@ -1118,15 +1201,15 @@
                     "a": "Not as a customer. Buying happens in WhatsApp, which you already have. Vendors, delivery agencies and agents do have accounts, because they need dashboards — but customers do not."
                 },
                 "whereAvailable": {
-                    "q": "Where does WiMall operate?",
+                    "q": "Where does Wi-Mall operate?",
                     "a": "Cameroon first. All ten regions are available for a delivery agency to register coverage in, and delivery in any given place depends on an agency covering that region. Prices are in FCFA and the platform is built around the payment methods used there."
                 },
                 "languages": {
-                    "q": "What languages does WiMall work in?",
+                    "q": "What languages does Wi-Mall work in?",
                     "a": "The site and the product are in French, English, Portuguese, Spanish and Arabic, with right-to-left layout for Arabic. For Cameroon the two that matter most are French and English, and the assistant answers a customer in the language they wrote in."
                 },
                 "shopperCost": {
-                    "q": "Does it cost anything to shop on WiMall?",
+                    "q": "Does it cost anything to shop on Wi-Mall?",
                     "a": "No. Customers pay for what they buy and for delivery where the vendor charges it. There is no platform fee, no subscription and no account charge on the buying side."
                 },
                 "vendorStart": {
@@ -1135,7 +1218,7 @@
                 },
                 "vendorWebsite": {
                     "q": "Do I need a website or an online shop?",
-                    "a": "No, and that is the point. Your catalogue lives on WiMall and is sold through the WhatsApp conversation. There is no storefront to design, no domain to buy and no developer to pay."
+                    "a": "No, and that is the point. Your catalogue lives on Wi-Mall and is sold through the WhatsApp conversation. There is no storefront to design, no domain to buy and no developer to pay."
                 },
                 "vendorCost": {
                     "q": "What does selling cost?",
@@ -1159,7 +1242,7 @@
                 },
                 "agencyEarn": {
                     "q": "How does a delivery agency make money?",
-                    "a": "From the delivery fee, which you set yourself in your agency policy. It is reserved against each shipment when the order is paid and divided when the delivery completes: the agent takes the cut their contract specifies, and your agency keeps the rest. WiMall takes no share of the delivery fee."
+                    "a": "From the delivery fee, which you set yourself in your agency policy. It is reserved against each shipment when the order is paid and divided when the delivery completes: the agent takes the cut their contract specifies, and your agency keeps the rest. Wi-Mall takes no share of the delivery fee."
                 },
                 "agencyCoverage": {
                     "q": "How do I choose where my agency delivers?",
@@ -1195,7 +1278,7 @@
                 },
                 "renewal": {
                     "q": "Do plans renew automatically?",
-                    "a": "No. There is no stored card and no recurring charge anywhere on WiMall. A paid plan runs its 30 days and then either hands over to a plan you queued while it was running, or drops you back to your role's free tier."
+                    "a": "No. There is no stored card and no recurring charge anywhere on Wi-Mall. A paid plan runs its 30 days and then either hands over to a plan you queued while it was running, or drops you back to your role's free tier."
                 },
                 "downgrade": {
                     "q": "What happens if I stop paying?",
@@ -1204,16 +1287,16 @@
             },
             "cta": {
                 "title": "Still deciding?",
-                "body": "Every role has a free tier that never expires, so the cheapest way to answer a question about WiMall is usually to try it.",
+                "body": "Every role has a free tier that never expires, so the cheapest way to answer a question about Wi-Mall is usually to try it.",
                 "finePrint": "No payment method required to start."
             }
         },
         "country": {
-            "metaTitle": "WiMall in Cameroon — WhatsApp commerce in FCFA",
-            "metaDescription": "WiMall is built for Cameroon first: prices in FCFA, French and English, MTN and Orange mobile money, cash on delivery, and delivery coverage across all ten regions.",
+            "metaTitle": "Wi-Mall in Cameroon — WhatsApp commerce in FCFA",
+            "metaDescription": "Wi-Mall is built for Cameroon first: prices in FCFA, French and English, MTN and Orange mobile money, cash on delivery, and delivery coverage across all ten regions.",
             "eyebrow": "Where we operate",
             "title": "Built for Cameroon first",
-            "lead": "Not a Western storefront translated into French. WiMall prices in FCFA, speaks French and English, settles through the mobile money people actually use, and organises delivery by region — because that is how the country is organised.",
+            "lead": "Not a Western storefront translated into French. Wi-Mall prices in FCFA, speaks French and English, settles through the mobile money people actually use, and organises delivery by region — because that is how the country is organised.",
             "why": {
                 "title": "Why here first",
                 "p1": "Commerce in Cameroon already happens in WhatsApp. A seller posts to a status, a buyer replies, they negotiate in the thread, and somebody arranges a moto. None of that needs to be replaced — it needs a catalogue behind it, a way to take payment that both sides trust, and a delivery leg that does not depend on knowing a guy.",
@@ -1225,7 +1308,7 @@
                 "lead": "Delivery coverage follows the agencies on the platform. An agency registers a country and the regions it covers, and all ten of Cameroon's regions are available to register.",
                 "regionLabel": "Region",
                 "capitalLabel": "Regional capital",
-                "note": "A region with no agency covering it yet is not a region WiMall refuses — it is one where an agency has not registered. If you run deliveries there, that is an opening rather than an obstacle."
+                "note": "A region with no agency covering it yet is not a region Wi-Mall refuses — it is one where an agency has not registered. If you run deliveries there, that is an opening rather than an obstacle."
             },
             "payments": {
                 "title": "Paying, the way it is actually done here",
@@ -1250,7 +1333,7 @@
             }
         },
         "city": {
-            "metaTitlePattern": "Sell on WhatsApp in {city} — WiMall",
+            "metaTitlePattern": "Sell on WhatsApp in {city} — Wi-Mall",
             "metaDescriptionPattern": "How WhatsApp commerce and delivery work in {city}, {region}: what selling costs, how orders reach a delivery agency, and how agents in {city} get paid.",
             "eyebrowPattern": "{city}, Cameroon",
             "titlePattern": "Selling and delivering in {city}",
@@ -1289,7 +1372,7 @@
             "bamenda": {
                 "lead": "Bamenda is the largest Anglophone market in the country, and it is served far worse than its size deserves by platforms that launch in French only.",
                 "context": "Capital of the Northwest region, high in the Grassfields, with commerce centred on the Bamenda Main Market and Nkwen. It anchors a wider English-speaking trade area that reaches Kumbo, Bali and Ndop.",
-                "angle": "Language is the practical difference here. WiMall's assistant answers in the language the customer writes in, so a seller in Bamenda is not asking their customers to switch into French to buy something."
+                "angle": "Language is the practical difference here. Wi-Mall's assistant answers in the language the customer writes in, so a seller in Bamenda is not asking their customers to switch into French to buy something."
             },
             "garoua": {
                 "lead": "Garoua trades north and across borders as much as it trades with the south, and the distances involved make organised delivery worth more, not less.",
@@ -1298,7 +1381,7 @@
             }
         },
         "blog": {
-            "metaTitle": "The WiMall blog — selling on WhatsApp in Cameroon",
+            "metaTitle": "The Wi-Mall blog — selling on WhatsApp in Cameroon",
             "metaDescription": "Practical guides on selling, getting paid and delivering over WhatsApp — written for vendors, delivery agencies and agents in Cameroon.",
             "eyebrow": "Blog",
             "title": "Guides for selling on WhatsApp",
@@ -1335,7 +1418,7 @@
                 "guides": "Product guides"
             },
             "category": {
-                "metaTitlePattern": "{category} — WiMall blog",
+                "metaTitlePattern": "{category} — Wi-Mall blog",
                 "metaDescriptionPattern": "Articles on {category}, written for vendors, delivery agencies and agents in Cameroon.",
                 "titlePattern": "{category}",
                 "leads": {
@@ -1351,6 +1434,253 @@
                 "body": "A catalog, a way to get paid and a delivery agency. That is the whole setup.",
                 "finePrint": "Free tier available. No card required."
             }
+        },
+        "about": {
+            "metaTitle": "About Wi-Mall — built for how Cameroon already sells",
+            "metaDescription": "Wi-Mall is WhatsApp-first commerce for Cameroon: a real catalogue, an assistant that sells inside the chat, and a delivery network of agencies and agents. Why we started, what we believe, and where we actually are.",
+            "eyebrow": "About Wi-Mall",
+            "title": "Commerce here already runs on WhatsApp. We built the rest.",
+            "lead": "Not a Western storefront translated into French. Wi-Mall is the catalogue, the assistant and the delivery leg that were missing from a market that already works.",
+            "why": {
+                "title": "Why we started",
+                "p1": "Open WhatsApp in Douala on any weekday and you will find a market. A seller posts three photos to a status. A buyer replies. They agree a price in the thread, and somebody arranges a moto. It works, and it has worked for years.",
+                "p2": "What does not work is everything around it. The seller is the catalogue, the salesperson and the dispatcher at once, and all three only exist while the phone is in their hand. So the same five questions come back all day. Is it still available. How much. What colours. Do you deliver to my area. Can I pay when it arrives.",
+                "p3": "The usual answer is an app: a download, an account, a password and a card form. That is a lot of steps to buy a phone charger, over a connection that may not survive them — and it asks a working market to move somewhere it never asked to go.",
+                "p4": "So we did not build a place to move to. We built what was missing behind the chat: a real catalogue, an assistant that answers at two in the morning the same way it would at two in the afternoon, a way to take payment both sides trust, and a delivery leg that does not depend on knowing a guy."
+            },
+            "how": {
+                "title": "What Wi-Mall actually does",
+                "lead": "Six steps, and a vendor is only involved in the first and the last.",
+                "s1Title": "Someone starts a chat",
+                "s1Body": "No download, no account, no password. A WhatsApp message is the whole entry.",
+                "s2Title": "The assistant works out what they want",
+                "s2Body": "It reads intent rather than keywords, and answers in the language the customer wrote in.",
+                "s3Title": "An order is created in the thread",
+                "s3Body": "Confirmed and paid without leaving the conversation.",
+                "s4Title": "An agency picks it up",
+                "s4Body": "It arrives already paid and already addressed, with the delivery fee attached.",
+                "s5Title": "An agent delivers it",
+                "s5Body": "They see the pay before accepting. Tracking is live and confirmation is real.",
+                "s6Title": "Everyone is paid",
+                "s6Body": "Vendor, agency and agent, out of the same completed transaction."
+            },
+            "here": {
+                "title": "Why Cameroon first",
+                "lead": "Because the constraints here are the design brief, not an afterthought.",
+                "p1": "Wi-Mall prices in FCFA, speaks French and English, settles through the mobile money people actually use, and organises delivery by region — because that is how the country is organised.",
+                "p2": "Mobile money through MTN, Orange and Moov. Cards for whoever has one. And cash on delivery as a first-class way to pay rather than an awkward exception: collected at the door by the agent, reconciled with their agency, and split exactly the way a card payment would be.",
+                "p3": "It is built for entry-level handsets, expensive data and networks that drop, because here that is the normal case rather than the edge case. All ten regions are in scope. A region with no agency covering it yet is not one Wi-Mall refuses — it is an opening.",
+                "link": "See how Wi-Mall works across Cameroon"
+            },
+            "foursides": {
+                "title": "Every order pays four sides",
+                "lead": "One transaction, four people who each did part of the work.",
+                "vendorTitle": "Vendor",
+                "vendorBody": "Sells without building a storefront, a website or an audience. The catalogue and the assistant do the repeating.",
+                "agencyTitle": "Agency",
+                "agencyBody": "Receives real shipments with a destination and a fee attached, and splits that fee with its agents.",
+                "agentTitle": "Agent",
+                "agentBody": "Sees the pay before accepting a delivery, and keeps their share of the fee.",
+                "customerTitle": "Customer",
+                "customerBody": "Pays for what they buy and nothing else. The conversation itself costs nothing.",
+                "note": "Wi-Mall takes nothing out of the delivery fee. The platform earns a commission on paid orders, and sells optional plans and credits to the selling side. That is the reason nobody is trying to charge a customer for a chat."
+            },
+            "beliefs": {
+                "title": "What we believe",
+                "lead": "Five things that settle arguments here.",
+                "meta": "Principle {n}",
+                "b1Title": "Meet people inside WhatsApp",
+                "b1Body": "No storefront, app or account should stand between someone and a purchase.",
+                "b2Title": "The assistant is the salesperson",
+                "b2Body": "Discovery, recommendation and ordering happen through conversation, not navigation.",
+                "b3Title": "Every transaction pays all four sides",
+                "b3Body": "Vendor, agency, agent and platform value has to move together, or the arrangement is not working.",
+                "b4Title": "Africa-first engineering",
+                "b4Body": "Mobile-dominant, entry-level devices and unreliable networks are the case we design for, not the one we apologise for.",
+                "b5Title": "Do not overstate",
+                "b5Body": "We are early. Real proof gets presented as proof, and targets get presented as targets."
+            },
+            "build": {
+                "title": "How we build",
+                "lead": "Some of this is unusual enough to be worth stating plainly.",
+                "i1": "The build fails if our own marketing copy contradicts the live price list. Prices live in one catalogue, and a page quoting a number that has since changed stops the next deploy and names the line to fix — rather than quietly publishing a page that lies about the price.",
+                "i2": "No invented numbers in structured data. There are no ratings or review counts in our schema markup, because there is no review data yet. The scale figures on this site are first-year targets, and they are labelled as targets.",
+                "i3": "Five languages, including a right-to-left one, from the first line rather than as a later pass.",
+                "i4": "Written for the network people actually have. The words ship inside the HTML, animation is optional, and nothing that matters waits on JavaScript that may never arrive.",
+                "note": "None of that is heroic. It is just what it takes for a page to still be true six months after somebody wrote it."
+            },
+            "now": {
+                "title": "Where we are now",
+                "p1": "Early. Real, but early: there are orders and there are users, and there are not many of either yet. We would rather write that down than publish a number we invented.",
+                "p2": "Which is why there are no testimonials on this site, no customer logos and no press quotes. When those exist they will appear here, and they will be real.",
+                "p3": "What there is: a working platform, a free tier that is not a trial, and room for the vendors who arrive first to shape what gets built next."
+            },
+            "cta": {
+                "title": "Come and be early",
+                "body": "The free tier costs nothing and does not expire. If you already sell on WhatsApp, you have done the hard part.",
+                "finePrint": "No card required, and nothing recurring.",
+                "secondary": "Talk to us"
+            }
+        },
+        "careers": {
+            "metaTitle": "Careers at Wi-Mall",
+            "metaDescription": "Wi-Mall is not hiring right now. These are the roles we will open first — engineering, operations and writing — and how to get on the list before they do.",
+            "eyebrow": "Careers",
+            "title": "Small team, unusually large surface",
+            "leadClosed": "We are not hiring at the moment. These are the roles we will open first when that changes, and the form below is how you get on the list before they appear.",
+            "leadOpen": "These are the roles we are hiring for right now.",
+            "relatedBody": "The roles we will open first, and how to get on the list before they do.",
+            "why": {
+                "title": "What you would be working on",
+                "p1": "Wi-Mall is a WhatsApp-first commerce platform for Cameroon: an assistant that sells inside a chat, a real catalogue behind it, and a network of delivery agencies and agents that gets the thing to a door.",
+                "p2": "The surface is wider than the team. A modular TypeScript backend with its own command bus, a Next.js front end in five languages including a right-to-left one, a mobile app for delivery agents, a separate tracking service, and a payments layer that has to speak mobile money, cards and cash on delivery without treating any of them as the odd one out.",
+                "p3": "That is a lot for the number of people currently doing it. It is the honest pitch, and it is also the interesting part."
+            },
+            "how": {
+                "title": "How we work",
+                "lead": "Some of it is unusual. Better to know before you write than after.",
+                "i1": "Correctness is enforced by the build, not by good intentions. Marketing copy that contradicts the live price catalogue fails the deploy and names the line to fix.",
+                "i2": "We do not publish numbers we cannot stand behind. No invented review counts, no fabricated traction, and targets labelled as targets.",
+                "i3": "Africa-first is a constraint we actually honour: entry-level handsets, expensive data, networks that drop. If it only works on fast wifi, it does not work.",
+                "i4": "Comments explain why, not what. A decision that would read as a bug without context gets the context written next to it.",
+                "i5": "Five languages from the start, never as a later pass. Nothing ships English-only.",
+                "note": "If that reads as unnecessary rigour for an early product, this is probably not the right team — and that is a useful thing for both of us to find out early."
+            },
+            "roles": {
+                "title": "The roles",
+                "leadClosed": "None of these are open yet. They are listed so you can see the shape of the team we are building, and tell us which one is yours.",
+                "leadOpen": "Open now. Apply through the form below.",
+                "openBadge": "Open",
+                "closedBadge": "Not open yet",
+                "location": "Remote, Cameroon-first",
+                "frontend": {
+                    "title": "Frontend engineer (Next.js)",
+                    "body": "The marketing site, the shop and the dashboards. React and TypeScript on the App Router, five locales, and a hard rule that the words ship in the HTML."
+                },
+                "backend": {
+                    "title": "Backend engineer (Node, TypeScript)",
+                    "body": "The modular monolith: orders, payments, earnings, shipments. MongoDB with real transactions, Redis, and a task-oriented API."
+                },
+                "assistant": {
+                    "title": "Engineer, conversational commerce",
+                    "body": "The WhatsApp assistant and the product indexing behind its recommendations. Turning what somebody typed into a cart they recognise."
+                },
+                "mobile": {
+                    "title": "Mobile engineer (delivery app)",
+                    "body": "The app agents use in traffic, on a cheap handset, with one hand. Offline behaviour is the feature, not the polish."
+                },
+                "agencyOps": {
+                    "title": "Agency partnerships, Cameroon",
+                    "body": "Signing and supporting the delivery agencies that cover each region. Field work, not a desk job."
+                },
+                "content": {
+                    "title": "Writer, English and French",
+                    "body": "Articles, help copy and product prose in both working languages. Plain sentences that survive translation."
+                }
+            },
+            "teams": {
+                "engineering": "Engineering",
+                "product": "Product",
+                "operations": "Operations",
+                "growth": "Growth"
+            },
+            "commitments": {
+                "fullTime": "Full time",
+                "contract": "Contract",
+                "internship": "Internship"
+            },
+            "form": {
+                "titleClosed": "Get on the list",
+                "titleOpen": "Apply",
+                "leadClosed": "Tell us what you do and which of these is yours. When one opens, this is the list we go to first.",
+                "leadOpen": "Send it through here.",
+                "frameTitle": "Wi-Mall careers form",
+                "note": "This form is hosted by Google, which sets its own cookies while it is open. It is currently shared with our contact form, so say which role you mean."
+            },
+            "elsewhere": {
+                "title": "Not an employee, but still work",
+                "p1": "Most of the people earning on Wi-Mall do not work for Wi-Mall. Delivery agencies run their own teams and keep the delivery fee. Agents choose which jobs to accept and see the pay first. Vendors sell their own stock on their own terms.",
+                "p2": "If what you actually want is to earn on the platform rather than join the company, that route is open today and does not depend on us hiring.",
+                "link": "Register a delivery agency"
+            },
+            "cta": {
+                "title": "Tell us who you are",
+                "body": "We are not hiring today, but the list is real, and it is where we start when that changes.",
+                "finePrint": "One form, five minutes.",
+                "primary": "Get in touch",
+                "secondary": "Read about Wi-Mall"
+            }
+        },
+        "contact": {
+            "metaTitle": "Contact Wi-Mall",
+            "metaDescription": "Reach the Wi-Mall team — about selling, delivering, an order, or anything else. Send a message, or check the FAQ first for the fast answer.",
+            "eyebrow": "Contact",
+            "title": "Tell us what you need",
+            "lead": "Selling, delivering, buying, or simply curious — this reaches us.",
+            "relatedBody": "Reach the team, or find the answer faster in the FAQ.",
+            "before": {
+                "title": "The fast answer first",
+                "lead": "Most questions already have an answer written down.",
+                "p1": "If yours is about what a plan costs, how commission works, when payouts land, or what happens to a delivery nobody accepts, the FAQ answers it now rather than in a day or two.",
+                "p2": "Worth a look before you write. If the answer is not there — or it is there and it is wrong — that is exactly what the form is for."
+            },
+            "form": {
+                "title": "Send us a message",
+                "lead": "One form for everything. It reaches the same place whatever you are asking about.",
+                "frameTitle": "Wi-Mall contact form",
+                "note": "This form is hosted by Google, which sets its own cookies while it is open."
+            },
+            "channels": {
+                "title": "Other ways to reach us",
+                "lead": "Slower than the form, but they work.",
+                "emailTitle": "Email",
+                "emailBody": "Write to {email}. One inbox, no routing rules to guess at.",
+                "whatsappTitle": "WhatsApp",
+                "whatsappBody": "Message the business line. Best for something short.",
+                "whatsappMessage": "Hello Wi-Mall — I have a question.",
+                "roleTitle": "Already using Wi-Mall",
+                "roleBody": "If you have an account, start from the support route in your dashboard: it arrives with your order context already attached."
+            }
         }
+    },
+    "forgotPassword": {
+        "title": "Reset your password",
+        "subtitle": "Enter your phone number or email and we'll send you a reset link.",
+        "identifierLabel": "Phone number or email",
+        "identifierPlaceholder": "+237 6 70 00 00 00",
+        "required": "Enter your phone number or email.",
+        "submit": "Send reset link",
+        "submitting": "Sending…",
+        "failed": "We couldn't send the link. Please check your connection and try again.",
+        "sentTitle": "Check your messages",
+        "sentBody": "If an account exists for that phone number or email, we've sent it a reset link. It expires shortly and can only be used once.",
+        "sentHint": "Nothing arrived? Check what you entered, then try again.",
+        "backToLogin": "Back to sign in"
+    },
+    "resetPassword": {
+        "title": "Choose a new password",
+        "subtitle": "Pick something you don't use anywhere else.",
+        "passwordLabel": "New password",
+        "confirmLabel": "Confirm new password",
+        "rules": "At least 8 characters, with an uppercase letter, a lowercase letter, a number and a symbol.",
+        "mismatch": "The two passwords do not match.",
+        "submit": "Set new password",
+        "submitting": "Saving…",
+        "failed": "We couldn't change your password. Please try again.",
+        "missingToken": "This link is missing its reset code. Request a new one.",
+        "requestNew": "Request a new link",
+        "successTitle": "Password changed",
+        "successBody": "You can now sign in with your new password. For your security, you have been signed out everywhere else.",
+        "signIn": "Sign in"
+    },
+    "magicLogin": {
+        "title": "Signing you in",
+        "subtitle": "One moment while we check your sign-in link.",
+        "redeeming": "Checking your link…",
+        "missingToken": "This link is missing its sign-in code. Open the one the bot sent you, or ask for a new one.",
+        "failedTitle": "That link did not work",
+        "failedBody": "Sign-in links last ten minutes and work once. Send the command to the bot again for a fresh one.",
+        "retryCta": "Get a new link",
+        "backToSignIn": "Back to sign in"
     }
 }

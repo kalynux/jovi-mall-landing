@@ -159,6 +159,7 @@ function BlockView({ block }: { block: Block }) {
             loading="lazy"
             decoding="async"
             className="w-full rounded-2xl border border-[var(--border)]"
+            
           />
           {block.caption && (
             <figcaption className="mt-3 text-xs text-[var(--text-muted)]">{block.caption}</figcaption>

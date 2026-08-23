@@ -11,6 +11,7 @@ import type {
   CustomerOrder,
   FulfillmentStatus,
   GroupPaymentStatus,
+  OrderGroup,
   OrderPaymentStatus,
 } from "./customer.types";
 
@@ -49,12 +50,23 @@ const PAYMENT: Record<OrderPaymentStatus, StatusChip> = {
   refunded: { label: "Refunded", tone: "neutral", icon: "undo-2" },
 };
 
-/** Group-level aggregate — a different, lower-case set from the per-order one. */
+/**
+ * Group-level aggregate — a different, lower-case set from the per-order one.
+ *
+ * All eight members the server's `aggregatePaymentStatus` can return are here.
+ * Four of them were missing and fell through to `UNKNOWN`, so a fully refunded
+ * group told the customer "Unknown" — the worst available answer to "what
+ * happened to my money", and one this map was in a position to answer exactly.
+ */
 const GROUP_PAYMENT: Record<GroupPaymentStatus, StatusChip> = {
   paid: { label: "Paid", tone: "success", icon: "circle-check-big" },
   awaiting_payment: { label: "Awaiting payment", tone: "warning", icon: "clock" },
   partially_paid: { label: "Partly paid", tone: "warning", icon: "wallet" },
   mixed: { label: "Mixed", tone: "neutral", icon: "circle-dot" },
+  refunded: { label: "Refunded", tone: "neutral", icon: "undo-2" },
+  failed: { label: "Payment failed", tone: "danger", icon: "circle-x" },
+  disputed: { label: "Disputed", tone: "danger", icon: "circle-alert" },
+  unknown: { label: "Unknown", tone: "neutral", icon: "circle-dot" },
 };
 
 const UNKNOWN: StatusChip = { label: "Unknown", tone: "neutral", icon: "circle-dot" };
@@ -65,6 +77,56 @@ export const groupPaymentChip = (s: GroupPaymentStatus): StatusChip => GROUP_PAY
 
 export const isCod = (order: CustomerOrder): boolean =>
   order.paymentMethod === "cash_on_delivery";
+
+/**
+ * The orders in a group that a payment would actually cover.
+ *
+ * Mirrors the `payable` filter in `payment-orchestrator.initiatePaymentForCart`
+ * exactly — `AWAITING_PAYMENT` or `pending`, nothing else. Two consequences
+ * worth knowing:
+ *
+ *   - **A cancelled order is excluded for free.** `cancelOrder` moves an unpaid
+ *     order to `failed`, so it drops out of this filter without the storefront
+ *     having to reason about fulfilment state at all.
+ *   - **A failed *payment* does not.** Nothing on the gateway path writes
+ *     `failed` to the order; only cancellation does. So a declined mobile-money
+ *     prompt leaves the order right here, payable, which is what makes retrying
+ *     possible in the first place.
+ */
+export const payableOrders = (group: OrderGroup): CustomerOrder[] =>
+  group.orders.filter(
+    (o) => o.paymentStatus === "AWAITING_PAYMENT" || o.paymentStatus === "pending",
+  );
+
+/**
+ * What paying this group would cost — the sum of the payable orders, not the
+ * group's own `totalAmount`.
+ *
+ * The server charges `payable.reduce(...)`, so on a group where one vendor's
+ * order was cancelled the two numbers differ, and `totalAmount` would be a
+ * button that promises one figure and takes another.
+ */
+export const payableTotal = (group: OrderGroup): number =>
+  payableOrders(group).reduce((sum, o) => sum + o.total, 0);
+
+/**
+ * Whether to offer "pay for this order".
+ *
+ * Same discipline as `canCancel`: mirror the server's gate so the button is
+ * never shown into a guaranteed failure. Both refusals below are ones the
+ * orchestrator makes for the whole group at once —
+ *
+ *   - any COD order in the group → `422 PAYMENT_ORDER_IS_COD`. The payment
+ *     method is chosen for the whole checkout, and cash is settled at handoff.
+ *   - nothing payable left → `409 PAYMENT_CART_NO_PAYABLE_ORDERS`.
+ *
+ * Note the COD test runs over *every* order rather than the payable ones, which
+ * is what the server does — a group is COD or it is not.
+ */
+export function canPayGroup(group: OrderGroup): boolean {
+  if (group.orders.some(isCod)) return false;
+  return payableOrders(group).length > 0;
+}
 
 /**
  * Whether to offer the customer-facing cancel action.

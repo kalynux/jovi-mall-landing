@@ -5,13 +5,12 @@ import { Store, Building2, Bike, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
-import { switchRoleAndGetAction, logoutAndRedirect } from "@/lib/auth/auth.service";
+import { switchRoleAndGetRedirect } from "@/lib/auth/auth.service";
 import { ApiError } from "@/lib/auth/auth.types";
-import type { Role, AuthRoleEntity } from "@/lib/auth/auth.types";
+import type { Role } from "@/lib/auth/auth.types";
 import { translateCode } from "@/lib/auth/error-translator";
 import { isNetworkError } from "@/lib/errors/is-network-error";
 import AuthCard from "@/components/auth/AuthCard";
-import { WhatsAppVerificationModal } from "@/components/auth/WhatsAppVerificationModal";
 import { cn } from "@/lib/utils";
 
 const ROLE_ICONS: Record<string, React.ElementType> = {
@@ -25,29 +24,10 @@ const ROLE_ICONS: Record<string, React.ElementType> = {
 export default function AuthMePage() {
   const t = useTranslations("authMe");
   const tErrors = useTranslations("errors");
-  const { user, role, role_entity, status } = useAuthGuard();
+  const { user, role, status } = useAuthGuard();
 
   const [switching, setSwitching] = useState<Role | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  // WA gate state — set when switchRoleAndGetAction returns type === "wa_gate"
-  const [waGateData, setWaGateData] = useState<{
-    roleEntity: AuthRoleEntity;
-    redirectUrl: string;
-  } | null>(null);
-
-  // ── WA gate overlay ───────────────────────────────────────────────────────
-  if (waGateData) {
-    return (
-      <WhatsAppVerificationModal
-        roleEntity={waGateData.roleEntity}
-        onSuccess={() => {
-          window.location.href = waGateData.redirectUrl;
-        }}
-        onLogout={logoutAndRedirect}
-      />
-    );
-  }
 
   if (status === "loading") {
     return (
@@ -76,17 +56,7 @@ export default function AuthMePage() {
     setError(null);
     setSwitching(role);
     try {
-      const action = await switchRoleAndGetAction(role);
-      if (action.type === "redirect") {
-        window.location.href = action.url;
-      } else {
-        // WA gate triggered — show modal instead of redirecting
-        setSwitching(null);
-        setWaGateData({
-          roleEntity: action.roleEntity,
-          redirectUrl: action.redirectUrl,
-        });
-      }
+      window.location.href = await switchRoleAndGetRedirect(role);
     } catch (err) {
       setSwitching(null);
       // Same resolution order the auth forms use via `mapApiErrors`: translate

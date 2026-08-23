@@ -1,14 +1,47 @@
 /**
  * Customer orders — `/api/customer/orders`.
  *
- * Orders are read by **checkout group** (`cartId`), not by order id: a cart
- * holding several vendors' items splits into one order per vendor at checkout,
- * and the customer sees the group as a single logical order. There is no
- * `GET /api/customer/orders/:id`.
+ * A cart holding several sellers' items splits into **one order per vendor**,
+ * all sharing a `cartId`, and the customer sees that group as a single logical
+ * order that they pay for once. So the group is the primary read — but
+ * `GET /orders/:id` exists now too, for the one seller's slice a push deep-link
+ * or an email carries.
  */
 import { apiFetch, apiFetchList } from "@/lib/api/client";
 import type { ListMeta } from "@/lib/api/client";
-import type { OrderGroup } from "./customer.types";
+import type {
+  CheckoutResult,
+  CustomerOrder,
+  CustomerShipment,
+  OrderGroup,
+} from "./customer.types";
+
+/**
+ * POST /api/customer/orders/checkout — turn the cart into orders.
+ *
+ * **Atomic**: if any order fails to create, none are persisted and the cart is
+ * left intact. Stock is held for 30 minutes at this point — a cart reserves
+ * nothing, the hold starts here — so this is where a line can fail with
+ * `422 CATALOG_INSUFFICIENT_STOCK` carrying
+ * `details: { variantId, sku, requested, available }`.
+ *
+ * Send `deliveryAddressId`, and send it to `POST /cart/quote` first: a physical
+ * checkout with no geocoded drop-off is refused with
+ * `422 ORDER_DELIVERY_ADDRESS_REQUIRED`, and finding that out at the pay button
+ * is much worse than finding it out on the cart.
+ *
+ * Online checkout continues at `POST /api/payments/initiate` with the returned
+ * `cartId`. Cash on delivery needs no payment call.
+ */
+export async function checkout(input: {
+  paymentMethod?: "online" | "cash_on_delivery";
+  deliveryAddressId?: string;
+}): Promise<CheckoutResult> {
+  return apiFetch<CheckoutResult>("/api/customer/orders/checkout", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
 
 /** GET /api/customer/orders — paginated by group. No sort parameter. */
 export async function listOrderGroups(
@@ -23,6 +56,37 @@ export async function getOrderGroup(cartId: string): Promise<OrderGroup> {
   return apiFetch<OrderGroup>(
     `/api/customer/orders/groups/${encodeURIComponent(cartId)}`,
   );
+}
+
+/**
+ * GET /api/customer/orders/:id — one seller's slice of a checkout group.
+ *
+ * New. This file used to state that it did not exist; it does, and it carries
+ * what the group list cannot: the store, the price breakdown, the frozen
+ * delivery address and per-line images.
+ */
+export async function getOrder(orderId: string): Promise<CustomerOrder> {
+  return apiFetch<CustomerOrder>(`/api/customer/orders/${encodeURIComponent(orderId)}`);
+}
+
+/**
+ * GET /api/customer/orders/:orderId/shipments — the parcels on an order.
+ *
+ * This is what makes `confirmShipmentDelivery` and `resendDeliveryCode` below
+ * reachable at all: no customer-facing response returned a shipment id except
+ * COD's `codCollections`, which is `undefined` for every online-paid order — so
+ * a prepaid customer could never confirm a delivery, and the tracking number was
+ * disclosed exactly once, by the confirm call, after delivery.
+ *
+ * Statuses are collapsed to the five a customer is shown; the internal dispatch
+ * vocabulary (`assigned`, `handing_over`, …) never reaches here, and neither
+ * does the agent's identity or the free-text note on a failed attempt.
+ */
+export async function listOrderShipments(orderId: string): Promise<CustomerShipment[]> {
+  const { data } = await apiFetchList<CustomerShipment>(
+    `/api/customer/orders/${encodeURIComponent(orderId)}/shipments`,
+  );
+  return data;
 }
 
 /**

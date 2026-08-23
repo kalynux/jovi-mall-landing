@@ -21,9 +21,9 @@
 import { useCallback, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useAuth } from "./useAuth";
-import { switchRoleAndGetAction } from "./auth.service";
+import { switchRoleAndGetRedirect } from "./auth.service";
 import { getRoleUrl } from "./auth.redirect";
-import type { AuthRoleEntity, UiRole } from "./auth.types";
+import type { UiRole } from "./auth.types";
 import { translateError } from "./error-translator";
 
 /** Roles that own a dashboard and can therefore be signed into. */
@@ -37,11 +37,6 @@ export type RoleCtaMode =
     | "dashboard"
     | "switch";
 
-export interface WaGate {
-    roleEntity: AuthRoleEntity;
-    redirectUrl: string;
-}
-
 export interface RoleCta {
     mode: RoleCtaMode;
     /** Locale-relative internal route for `register` / `add-role`; else null. */
@@ -52,8 +47,6 @@ export interface RoleCta {
     activate: () => void;
     /** True from the moment `activate()` fires until the page leaves. */
     pending: boolean;
-    /** Set when the switch came back needing WhatsApp verification first. */
-    waGate: WaGate | null;
     /** Translated failure message from a switch that did not go through. */
     error: string | null;
     /** True when the label should read "Go to <role> dashboard". */
@@ -96,7 +89,6 @@ export function useRoleCta(role: CtaRole): RoleCta {
     const { user, role: activeRole, status } = useAuth();
 
     const [pending, setPending] = useState(false);
-    const [waGate, setWaGate] = useState<WaGate | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     const mode: RoleCtaMode = useMemo(() => {
@@ -112,20 +104,10 @@ export function useRoleCta(role: CtaRole): RoleCta {
         setError(null);
         setPending(true);
         try {
-            const action = await switchRoleAndGetAction(role);
-            if (action.type === "redirect") {
-                // Leave `pending` and the in-flight flag set — the page is on
-                // its way out and re-enabling the button would only invite a
-                // second switch during the navigation.
-                window.location.href = action.url;
-                return;
-            }
-            switchInFlight.current = false;
-            setPending(false);
-            setWaGate({
-                roleEntity: action.roleEntity,
-                redirectUrl: action.redirectUrl,
-            });
+            // Leave `pending` and the in-flight flag set — the page is on its
+            // way out and re-enabling the button would only invite a second
+            // switch during the navigation.
+            window.location.href = await switchRoleAndGetRedirect(role);
         } catch (err) {
             switchInFlight.current = false;
             setPending(false);
@@ -151,7 +133,6 @@ export function useRoleCta(role: CtaRole): RoleCta {
         externalHref: mode === "dashboard" ? getRoleUrl(role) : null,
         activate,
         pending,
-        waGate,
         error,
         isDashboard,
     };

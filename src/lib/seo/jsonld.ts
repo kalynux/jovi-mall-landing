@@ -10,7 +10,8 @@
 import { BRAND } from "@/lib/constants";
 import { absoluteUrl, SITE_URL } from "@/lib/site";
 import { localePath, type Locale } from "@/i18n/routing";
-import type { Product, Vendor } from "@/lib/shop/shop.types";
+import type { Product, Store } from "@/lib/shop/shop.types";
+import { productPath, storePath } from "@/lib/shop/shop.routes";
 
 export type JsonLdNode = Record<string, unknown>;
 
@@ -97,6 +98,89 @@ export function faqPageJsonLd(
       name: item.question,
       acceptedAnswer: { "@type": "Answer", text: item.answer },
     })),
+  };
+}
+
+/**
+ * AboutPage for /about.
+ *
+ * Points at the existing Organization by `@id` instead of restating it, so the
+ * page describes the same entity the homepage already declared rather than
+ * introducing a second one. No `founder`, `foundingDate`, `numberOfEmployees` or
+ * `address`: none of those are known facts here, and the About page's whole
+ * argument is that this project does not overstate itself.
+ */
+export function aboutPageJsonLd(locale: Locale, path: string, description: string): JsonLdNode {
+  return {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "@id": `${localeUrl(locale, path)}#about`,
+    url: localeUrl(locale, path),
+    name: BRAND.name,
+    description,
+    mainEntity: { "@id": ORG_ID },
+    inLanguage: locale,
+  };
+}
+
+/**
+ * ContactPage for /contact.
+ *
+ * The email is the one already published on the Organization node, so the two
+ * agree. No `telephone`: `BRAND.whatsappNumber` is still a placeholder, and a
+ * phone number in structured data is a number Google will happily show to
+ * someone who then reaches nobody.
+ */
+export function contactPageJsonLd(locale: Locale, path: string, description: string): JsonLdNode {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "@id": `${localeUrl(locale, path)}#contact`,
+    url: localeUrl(locale, path),
+    name: BRAND.name,
+    description,
+    mainEntity: { "@id": ORG_ID },
+    inLanguage: locale,
+  };
+}
+
+/**
+ * A single open role, for /careers.
+ *
+ * **Only ever called when `HIRING_OPEN` is true** (see lib/marketing/careers.ts).
+ * A JobPosting is a promise that an application leads somewhere; emitting one
+ * for a role nobody can currently be hired into is fabricated structured data,
+ * the same class of problem as the invented review counts this file refuses at
+ * the top. Google also expires and penalises stale postings, so the flag is
+ * what keeps the markup honest — not a stylistic preference.
+ *
+ * `datePosted` is passed in rather than derived from `new Date()`: a build-time
+ * clock would restamp every posting on every deploy, which is exactly the
+ * "fresh" signal that should not be faked.
+ */
+export function jobPostingJsonLd(
+  locale: Locale,
+  path: string,
+  job: {
+    id: string;
+    title: string;
+    description: string;
+    employmentType: string;
+    datePosted: string;
+  }
+): JsonLdNode {
+  return {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    "@id": `${localeUrl(locale, path)}#${job.id}`,
+    title: job.title,
+    description: job.description,
+    employmentType: job.employmentType,
+    datePosted: job.datePosted,
+    hiringOrganization: { "@id": ORG_ID },
+    jobLocationType: "TELECOMMUTE",
+    applicantLocationRequirements: { "@type": "Country", name: "Cameroon" },
+    directApply: false,
   };
 }
 
@@ -255,23 +339,40 @@ export function blogJsonLd(
   };
 }
 
-export function productJsonLd(locale: Locale, product: Product, vendor: Vendor): JsonLdNode {
-  const url = localeUrl(locale, `/shop/products/${product.slug}`);
-  const availability = product.inStock
+/**
+ * `Product` structured data.
+ *
+ * The seller is `product.store` — there is no separate vendor object any more,
+ * and there is no `vendorId` on the public API at all: a store is addressed by
+ * slug so an internal id never becomes a public identifier.
+ *
+ * `aggregateRating` and `review` stay **absent**. There is still no review model
+ * in the platform, and publishing invented review counts is a Google
+ * spam-policy violation that earns a manual action. Do not add them until a real
+ * review system exists.
+ */
+export function productJsonLd(locale: Locale, product: Product): JsonLdNode {
+  const url = localeUrl(locale, productPath(product.store.slug, product.slug));
+  const seller = { "@type": "Organization", name: product.store.name };
+
+  // Currency comes from the data rather than the module constant: XAF is the
+  // platform default, not a guarantee, and mislabelling an amount is worse than
+  // omitting the markup.
+  const currency = product.variants[0]?.currency ?? CURRENCY;
+
+  // Availability is per variant, so a product is in stock when *something* under
+  // it is buyable — which is what the browse grid's own `inStock` means too.
+  const availability = product.variants.some((v) => v.inStock)
     ? "https://schema.org/InStock"
     : "https://schema.org/OutOfStock";
-  const seller = { "@type": "Organization", name: vendor.name };
 
-  // Variants carry the real prices, so a product with more than one is a price
-  // range rather than a single offer — claiming one price for all of them is
-  // the kind of mismatch that gets rich results suppressed.
   const prices = product.variants.map((v) => v.price).filter((p) => Number.isFinite(p));
   const offers =
     prices.length > 1 && Math.min(...prices) !== Math.max(...prices)
       ? {
           "@type": "AggregateOffer",
           url,
-          priceCurrency: CURRENCY,
+          priceCurrency: currency,
           lowPrice: Math.min(...prices),
           highPrice: Math.max(...prices),
           offerCount: product.variants.length,
@@ -281,8 +382,8 @@ export function productJsonLd(locale: Locale, product: Product, vendor: Vendor):
       : {
           "@type": "Offer",
           url,
-          priceCurrency: CURRENCY,
-          price: prices[0] ?? product.price,
+          priceCurrency: currency,
+          price: prices[0] ?? 0,
           availability,
           itemCondition: "https://schema.org/NewCondition",
           seller,
@@ -293,32 +394,43 @@ export function productJsonLd(locale: Locale, product: Product, vendor: Vendor):
     "@type": "Product",
     "@id": `${url}#product`,
     name: product.title,
-    description: product.desc,
-    image: product.images,
+    description: product.description,
+    image: product.images.map((image) => image.url),
     category: product.category,
+    // `sku` is published per variant now, and is already globally unique and
+    // already shown to the customer on cart and order lines — so it is safe to
+    // emit, and `Offer` wants a stable identifier for rich results.
     ...(product.variants[0]?.sku ? { sku: product.variants[0].sku } : {}),
-    brand: { "@type": "Brand", name: vendor.name },
+    brand: { "@type": "Brand", name: product.store.name },
     offers,
   };
 }
 
-export function storeJsonLd(locale: Locale, vendor: Vendor): JsonLdNode {
-  const url = localeUrl(locale, `/shop/stores/${vendor.slug}`);
+export function storeJsonLd(locale: Locale, store: Store): JsonLdNode {
+  const url = localeUrl(locale, storePath(store.slug));
 
   return {
     "@context": "https://schema.org",
     "@type": "Store",
     "@id": `${url}#store`,
-    name: vendor.name,
-    description: vendor.desc,
+    name: store.name,
+    description: store.description,
     url,
-    image: vendor.banner,
-    telephone: vendor.whatsapp,
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: vendor.city,
-      addressCountry: vendor.country,
-    },
+    // Every one of these is nullable on the public DTO, so each is omitted
+    // rather than emitted as null — `"telephone": null` is invalid markup.
+    ...(store.banner?.url ?? store.logo?.url ? { image: store.banner?.url ?? store.logo?.url } : {}),
+    ...(store.supportWhatsapp ? { telephone: store.supportWhatsapp } : {}),
+    ...(store.city || store.country
+      ? {
+          address: {
+            "@type": "PostalAddress",
+            // City is the only address component the API publishes; the rest of
+            // a vendor's addresses are the places they ship from.
+            ...(store.city ? { addressLocality: store.city } : {}),
+            ...(store.country ? { addressCountry: store.country } : {}),
+          },
+        }
+      : {}),
     parentOrganization: { "@id": ORG_ID },
   };
 }

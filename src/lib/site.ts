@@ -8,10 +8,10 @@
  * and every sitemap entry points at the wrong host.
  */
 export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://wimall.com"
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://wi-mall.com"
 ).replace(/\/+$/, "");
 
-/** Absolute URL for a site-relative path (`/shop` → `https://wimall.com/shop`). */
+/** Absolute URL for a site-relative path (`/shop` → `https://wi-mall.com/shop`). */
 export function absoluteUrl(path = "/"): string {
   return `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }

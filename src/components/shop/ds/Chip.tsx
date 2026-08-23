@@ -12,6 +12,12 @@ export interface ChipProps {
   onRemove?: () => void;
   icon?: string;
   onClick?: () => void;
+  /**
+   * Rendered but not selectable — an option value with no sellable variant
+   * behind it. Disabled rather than hidden: the vendor lists the option, and
+   * dropping it would make the range look narrower than it is.
+   */
+  disabled?: boolean;
   style?: CSSProperties;
 }
 
@@ -24,6 +30,7 @@ export function Chip({
   onRemove,
   icon,
   onClick,
+  disabled,
   style,
 }: ChipProps) {
   let bg = "var(--surface)";
@@ -43,6 +50,7 @@ export function Chip({
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -56,7 +64,9 @@ export function Chip({
         border: `1.5px solid ${border}`,
         background: bg,
         color,
-        cursor: "pointer",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.45 : 1,
+        textDecoration: disabled ? "line-through" : undefined,
         whiteSpace: "nowrap",
         transition: "var(--transition-colors)",
         ...style,

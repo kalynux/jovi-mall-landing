@@ -13,8 +13,8 @@ import {
   ROLES_WITH_BUSINESS_NAME,
   type RegisterFormValues,
 } from "@/lib/auth/auth.schemas";
-import { registerAndGetAction, logoutAndRedirect } from "@/lib/auth/auth.service";
-import { isUiRole, type UiRole, type AuthRoleEntity } from "@/lib/auth/auth.types";
+import { registerAndGetRedirect } from "@/lib/auth/auth.service";
+import { isUiRole, type UiRole } from "@/lib/auth/auth.types";
 import { mapApiErrors, parseRootType } from "@/lib/auth/form-errors";
 import { sanitizePayload } from "@/lib/form/sanitize-payload";
 import AuthSplitShell from "@/components/auth/AuthSplitShell";
@@ -23,7 +23,7 @@ import { PhoneField } from "@/components/ui/phone";
 import { GlobalError } from "@/components/auth/GlobalError";
 import RolePicker from "@/components/auth/RolePicker";
 import CustomerWhatsAppCta from "@/components/auth/CustomerWhatsAppCta";
-import { WhatsAppVerificationModal } from "@/components/auth/WhatsAppVerificationModal";
+import { IS_NATIVE_BUILD } from "@/lib/platform";
 
 type Step = "role" | "customer-wa" | "form";
 
@@ -42,21 +42,32 @@ function RegisterFormContent() {
   const searchParams = useSearchParams();
   const roleParam = searchParams.get("role");
 
-  const initialRole: UiRole = isUiRole(roleParam) ? roleParam : "vendor";
-  const initialStep: Step = isUiRole(roleParam)
-    ? roleParam === "customer"
-      ? "customer-wa"
-      : "form"
-    : "role";
+  /**
+   * Customer-only entry, on the same rule the sign-in page uses.
+   *
+   * `?role=customer` is what the shop's own links carry, and the app build is
+   * the shop and nothing else — there is no vendor console in the APK. For
+   * either, the four-way picker is a question with one right answer.
+   *
+   * Context, not viewport: a vendor registering from the marketing site on a
+   * phone still gets the full picker.
+   */
+  const customerOnly = IS_NATIVE_BUILD || roleParam === "customer";
+
+  const initialRole: UiRole = isUiRole(roleParam)
+    ? roleParam
+    : customerOnly
+      ? "customer"
+      : "vendor";
+
+  const initialStep: Step = customerOnly
+    ? "customer-wa"
+    : isUiRole(roleParam)
+      ? "form"
+      : "role";
 
   const [selectedRole, setSelectedRole] = useState<UiRole>(initialRole);
   const [step, setStep] = useState<Step>(initialStep);
-
-  // WA gate state — set when registerAndGetAction returns type === "wa_gate"
-  const [waGateData, setWaGateData] = useState<{
-    roleEntity: AuthRoleEntity;
-    redirectUrl: string;
-  } | null>(null);
 
   const {
     register,
@@ -112,34 +123,11 @@ function RegisterFormContent() {
         role: selectedRole,
       });
 
-      const action = await registerAndGetAction(payload as RegisterFormValues);
-
-      if (action.type === "redirect") {
-        window.location.href = action.url;
-      } else {
-        // WA gate triggered — show modal instead of redirecting
-        setWaGateData({
-          roleEntity: action.roleEntity,
-          redirectUrl: action.redirectUrl,
-        });
-      }
+      window.location.href = await registerAndGetRedirect(payload as RegisterFormValues);
     } catch (err) {
       mapApiErrors(err, setError, tErrors);
     }
   };
-
-  // ── WA verification gate overlay ─────────────────────────────────────────
-  if (waGateData) {
-    return (
-      <WhatsAppVerificationModal
-        roleEntity={waGateData.roleEntity}
-        onSuccess={() => {
-          window.location.href = waGateData.redirectUrl;
-        }}
-        onLogout={logoutAndRedirect}
-      />
-    );
-  }
 
   // ── Title / subtitle per step ──────────────────────────────────────────────
   const cardTitle =
@@ -202,10 +190,17 @@ function RegisterFormContent() {
         {step === "customer-wa" && (
           <motion.div key="customer-wa" {...stepMotion}>
             <CustomerWhatsAppCta
-              onBack={() => {
-                setSelectedRole("vendor");
-                setStep("role");
-              }}
+              /* The escape hatch back to the picker, absent in the app —
+                 there is no other role to register for in a shop bundle. */
+              onBack={
+                IS_NATIVE_BUILD
+                  ? undefined
+                  : () => {
+                      setSelectedRole("vendor");
+                      setStep("role");
+                    }
+              }
+              backLabel={customerOnly ? t("signInOtherRole") : undefined}
             />
           </motion.div>
         )}
@@ -236,10 +231,12 @@ function RegisterFormContent() {
             {/* Hidden role field */}
             <input type="hidden" value={selectedRole} {...register("role")} />
 
-            {/* Two columns from `sm` up — the form pane is half the shell on
-                desktop, so a single column of six fields would run far past the
-                showcase beside it. */}
-            <div className="grid gap-4 sm:grid-cols-2">
+            {/* One column at every width. The two-column arrangement this
+                replaced saved vertical space but paired unrelated fields side
+                by side, and the descriptions that explain them now live in
+                tooltips rather than under each field — so the column no longer
+                runs long enough to be worth splitting. */}
+            <div className="flex flex-col gap-4">
               {/*
                 Personal name — lands on the role profile itself (display_name for
                 vendor/agency, name for agent). Vendors and agencies additionally
@@ -287,13 +284,20 @@ function RegisterFormContent() {
               />
 
               {/*
-                Email is required for vendors, optional for agency and agent.
-                sanitizePayload still drops it if left empty (only reachable
-                for non-vendor roles where the field is truly optional).
+                Required for a vendor, optional for agency and agent — see the
+                long note in RegisterSchema: api-doc says optional for all four,
+                the vendor model says otherwise, and the backend answers 500
+                rather than 400 when they disagree.
+
+                The label follows suit, so it never reads "(optional) *".
+                sanitizePayload drops the field when left blank, so the backend
+                never receives an empty-string email.
               */}
               <AuthFormField
                 variant="floating"
-                label={t("emailLabel")}
+                label={
+                  selectedRole === "vendor" ? t("emailLabelLogin") : t("emailLabel")
+                }
                 type="email"
                 autoComplete="email"
                 placeholder={t("emailPlaceholder")}
@@ -344,20 +348,18 @@ function RegisterFormContent() {
                 />
               )}
 
-              <div className="sm:col-span-2">
-                <AuthFormField
-                  variant="floating"
-                  label={t("passwordLabel")}
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder={t("newPasswordPlaceholder")}
-                  required
-                  {...register("password", {
-                    onChange: () => clearErrors(["password", "root"] as any),
-                  })}
-                  error={errors.password?.message}
-                />
-              </div>
+              <AuthFormField
+                variant="floating"
+                label={t("passwordLabel")}
+                type="password"
+                autoComplete="new-password"
+                placeholder={t("newPasswordPlaceholder")}
+                required
+                {...register("password", {
+                  onChange: () => clearErrors(["password", "root"] as any),
+                })}
+                error={errors.password?.message}
+              />
             </div>
 
             {(() => {
@@ -374,8 +376,10 @@ function RegisterFormContent() {
               );
             })()}
 
-            {/* Action pair — create, or peel off to sign-in. */}
-            <div className="mt-1 grid gap-3 sm:grid-cols-2">
+            {/* One action, one aside — the mirror of the sign-in screen.
+                Signing in is the quiet alternative here, so it carries the
+                weight of a link rather than a second solid button. */}
+            <div className="mt-1 flex flex-col gap-3">
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -385,7 +389,10 @@ function RegisterFormContent() {
                 {isSubmitting ? t("creatingAccount") : t("createAccount")}
                 {!isSubmitting && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
               </button>
-              <Link href="/login" className="btn-secondary w-full">
+              <Link
+                href="/login"
+                className="self-center text-xs text-[var(--text-muted)] transition-colors hover:text-primary-600"
+              >
                 {t("signInLink")}
               </Link>
             </div>

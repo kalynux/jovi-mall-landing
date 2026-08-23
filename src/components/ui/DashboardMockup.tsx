@@ -47,19 +47,19 @@ const ROLE: Record<Variant, { accent: string; title: string; address: string; ta
   vendor: {
     accent: "#068554",
     title: "Vendor Dashboard",
-    address: "app.wimall.com/vendor",
+    address: "vendor.wi-mall.com",
     tabs: [Home, Package, BarChart2, Wallet],
   },
   agency: {
     accent: "#2563eb",
     title: "Agency Console",
-    address: "app.wimall.com/agency",
+    address: "agency.wi-mall.com",
     tabs: [Home, Users, Route, Wallet],
   },
   agent: {
     accent: "#f59e0b",
     title: "Agent App",
-    address: "app.wimall.com/agent",
+    address: "agent.wi-mall.com",
     tabs: [Home, Navigation, Package, Wallet],
   },
 };
@@ -251,7 +251,7 @@ function Stats({
   const stats =
     variant === "vendor"
       ? [
-          { icon: TrendingUp, label: t("stRevenue"), value: `₦ ${(284 + beat * 2.45).toFixed(1)}K`, up: true },
+          { icon: TrendingUp, label: t("stRevenue"), value: `${(284 + beat * 2.45).toFixed(1)}K FCFA`, up: true },
           { icon: ShoppingCart, label: t("stOrders"), value: `${(1240 + beat).toLocaleString("en-US")}`, up: true },
           { icon: Box, label: t("stProducts"), value: "86", up: false },
         ]
@@ -259,11 +259,11 @@ function Stats({
         ? [
             { icon: Package, label: t("stDeliveries"), value: `${(3820 + beat).toLocaleString("en-US")}`, up: true },
             { icon: Users, label: t("stAgents"), value: `${40 + (beat % 5)}`, up: true },
-            { icon: TrendingUp, label: t("stEarnings"), value: `₦ ${(96 + beat * 0.8).toFixed(1)}K`, up: true },
+            { icon: TrendingUp, label: t("stEarnings"), value: `${(96 + beat * 0.8).toFixed(1)}K FCFA`, up: true },
           ]
         : [
             { icon: Package, label: t("stDelivered"), value: `${148 + cycles}`, up: true },
-            { icon: TrendingUp, label: t("stEarnings"), value: `₦ ${(38 + cycles * 1.2).toFixed(1)}K`, up: true },
+            { icon: TrendingUp, label: t("stEarnings"), value: `${(38 + cycles * 1.2).toFixed(1)}K FCFA`, up: true },
             { icon: Star, label: t("stRating"), value: "4.9", up: false },
           ];
 

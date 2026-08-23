@@ -3,6 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "@/i18n/navigation";
 import { usePathname } from "@/i18n/navigation";
 import { Menu, X, Sun, Moon, Globe, ChevronDown, LogIn } from "lucide-react";
+import NavDropdown from "@/components/nav/NavDropdown";
+import { MAIN_MENU, isNodeActive, type MenuNode } from "@/lib/nav/menu";
 import WiMallMark from "@/components/brand/WiMallMark.generated";
 import { motion, useScroll, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -14,7 +16,6 @@ import { useLocale, LOCALES, type Locale } from "@/lib/i18n-provider";
 import { useAuth } from "@/lib/auth/useAuth";
 import type { AuthRoleEntity } from "@/lib/auth/auth.types";
 import UserMenuDropdown from "@/components/nav/UserMenuDropdown";
-import { useOptionalSectionNav } from "@/components/scroll/SectionNavProvider";
 
 interface NavbarProps {
   onGetStarted: () => void;
@@ -111,32 +112,117 @@ function AuthControls({
   );
 }
 
+/**
+ * One collapsible group inside the mobile panel.
+ *
+ * The desktop popover does not translate to a phone — there is nowhere to hover
+ * and no room to float a panel — so a `menu` node becomes a disclosure instead,
+ * reusing the same `AnimatePresence` + `height: "auto"` motion the outer panel
+ * already uses.
+ */
+function MobileMenuSection({
+  node,
+  pathname,
+  t,
+  expanded,
+  onToggle,
+  onNavigate,
+}: {
+  node: Extract<MenuNode, { kind: "menu" }>;
+  pathname: string;
+  t: ReturnType<typeof useTranslations>;
+  expanded: boolean;
+  onToggle: () => void;
+  onNavigate: () => void;
+}) {
+  const sectionActive = isNodeActive(node, pathname);
+  const panelId = `mobile-menu-${node.key}`;
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        aria-controls={panelId}
+        className={cn(
+          "w-full flex items-center justify-between py-2.5 px-3 rounded-lg text-sm font-medium transition-colors",
+          sectionActive
+            ? "text-primary-600"
+            : "text-[var(--text-primary)] hover:bg-[var(--accent-light)] hover:text-primary-600"
+        )}
+      >
+        {t(node.key)}
+        <ChevronDown
+          className={cn("w-4 h-4 transition-transform duration-200", expanded && "rotate-180")}
+          aria-hidden="true"
+        />
+      </button>
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            id={panelId}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="ps-3 ms-3 border-s border-[var(--border-medium)] flex flex-col gap-1 py-1">
+              {node.items.map((item) => {
+                const itemActive =
+                  pathname === item.href || pathname.startsWith(`${item.href}/`);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={onNavigate}
+                    aria-current={itemActive ? "page" : undefined}
+                    className={cn(
+                      "py-2 px-3 rounded-lg text-sm transition-colors",
+                      itemActive
+                        ? "bg-[var(--accent-light)] text-primary-600 font-medium"
+                        : "text-[var(--text-secondary)] hover:bg-[var(--accent-light)] hover:text-primary-600"
+                    )}
+                  >
+                    {t(item.key)}
+                  </Link>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function Navbar({ onGetStarted }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  /** Which mobile submenu is expanded — one at a time keeps the panel short. */
+  const [openSection, setOpenSection] = useState<string | null>(null);
   const { scrollY } = useScroll();
   const [scrolled, setScrolled] = useState(false);
   const { theme, toggle } = useTheme();
   const { locale, setLocale, localeLabels } = useLocale();
   const menuRef = useRef<HTMLDivElement>(null);
-  const langRef = useRef<HTMLDivElement>(null);
+  // Desktop and mobile render their own language switcher, and only one of them
+  // is mounted at a time — but they used to share a single ref, so outside-click
+  // detection bound to whichever mounted last and silently stopped working for
+  // the other. One ref each.
+  const langRefDesktop = useRef<HTMLDivElement>(null);
+  const langRefMobile = useRef<HTMLDivElement>(null);
   const t = useTranslations("navbar");
 
   // Auth state — single source of truth from AuthProvider
   const { user, role, role_entity, status, logout } = useAuth();
 
-  // Full-page scroll state — highlight the active section + smooth-jump on click.
-  // Optional: null when this Navbar is rendered off the landing page (no engine).
-  const sectionNav = useOptionalSectionNav();
-  const activeId = sectionNav?.activeId ?? "";
-
-  const handleNavClick = (e: React.MouseEvent, href: string) => {
-    if (href.startsWith("#") && sectionNav) {
-      e.preventDefault();
-      sectionNav.scrollToId(href.slice(1));
-      setMenuOpen(false);
-    }
-  };
+  // NOTE: this component used to consume `useOptionalSectionNav()` so that
+  // `#anchor` entries could smooth-scroll the landing page's full-page scroller.
+  // Every nav entry is a real route now (see `lib/nav/menu.ts`), so that branch
+  // was unreachable and is gone. The landing's own section rail
+  // (`SectionProgressIndicator`) still drives the scroller.
 
   useEffect(() => {
     const unsub = scrollY.onChange((v) => setScrolled(v > 60));
@@ -155,41 +241,21 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [menuOpen]);
 
-  // Close lang dropdown on outside click
+  // Close lang dropdown on outside click. A click counts as "outside" only when
+  // it misses *both* switchers, so whichever one is mounted keeps working.
   useEffect(() => {
     if (!langOpen) return;
     const handleClick = (e: MouseEvent) => {
-      if (langRef.current && !langRef.current.contains(e.target as Node)) {
-        setLangOpen(false);
-      }
+      const target = e.target as Node;
+      const inside =
+        langRefDesktop.current?.contains(target) || langRefMobile.current?.contains(target);
+      if (!inside) setLangOpen(false);
     };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [langOpen]);
 
   const pathname = usePathname();
-
-  // Nav links from translations. `route` links are real pages; the rest are
-  // landing anchors (resolved to `/#…` when we're off the landing page).
-  //
-  // The three roles that have a page navigate to it rather than scrolling the
-  // landing: the page is the fuller answer, and a header link that only worked
-  // on one route was the reason those pages went unfound. Customers stay an
-  // anchor because there is no /customers page — the landing section, with its
-  // WhatsApp deep link, is the whole story for them.
-  const NAV_LINKS: { label: string; href: string; route?: boolean }[] = [
-    { label: t("shop"), href: "/shop", route: true },
-    { label: t("vendors"), href: "/vendors", route: true },
-    { label: t("agencies"), href: "/agencies", route: true },
-    { label: t("agents"), href: "/agents", route: true },
-    { label: t("customers"), href: "#customers" },
-    { label: t("pricing"), href: "/pricing", route: true },
-  ];
-
-  const resolveHref = (link: { href: string; route?: boolean }) =>
-    link.route || sectionNav ? link.href : `/${link.href}`;
-  const isLinkActive = (link: { href: string; route?: boolean }) =>
-    link.route ? pathname.startsWith(link.href) : activeId === link.href.slice(1);
 
   const currentLocaleConfig = LOCALES.find((l) => l.code === locale)!;
 
@@ -218,16 +284,20 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
             </span>
           </Link>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-8" aria-label={t("mainNavAriaLabel")}>
-            {NAV_LINKS.map((link) => {
-              const isActive = isLinkActive(link);
+          {/* Desktop Nav — structure comes from MAIN_MENU, labels from `navbar`. */}
+          <nav className="hidden md:flex items-center gap-7" aria-label={t("mainNavAriaLabel")}>
+            {MAIN_MENU.map((node) => {
+              if (node.kind === "menu") {
+                return (
+                  <NavDropdown key={node.key} node={node} pathname={pathname} t={t} />
+                );
+              }
+              const isActive = isNodeActive(node, pathname);
               return (
                 <Link
-                  key={link.href}
-                  href={resolveHref(link)}
-                  onClick={(e) => handleNavClick(e, link.href)}
-                  aria-current={isActive ? "true" : undefined}
+                  key={node.href}
+                  href={node.href}
+                  aria-current={isActive ? "page" : undefined}
                   className={cn(
                     "relative text-sm font-medium transition-colors duration-200",
                     isActive
@@ -235,7 +305,7 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
                       : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                   )}
                 >
-                  {link.label}
+                  {t(node.key)}
                   {isActive && (
                     <motion.span
                       layoutId="nav-active"
@@ -251,7 +321,7 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
           {/* Desktop controls */}
           <div className="hidden md:flex items-center gap-2">
             {/* Language switcher */}
-            <div ref={langRef} className="relative">
+            <div ref={langRefDesktop} className="relative">
               <button
                 onClick={() => setLangOpen(!langOpen)}
                 aria-label={t("languageSwitcher")}
@@ -318,7 +388,7 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
           {/* Mobile controls */}
           <div className="md:hidden flex items-center gap-2">
             {/* Mobile lang */}
-            <div ref={langRef} className="relative">
+            <div ref={langRefMobile} className="relative">
               <button
                 onClick={() => setLangOpen(!langOpen)}
                 aria-label={t("languageSwitcher")}
@@ -388,26 +458,41 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
               background: theme === "dark" ? "#05050C" : "#FFFFFF",
             }}
           >
-            <div className="px-4 py-5 flex flex-col gap-1">
-              {NAV_LINKS.map((link) => {
-                const isActive = isLinkActive(link);
-                return (
+            {/* Nesting makes this list long enough to run past the bottom of a
+                short viewport, and the header it hangs from is `fixed` with
+                `overflow-hidden` — so it needs its own scroll container or the
+                last items become unreachable. */}
+            <div className="px-4 py-5 flex flex-col gap-1 max-h-[calc(100svh-4rem)] overflow-y-auto">
+              {MAIN_MENU.map((node) =>
+                node.kind === "menu" ? (
+                  <MobileMenuSection
+                    key={node.key}
+                    node={node}
+                    pathname={pathname}
+                    t={t}
+                    expanded={openSection === node.key}
+                    onToggle={() =>
+                      setOpenSection((current) => (current === node.key ? null : node.key))
+                    }
+                    onNavigate={() => setMenuOpen(false)}
+                  />
+                ) : (
                   <Link
-                    key={link.href}
-                    href={resolveHref(link)}
-                    onClick={(e) => handleNavClick(e, link.href)}
-                    aria-current={isActive ? "true" : undefined}
+                    key={node.href}
+                    href={node.href}
+                    onClick={() => setMenuOpen(false)}
+                    aria-current={isNodeActive(node, pathname) ? "page" : undefined}
                     className={cn(
                       "py-2.5 px-3 rounded-lg text-sm font-medium transition-colors",
-                      isActive
+                      isNodeActive(node, pathname)
                         ? "bg-[var(--accent-light)] text-primary-600"
                         : "text-[var(--text-primary)] hover:bg-[var(--accent-light)] hover:text-primary-600"
                     )}
                   >
-                    {link.label}
+                    {t(node.key)}
                   </Link>
-                );
-              })}
+                )
+              )}
               <div className="pt-3 mt-2 border-t border-[var(--border-medium)] flex flex-col gap-2">
                 <AuthControls
                   mobile

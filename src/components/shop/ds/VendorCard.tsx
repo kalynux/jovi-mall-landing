@@ -1,49 +1,62 @@
 "use client";
 
+import { Link } from "@/i18n/navigation";
 import { Avatar } from "./Avatar";
 import { Icon } from "./Icon";
-import { Rating } from "./Rating";
 
 export interface VendorCardProps {
   name: string;
-  rating: number;
-  reviewCount: number;
+  /** The store's URL. Prefer over `onView` — a grouped grid should link to stores. */
+  href?: string;
   productCount: number;
-  city: string;
+  /**
+   * The only address component the API publishes, and `null` when the vendor has
+   * set none. The rest of a vendor's `business_addresses[]` is a home or
+   * warehouse address and is deliberately private.
+   */
+  city?: string | null;
+  /** `kyc_details.legit_verified`. */
   verified?: boolean;
+  /** Vacation mode. A closed store still sells — this is a flag, not a gate. */
   isOpen?: boolean;
   asHeader?: boolean;
   onView?: () => void;
 }
 
-/** Compact store header used to group the catalog by vendor. */
+/**
+ * Compact store header used to group the catalog by vendor.
+ *
+ * Carried a star rating and a review count until the catalogue went real. There
+ * is no review system in the platform — those numbers were fixtures, and a store
+ * card is exactly the surface where an invented 4.8 would be read as a fact
+ * about a real business.
+ */
 export function VendorCard({
   name,
-  rating,
-  reviewCount,
+  href,
   productCount,
   city,
   verified,
   isOpen,
   onView,
 }: VendorCardProps) {
-  return (
-    <div
-      onClick={onView}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && onView?.()}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        padding: "10px 12px",
-        background: "var(--surface-2)",
-        border: "1px solid var(--border-subtle)",
-        borderRadius: "var(--radius-lg)",
-        cursor: "pointer",
-      }}
-    >
+  const shell = {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    padding: "10px 12px",
+    background: "var(--surface-2)",
+    border: "1px solid var(--border-subtle)",
+    borderRadius: "var(--radius-lg)",
+    cursor: "pointer",
+    textDecoration: "none",
+    color: "inherit",
+  } as const;
+
+  // Built as a value and wrapped below rather than as a component defined during
+  // render — a fresh component identity each render remounts the whole subtree.
+  const body = (
+    <>
       <Avatar name={name} size={44} shape="squircle" status={isOpen ? "open" : "closed"} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
@@ -63,12 +76,18 @@ export function VendorCard({
           {verified && <Icon name="badge-check" size={15} style={{ color: "var(--brand)" }} />}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2, flexWrap: "wrap" }}>
-          <Rating value={rating} count={reviewCount} compact size={12} />
-          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>· {productCount} items</span>
-          <span style={{ fontSize: 12, color: "var(--text-muted)", display: "inline-flex", alignItems: "center", gap: 2 }}>
-            · <Icon name="map-pin" size={12} />
-            {city}
+          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            {productCount} item{productCount === 1 ? "" : "s"}
           </span>
+          {city && (
+            <span style={{ fontSize: 12, color: "var(--text-muted)", display: "inline-flex", alignItems: "center", gap: 2 }}>
+              · <Icon name="map-pin" size={12} />
+              {city}
+            </span>
+          )}
+          {isOpen === false && (
+            <span style={{ fontSize: 12, color: "var(--warning)", fontWeight: 700 }}>· On holiday</span>
+          )}
         </div>
       </div>
       <span
@@ -84,6 +103,26 @@ export function VendorCard({
       >
         View store <Icon name="chevron-right" size={16} />
       </span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} style={shell}>
+        {body}
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      onClick={onView}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && onView?.()}
+      style={shell}
+    >
+      {body}
     </div>
   );
 }

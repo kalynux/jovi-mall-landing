@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // GENERATED FILE — do not edit by hand.
 //
-// The WiMall bag mark, in the brand colour sampled from AppLogos/. Solid body,
+// The Wi-Mall bag mark, in the brand colour sampled from AppLogos/. Solid body,
 // white face, and a transparent surround, so it sits on the light navbar, the
 // dark navbar and the auth panes without a plate behind it.
 //

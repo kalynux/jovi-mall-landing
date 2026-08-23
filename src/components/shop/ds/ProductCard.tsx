@@ -1,35 +1,62 @@
 "use client";
 
-import type { ProductType } from "@/lib/shop/shop.types";
+import type { CSSProperties, ReactNode } from "react";
+import { Link } from "@/i18n/navigation";
+import type { PriceRange, ProductType } from "@/lib/shop/shop.types";
 import { discountPct } from "@/lib/shop/format";
 import { Badge } from "./Badge";
 import { Icon } from "./Icon";
 import { PriceDisplay } from "./PriceDisplay";
-import { Rating } from "./Rating";
+
+/** Shipped in `public/`, for products the vendor listed without a usable image. */
+const NO_IMAGE = "/no_product_image.png";
 
 export interface ProductCardProps {
   layout?: "grid" | "list";
   title: string;
-  image: string;
+  /** `null` when the product has no usable image — the API says so explicitly. */
+  image: string | null;
   type: ProductType;
   price: number;
   compareAt?: number | null;
-  rating?: number;
-  reviewCount?: number;
+  currency?: string;
+  /** Present only when the product's variants differ in price. */
+  priceRange?: PriceRange;
   vendorName?: string;
   showVendor?: boolean;
-  deliveryLabel?: string;
+  /**
+   * A real backend field, unlike the free-text delivery label this card used to
+   * take. It is a boolean promise about this product, not a description.
+   */
+  freeDelivery?: boolean;
   favorite?: boolean;
   onToggleFavorite?: () => void;
+  /** Boolean by design — the API publishes no stock count. */
   inStock?: boolean;
   onQuickAdd?: () => void;
+  /**
+   * The product's URL.
+   *
+   * **Prefer this over `onClick`.** The card used to be a `div` with a click
+   * handler, which meant the grid contained no links at all: a crawler could
+   * read the titles and had no way to reach a product, and a shopper could not
+   * middle-click, open in a new tab, or copy a link. Server-rendering the grid
+   * only pays off if what it renders is navigable.
+   */
+  href?: string;
   onClick?: () => void;
 }
 
-const quickAddIcon: Record<ProductType, string> = {
-  physical: "plus",
-  digital: "download",
-  service: "calendar-clock",
+/**
+ * What the corner button does, per type — and it is three different things, so
+ * it says three different things. Digital is a buy-now: it goes to checkout
+ * rather than into a cart, and a "+" over that is a lie about where the tap
+ * lands.
+ */
+const quickAction: Record<ProductType, { icon: string; label: string }> = {
+  physical: { icon: "plus", label: "Quick add" },
+  digital: { icon: "zap", label: "Buy now" },
+  service: { icon: "calendar-clock", label: "Book" },
 };
 
 const typeLabel = (t: ProductType) => t[0].toUpperCase() + t.slice(1);
@@ -42,6 +69,9 @@ function FavButton({ favorite, onToggleFavorite }: Pick<ProductCardProps, "favor
       aria-pressed={favorite}
       className="ds-pop"
       onClick={(e) => {
+        // `preventDefault` as well as `stopPropagation`: the card is a link now,
+        // and without it saving a product also navigates to it.
+        e.preventDefault();
         e.stopPropagation();
         onToggleFavorite?.();
       }}
@@ -72,19 +102,23 @@ export function ProductCard(props: ProductCardProps) {
     type,
     price,
     compareAt,
-    rating,
-    reviewCount,
+    currency = "XAF",
+    priceRange,
     vendorName,
     showVendor,
-    deliveryLabel,
+    freeDelivery,
     favorite,
     onToggleFavorite,
     inStock = true,
     onQuickAdd,
+    href,
     onClick,
   } = props;
 
-  const pct = discountPct(price, compareAt);
+  // Suppressed on a price band: the compare-at belongs to the default variant,
+  // so a "-20%" badge over "from 24 000" claims a discount on prices it does
+  // not describe.
+  const pct = priceRange ? null : discountPct(price, compareAt);
 
   const titleEl = (
     <div
@@ -111,14 +145,13 @@ export function ProductCard(props: ProductCardProps) {
         </div>
       )}
       {titleEl}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "6px 0", flexWrap: "wrap" }}>
-        {typeof rating === "number" && <Rating value={rating} count={reviewCount} compact size={13} />}
+      <div style={{ marginTop: 6 }}>
+        <PriceDisplay amount={price} compareAt={compareAt} currency={currency} range={priceRange} size="sm" />
       </div>
-      <PriceDisplay amount={price} compareAt={compareAt} size="sm" />
-      {deliveryLabel && (
+      {freeDelivery && (
         <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 6, fontSize: 11.5, color: "var(--text-muted)", fontWeight: 600 }}>
           <Icon name="truck" size={13} />
-          {deliveryLabel}
+          Free delivery
         </div>
       )}
     </>
@@ -139,9 +172,10 @@ export function ProductCard(props: ProductCardProps) {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={image}
+        src={image ?? NO_IMAGE}
         alt={title}
         style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: inStock ? 1 : 0.6 }}
+        
       />
       <div style={{ position: "absolute", top: 8, left: 8, display: "flex", gap: 5 }}>
         <Badge productType={type} variant="solid" size="sm">
@@ -184,9 +218,11 @@ export function ProductCard(props: ProductCardProps) {
       {inStock && onQuickAdd && (
         <button
           type="button"
-          aria-label={type === "service" ? "Book" : "Quick add"}
+          aria-label={quickAction[type].label}
+          title={quickAction[type].label}
           className="ds-pop"
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             onQuickAdd();
           }}
@@ -207,34 +243,88 @@ export function ProductCard(props: ProductCardProps) {
             boxShadow: "var(--shadow-md)",
           }}
         >
-          <Icon name={quickAddIcon[type]} size={18} />
+          <Icon name={quickAction[type].icon} size={18} />
         </button>
       )}
     </div>
   );
 
-  if (layout === "list") {
-    return (
-      <div
-        onClick={onClick}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === "Enter" && onClick?.()}
-        className="ds-card lift"
-        style={{
-          display: "flex",
-          gap: 12,
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
-          borderRadius: "var(--radius-lg)",
-          overflow: "hidden",
-          cursor: "pointer",
-          boxShadow: "var(--shadow-card)",
-        }}
-      >
+  const listShell: CSSProperties = {
+    display: "flex",
+    gap: 12,
+    background: "var(--surface)",
+    border: "1px solid var(--border)",
+    borderRadius: "var(--radius-lg)",
+    overflow: "hidden",
+    cursor: "pointer",
+    boxShadow: "var(--shadow-card)",
+    textDecoration: "none",
+    color: "inherit",
+  };
+
+  const gridShell: CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    background: "var(--surface)",
+    border: "1px solid var(--border)",
+    borderRadius: "var(--radius-lg)",
+    overflow: "hidden",
+    cursor: "pointer",
+    boxShadow: "var(--shadow-card)",
+    textDecoration: "none",
+    color: "inherit",
+  };
+
+  const body =
+    layout === "list" ? (
+      <>
         {imageBox({ width: 118, height: 118 })}
         <div style={{ flex: 1, minWidth: 0, padding: "10px 12px 10px 0" }}>{meta}</div>
-      </div>
+      </>
+    ) : (
+      <>
+        {imageBox({ width: "100%", aspect: "1 / 1" })}
+        <div style={{ padding: "10px 12px 12px" }}>{meta}</div>
+      </>
+    );
+
+  return (
+    <CardShell
+      href={href}
+      onClick={onClick}
+      className={layout === "list" ? "ds-card lift" : "fadein lift ds-card"}
+      style={layout === "list" ? listShell : gridShell}
+    >
+      {body}
+    </CardShell>
+  );
+}
+
+/**
+ * A real `<a>` when there is somewhere to go, and the old click-handled `div`
+ * only where there is not.
+ *
+ * The fallback exists because a couple of surfaces navigate imperatively rather
+ * than to a fixed URL; everything with a product behind it should pass `href`.
+ */
+function CardShell({
+  href,
+  onClick,
+  className,
+  style,
+  children,
+}: {
+  href?: string;
+  onClick?: () => void;
+  className: string;
+  style: CSSProperties;
+  children: ReactNode;
+}) {
+  if (href) {
+    return (
+      <Link href={href} onClick={onClick} className={className} style={style}>
+        {children}
+      </Link>
     );
   }
 
@@ -244,20 +334,10 @@ export function ProductCard(props: ProductCardProps) {
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onClick?.()}
-      className="fadein lift ds-card"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: "var(--radius-lg)",
-        overflow: "hidden",
-        cursor: "pointer",
-        boxShadow: "var(--shadow-card)",
-      }}
+      className={className}
+      style={style}
     >
-      {imageBox({ width: "100%", aspect: "1 / 1" })}
-      <div style={{ padding: "10px 12px 12px" }}>{meta}</div>
+      {children}
     </div>
   );
 }

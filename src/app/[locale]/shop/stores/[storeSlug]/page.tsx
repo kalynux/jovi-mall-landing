@@ -1,61 +1,84 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { getVendorBySlug } from "@/lib/shop/shop.api";
+import { getStore, isPreviewRequest, listStoreProducts } from "@/lib/shop/catalog.api";
 import { VendorStore } from "@/components/shop/VendorStore";
 import JsonLd from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd, storeJsonLd } from "@/lib/seo/jsonld";
 import { localeAlternates } from "@/lib/seo/alternates";
+import { PAGE_SIZE, parseProductSearchParams } from "@/lib/shop/shop.query";
+import { storePath } from "@/lib/shop/shop.routes";
 import { isLocale } from "@/i18n/routing";
 
 interface PageProps {
-  params: Promise<{ locale: string; vendorSlug: string }>;
+  params: Promise<{ locale: string; storeSlug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { locale, vendorSlug } = await params;
+  const { locale, storeSlug } = await params;
   if (!isLocale(locale)) notFound();
 
-  const vendor = await getVendorBySlug(vendorSlug);
-  if (!vendor) {
-    return { title: "Store not found — WiMall", robots: { index: false, follow: false } };
+  const store = await getStore(storeSlug);
+  if (!store) {
+    return { title: "Store not found — Wi-Mall", robots: { index: false, follow: false } };
   }
 
-  const path = `/shop/stores/${vendor.slug}`;
+  const path = storePath(store.slug);
+  const where = [store.city, store.country].filter(Boolean).join(", ");
+
   return {
-    title: `${vendor.name} — WiMall`,
-    description: vendor.desc,
+    title: `${store.name} — Wi-Mall`,
+    description: store.description,
     alternates: localeAlternates(locale, path),
     openGraph: {
-      title: `${vendor.name} — ${vendor.city}, ${vendor.country}`,
-      description: vendor.desc,
-      images: [vendor.banner],
+      title: where ? `${store.name} — ${where}` : store.name,
+      description: store.description,
+      // `banner` and `logo` are both nullable; a store with neither gets no
+      // image rather than a broken one.
+      images: [store.banner?.url ?? store.logo?.url].filter((url): url is string => Boolean(url)),
       url: path,
       type: "website",
     },
   };
 }
 
-export default async function VendorPage({ params }: PageProps) {
-  const { locale, vendorSlug } = await params;
+export default async function StorePage({ params, searchParams }: PageProps) {
+  const { locale, storeSlug } = await params;
   if (!isLocale(locale)) notFound();
   setRequestLocale(locale);
 
-  const vendor = await getVendorBySlug(vendorSlug);
-  if (!vendor) notFound();
+  const resolvedSearchParams = await searchParams;
+  const query = parseProductSearchParams(resolvedSearchParams);
+  // `?preview=1` — the vendor dashboard's preview iframe, asking to skip the
+  // five-minute catalog cache so a vendor sees the edit they just saved. Read
+  // freshness only; it unlocks nothing.
+  const fresh = isPreviewRequest(resolvedSearchParams);
+
+  // Resolve the store first. Its own endpoint 404s a suspended vendor, and
+  // `/stores/:slug/products` 404s too rather than returning an empty grid —
+  // which would have said "this seller has nothing" about a suspended shop.
+  const store = await getStore(storeSlug, { fresh });
+  if (!store) notFound();
+
+  const { data: products, meta } = await listStoreProducts(
+    storeSlug,
+    { ...query, limit: PAGE_SIZE },
+    { fresh }
+  );
 
   return (
     <>
       <JsonLd
         data={[
-          storeJsonLd(locale, vendor),
+          storeJsonLd(locale, store),
           breadcrumbJsonLd(locale, [
             { name: "Shop", path: "/shop" },
-            { name: vendor.name, path: `/shop/stores/${vendor.slug}` },
+            { name: store.name, path: storePath(store.slug) },
           ]),
         ]}
       />
-      <VendorStore vendor={vendor} />
+      <VendorStore store={store} products={products} meta={meta} activeType={query.type?.[0]} />
     </>
   );
 }

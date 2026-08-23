@@ -44,7 +44,14 @@ const PROTECTED_PATHS = ["/add-role", "/auth-me"];
  *
  * The rest of /shop stays public on purpose: browsing must not need an account.
  */
-const PROTECTED_PREFIXES = ["/shop/account"];
+/**
+ * `/shop/checkout` joins `/shop/account` here because checkout is
+ * `requireRole(['customer'])` server-side: a signed-out visitor reaching it
+ * could only ever have seen a form that fails on submit. Browsing and the cart
+ * stay public — a visitor fills a cart, signs in at this gate, and
+ * `POST /cart/merge` carries the basket over.
+ */
+const PROTECTED_PREFIXES = ["/shop/account", "/shop/checkout"];
 
 /** Splits "/fr/add-role" into its locale and "/add-role". */
 function splitLocale(pathname: string): { locale: Locale; rest: string } {
@@ -73,6 +80,13 @@ export function middleware(req: NextRequest) {
       // back where the visitor actually was — and its query string, since
       // /add-role?role=vendor loses its preselected role without it.
       loginUrl.searchParams.set("return", req.nextUrl.pathname + req.nextUrl.search);
+      // The server half of the same rule the client guard applies: nothing
+      // under /shop belongs to a vendor, agency or agent, so the sign-in page
+      // is told it is dealing with a shopper and skips the role step. `rest`
+      // is already locale-stripped by splitLocale above.
+      if (rest === "/shop" || rest.startsWith("/shop/")) {
+        loginUrl.searchParams.set("role", "customer");
+      }
       return NextResponse.redirect(loginUrl);
     }
   }

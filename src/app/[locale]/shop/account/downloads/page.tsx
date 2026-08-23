@@ -11,6 +11,7 @@ import { Badge, Button, EmptyState, Icon } from "@/components/shop/ds";
 import { useToast } from "@/components/shop/providers";
 import { translateError } from "@/lib/auth/error-translator";
 import { createDownloadLink, getMyDigitalProducts } from "@/lib/shop/digital.api";
+import { startDownload } from "@/lib/native/download";
 import { useApiResource } from "@/lib/shop/useApiResource";
 import type { DigitalEntitlement } from "@/lib/shop/customer.types";
 
@@ -20,7 +21,7 @@ export default function DownloadsPage() {
   return (
     <AccountShell
       title="My downloads"
-      description="Everything digital you've bought. Files stay available for as long as your purchase allows."
+      description="Everything digital you've bought."
     >
       <ResourceView
         status={library.status}
@@ -68,7 +69,12 @@ function DownloadRow({
       // consumed on first use. Minting one per click is the contract, not a
       // fallback — a cached URL is already spent.
       const link = await createDownloadLink(item.id);
-      window.location.href = link.url;
+      // NOT `window.location.href`. In a WebView that navigates the app itself
+      // to the file — off its own origin, out of the bundle, with no way back —
+      // and the single-use token is spent either way, so one tap cost the
+      // shopper both the download and the app. `startDownload` hands the URL to
+      // the platform's download manager instead.
+      await startDownload(link.url);
       // The counter moved server-side; re-read so the remaining count on screen
       // is not one behind.
       onUsed();

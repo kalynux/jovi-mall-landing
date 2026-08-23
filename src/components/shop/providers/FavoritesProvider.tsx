@@ -11,7 +11,9 @@ interface FavoritesContextValue {
 }
 
 const FavoritesContext = createContext<FavoritesContextValue | null>(null);
-const STORAGE_KEY = "wimall-shop-favorites";
+const STORAGE_KEY = "wi-mall-shop-favorites";
+/** The key from before the brand became `wi-mall`. Carried over once, then retired. */
+const PRE_RENAME_STORAGE_KEY = "wimall-shop-favorites";
 
 export function useFavorites(): FavoritesContextValue {
   const ctx = useContext(FavoritesContext);
@@ -24,7 +26,15 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      let raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        const carried = localStorage.getItem(PRE_RENAME_STORAGE_KEY);
+        if (carried) {
+          localStorage.setItem(STORAGE_KEY, carried);
+          localStorage.removeItem(PRE_RENAME_STORAGE_KEY);
+          raw = carried;
+        }
+      }
       // eslint-disable-next-line react-hooks/set-state-in-effect
       if (raw) setFavorites(new Set(JSON.parse(raw) as string[]));
     } catch {

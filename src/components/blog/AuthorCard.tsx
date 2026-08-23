@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 /**
  * Initials from a name, for authors with no avatar.
  *
- * Two words at most: "The WiMall team" should read "TW", not "TWT".
+ * Two words at most: "The Wi-Mall team" should read "TW", not "TWT".
  */
 function initials(name: string): string {
   return name
@@ -29,6 +29,7 @@ function Avatar({ author, size }: { author: ResolvedAuthor; size: "sm" | "lg" })
         className={cn("flex-shrink-0 rounded-full object-cover", box)}
         loading="lazy"
         decoding="async"
+        
       />
     );
   }

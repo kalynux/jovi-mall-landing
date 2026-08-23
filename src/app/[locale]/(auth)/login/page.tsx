@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSearchParams } from "next/navigation";
@@ -8,24 +8,27 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
-  IDENTIFIER_TYPES,
   LoginSchema,
   type IdentifierType,
   type LoginFormValues,
 } from "@/lib/auth/auth.schemas";
-import { loginAndGetAction, logoutAndRedirect } from "@/lib/auth/auth.service";
-import type { UiRole, AuthRoleEntity } from "@/lib/auth/auth.types";
+import { loginAndGetRedirect } from "@/lib/auth/auth.service";
+import { validateReturnUrl } from "@/lib/auth/auth.redirect";
+import { useLocale } from "@/lib/i18n-provider";
+import { IS_NATIVE_BUILD } from "@/lib/platform";
+import { localePath } from "@/i18n/routing";
+import type { UiRole } from "@/lib/auth/auth.types";
 import { mapApiErrors, parseRootType } from "@/lib/auth/form-errors";
 import { sanitizePayload } from "@/lib/form/sanitize-payload";
 import AuthSplitShell from "@/components/auth/AuthSplitShell";
 import AuthFormField from "@/components/auth/AuthFormField";
+import IdentifierTypeToggle from "@/components/auth/IdentifierTypeToggle";
 import { PhoneField } from "@/components/ui/phone";
 import { GlobalError } from "@/components/auth/GlobalError";
 import RolePicker from "@/components/auth/RolePicker";
-import CustomerWhatsAppCta from "@/components/auth/CustomerWhatsAppCta";
-import { WhatsAppVerificationModal } from "@/components/auth/WhatsAppVerificationModal";
+import CustomerMagicSignIn from "@/components/auth/CustomerMagicSignIn";
 
-type Step = "role" | "customer-wa" | "form";
+type Step = "role" | "customer" | "form";
 
 /** Shared entrance for whichever step is on screen. */
 const stepMotion = {
@@ -35,99 +38,35 @@ const stepMotion = {
   transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] as const },
 };
 
-/**
- * Picks which kind of identifier is being entered.
- *
- * Sign-in accepts a phone number or an email, and the two need different
- * inputs — a phone needs the country selector and E.164 normalisation that the
- * rest of the app uses, an email must not get either. Asking up front is what
- * lets both be handled properly instead of guessing from the typed characters.
- *
- * Radio semantics with a roving tabindex: one tab stop for the group, arrows
- * move between the options, which is what a segmented control should do.
- */
-function IdentifierTypeToggle({
-  value,
-  onChange,
-  labels,
-  groupLabel,
-}: {
-  value: IdentifierType;
-  onChange: (next: IdentifierType) => void;
-  labels: Record<IdentifierType, string>;
-  groupLabel: string;
-}) {
-  const refs = useRef<Partial<Record<IdentifierType, HTMLButtonElement | null>>>({});
-
-  const move = (delta: number) => {
-    const index = IDENTIFIER_TYPES.indexOf(value);
-    const next =
-      IDENTIFIER_TYPES[
-        (index + delta + IDENTIFIER_TYPES.length) % IDENTIFIER_TYPES.length
-      ];
-    onChange(next);
-    refs.current[next]?.focus();
-  };
-
-  return (
-    <div
-      role="radiogroup"
-      aria-label={groupLabel}
-      className="inline-flex rounded-full bg-[var(--bg-subtle)] p-0.5"
-      onKeyDown={(e) => {
-        if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-          e.preventDefault();
-          move(1);
-        } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-          e.preventDefault();
-          move(-1);
-        }
-      }}
-    >
-      {IDENTIFIER_TYPES.map((type) => {
-        const selected = type === value;
-        return (
-          <button
-            key={type}
-            ref={(node) => {
-              refs.current[type] = node;
-            }}
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            tabIndex={selected ? 0 : -1}
-            onClick={() => onChange(type)}
-            className={[
-              "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors duration-150",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500",
-              selected
-                ? "bg-[var(--surface)] text-primary-600 shadow-[var(--shadow-sm)]"
-                : "text-[var(--text-muted)] hover:text-[var(--text-primary)]",
-            ].join(" ")}
-          >
-            {labels[type]}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 function LoginFormContent() {
   const t = useTranslations("auth");
   const tModal = useTranslations("modal");
   const tErrors = useTranslations("errors");
   const searchParams = useSearchParams();
   const returnParam = searchParams.get("return");
+  const { locale } = useLocale();
 
-  const [selectedRole, setSelectedRole] = useState<UiRole | null>(null);
-  const [step, setStep] = useState<Step>("role");
+  /**
+   * Who is asking, and therefore whether the role picker is a question worth
+   * putting to them.
+   *
+   * Two callers already know the answer. The app build is the shop and nothing
+   * else — there is no vendor console in the APK — and anything that redirects
+   * out of `/shop/**` is a shopper by construction, so the guard and the
+   * middleware both append `?role=customer` on the way here (auth.guard.tsx,
+   * middleware.ts). For either of them, opening on a four-way choice with only
+   * one right answer is a step that exists to be dismissed.
+   *
+   * Note this is **context, not viewport**: a vendor signing in from the
+   * marketing site on the same phone still gets the full picker. The screen
+   * size was never what made the question redundant.
+   */
+  const customerOnly = IS_NATIVE_BUILD || searchParams.get("role") === "customer";
 
-  // WA gate state — set when loginAndGetAction returns type === "wa_gate"
-  const [waGateData, setWaGateData] = useState<{
-    roleEntity: AuthRoleEntity;
-    redirectUrl: string;
-  } | null>(null);
+  const [selectedRole, setSelectedRole] = useState<UiRole | null>(
+    customerOnly ? "customer" : null
+  );
+  const [step, setStep] = useState<Step>(customerOnly ? "customer" : "role");
 
   const {
     register,
@@ -166,7 +105,7 @@ function LoginFormContent() {
   const handleRoleSelect = (role: UiRole) => {
     if (role === "customer") {
       setSelectedRole("customer");
-      setStep("customer-wa");
+      setStep("customer");
       return;
     }
     setSelectedRole(role);
@@ -181,6 +120,25 @@ function LoginFormContent() {
   const handleBackToRole = () => {
     setSelectedRole(null);
     setStep("role");
+  };
+
+  /**
+   * Where a customer lands once the magic code has set their cookies.
+   *
+   * The other three roles leave for their own subdomain, so `resolvePostLoginUrl`
+   * hands back an absolute URL. A customer's "dashboard" is this very app, so
+   * the destination is an internal path — and it has to carry the active locale
+   * explicitly, or the middleware re-resolves a bare `/shop` against whatever
+   * `NEXT_LOCALE` happens to say rather than the language being read.
+   *
+   * A full page load, like every other auth handoff here: the session providers
+   * resolve on mount, not on route change, so a client-side push would land on
+   * the shop still believing nobody is signed in.
+   */
+  const handleCustomerSignedIn = () => {
+    // A `return` from the middleware's gate already carries its locale prefix.
+    const safeReturn = validateReturnUrl(returnParam);
+    window.location.href = safeReturn ?? localePath(locale, "/shop");
   };
 
   const onSubmit = async (data: LoginFormValues) => {
@@ -199,57 +157,59 @@ function LoginFormContent() {
         role: selectedRole ?? undefined,
       });
 
-      const action = await loginAndGetAction(
+      window.location.href = await loginAndGetRedirect(
         payload as typeof data & { role?: UiRole },
         returnParam
       );
-
-      if (action.type === "redirect") {
-        window.location.href = action.url;
-      } else {
-        // WA gate triggered — show modal instead of redirecting
-        setWaGateData({
-          roleEntity: action.roleEntity,
-          redirectUrl: action.redirectUrl,
-        });
-      }
     } catch (err) {
       mapApiErrors(err, setError, tErrors);
     }
   };
 
-  // ── WA verification gate overlay ─────────────────────────────────────────
-  if (waGateData) {
-    return (
-      <WhatsAppVerificationModal
-        roleEntity={waGateData.roleEntity}
-        onSuccess={() => {
-          window.location.href = waGateData.redirectUrl;
-        }}
-        onLogout={logoutAndRedirect}
-      />
-    );
-  }
-
   // ── Title / subtitle per step ──────────────────────────────────────────────
-  const cardTitle =
-    step === "customer-wa" ? t("customerWaTitle") : t("welcomeBack");
+  /**
+   * "Sign in", on every step, and nothing else.
+   *
+   * It used to be "Welcome back" for a vendor and "No password needed" for a
+   * shopper. The first is a greeting, not a name for the screen; the second
+   * describes the mechanism — which is the subtitle's job, and the subtitle
+   * directly beneath it was already doing that job properly. A card whose
+   * heading explains *how* to sign in makes the reader work out *what* the
+   * screen is from the form underneath.
+   *
+   * The eyebrow pill is gone with it: it said "Sign in" too, and the title is
+   * the better place for the only two words this screen needs.
+   */
+  const cardTitle = t("signIn");
 
+  /**
+   * The customer step used to stack three sentences before the first field: a
+   * six-word title, a subtitle about shopping accounts, and then the actual
+   * instruction inside the form. On a phone that is most of the screen spent
+   * saying one thing three ways.
+   *
+   * It is one instruction now, and it is the subtitle — so the form below opens
+   * on the identifier field. The instruction differs by platform: a magic link
+   * opens the phone's browser, not this WebView, so the app is only told about
+   * the half that works there.
+   */
   const cardSubtitle =
     step === "role"
       ? t("loginSubtitle")
-      : step === "customer-wa"
-        ? t("customerWaSubtitle")
+      : step === "customer"
+        ? IS_NATIVE_BUILD
+          ? t("customerSignInCodeIntroApp")
+          : t("customerSignInCodeIntroWeb")
         : t("loginSubtitleForm");
 
-  // The customer branch leaves the sign-in path entirely (they shop on
-  // WhatsApp), so the two-step rail is only shown on the path it describes.
-  const showSteps = step !== "customer-wa";
+  // The customer branch is a whole different sign-in — a bot-issued link or
+  // code, no password anywhere — so the two-step role/details rail does not
+  // describe it and is not shown on it.
+  const showSteps = step !== "customer";
 
   return (
     <AuthSplitShell
       mode="login"
-      eyebrow={t("signIn")}
       title={cardTitle}
       subtitle={cardSubtitle}
       steps={showSteps ? [t("stepRole"), t("stepDetails")] : undefined}
@@ -262,7 +222,10 @@ function LoginFormContent() {
         step === "form" ? undefined : (
           <>
             {t("noAccount")}{" "}
-            <Link href="/register" className="font-medium text-primary-600 hover:underline">
+            <Link
+              href={customerOnly ? "/register?role=customer" : "/register"}
+              className="font-medium text-primary-600 hover:underline"
+            >
               {t("createOne")}
             </Link>
           </>
@@ -282,10 +245,19 @@ function LoginFormContent() {
           </motion.div>
         )}
 
-        {/* ── Step: customer → WhatsApp only ──────────────────────────────── */}
-        {step === "customer-wa" && (
-          <motion.div key="customer-wa" {...stepMotion}>
-            <CustomerWhatsAppCta onBack={handleBackToRole} />
+        {/* ── Step: customer → passwordless, via the bot ──────────────────── */}
+        {step === "customer" && (
+          <motion.div key="customer" {...stepMotion}>
+            <CustomerMagicSignIn
+              onSignedIn={handleCustomerSignedIn}
+              /* The escape hatch, and the reason `customerOnly` skips the
+                 picker rather than deleting it: a vendor who followed a shop
+                 link, or who simply bookmarked `?role=customer`, is one tap
+                 from the choice they actually wanted. Absent in the app, where
+                 there is no other role to reach. */
+              onBack={IS_NATIVE_BUILD ? undefined : handleBackToRole}
+              backLabel={customerOnly ? t("signInOtherRole") : undefined}
+            />
           </motion.div>
         )}
 
@@ -378,14 +350,15 @@ function LoginFormContent() {
                 })}
                 error={errors.password?.message}
               />
-              <button
-                type="button"
-                onClick={(e) => e.preventDefault()}
+              {/* A dead button until now — `POST /auth/forgot-password` did not
+                  exist, and the aria-label said so. It exists, so this is a link. */}
+              <Link
+                href="/forgot-password"
                 className="self-end text-xs text-[var(--text-muted)] transition-colors hover:text-primary-600"
                 aria-label={t("forgotPasswordAria")}
               >
                 {t("forgotPassword")}
-              </button>
+              </Link>
             </div>
 
             {(() => {
@@ -402,8 +375,11 @@ function LoginFormContent() {
               );
             })()}
 
-            {/* Action pair — sign in, or peel off to registration. */}
-            <div className="mt-1 grid gap-3 sm:grid-cols-2">
+            {/* One action, one aside. Registration used to sit beside sign-in
+                as a second solid button, which gave the page two things of
+                equal weight to choose between; it now reads as the quiet
+                alternative it is, in the same key as "Forgot password?". */}
+            <div className="mt-1 flex flex-col gap-3">
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -413,7 +389,10 @@ function LoginFormContent() {
                 {isSubmitting ? t("signingIn") : t("signIn")}
                 {!isSubmitting && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
               </button>
-              <Link href="/register" className="btn-secondary w-full">
+              <Link
+                href="/register"
+                className="self-center text-xs text-[var(--text-muted)] transition-colors hover:text-primary-600"
+              >
                 {t("createAccount")}
               </Link>
             </div>

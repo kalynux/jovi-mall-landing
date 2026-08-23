@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.wimall.shop",
+      "sha256_cert_fingerprints": [
+        "EE:8F:FC:58:F2:17:23:4A:C9:62:82:7D:C2:0A:E0:2E:32:7B:71:66:56:77:E5:FF:17:6B:82:AB:50:D6:53:F1"
+      ]
+    }
+  }
+]

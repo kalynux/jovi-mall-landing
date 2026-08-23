@@ -13,7 +13,7 @@
     "meta": {
         "langName": "Español",
         "langCode": "es",
-        "title": "WiMall — El comercio ocurre en la conversación",
+        "title": "Wi-Mall — El comercio ocurre en la conversación",
         "description": "Infraestructura de comercio electrónico con IA para negocios que venden por WhatsApp. Los vendedores venden sin sitio web. Los clientes compran conversando. Agencias y repartidores ganan en cada entrega.",
         "shareDescription": "La plataforma de comercio electrónico con IA pensada para WhatsApp."
     },
@@ -31,7 +31,7 @@
         "toggleLight": "Cambiar a modo claro",
         "openMenu": "Abrir menú",
         "closeMenu": "Cerrar menú",
-        "logoAriaLabel": "Inicio WiMall",
+        "logoAriaLabel": "Inicio Wi-Mall",
         "mainNavAriaLabel": "Navegación principal",
         "languageSwitcher": "Seleccionar idioma",
         "dashboard": "Panel de control",
@@ -42,7 +42,12 @@
         "pricing": "Precios",
         "faq": "Preguntas frecuentes",
         "cameroon": "Camerún",
-        "blog": "Blog"
+        "blog": "Blog",
+        "solutions": "Soluciones",
+        "company": "Empresa",
+        "about": "Nosotros",
+        "careers": "Empleo",
+        "contact": "Contacto"
     },
     "hero": {
         "badge": "La plataforma de comercio WhatsApp",
@@ -62,13 +67,13 @@
         "socialProof": "Sé uno de nuestros vendedores fundadores",
         "aiLabel": "IA activa",
         "orderConfirmed": "¡Pedido confirmado!",
-        "orderDetail": "₦ 12.500 · Llega hoy 🚚",
-        "chatCustomer1": "Busco auriculares inalámbricos por menos de ₦15k 🎧",
-        "chatAI1": "¡Encontré 3 opciones perfectas! El WiBuds Pro (₦12.500) es el más vendido ⭐",
+        "orderDetail": "12.500 FCFA · Llega hoy 🚚",
+        "chatCustomer1": "Busco auriculares inalámbricos por menos de 15.000 FCFA 🎧",
+        "chatAI1": "¡Encontré 3 opciones perfectas! El WiBuds Pro (12.500 FCFA) es el más vendido ⭐",
         "chatCustomer2": "¿Cuánto dura la batería?",
         "chatAI2": "7 horas por carga, 28 con el estuche — e incluye 1 año de garantía 🔋",
-        "chatCustomer3": "Genial 👌 ¿Entregan hoy en Lagos?",
-        "chatAI3": "Sí — el mismo día en todo Lagos por ₦1.000 si pides antes de las 13h 🛵",
+        "chatCustomer3": "Genial 👌 ¿Entregan hoy en Douala?",
+        "chatAI3": "Sí — el mismo día en toda Douala por 1.000 FCFA si pides antes de las 13h 🛵",
         "chatCustomer4": "¡Sí! Pedir el WiBuds Pro por favor",
         "chatAI4": "¡Perfecto! 🎉 ¿Mobile Money o pago contra entrega?",
         "chatCustomer5": "Mobile Money",
@@ -81,7 +86,7 @@
         "title1": "Una plataforma.",
         "title2": "Todos los roles.",
         "title3": "Conectados.",
-        "subtitle": "De un mensaje de WhatsApp a un producto entregado — cada paso funciona automáticamente en WiMall.",
+        "subtitle": "De un mensaje de WhatsApp a un producto entregado — cada paso funciona automáticamente en Wi-Mall.",
         "stats": {
             "aiResponse": "Tiempo de respuesta IA",
             "uptime": "Disponibilidad de la plataforma",
@@ -123,7 +128,7 @@
         "sectionLabel": "Para agencias",
         "title1": "Convierte la logística",
         "title2": "en ingresos.",
-        "subtitle": "Construye un negocio de entregas sobre WiMall. Recibe pedidos, coordina tu red de repartidores y gana comisión en cada entrega exitosa — con cero costo de adquisición de clientes.",
+        "subtitle": "Construye un negocio de entregas sobre Wi-Mall. Recibe pedidos, coordina tu red de repartidores y gana comisión en cada entrega exitosa — con cero costo de adquisición de clientes.",
         "ctaPrimary": "Unirse como agencia",
         "flow": {
             "orderIn": "Pedido recibido",
@@ -143,7 +148,7 @@
         "title1": "Entrega.",
         "title2": "Gana.",
         "title3": "Repite.",
-        "subtitle": "Únete a la red de entregas de WiMall. Define tus horarios, acepta misiones, entrega pedidos y cobra por entrega — todo desde tu teléfono.",
+        "subtitle": "Únete a la red de entregas de Wi-Mall. Define tus horarios, acepta misiones, entrega pedidos y cobra por entrega — todo desde tu teléfono.",
         "ctaPrimary": "Convertirse en repartidor",
         "steps": {
             "stepLabel": "Paso",
@@ -173,9 +178,9 @@
             "headerRole": "Asistente de compras IA",
             "placeholder": "Escribe un mensaje...",
             "you": "Tú",
-            "ai": "WiMall IA",
+            "ai": "Wi-Mall IA",
             "now": "ahora",
-            "m1": "¡Hola! Busco auriculares inalámbricos por menos de ₦15.000 🎧",
+            "m1": "¡Hola! Busco auriculares inalámbricos por menos de 15.000 FCFA 🎧",
             "m2": "Tres opciones ideales — este es nuestro más vendido ⭐",
             "m3": "¿Cuánto dura la batería?",
             "m4": "7 horas con una carga, 28 con el estuche — y un año de garantía 🔋",
@@ -183,16 +188,16 @@
             "m6": "¡Pedido confirmado! Llega hoy entre las 2 y las 5 PM. Síguelo aquí mismo 📦",
             "productName": "WiBuds Pro",
             "productMeta": "Envío gratis · En stock",
-            "productPrice": "₦ 12.500",
+            "productPrice": "12.500 FCFA",
             "orderBadge": "Llega hoy",
-            "orderDetail": "₦ 12.500 · 2–5 PM 🛵"
+            "orderDetail": "12.500 FCFA · 2–5 PM 🛵"
         },
         "whatsapp": {
             "cta": "Comprar en WhatsApp",
-            "previewWelcome": "👋 ¡Bienvenido a WiMall!",
+            "previewWelcome": "👋 ¡Bienvenido a Wi-Mall!",
             "previewMsg": "Dinos qué buscas y nuestra IA encontrará las mejores ofertas. ¿Qué necesitas hoy?",
-            "previewTime": "WiMall IA · ahora",
-            "previewUserMsg": "¡Hola WiMall! Me gustaría empezar a comprar.",
+            "previewTime": "Wi-Mall IA · ahora",
+            "previewUserMsg": "¡Hola Wi-Mall! Me gustaría empezar a comprar.",
             "trust": "Negocio verificado · Seguro",
             "openWhatsApp": "Abrir WhatsApp",
             "closePreview": "Cerrar vista previa",
@@ -204,7 +209,7 @@
         "title1": "Construido para cómo",
         "title2": "tú",
         "title3": "compras de verdad.",
-        "subtitle": "No solo copiamos un modelo de e-commerce occidental. WiMall se construyó desde cero para compradores y empresas móviles, WhatsApp, conscientes de los datos.",
+        "subtitle": "No solo copiamos un modelo de e-commerce occidental. Wi-Mall se construyó desde cero para compradores y empresas móviles, WhatsApp, conscientes de los datos.",
         "ctaPrimary": "Conoce nuestra historia",
         "features": {
             "mobileTitle": "Nativo para móvil",
@@ -216,15 +221,15 @@
         },
         "phone": {
             "status": "9:41",
-            "assistantName": "WiMall",
+            "assistantName": "Wi-Mall",
             "assistantSub": "Asistente de compras con IA",
             "onlineLabel": "en línea",
             "chat1Customer": "Necesito un regalo de cumpleaños 🎁",
             "chat1AI": "¡Genial! ¿Cuál es tu presupuesto? 💜",
-            "chat2Customer": "₦5.000 - ₦15.000",
-            "chat2AI": "Aquí hay 5 regalos perfectos por menos de ₦15k — ¡los más vendidos! 🎉",
+            "chat2Customer": "5.000 - 15.000 FCFA",
+            "chat2AI": "Aquí hay 5 regalos perfectos por menos de 15.000 FCFA — ¡los más vendidos! 🎉",
             "inputPlaceholder": "Mensaje...",
-            "earnedBadge": "+₦12.500 ganados",
+            "earnedBadge": "+12.500 FCFA ganados",
             "aiActiveBadge": "IA activa ✦",
             "lowSignalNote": "Sigue enviando en 2G"
         }
@@ -252,7 +257,7 @@
             "revenueTitle": "Ingresos multi-actor",
             "revenueDesc": "Cada transacción crea valor para vendedores, agencias y repartidores simultáneamente — una verdadera economía compartida.",
             "scaleTitle": "Hecho para escala regional",
-            "scaleDesc": "Multi-ciudad, multi-moneda y multi-idioma. Expande de Lagos a Nairobi a Accra sin reconstruir todo."
+            "scaleDesc": "Multi-ciudad, multi-moneda y multi-idioma. Expande de Douala a Yaoundé a Garoua — y más allá de Camerún cuando quieras — sin reconstruir todo."
         },
         "stats": {
             "vendors": "Vendedores",
@@ -263,7 +268,7 @@
         "dashboard": {
             "recentActivity1": "Nuevo pedido #4821 asignado",
             "recentActivity2": "El repartidor Chidi confirmó la recogida",
-            "recentActivity3": "₦ 12.500 acreditados en la billetera",
+            "recentActivity3": "12.500 FCFA acreditados en la billetera",
             "performance": "Rendimiento de 30 días",
             "stable": "Estable",
             "up": "↑ +12%",
@@ -284,9 +289,9 @@
             "capTablet": "Se adapta hasta el formato tableta",
             "capPhone": "Y una app nativa para iOS y Android",
             "live": "En vivo",
-            "toastOrder": "Nuevo pedido · ₦ 2.450",
+            "toastOrder": "Nuevo pedido · 2.450 FCFA",
             "toastDispatch": "Asignado al repartidor más cercano",
-            "toastDelivered": "Entregado · +₦ 1.200",
+            "toastDelivered": "Entregado · +1.200 FCFA",
             "stRevenue": "Ingresos",
             "stOrders": "Pedidos",
             "stProducts": "Productos",
@@ -298,7 +303,7 @@
         }
     },
     "finalCta": {
-        "badge": "✦ Sé un negocio fundador en WiMall",
+        "badge": "✦ Sé un negocio fundador en Wi-Mall",
         "title1": "Tu negocio,",
         "title2": "impulsado por la conversación.",
         "subtitle": "Empieza en minutos. Sin tarjeta de crédito. Sin equipo técnico. Tus primeros 30 días son completamente gratis.",
@@ -348,16 +353,15 @@
         "terms": "Términos de servicio",
         "cookies": "Política de cookies",
         "copyright": "Todos los derechos reservados.",
-        "builtFor": "Hecho para el comercio moderno. Impulsado por WiMall.",
-        "logoAriaLabel": "Inicio WiMall",
+        "builtFor": "Hecho para el comercio moderno. Impulsado por Wi-Mall.",
+        "logoAriaLabel": "Inicio Wi-Mall",
         "socialAriaLabel": "Enlace social",
         "learn": "Recursos"
     },
     "auth": {
         "forgotPassword": "¿Olvidaste tu contraseña?",
-        "customerWaTitle": "Los clientes compran vía WhatsApp",
-        "customerWaSubtitle": "No necesitas cuenta — solo empieza a chatear.",
-        "customerWaBody": "Los clientes no necesitan crear una cuenta. Continúa en WhatsApp para acceder a tu perfil.",
+        "customerWaTitle": "Los compradores empiezan en el chat",
+        "customerWaSubtitle": "Sin formulario que rellenar.",
         "customerWaCta": "Continuar en WhatsApp",
         "customerWaBack": "Elegir un rol diferente",
         "backToHome": "Volver al inicio",
@@ -367,11 +371,11 @@
         "showcaseEyebrow": "El comercio ocurre conversando",
         "showcaseTitleLogin": "Tu tienda cabe en un chat.",
         "showcaseTitleRegister": "Vende donde tus clientes ya están.",
-        "showcaseBody": "WiMall convierte WhatsApp en una tienda completa: la IA responde preguntas, toma pedidos y asigna la entrega a un agente cerca de tu cliente.",
+        "showcaseBody": "Wi-Mall convierte WhatsApp en una tienda completa: la IA responde preguntas, toma pedidos y asigna la entrega a un agente cerca de tu cliente.",
         "showcasePoint1": "IA que responde en segundos, de día y de noche",
         "showcasePoint2": "Pedidos y pagos resueltos dentro del chat",
         "showcasePoint3": "Entregas asignadas y seguidas hasta la puerta",
-        "loginTitle": "Inicia sesión en WiMall",
+        "loginTitle": "Inicia sesión en Wi-Mall",
         "loginSubtitle": "Elige el rol con el que quieres iniciar sesión",
         "loginSubtitleForm": "Introduce tus credenciales para continuar",
         "registerTitle": "Crea tu cuenta",
@@ -395,7 +399,7 @@
         "agencyNamePlaceholder": "Nombre de tu agencia de entrega",
         "passwordPlaceholder": "",
         "newPasswordPlaceholder": "Mín. 8 caracteres",
-        "forgotPasswordAria": "Contraseña olvidada — aún no disponible",
+        "forgotPasswordAria": "¿Olvidaste tu contraseña? Restablécela",
         "signIn": "Iniciar sesión",
         "signingIn": "Iniciando sesión",
         "createAccount": "Crear cuenta",
@@ -410,7 +414,21 @@
         "identifierTypeLabel": "Iniciar sesión con",
         "identifierTypePhone": "Teléfono",
         "identifierTypeEmail": "Correo",
-        "emailLabelLogin": "Correo"
+        "emailLabelLogin": "Correo",
+        "fieldInfoAria": "Más información",
+        "customerSignInTitle": "Sin contraseña",
+        "customerSignInWaCta": "Abrir WhatsApp",
+        "customerSignInTgCta": "Abrir Telegram",
+        "customerSignInIdentifierHint": "El número o correo que usas con el bot.",
+        "customerCodeLabel": "Código de inicio de sesión",
+        "customerCodePlaceholder": "4B2K91QN",
+        "signInOtherRole": "Iniciar sesión como vendedor, agencia o agente",
+        "customerSignInCodeIntroWeb": "Abre el enlace del bot o introduce su código.",
+        "customerSignInCodeIntroApp": "Introduce el código que te envió el bot.",
+        "customerGetCode": "Obtener",
+        "customerGetCodeTitle": "Obtener un código de acceso",
+        "customerGetCodeBody": "Envía el comando <code>{command}</code> al bot.",
+        "customerCodeExpiryNote": "Los códigos duran diez minutos y sirven una vez. Si el tuyo ya no funciona, envía el comando de nuevo para obtener otro."
     },
     "authMe": {
         "title": "Cambiar rol",
@@ -453,7 +471,7 @@
     "addRole": {
         "title": "Añadir nuevo rol",
         "subtitle": "Actualmente tienes: {roles}",
-        "subtitleEmpty": "Amplía lo que puedes hacer en WiMall",
+        "subtitleEmpty": "Amplía lo que puedes hacer en Wi-Mall",
         "nameLabel": "Nombre completo",
         "namePlaceholder": "Tu nombre completo",
         "personalNameLabel": "Tu nombre",
@@ -477,45 +495,9 @@
         "confirmStay": "Quedarse con el rol actual",
         "serverError": "Algo salió mal. Inténtalo de nuevo."
     },
-    "waVerification": {
-        "title": "Verifica tu WhatsApp",
-        "subtitle": "Requerido antes de acceder a tu panel",
-        "description": "Para proteger tu cuenta y activar las notificaciones de WhatsApp, debes verificar tu número de teléfono.",
-        "updateOtherRolesLabel": "Verificar este número para todos mis roles no verificados",
-        "updateOtherRolesDesc": "Si tienes otros roles sin verificar, se vincularán todos a este número de WhatsApp en un paso.",
-        "requestCodeBtn": "Solicitar código de verificación",
-        "instructionsHeader": "Cómo verificar",
-        "commandInstructionPart1": "Para verificar, ",
-        "commandInstructionLinkText": "haz clic aquí",
-        "commandInstructionPart2": " para enviar un mensaje a nuestro bot, o copia y envía el comando al ",
-        "commandInstructionPart3": "",
-        "commandLabel": "Envía este comando en WhatsApp",
-        "copyBtn": "Copiar",
-        "copyAriaLabel": "Copiar el comando al portapapeles",
-        "copied": "¡Copiado!",
-        "openWhatsApp": "Abrir WhatsApp",
-        "expiresIn": "El código expira en {time}",
-        "sentCodeBtn": "He enviado el código",
-        "checkingStatus": "Comprobando…",
-        "pollingStatus": "Aún comprobando…",
-        "pollingAttempt": "Intento {current} de {max}",
-        "checking": "Comprobando el estado…",
-        "expiredTitle": "Código expirado",
-        "expiredDesc": "Su código de verificación ha expirado. Solicite uno nuevo para continuar.",
-        "failedTitle": "Verificación fallida",
-        "failedDesc": "No pudimos verificar su número de WhatsApp. Solicite un nuevo código y vuelva a intentarlo.",
-        "requestNewCode": "Solicitar un nuevo código",
-        "requestNewCodeBtn": "Nuevo código",
-        "successTitle": "¡WhatsApp verificado!",
-        "successDesc": "Redirigiendo a tu panel…",
-        "errorTitle": "Algo salió mal",
-        "genericError": "Ocurrió un error. Por favor, inténtalo de nuevo.",
-        "tryAgain": "Intentar de nuevo",
-        "logoutLink": "Cerrar sesión y probar con otra cuenta"
-    },
     "errors": {
         "UNKNOWN_ERROR": "Ocurrió un error inesperado. Por favor, inténtalo de nuevo.",
-        "NETWORK_ERROR": "No podemos conectar con WiMall ahora mismo. Comprueba tu conexión e inténtalo de nuevo.",
+        "NETWORK_ERROR": "No podemos conectar con Wi-Mall ahora mismo. Comprueba tu conexión e inténtalo de nuevo.",
         "request_id": "ID de soporte: {id}",
         "fields": {
             "invalid_type": "Este campo contiene un valor no válido.",
@@ -548,15 +530,13 @@
         "AUTH_EMAIL_ALREADY_VERIFIED": "Este correo ya ha sido verificado.",
         "AUTH_EMAIL_MISSING": "Se requiere una dirección de correo para esta acción.",
         "AUTH_VERIFY_TOKEN_INVALID": "El enlace de verificación no es válido o ha expirado.",
-        "AUTH_WA_ALREADY_VERIFIED": "Tu número de WhatsApp ya ha sido verificado.",
+        "AUTH_RESET_TOKEN_INVALID": "Este enlace para restablecer la contraseña no es válido o ha caducado. Solicita uno nuevo.",
         "AUTH_PROFILE_NOT_FOUND": "No se encontró tu perfil.",
-        "AUTH_PHONE_REQUIRED_FOR_WA": "Se requiere un número de teléfono para vincular WhatsApp.",
         "AUTH_UNSUPPORTED_ROLE": "Este rol no está soportado.",
         "AUTH_REFRESH_TOKEN_INVALID": "Tu sesión no pudo renovarse. Por favor, inicia sesión de nuevo.",
         "AUTH_SESSION_EXPIRED": "Tu sesión ha expirado. Por favor, inicia sesión de nuevo.",
         "AUTH_USER_NOT_FOUND": "No se encontró ningún usuario con esta información.",
         "AUTH_ROLE_PROFILE_NOT_FOUND": "No se encontró tu perfil de rol.",
-        "AUTH_WA_PHONE_ID_REQUIRED": "Se requiere un ID de teléfono de WhatsApp.",
         "AUTH_FORBIDDEN": "No tienes permiso para realizar esta acción.",
         "AUTH_OAUTH_STATE_INVALID": "La solicitud de autenticación no es válida. Por favor, inténtalo de nuevo.",
         "AUTH_OAUTH_STATE_EXPIRED": "El enlace de autenticación ha expirado. Por favor, inténtalo de nuevo.",
@@ -573,6 +553,12 @@
         "REQUEST_MEDIA_TYPE_UNSUPPORTED": "Ese formato de solicitud no está soportado. Por favor, inténtalo de nuevo.",
         "PAYMENT_ORDER_NOT_FOUND": "No se encontró el pedido.",
         "PAYMENT_ORDER_ALREADY_PAID": "Este pedido ya ha sido pagado.",
+        "PAYMENT_ORDER_IS_COD": "Este pedido se paga en efectivo contra entrega: no hay nada que pagar en línea.",
+        "PAYMENT_OPERATOR_UNDETERMINED": "No pudimos determinar la red móvil de este número. El dinero móvil funciona con números MTN y Orange en Camerún.",
+        "PAYMENT_CURRENCY_NOT_SUPPORTED": "Este método de pago no puede usarse para esta moneda.",
+        "PAYMENT_CART_NOT_FOUND": "No encontramos este pedido.",
+        "PAYMENT_CART_NO_PAYABLE_ORDERS": "Ya no queda nada por pagar en este pedido.",
+        "PAYMENT_CART_MIXED_CURRENCY": "Este pedido combina varias monedas y no puede liquidarse en un solo pago. Ponte en contacto con soporte.",
         "PAYMENT_INVALID_ORDER_STATUS": "Este pedido no puede pagarse en este momento.",
         "PAYMENT_GATEWAY_NOT_SUPPORTED": "Esta pasarela de pago no está soportada.",
         "PAYMENT_INITIATION_FAILED": "El pago no pudo iniciarse. Por favor, inténtalo de nuevo.",
@@ -615,8 +601,6 @@
         "DIGITAL_ASSET_IN_USE": "Este recurso digital está en uso y no puede modificarse.",
         "DIGITAL_ENTITLEMENT_CONFIG_MISSING": "Falta la configuración del derecho.",
         "DIGITAL_ENTITLEMENT_CONFIG_INACTIVE": "La configuración del derecho está inactiva.",
-        "WHATSAPP_ROLE_NOT_SUPPORTED": "WhatsApp no está disponible para este rol.",
-        "WHATSAPP_NOT_LINKED": "Tu cuenta de WhatsApp no está vinculada.",
         "WHATSAPP_LINK_FAILED": "La vinculación de WhatsApp falló. Por favor, inténtalo de nuevo.",
         "WHATSAPP_INVALID_PAYLOAD": "Se recibió un mensaje de WhatsApp no válido.",
         "WHATSAPP_POLICY_VIOLATION": "Este mensaje viola la política de WhatsApp.",
@@ -742,6 +726,7 @@
         "DELIVERY_AGENT_NOT_FOUND": "No se encontró el repartidor.",
         "CUSTOMER_NOT_FOUND": "No se encontró la cuenta de cliente.",
         "CUSTOMER_ADDRESS_NOT_FOUND": "No se encontró la dirección de entrega.",
+        "ORDER_DELIVERY_ADDRESS_REQUIRED": "Necesitamos una dirección de entrega que podamos localizar antes de realizar este pedido.",
         "CUSTOMER_PAYMENT_METHOD_NOT_FOUND": "No se encontró el método de pago.",
         "USER_NOT_FOUND": "No se encontró la cuenta de usuario.",
         "USER_INVALID_PASSWORD": "La contraseña actual es incorrecta.",
@@ -751,6 +736,7 @@
         "CART_PRODUCT_NOT_FOUND": "No se encontró un producto de tu carrito.",
         "CART_SERVICE_PRODUCT_NOT_ALLOWED": "Los productos de servicio no pueden añadirse al carrito.",
         "CART_VARIANT_NOT_FOUND": "No se encontró la variante seleccionada.",
+        "CART_ITEM_NOT_FOUND": "Ese artículo ya no está en tu carrito. Actualiza para ver la última versión.",
         "CART_VARIANT_PRODUCT_MISMATCH": "La variante seleccionada no coincide con el producto.",
         "CART_DIGITAL_QUANTITY_MUST_BE_ONE": "Los productos digitales solo pueden comprarse de uno en uno.",
         "CART_MIXED_PRODUCT_TYPES": "Tu carrito no puede mezclar diferentes tipos de productos.",
@@ -774,7 +760,21 @@
         "ADMIN_NOT_FOUND": "No se encontró la cuenta de administrador.",
         "ADMIN_FORBIDDEN": "Se requiere acceso de administrador para esta acción.",
         "COMMAND_ALREADY_REGISTERED": "Este comando ya está registrado.",
-        "COMMAND_NOT_FOUND": "No se encontró el comando."
+        "COMMAND_NOT_FOUND": "No se encontró el comando.",
+        "AUTH_SESSION_CAP_REACHED": "Ha pasado un tiempo: vuelve a iniciar sesión.",
+        "AUTH_ACCOUNT_SUSPENDED": "Esta cuenta está suspendida. Contacta con soporte.",
+        "AUTH_VENDOR_SUSPENDED": "Este perfil de vendedor está inactivo. Contacta con soporte.",
+        "MAGIC_LINK_INVALID": "Este enlace de inicio de sesión ya no es válido. Envía el comando al bot de nuevo para obtener otro.",
+        "MAGIC_LINK_EXPIRED": "Este enlace de inicio de sesión ha caducado. Envía el comando al bot de nuevo para obtener otro.",
+        "MAGIC_CODE_INVALID": "Ese código no funcionó. Envía el comando al bot de nuevo para obtener otro.",
+        "MAGIC_CODE_EXPIRED": "Ese código ha caducado. Envía el comando al bot de nuevo para obtener otro.",
+        "MAGIC_ATTEMPTS_EXCEEDED": "Demasiados intentos. Espera unos minutos y pide un código nuevo al bot.",
+        "MAGIC_CONTACT_UNVERIFIED": "Comparte tu propia tarjeta de contacto, no la de otra persona.",
+        "CONNECTION_CODE_INVALID": "Ese código no funcionó. Revisa lo que escribiste o envía el comando de nuevo para obtener otro.",
+        "CONNECTION_CODE_EXPIRED": "Ese código ha caducado. Envía el comando al bot de nuevo para obtener otro.",
+        "CONNECTION_CODE_ATTEMPTS_EXCEEDED": "Demasiados intentos. Espera unos minutos antes de volver a intentarlo.",
+        "MESSAGING_IDENTITY_ALREADY_LINKED": "Esa cuenta de mensajería ya está conectada a otra cuenta de Wi-Mall. Desconéctala allí primero o contacta con soporte.",
+        "MESSAGING_CONNECTION_NOT_FOUND": "Ese canal no está conectado."
     },
     "errorPage": {
         "generic": {
@@ -783,7 +783,7 @@
         },
         "pricing": {
             "title": "No hemos podido cargar los planes",
-            "body": "Nuestros precios vienen directamente de los servidores de WiMall, y ahora mismo no podemos conectar con ellos. No es un problema de tu cuenta: inténtalo de nuevo en un momento."
+            "body": "Nuestros precios vienen directamente de los servidores de Wi-Mall, y ahora mismo no podemos conectar con ellos. No es un problema de tu cuenta: inténtalo de nuevo en un momento."
         },
         "blog": {
             "title": "El blog no se está cargando",
@@ -829,7 +829,11 @@
             "pricing": "Precios",
             "faq": "Preguntas frecuentes",
             "cameroon": "Camerún",
-            "blog": "Blog"
+            "blog": "Blog",
+            "customers": "Para clientes",
+            "about": "Nosotros",
+            "careers": "Empleo",
+            "contact": "Contacto"
         },
         "common": {
             "breadcrumbLabel": "Ruta de navegación",
@@ -844,8 +848,9 @@
             "keepReading": "Sigue leyendo",
             "commonQuestions": "Preguntas frecuentes",
             "allQuestions": "Ver todas las preguntas",
-            "currencyNote": "Los precios están en FCFA (XAF), la moneda del mercado al que WiMall sirve primero.",
-            "faqShort": "FAQ"
+            "currencyNote": "Los precios están en FCFA (XAF), la moneda del mercado al que Wi-Mall sirve primero.",
+            "faqShort": "FAQ",
+            "openFormNewTab": "Abrir el formulario en una pestaña nueva"
         },
         "plans": {
             "free": "Gratis",
@@ -875,13 +880,13 @@
             "west": "Oeste"
         },
         "pricing": {
-            "metaTitle": "Precios de WiMall — empieza en cero, paga cuando te rinda",
-            "metaDescription": "Lo que cuesta WiMall a vendedores, agencias de reparto y repartidores. Planes gratuitos que nunca caducan, planes de vendedor desde 5.000 FCFA por 30 días, comisión del 7% hasta el 3%, y nada que se renueve solo.",
+            "metaTitle": "Precios de Wi-Mall — empieza en cero, paga cuando te rinda",
+            "metaDescription": "Lo que cuesta Wi-Mall a vendedores, agencias de reparto y repartidores. Planes gratuitos que nunca caducan, planes de vendedor desde 5.000 FCFA por 30 días, comisión del 7% hasta el 3%, y nada que se renueve solo.",
             "eyebrow": "Planes, comisión y créditos",
             "title": "Empieza en cero. Paga cuando te rinda.",
             "lead": "Vendedores, agencias de reparto y repartidores tienen cada uno un plan gratuito que nunca caduca. Los planes de pago suben tus límites y, para los vendedores, bajan la comisión de cada pedido. Sin cuota de alta, sin contrato, y nada se renueva solo.",
             "howWeEarn": {
-                "title": "Cómo gana dinero WiMall",
+                "title": "Cómo gana dinero Wi-Mall",
                 "lead": "Conviene decirlo claro, porque es lo que decide si el trato te sirve.",
                 "commission": {
                     "title": "Una comisión por cada pedido pagado",
@@ -897,9 +902,9 @@
                 },
                 "delivery": {
                     "title": "Nada de la tarifa de reparto",
-                    "body": "La tarifa de reparto la fija la agencia y se reparte entre ella y el repartidor que hizo el trayecto. WiMall no toma ninguna parte de ella."
+                    "body": "La tarifa de reparto la fija la agencia y se reparte entre ella y el repartidor que hizo el trayecto. Wi-Mall no toma ninguna parte de ella."
                 },
-                "customerNote": "Los clientes pagan por lo que compran y nada más. No hay comisión, ni suscripción, ni cargo de cuenta por comprar en WiMall."
+                "customerNote": "Los clientes pagan por lo que compran y nada más. No hay comisión, ni suscripción, ni cargo de cuenta por comprar en Wi-Mall."
             },
             "vendor": {
                 "title": "Planes para vendedores",
@@ -918,7 +923,7 @@
             },
             "credits": {
                 "title": "Qué son los créditos",
-                "p1": "Dos cosas cuestan dinero de verdad cada vez que ocurren en WiMall, así que se miden en lugar de incluirse: indexar uno de tus productos para que el asistente de IA pueda encontrarlo y recomendarlo, y enviar un mensaje de plantilla de WhatsApp facturable a un cliente. Cada una cuesta 1 crédito.",
+                "p1": "Dos cosas cuestan dinero de verdad cada vez que ocurren en Wi-Mall, así que se miden en lugar de incluirse: indexar uno de tus productos para que el asistente de IA pueda encontrarlo y recomendarlo, y enviar un mensaje de plantilla de WhatsApp facturable a un cliente. Cada una cuesta 1 crédito.",
                 "p2": "Activar un plan concede su asignación una sola vez — 50 créditos en el plan gratuito de vendedor, 4.500 en Business. Si la agotas, recarga por paquetes. Cuanto mayor el paquete, menos cuesta cada crédito.",
                 "packsTitle": "Paquetes de créditos",
                 "packsCaption": "Paquetes de recarga de créditos y sus precios",
@@ -928,7 +933,7 @@
             },
             "payment": {
                 "title": "Cómo funciona el pago",
-                "p1": "Los planes y los paquetes de créditos se pagan con NotchPay o MyCoolPay para dinero móvil, o con Stripe para tarjetas. Nada se guarda para cobrarlo más adelante — no hay suscripción recurrente en ninguna parte de WiMall.",
+                "p1": "Los planes y los paquetes de créditos se pagan con NotchPay o MyCoolPay para dinero móvil, o con Stripe para tarjetas. Nada se guarda para cobrarlo más adelante — no hay suscripción recurrente en ninguna parte de Wi-Mall.",
                 "p2": "Un periodo pagado simplemente se agota a los 30 días. Si compraste otro plan mientras uno estaba en marcha, quedó en cola y toma el relevo en ese momento; si no lo hiciste, vuelves al plan gratuito de tu rol y sigues trabajando. Puedes tener un plan activo y otro en cola a la vez.",
                 "p3": "Si un pago con tarjeta se revierte después, el plan que compró vuelve al gratuito y los créditos que concedió se retiran con él — lo que puede dejar un saldo negativo hasta la siguiente recarga."
             },
@@ -941,16 +946,16 @@
             "unsoldTierNote": "Los niveles marcados como no disponibles para la venta aparecen a su precio de catálogo pero hoy no se pueden comprar aquí. El plan gratuito está siempre disponible."
         },
         "vendors": {
-            "metaTitle": "Vende por WhatsApp sin página web — WiMall para vendedores",
-            "metaDescription": "Sube tus productos una vez y deja que el asistente de IA de WiMall los venda dentro de WhatsApp. Sin tienda, sin app, sin programador. Plan gratuito: 15 productos, 7% de comisión, sin caducidad.",
-            "eyebrow": "Vender en WiMall",
+            "metaTitle": "Vende por WhatsApp sin página web — Wi-Mall para vendedores",
+            "metaDescription": "Sube tus productos una vez y deja que el asistente de IA de Wi-Mall los venda dentro de WhatsApp. Sin tienda, sin app, sin programador. Plan gratuito: 15 productos, 7% de comisión, sin caducidad.",
+            "eyebrow": "Vender en Wi-Mall",
             "title": "Vende por WhatsApp sin página web",
-            "lead": "No necesitas tienda online, ni dominio, ni programador. Sube tus productos una vez, y el asistente de IA de WiMall los vende dentro de las conversaciones de WhatsApp que tus clientes ya están teniendo.",
+            "lead": "No necesitas tienda online, ni dominio, ni programador. Sube tus productos una vez, y el asistente de IA de Wi-Mall los vende dentro de las conversaciones de WhatsApp que tus clientes ya están teniendo.",
             "problem": {
                 "title": "Ya vendes por WhatsApp. Ese es justamente el problema.",
                 "p1": "La conversación funciona. La gente confía en ella, abrirla casi no gasta datos, y nadie tiene que crear una cuenta para hablar contigo. Lo que no funciona es que tú eres el catálogo, el vendedor y el despachador a la vez — y los tres solo existen mientras el teléfono está en tu mano.",
                 "p2": "Así que las mismas cinco preguntas vuelven todo el día. ¿Todavía hay? ¿Cuánto cuesta? ¿Qué colores? ¿Repartes en mi zona? ¿Puedo pagar cuando llegue? Piérdete una hora y perdiste la venta, porque el cliente ya preguntó en otro sitio.",
-                "p3": "WiMall no te saca de WhatsApp. Pone un catálogo de verdad y un asistente detrás de la conversación, para que esas cinco preguntas se respondan a las dos de la mañana igual que a las dos de la tarde."
+                "p3": "Wi-Mall no te saca de WhatsApp. Pone un catálogo de verdad y un asistente detrás de la conversación, para que esas cinco preguntas se respondan a las dos de la mañana igual que a las dos de la tarde."
             },
             "how": {
                 "title": "Cómo funciona",
@@ -1000,16 +1005,16 @@
             }
         },
         "agencies": {
-            "metaTitle": "Agencias de reparto en WiMall — pedidos que llegan pagados y con dirección",
-            "metaDescription": "Lleva un negocio de reparto sobre WiMall: pedidos pagados despachados a tus repartidores, cobertura por región, seguimiento en vivo, gestión del pago contra entrega. Tú fijas la tarifa de reparto y WiMall no se lleva nada de ella.",
+            "metaTitle": "Agencias de reparto en Wi-Mall — pedidos que llegan pagados y con dirección",
+            "metaDescription": "Lleva un negocio de reparto sobre Wi-Mall: pedidos pagados despachados a tus repartidores, cobertura por región, seguimiento en vivo, gestión del pago contra entrega. Tú fijas la tarifa de reparto y Wi-Mall no se lleva nada de ella.",
             "eyebrow": "Operaciones de reparto",
             "title": "Pedidos que llegan ya pagados y con dirección",
-            "lead": "WiMall entrega a tu agencia envíos reales, con destino y tarifa incluidos. Tú los despachas a tus repartidores, ellos entregan, y la tarifa de reparto es tuya para repartirla — WiMall no toma ninguna parte.",
+            "lead": "Wi-Mall entrega a tu agencia envíos reales, con destino y tarifa incluidos. Tú los despachas a tus repartidores, ellos entregan, y la tarifa de reparto es tuya para repartirla — Wi-Mall no toma ninguna parte.",
             "money": {
                 "title": "De dónde sale el dinero de una agencia",
                 "p1": "Tú fijas tus propias tarifas de reparto en la política de tu agencia. Cuando se paga un pedido, la tarifa de cada uno de sus envíos queda reservada sobre ese envío y sale de la parte del vendedor — no se suma a lo que se te debe.",
                 "p2": "Cuando termina una entrega, esa tarifa reservada se divide entre tu agencia y el repartidor que la hizo, según el contrato acordado con él: un porcentaje de la tarifa, o una cantidad fija por entrega. Lo que queda tras la parte del repartidor es de tu agencia.",
-                "p3": "La comisión de WiMall sale de la parte del vendedor en el total del pedido. Nunca toca la tarifa de reparto. Si un envío no tiene contrato de repartidor asociado, la agencia se queda con la tarifa entera.",
+                "p3": "La comisión de Wi-Mall sale de la parte del vendedor en el total del pedido. Nunca toca la tarifa de reparto. Si un envío no tiene contrato de repartidor asociado, la agencia se queda con la tarifa entera.",
                 "codNote": "El pago contra entrega tiene su propio circuito: el repartidor cobra, el cobro se registra a nombre de la agencia, y el mismo reparto se aplica al efectivo igual que se aplicaría al pago con tarjeta."
             },
             "run": {
@@ -1047,9 +1052,9 @@
             }
         },
         "agents": {
-            "metaTitle": "Hazte repartidor — WiMall",
-            "metaDescription": "Reparte para WiMall con tu propio horario. Regístrate por tu cuenta, únete a una agencia o a varias, mira cuánto paga un trayecto antes de aceptarlo, y cobra tu parte de cada tarifa de reparto.",
-            "eyebrow": "Repartir con WiMall",
+            "metaTitle": "Hazte repartidor — Wi-Mall",
+            "metaDescription": "Reparte para Wi-Mall con tu propio horario. Regístrate por tu cuenta, únete a una agencia o a varias, mira cuánto paga un trayecto antes de aceptarlo, y cobra tu parte de cada tarifa de reparto.",
+            "eyebrow": "Repartir con Wi-Mall",
             "title": "Reparte en tus términos. Mira la paga antes de aceptar.",
             "lead": "Regístrate como repartidor, únete a una agencia — o a varias — y empieza a recibir ofertas de reparto en tu teléfono. Cada oferta dice cuánto paga el trayecto antes de que decidas.",
             "how": {
@@ -1071,7 +1076,7 @@
                 "title": "Qué ganas",
                 "p1": "Tus ganancias salen de la tarifa de reparto de cada envío. Cuánto de ella es tuya lo fija el contrato que tienes con esa agencia: un porcentaje de la tarifa, o una cantidad fija por entrega.",
                 "p2": "Como va por contrato, dos agencias pueden pagar distinto por el mismo tipo de trayecto — y ves cuánto paga un trabajo concreto antes de aceptarlo, no después. Una entrega que acaba en devolución se liquida con su propia regla en lugar de darse por perdida.",
-                "p3": "WiMall no se lleva nada de la tarifa de reparto. Se divide íntegra entre tu agencia y tú."
+                "p3": "Wi-Mall no se lleva nada de la tarifa de reparto. Se divide íntegra entre tu agencia y tú."
             },
             "capacity": {
                 "title": "Cuántas a la vez",
@@ -1092,21 +1097,99 @@
                 "finePrint": "Plan gratuito: 20 entregas a la vez. Sin cuota mensual."
             }
         },
+        "customers": {
+            "metaTitle": "Comprar por WhatsApp — Wi-Mall para clientes",
+            "metaDescription": "Compra a vendedores cercanos dentro de una conversación de WhatsApp. Sin aplicación que instalar y sin cuenta que crear: describe lo que buscas, recibe productos reales a precios reales, paga con dinero móvil, tarjeta o en efectivo contra entrega, y recíbelo en tu puerta.",
+            "eyebrow": "Comprar en Wi-Mall",
+            "title": "Comprar es una conversación. No hay nada que instalar.",
+            "lead": "Abre WhatsApp, di qué estás buscando y un asistente te responde con productos reales de vendedores reales. Pides y pagas en el mismo chat, y un repartidor te lo lleva.",
+            "problem": {
+                "title": "Por qué comprar funciona así",
+                "p1": "La mayoría de las tiendas que valen la pena aquí no tienen sitio web. Tienen un número de WhatsApp, algunas fotos y a alguien que responde entre otras tareas. Comprar es preguntar si el artículo sigue disponible, esperar la respuesta, acordar un precio y luego organizar la entrega en otra conversación.",
+                "p2": "La solución habitual es una aplicación: una descarga, una cuenta, una contraseña y un formulario de tarjeta — demasiados pasos para comprar un cargador, con una conexión que quizá no aguante.",
+                "p3": "Wi-Mall conserva la conversación y quita la espera. Detrás del chat hay un catálogo real: los vendedores mantienen su stock y sus precios al día en su propio panel, así que lo que el asistente te dice es lo que el vendedor vende hoy."
+            },
+            "how": {
+                "title": "Cómo se compra",
+                "lead": "Seis pasos, todos dentro de un mismo chat.",
+                "s1Title": "Abre el chat",
+                "s1Body": "Toca el enlace de WhatsApp, o guarda el número de Wi-Mall y escríbele. No hay pantalla de registro: el número desde el que escribes es tu identidad.",
+                "s2Title": "Di qué quieres",
+                "s2Body": "Escríbelo como se lo dirías a un amigo: «auriculares inalámbricos por menos de 15.000 FCFA», «una mochila escolar para un niño de seis años». El asistente lee tu idioma y responde en él.",
+                "s3Title": "Mira lo que llega",
+                "s3Body": "Recibes productos reales con fotos, precios y disponibilidad. Pregunta por uno concreto — talla, color, batería, garantía — y la respuesta trata de ese producto, no de un folleto.",
+                "s4Title": "Confirma el pedido",
+                "s4Body": "Cuando ya has elegido, el pedido se crea en la conversación. Confirmas la cantidad y la dirección, y ves el coste de la entrega antes de que se cobre nada.",
+                "s5Title": "Paga como ya pagas",
+                "s5Body": "Dinero móvil, tarjeta, o efectivo en mano al repartidor cuando el vendedor y la agencia lo aceptan.",
+                "s6Title": "Síguelo hasta tu puerta",
+                "s6Body": "El vendedor lo prepara, una agencia de reparto lo asume y uno de sus repartidores te lo lleva. Las novedades llegan al mismo chat donde pediste."
+            },
+            "ask": {
+                "title": "Qué puedes pedirle",
+                "lead": "Al asistente se le habla, no se le busca. Todo lo de esta lista es un mensaje normal que puedes enviarle.",
+                "i1": "Describir un producto en vez de saber cómo se llama",
+                "i2": "Poner un presupuesto y ver solo lo que cabe dentro",
+                "i3": "Preguntar por un artículo — talla, color, estado, qué trae la caja",
+                "i4": "Comparar dos de los productos que acaba de mostrarte",
+                "i5": "Preguntar cuánto cuesta la entrega en tu zona y cuánto tarda",
+                "i6": "Cambiar la cantidad o la dirección antes de confirmar",
+                "i7": "Preguntar por dónde va un pedido después de pagarlo",
+                "i8": "Escribir en francés, inglés, portugués, español o árabe"
+            },
+            "pay": {
+                "title": "Cómo pagas",
+                "lead": "Los tres pasan por la misma conversación. Cuáles ofrece un pedido depende del vendedor y, para el efectivo, de la agencia que lo entrega.",
+                "mobileTitle": "Dinero móvil",
+                "mobileBody": "MTN, Orange y Moov, a través de NotchPay o MyCoolPay. Lo apruebas desde tu propio teléfono, como cualquier otra transferencia.",
+                "cardTitle": "Tarjeta",
+                "cardBody": "Visa y Mastercard a través de Stripe, para quien prefiera pagar así o pague desde el extranjero.",
+                "codTitle": "Contra entrega",
+                "codBody": "Le das el dinero al repartidor en la puerta. Aquí es una forma de pago de pleno derecho, no una excepción, y el cobro queda registrado a nombre del repartidor que lo recibió."
+            },
+            "delivery": {
+                "title": "Cómo llega hasta ti",
+                "p1": "Las entregas las hacen agencias locales y los repartidores que trabajan con ellas, no Wi-Mall. Una agencia declara las regiones que cubre, así que si un pedido puede llegarte depende de que haya una agencia trabajando donde estás.",
+                "p2": "El coste de la entrega lo fija el vendedor y se te muestra antes de confirmar, no se añade al final. Cuando un vendedor entrega gratis, lo ves en el mismo sitio.",
+                "p3": "Camerún es el primer mercado. Las diez regiones pueden cubrirse, y las ciudades con más vendedores y agencias hoy son Douala, Yaoundé, Bafoussam, Bamenda y Garoua.",
+                "link": "Ver cómo funciona Wi-Mall en Camerún"
+            },
+            "cost": {
+                "title": "Lo que te cuesta",
+                "p1": "Nada. No hay comisión de plataforma por comprar, ni suscripción, ni cuenta que pagar. Le pagas el producto al vendedor, y la entrega cuando corresponde.",
+                "p2": "El dinero viene del lado de la venta: los vendedores pagan su plan y una comisión sobre lo que venden. Conviene saberlo, porque es la razón por la que nadie intenta cobrarte la conversación."
+            },
+            "need": {
+                "title": "Qué necesitas",
+                "lead": "Casi con seguridad ya lo tienes todo.",
+                "i1": "Un teléfono con WhatsApp — el que usas todos los días",
+                "i2": "Una dirección, o una referencia que el repartidor pueda encontrar de verdad",
+                "i3": "Dinero móvil, una tarjeta, o efectivo para el repartidor en la puerta",
+                "i4": "Nada más: ninguna aplicación, ninguna cuenta, ninguna contraseña"
+            },
+            "faqTitle": "Preguntas que hacen los clientes",
+            "sellToo": "Vender funciona al revés pero igual: tu catálogo vive en el chat, y nunca construyes una tienda.",
+            "cta": {
+                "title": "Tu próximo pedido empieza con un mensaje",
+                "body": "Abre la conversación, describe lo que necesitas y mira lo que llega. Nada que instalar, nada que registrar y ninguna obligación de comprar lo que te muestren.",
+                "finePrint": "Gratis para los clientes. Le pagas el producto al vendedor y la entrega cuando corresponde."
+            }
+        },
         "faq": {
-            "metaTitle": "Preguntas frecuentes de WiMall — vender, repartir y pagar por WhatsApp",
-            "metaDescription": "Respuestas claras sobre WiMall: cómo se compra por WhatsApp, cuánto cuesta vender, cómo cobran las agencias de reparto y los repartidores, qué métodos de pago funcionan, y dónde opera la plataforma.",
+            "metaTitle": "Preguntas frecuentes de Wi-Mall — vender, repartir y pagar por WhatsApp",
+            "metaDescription": "Respuestas claras sobre Wi-Mall: cómo se compra por WhatsApp, cuánto cuesta vender, cómo cobran las agencias de reparto y los repartidores, qué métodos de pago funcionan, y dónde opera la plataforma.",
             "eyebrow": "Preguntas y respuestas",
             "title": "Preguntas, respondidas sin rodeos",
             "lead": "Si algo aquí está desactualizado o falta, la respuesta honesta suele estar en el propio producto — pero estas son las preguntas que la gente hace de verdad antes de registrarse.",
             "groups": {
-                "general": "Sobre WiMall",
-                "selling": "Vender en WiMall",
-                "delivering": "Repartir con WiMall",
+                "general": "Sobre Wi-Mall",
+                "selling": "Vender en Wi-Mall",
+                "delivering": "Repartir con Wi-Mall",
                 "money": "Dinero y pagos"
             },
             "q": {
-                "whatIsWimall": {
-                    "q": "¿Qué es WiMall?",
+                "whatIsWiMall": {
+                    "q": "¿Qué es Wi-Mall?",
                     "a": "Una plataforma de comercio que funciona dentro de WhatsApp. Los vendedores suben un catálogo; los clientes hablan con un asistente de IA que entiende qué buscan, recomienda productos y crea el pedido en la conversación; las agencias de reparto y sus repartidores lo llevan. Nadie necesita una página web ni una app."
                 },
                 "howShopping": {
@@ -1118,15 +1201,15 @@
                     "a": "Como cliente, no. La compra ocurre en WhatsApp, que ya tienes. Los vendedores, las agencias y los repartidores sí tienen cuentas, porque necesitan paneles — pero los clientes no."
                 },
                 "whereAvailable": {
-                    "q": "¿Dónde opera WiMall?",
+                    "q": "¿Dónde opera Wi-Mall?",
                     "a": "Camerún primero. Las diez regiones están disponibles para que una agencia registre cobertura, y el reparto en un sitio concreto depende de que una agencia cubra esa región. Los precios están en FCFA y la plataforma está construida alrededor de los métodos de pago que allí se usan."
                 },
                 "languages": {
-                    "q": "¿En qué idiomas funciona WiMall?",
+                    "q": "¿En qué idiomas funciona Wi-Mall?",
                     "a": "El sitio y el producto están en francés, inglés, portugués, español y árabe, con maquetación de derecha a izquierda para el árabe. Para Camerún, los dos que más importan son el francés y el inglés, y el asistente le responde a un cliente en el idioma en que escribió."
                 },
                 "shopperCost": {
-                    "q": "¿Comprar en WiMall cuesta algo?",
+                    "q": "¿Comprar en Wi-Mall cuesta algo?",
                     "a": "No. Los clientes pagan lo que compran, y el reparto donde el vendedor lo cobra. No hay comisión de plataforma, ni suscripción, ni cargo de cuenta del lado del comprador."
                 },
                 "vendorStart": {
@@ -1135,7 +1218,7 @@
                 },
                 "vendorWebsite": {
                     "q": "¿Necesito una página web o una tienda online?",
-                    "a": "No, y esa es la idea. Tu catálogo vive en WiMall y se vende a través de la conversación de WhatsApp. No hay escaparate que diseñar, ni dominio que comprar, ni programador al que pagar."
+                    "a": "No, y esa es la idea. Tu catálogo vive en Wi-Mall y se vende a través de la conversación de WhatsApp. No hay escaparate que diseñar, ni dominio que comprar, ni programador al que pagar."
                 },
                 "vendorCost": {
                     "q": "¿Cuánto cuesta vender?",
@@ -1159,7 +1242,7 @@
                 },
                 "agencyEarn": {
                     "q": "¿Cómo gana dinero una agencia de reparto?",
-                    "a": "Con la tarifa de reparto, que fijas tú misma en la política de tu agencia. Se reserva sobre cada envío cuando se paga el pedido y se divide cuando la entrega termina: el repartidor se lleva la parte que marca su contrato, y tu agencia se queda el resto. WiMall no toma ninguna parte de la tarifa de reparto."
+                    "a": "Con la tarifa de reparto, que fijas tú misma en la política de tu agencia. Se reserva sobre cada envío cuando se paga el pedido y se divide cuando la entrega termina: el repartidor se lleva la parte que marca su contrato, y tu agencia se queda el resto. Wi-Mall no toma ninguna parte de la tarifa de reparto."
                 },
                 "agencyCoverage": {
                     "q": "¿Cómo elijo dónde reparte mi agencia?",
@@ -1195,7 +1278,7 @@
                 },
                 "renewal": {
                     "q": "¿Los planes se renuevan automáticamente?",
-                    "a": "No. No hay tarjeta guardada ni cargo recurrente en ninguna parte de WiMall. Un plan de pago corre sus 30 días y después, o le pasa el relevo a un plan que dejaste en cola mientras estaba en marcha, o te devuelve al plan gratuito de tu rol."
+                    "a": "No. No hay tarjeta guardada ni cargo recurrente en ninguna parte de Wi-Mall. Un plan de pago corre sus 30 días y después, o le pasa el relevo a un plan que dejaste en cola mientras estaba en marcha, o te devuelve al plan gratuito de tu rol."
                 },
                 "downgrade": {
                     "q": "¿Qué pasa si dejo de pagar?",
@@ -1204,16 +1287,16 @@
             },
             "cta": {
                 "title": "¿Aún lo estás pensando?",
-                "body": "Cada rol tiene un plan gratuito que nunca caduca, así que la forma más barata de responder a una pregunta sobre WiMall suele ser probarlo.",
+                "body": "Cada rol tiene un plan gratuito que nunca caduca, así que la forma más barata de responder a una pregunta sobre Wi-Mall suele ser probarlo.",
                 "finePrint": "No hace falta método de pago para empezar."
             }
         },
         "country": {
-            "metaTitle": "WiMall en Camerún — comercio por WhatsApp en FCFA",
-            "metaDescription": "WiMall está hecha para Camerún primero: precios en FCFA, francés e inglés, dinero móvil de MTN y Orange, pago contra entrega, y cobertura en las diez regiones.",
+            "metaTitle": "Wi-Mall en Camerún — comercio por WhatsApp en FCFA",
+            "metaDescription": "Wi-Mall está hecha para Camerún primero: precios en FCFA, francés e inglés, dinero móvil de MTN y Orange, pago contra entrega, y cobertura en las diez regiones.",
             "eyebrow": "Dónde operamos",
             "title": "Hecha para Camerún primero",
-            "lead": "No es una tienda occidental traducida al francés. WiMall pone sus precios en FCFA, habla francés e inglés, cobra por el dinero móvil que la gente usa de verdad, y organiza el reparto por región — porque así está organizado el país.",
+            "lead": "No es una tienda occidental traducida al francés. Wi-Mall pone sus precios en FCFA, habla francés e inglés, cobra por el dinero móvil que la gente usa de verdad, y organiza el reparto por región — porque así está organizado el país.",
             "why": {
                 "title": "Por qué aquí primero",
                 "p1": "En Camerún el comercio ya ocurre en WhatsApp. Un vendedor publica un estado, un comprador responde, negocian en el hilo, y alguien consigue una moto. Nada de eso hay que reemplazarlo — le hace falta un catálogo detrás, una forma de cobrar en la que ambas partes confíen, y un tramo de reparto que no dependa de conocer a alguien.",
@@ -1225,7 +1308,7 @@
                 "lead": "La cobertura de reparto sigue a las agencias de la plataforma. Una agencia registra un país y las regiones que cubre, y las diez regiones de Camerún están todas disponibles.",
                 "regionLabel": "Región",
                 "capitalLabel": "Capital regional",
-                "note": "Una región que aún no cubre ninguna agencia no es una región que WiMall rechace — es una en la que ninguna agencia se ha registrado. Si tú repartes allí, eso es una oportunidad más que un obstáculo."
+                "note": "Una región que aún no cubre ninguna agencia no es una región que Wi-Mall rechace — es una en la que ninguna agencia se ha registrado. Si tú repartes allí, eso es una oportunidad más que un obstáculo."
             },
             "payments": {
                 "title": "Pagar como se paga aquí de verdad",
@@ -1250,7 +1333,7 @@
             }
         },
         "city": {
-            "metaTitlePattern": "Vender por WhatsApp en {city} — WiMall",
+            "metaTitlePattern": "Vender por WhatsApp en {city} — Wi-Mall",
             "metaDescriptionPattern": "Cómo funcionan el comercio por WhatsApp y el reparto en {city}, región {region}: cuánto cuesta vender, cómo llegan los pedidos a una agencia de reparto, y cómo cobran los repartidores de {city}.",
             "eyebrowPattern": "{city}, Camerún",
             "titlePattern": "Vender y repartir en {city}",
@@ -1289,7 +1372,7 @@
             "bamenda": {
                 "lead": "Bamenda es el mayor mercado anglófono del país, y está mucho peor atendido de lo que su tamaño merece por las plataformas que arrancan solo en francés.",
                 "context": "Capital de la región Noroeste, en lo alto de los Grassfields, con el comercio centrado en el Bamenda Main Market y en Nkwen. Ancla una zona de intercambio de habla inglesa más amplia que llega a Kumbo, Bali y Ndop.",
-                "angle": "Aquí la diferencia práctica es el idioma. El asistente de WiMall responde en el idioma en que escribe el cliente, así que un vendedor de Bamenda no le está pidiendo a sus clientes que se pasen al francés para comprar algo."
+                "angle": "Aquí la diferencia práctica es el idioma. El asistente de Wi-Mall responde en el idioma en que escribe el cliente, así que un vendedor de Bamenda no le está pidiendo a sus clientes que se pasen al francés para comprar algo."
             },
             "garoua": {
                 "lead": "Garoua comercia tanto hacia el norte y cruzando fronteras como con el sur, y las distancias implicadas hacen que un reparto organizado valga más, no menos.",
@@ -1298,7 +1381,7 @@
             }
         },
         "blog": {
-            "metaTitle": "El blog de WiMall — vender por WhatsApp en Camerún",
+            "metaTitle": "El blog de Wi-Mall — vender por WhatsApp en Camerún",
             "metaDescription": "Guías prácticas para vender, cobrar y entregar por WhatsApp — escritas para vendedores, agencias de reparto y repartidores en Camerún.",
             "eyebrow": "Blog",
             "title": "Guías para vender por WhatsApp",
@@ -1335,7 +1418,7 @@
                 "guides": "Guías del producto"
             },
             "category": {
-                "metaTitlePattern": "{category} — blog de WiMall",
+                "metaTitlePattern": "{category} — blog de Wi-Mall",
                 "metaDescriptionPattern": "Artículos sobre {category}, escritos para vendedores, agencias de reparto y repartidores en Camerún.",
                 "titlePattern": "{category}",
                 "leads": {
@@ -1351,6 +1434,253 @@
                 "body": "Un catálogo, una forma de cobrar y una agencia de reparto. Esa es toda la configuración.",
                 "finePrint": "Plan gratuito disponible. Sin tarjeta."
             }
+        },
+        "about": {
+            "metaTitle": "Sobre Wi-Mall — hecho para la forma en que Camerún ya vende",
+            "metaDescription": "Wi-Mall es comercio por WhatsApp en Camerún: un catálogo de verdad, un asistente que vende dentro de la conversación y una red de reparto de agencias y repartidores. Por qué empezamos, en qué creemos y dónde estamos realmente.",
+            "eyebrow": "Sobre Wi-Mall",
+            "title": "Aquí el comercio ya ocurre en WhatsApp. Construimos el resto.",
+            "lead": "No es una tienda occidental traducida al francés. Wi-Mall es el catálogo, el asistente y el reparto que le faltaban a un mercado que ya funciona.",
+            "why": {
+                "title": "Por qué empezamos",
+                "p1": "Abra WhatsApp en Douala un día entre semana y encontrará un mercado. Un vendedor publica tres fotos en su estado. Un comprador responde. Acuerdan un precio en el chat y alguien consigue una moto. Funciona, y lleva años funcionando.",
+                "p2": "Lo que no funciona es todo lo que hay alrededor. El vendedor es a la vez el catálogo, el comercial y el repartidor, y los tres solo existen mientras el teléfono está en su mano. Así que las mismas cinco preguntas vuelven todo el día. Sigue disponible. Cuánto cuesta. Qué colores. Reparten en mi zona. Puedo pagar al recibirlo.",
+                "p3": "La respuesta habitual es una aplicación: una descarga, una cuenta, una contraseña y un formulario de tarjeta. Son muchos pasos para comprar un cargador, sobre una conexión que quizá no los aguante — y le pide a un mercado que funciona que se mude adonde nunca pidió ir.",
+                "p4": "Así que no construimos un sitio al que mudarse. Construimos lo que faltaba detrás de la conversación: un catálogo de verdad, un asistente que responde a las dos de la mañana igual que a las dos de la tarde, una forma de cobrar en la que ambas partes confían, y un reparto que no depende de conocer a alguien."
+            },
+            "how": {
+                "title": "Qué hace Wi-Mall en la práctica",
+                "lead": "Seis pasos, y el vendedor solo interviene en el primero y en el último.",
+                "s1Title": "Alguien abre una conversación",
+                "s1Body": "Sin descarga, sin cuenta, sin contraseña. Un mensaje de WhatsApp es toda la entrada.",
+                "s2Title": "El asistente entiende qué quiere",
+                "s2Body": "Lee la intención en lugar de palabras clave, y responde en el idioma en que escribió el cliente.",
+                "s3Title": "El pedido nace en la conversación",
+                "s3Body": "Confirmado y pagado sin salir del hilo.",
+                "s4Title": "Una agencia lo recoge",
+                "s4Body": "Llega ya pagado y ya con dirección, con la tarifa de reparto adjunta.",
+                "s5Title": "Un repartidor lo entrega",
+                "s5Body": "Ve cuánto cobra antes de aceptar. El seguimiento es en vivo y la confirmación es real.",
+                "s6Title": "Todos cobran",
+                "s6Body": "Vendedor, agencia y repartidor, de la misma transacción completada."
+            },
+            "here": {
+                "title": "Por qué Camerún primero",
+                "lead": "Porque aquí las restricciones son el encargo de diseño, no una ocurrencia posterior.",
+                "p1": "Wi-Mall cobra en FCFA, habla francés e inglés, liquida a través del dinero móvil que la gente usa de verdad, y organiza el reparto por región — porque así está organizado el país.",
+                "p2": "Dinero móvil con MTN, Orange y Moov. Tarjeta para quien tenga una. Y contra reembolso como forma de pago de pleno derecho y no como excepción incómoda: cobrado en la puerta por el repartidor, conciliado con su agencia y repartido exactamente igual que un pago con tarjeta.",
+                "p3": "Está hecho para teléfonos de gama de entrada, datos caros y redes que se caen, porque aquí ese es el caso normal y no el caso límite. Las diez regiones están incluidas. Una región sin agencia todavía no es una región que Wi-Mall rechace — es una oportunidad.",
+                "link": "Ver cómo funciona Wi-Mall en Camerún"
+            },
+            "foursides": {
+                "title": "Cada pedido paga a cuatro partes",
+                "lead": "Una transacción, cuatro personas que hicieron cada una su parte.",
+                "vendorTitle": "Vendedor",
+                "vendorBody": "Vende sin montar tienda, web ni audiencia. El catálogo y el asistente se encargan de lo repetitivo.",
+                "agencyTitle": "Agencia",
+                "agencyBody": "Recibe envíos reales con destino y tarifa adjuntos, y reparte esa tarifa con sus repartidores.",
+                "agentTitle": "Repartidor",
+                "agentBody": "Ve cuánto cobra antes de aceptar un reparto, y se queda con su parte de la tarifa.",
+                "customerTitle": "Cliente",
+                "customerBody": "Paga lo que compra y nada más. La conversación en sí no cuesta nada.",
+                "note": "Wi-Mall no se queda nada de la tarifa de reparto. La plataforma gana una comisión sobre los pedidos pagados y vende planes y créditos opcionales al lado vendedor. Esa es la razón por la que nadie intenta cobrarle una conversación a un cliente."
+            },
+            "beliefs": {
+                "title": "En qué creemos",
+                "lead": "Cinco principios que zanjan discusiones aquí.",
+                "meta": "Principio {n}",
+                "b1Title": "Ir a buscar a la gente dentro de WhatsApp",
+                "b1Body": "Ninguna tienda, aplicación ni registro debería interponerse entre alguien y su compra.",
+                "b2Title": "El asistente es el comercial",
+                "b2Body": "El descubrimiento, la recomendación y el pedido ocurren por conversación, no por navegación.",
+                "b3Title": "Cada transacción paga a las cuatro partes",
+                "b3Body": "El valor tiene que moverse a la vez hacia vendedor, agencia, repartidor y plataforma, o el acuerdo no está funcionando.",
+                "b4Title": "Ingeniería pensada para África",
+                "b4Body": "El predominio del móvil, los dispositivos de gama de entrada y las redes inestables son el caso para el que diseñamos, no aquel del que nos disculpamos.",
+                "b5Title": "No exagerar",
+                "b5Body": "Estamos empezando. Una prueba real se presenta como prueba, y un objetivo como objetivo."
+            },
+            "build": {
+                "title": "Cómo construimos",
+                "lead": "Algunas de estas decisiones son lo bastante inusuales como para decirlas claramente.",
+                "i1": "La compilación falla si nuestros propios textos de marketing contradicen la lista de precios vigente. Los precios viven en un único catálogo, y una página que cite una cifra que ha cambiado detiene el siguiente despliegue y señala la línea a corregir — en lugar de publicar en silencio una página que miente sobre el precio.",
+                "i2": "Ninguna cifra inventada en los datos estructurados. No hay valoraciones ni recuentos de reseñas en nuestro marcado, porque todavía no existen datos de reseñas. Las cifras de escala de este sitio son objetivos del primer año, y se presentan como objetivos.",
+                "i3": "Cinco idiomas, incluido uno de derecha a izquierda, desde la primera línea y no en una pasada posterior.",
+                "i4": "Escrito para la red que la gente tiene de verdad. Las palabras viajan dentro del HTML, la animación es opcional, y nada importante espera a un JavaScript que quizá no llegue nunca.",
+                "note": "Nada de esto es heroico. Es simplemente lo que hace falta para que una página siga siendo cierta seis meses después de que alguien la escribiera."
+            },
+            "now": {
+                "title": "Dónde estamos ahora",
+                "p1": "Al principio. Real, pero al principio: hay pedidos y hay usuarios, y todavía no hay muchos de ninguno de los dos. Preferimos escribirlo a publicar una cifra inventada.",
+                "p2": "Por eso en este sitio no hay testimonios, ni logotipos de clientes, ni citas de prensa. Cuando existan aparecerán aquí, y serán reales.",
+                "p3": "Lo que sí hay: una plataforma que funciona, un plan gratuito que no es una prueba, y espacio para que los vendedores que llegan primero den forma a lo que se construye después."
+            },
+            "cta": {
+                "title": "Llegue pronto",
+                "body": "El plan gratuito no cuesta nada y no caduca. Si ya vende por WhatsApp, ya ha hecho lo difícil.",
+                "finePrint": "Sin tarjeta, y sin nada recurrente.",
+                "secondary": "Hablar con nosotros"
+            }
+        },
+        "careers": {
+            "metaTitle": "Empleo en Wi-Mall",
+            "metaDescription": "Wi-Mall no está contratando ahora mismo. Estos son los puestos que abriremos primero — ingeniería, operaciones y redacción — y cómo entrar en la lista antes de que aparezcan.",
+            "eyebrow": "Empleo",
+            "title": "Equipo pequeño, superficie inusualmente grande",
+            "leadClosed": "No estamos contratando en este momento. Estos son los puestos que abriremos primero cuando eso cambie, y el formulario de abajo es la forma de entrar en la lista antes de que aparezcan.",
+            "leadOpen": "Estos son los puestos para los que estamos contratando ahora.",
+            "relatedBody": "Los puestos que abriremos primero, y cómo entrar en la lista.",
+            "why": {
+                "title": "En qué trabajaría",
+                "p1": "Wi-Mall es una plataforma de comercio por WhatsApp para Camerún: un asistente que vende dentro del chat, un catálogo de verdad detrás, y una red de agencias y repartidores que lleva el pedido hasta una puerta.",
+                "p2": "La superficie es más amplia que el equipo. Un backend TypeScript modular con su propio bus de comandos, un front-end Next.js en cinco idiomas incluido uno de derecha a izquierda, una aplicación móvil para repartidores, un servicio de seguimiento aparte, y una capa de pagos que tiene que hablar dinero móvil, tarjeta y contra reembolso sin tratar a ninguno como el raro de la familia.",
+                "p3": "Es mucho para el número de personas que ahora mismo lo lleva. Ese es el argumento honesto, y también es la parte interesante."
+            },
+            "how": {
+                "title": "Cómo trabajamos",
+                "lead": "Parte de esto es inusual. Mejor saberlo antes de escribir que después.",
+                "i1": "La corrección la impone la compilación, no la buena voluntad. Un texto de marketing que contradiga el catálogo de precios vigente hace fallar el despliegue y señala la línea a corregir.",
+                "i2": "No publicamos cifras que no podamos sostener. Sin recuentos de reseñas inventados, sin tracción fabricada, y con objetivos presentados como objetivos.",
+                "i3": "La prioridad a África es una restricción que respetamos de verdad: teléfonos de gama de entrada, datos caros, redes que se caen. Si solo funciona con wifi rápido, no funciona.",
+                "i4": "Los comentarios explican el porqué, no el qué. Una decisión que sin contexto parecería un error lleva ese contexto escrito al lado.",
+                "i5": "Cinco idiomas desde el principio, nunca en una pasada posterior. Nada sale solo en inglés.",
+                "note": "Si eso suena a rigor innecesario para un producto que empieza, probablemente no sea el equipo adecuado — y es algo útil de descubrir pronto, para ambas partes."
+            },
+            "roles": {
+                "title": "Los puestos",
+                "leadClosed": "Ninguno está abierto todavía. Están listados para que vea la forma del equipo que estamos construyendo, y nos diga cuál es el suyo.",
+                "leadOpen": "Abiertos ahora. Postule con el formulario de abajo.",
+                "openBadge": "Abierto",
+                "closedBadge": "Aún no abierto",
+                "location": "En remoto, con prioridad a Camerún",
+                "frontend": {
+                    "title": "Ingeniero front-end (Next.js)",
+                    "body": "El sitio público, la tienda y los paneles. React y TypeScript sobre App Router, cinco idiomas, y una regla dura: las palabras viajan en el HTML."
+                },
+                "backend": {
+                    "title": "Ingeniero back-end (Node, TypeScript)",
+                    "body": "El monolito modular: pedidos, pagos, ganancias, envíos. MongoDB con transacciones de verdad, Redis, y una API orientada a tareas."
+                },
+                "assistant": {
+                    "title": "Ingeniero, comercio conversacional",
+                    "body": "El asistente de WhatsApp y la indexación de productos detrás de sus recomendaciones. Convertir lo que alguien escribió en un carrito que reconoce."
+                },
+                "mobile": {
+                    "title": "Ingeniero móvil (aplicación de reparto)",
+                    "body": "La aplicación que los repartidores usan en el tráfico, en un teléfono barato, con una sola mano. El funcionamiento sin conexión es la función, no el acabado."
+                },
+                "agencyOps": {
+                    "title": "Alianzas con agencias, Camerún",
+                    "body": "Firmar y acompañar a las agencias de reparto que cubren cada región. Trabajo de campo, no de escritorio."
+                },
+                "content": {
+                    "title": "Redactor, inglés y francés",
+                    "body": "Artículos, textos de ayuda y prosa de producto en los dos idiomas de trabajo. Frases sencillas que sobreviven a la traducción."
+                }
+            },
+            "teams": {
+                "engineering": "Ingeniería",
+                "product": "Producto",
+                "operations": "Operaciones",
+                "growth": "Crecimiento"
+            },
+            "commitments": {
+                "fullTime": "Jornada completa",
+                "contract": "Por contrato",
+                "internship": "Prácticas"
+            },
+            "form": {
+                "titleClosed": "Entrar en la lista",
+                "titleOpen": "Postular",
+                "leadClosed": "Cuéntenos qué hace y cuál de estos es el suyo. Cuando se abra uno, esta es la lista a la que iremos primero.",
+                "leadOpen": "Envíelo por aquí.",
+                "frameTitle": "Formulario de empleo de Wi-Mall",
+                "note": "Este formulario está alojado por Google, que coloca sus propias cookies mientras está abierto. Por ahora lo compartimos con nuestro formulario de contacto, así que indique a qué puesto se refiere."
+            },
+            "elsewhere": {
+                "title": "No es empleo, pero sigue siendo trabajo",
+                "p1": "La mayoría de quienes ganan en Wi-Mall no trabajan para Wi-Mall. Las agencias de reparto dirigen sus propios equipos y se quedan la tarifa de reparto. Los repartidores eligen qué trabajos aceptan y ven primero cuánto cobran. Los vendedores venden su propio stock en sus propias condiciones.",
+                "p2": "Si lo que quiere en realidad es ganar en la plataforma en lugar de entrar en la empresa, esa vía está abierta hoy y no depende de que estemos contratando.",
+                "link": "Registrar una agencia de reparto"
+            },
+            "cta": {
+                "title": "Cuéntenos quién es",
+                "body": "Hoy no estamos contratando, pero la lista es real, y es por donde empezamos cuando eso cambie.",
+                "finePrint": "Un formulario, cinco minutos.",
+                "primary": "Escríbanos",
+                "secondary": "Conocer Wi-Mall"
+            }
+        },
+        "contact": {
+            "metaTitle": "Contactar con Wi-Mall",
+            "metaDescription": "Contacte con el equipo de Wi-Mall — sobre vender, repartir, un pedido o cualquier otra cosa. Envíe un mensaje, o consulte antes las preguntas frecuentes para la respuesta rápida.",
+            "eyebrow": "Contacto",
+            "title": "Cuéntenos qué necesita",
+            "lead": "Vendiendo, repartiendo, comprando o simplemente con curiosidad — esto llega hasta nosotros.",
+            "relatedBody": "Contactar con el equipo, o encontrar la respuesta antes en las preguntas frecuentes.",
+            "before": {
+                "title": "Primero, la respuesta rápida",
+                "lead": "La mayoría de las preguntas ya tienen respuesta escrita.",
+                "p1": "Si la suya es sobre cuánto cuesta un plan, cómo funciona la comisión, cuándo llegan los pagos, o qué pasa con un reparto que nadie acepta, las preguntas frecuentes la responden ahora en lugar de dentro de un día o dos.",
+                "p2": "Merece un vistazo antes de escribir. Si la respuesta no está — o está y es incorrecta — para eso es exactamente el formulario."
+            },
+            "form": {
+                "title": "Envíenos un mensaje",
+                "lead": "Un formulario para todo. Llega al mismo sitio sea cual sea el asunto.",
+                "frameTitle": "Formulario de contacto de Wi-Mall",
+                "note": "Este formulario está alojado por Google, que coloca sus propias cookies mientras está abierto."
+            },
+            "channels": {
+                "title": "Otras formas de contactarnos",
+                "lead": "Más lentas que el formulario, pero funcionan.",
+                "emailTitle": "Correo",
+                "emailBody": "Escriba a {email}. Un solo buzón, sin reglas de reparto que adivinar.",
+                "whatsappTitle": "WhatsApp",
+                "whatsappBody": "Escriba a la línea profesional. Mejor para algo corto.",
+                "whatsappMessage": "Hola Wi-Mall — tengo una pregunta.",
+                "roleTitle": "Ya usa Wi-Mall",
+                "roleBody": "Si tiene cuenta, empiece por el canal de soporte de su panel: llega con el contexto de su pedido ya adjunto."
+            }
         }
+    },
+    "forgotPassword": {
+        "title": "Restablece tu contraseña",
+        "subtitle": "Introduce tu número o tu correo y te enviaremos un enlace.",
+        "identifierLabel": "Número de teléfono o correo",
+        "identifierPlaceholder": "+237 6 70 00 00 00",
+        "required": "Introduce tu número de teléfono o tu correo.",
+        "submit": "Enviar enlace",
+        "submitting": "Enviando…",
+        "failed": "No pudimos enviar el enlace. Comprueba tu conexión e inténtalo de nuevo.",
+        "sentTitle": "Revisa tus mensajes",
+        "sentBody": "Si existe una cuenta con ese número o correo, le hemos enviado un enlace para restablecer la contraseña. Caduca pronto y solo se puede usar una vez.",
+        "sentHint": "¿No te ha llegado nada? Comprueba lo que has escrito e inténtalo de nuevo.",
+        "backToLogin": "Volver a iniciar sesión"
+    },
+    "resetPassword": {
+        "title": "Elige una contraseña nueva",
+        "subtitle": "Elige una que no uses en ningún otro sitio.",
+        "passwordLabel": "Nueva contraseña",
+        "confirmLabel": "Confirma la nueva contraseña",
+        "rules": "Al menos 8 caracteres, con una mayúscula, una minúscula, un número y un símbolo.",
+        "mismatch": "Las dos contraseñas no coinciden.",
+        "submit": "Guardar contraseña",
+        "submitting": "Guardando…",
+        "failed": "No pudimos cambiar tu contraseña. Inténtalo de nuevo.",
+        "missingToken": "A este enlace le falta el código de restablecimiento. Solicita uno nuevo.",
+        "requestNew": "Solicitar un enlace nuevo",
+        "successTitle": "Contraseña cambiada",
+        "successBody": "Ya puedes iniciar sesión con tu nueva contraseña. Por seguridad, se ha cerrado tu sesión en todos los demás dispositivos.",
+        "signIn": "Iniciar sesión"
+    },
+    "magicLogin": {
+        "title": "Iniciando tu sesión",
+        "subtitle": "Un momento mientras comprobamos tu enlace de inicio de sesión.",
+        "redeeming": "Comprobando tu enlace…",
+        "missingToken": "A este enlace le falta el código de inicio de sesión. Abre el que te envió el bot o pide uno nuevo.",
+        "failedTitle": "Ese enlace no funcionó",
+        "failedBody": "Los enlaces de inicio de sesión duran diez minutos y sirven una vez. Envía el comando al bot de nuevo para obtener otro.",
+        "retryCta": "Obtener un enlace nuevo",
+        "backToSignIn": "Volver al inicio de sesión"
     }
 }

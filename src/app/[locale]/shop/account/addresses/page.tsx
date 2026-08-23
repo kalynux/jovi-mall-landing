@@ -8,7 +8,7 @@ import {
   CardAction,
   ResourceView,
 } from "@/components/shop/account/AccountShell";
-import { Badge, BottomSheet, Button, EmptyState, Icon } from "@/components/shop/ds";
+import { Badge, BottomSheet, Button, ConfirmDialog, EmptyState, Icon } from "@/components/shop/ds";
 import { useToast } from "@/components/shop/providers";
 import { translateError } from "@/lib/auth/error-translator";
 import {
@@ -19,6 +19,8 @@ import {
 } from "@/lib/shop/addresses.api";
 import { getProfile } from "@/lib/shop/profile.api";
 import { useApiResource } from "@/lib/shop/useApiResource";
+import { IS_NATIVE_BUILD } from "@/lib/platform";
+import { UseMyLocation } from "@/components/shop/account/UseMyLocation";
 import type {
   CustomerProfile,
   GeoCandidate,
@@ -29,6 +31,8 @@ export default function AddressesPage() {
   const profile = useApiResource<CustomerProfile>(() => getProfile());
   const [sheetOpen, setSheetOpen] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  /** The address the shopper has asked to remove, held until they confirm. */
+  const [pendingRemoval, setPendingRemoval] = useState<SavedAddress | null>(null);
   const { flash, flashError } = useToast();
   const t = useTranslations("errors");
 
@@ -55,7 +59,7 @@ export default function AddressesPage() {
   return (
     <AccountShell
       title="Addresses"
-      description="Where your orders are delivered. The default is used at checkout unless you pick another."
+      description="Where your orders are delivered."
       action={
         <Button size="sm" leadingIcon="plus" onClick={() => setSheetOpen(true)}>
           Add
@@ -89,7 +93,7 @@ export default function AddressesPage() {
                   onMakeDefault={() =>
                     run(a._id, () => setDefaultAddress(a._id), "Default address updated")
                   }
-                  onRemove={() => run(a._id, () => removeAddress(a._id), "Address removed")}
+                  onRemove={() => setPendingRemoval(a)}
                 />
               ))}
             </div>
@@ -106,6 +110,29 @@ export default function AddressesPage() {
           flash("Address added");
         }}
       />
+
+      {/* Removal is one tap from "Make default" on the same row, and a deleted
+          address takes its geocode with it — re-entering one is a search, not a
+          retype. So it asks. */}
+      <ConfirmDialog
+        open={pendingRemoval !== null}
+        title="Remove this address?"
+        tone="danger"
+        icon="trash-2"
+        confirmLabel="Remove"
+        cancelLabel="Keep it"
+        busy={pendingRemoval !== null && busyId === pendingRemoval._id}
+        onConfirm={async () => {
+          const address = pendingRemoval;
+          if (!address) return;
+          await run(address._id, () => removeAddress(address._id), "Address removed");
+          setPendingRemoval(null);
+        }}
+        onCancel={() => setPendingRemoval(null)}
+      >
+        <strong>{pendingRemoval?.label}</strong> will no longer be offered at checkout. Orders
+        already on their way to it are unaffected.
+      </ConfirmDialog>
     </AccountShell>
   );
 }
@@ -319,6 +346,22 @@ function AddAddressSheet({
           placeholder="Start typing a street, area or landmark…"
           autoComplete="off"
         />
+
+        {/*
+          The GPS shortcut, and the reason it earns a location permission at all.
+
+          Checkout REFUSES an address with no coordinates, and the only way to
+          get them above is to describe where you live in words the geocoder
+          recognises. Plenty of real addresses here are a landmark and a
+          quartier, not a street and a number — and a shopper who cannot produce
+          a match cannot check out. A coordinate from the handset skips the
+          naming problem entirely, and comes back as the same `GeoCandidate` a
+          picked search result produces, so everything downstream is unchanged.
+
+          Rendered only where it can work: `IS_NATIVE_BUILD` is compile-time, so
+          the web bundle never sees this button or the module behind it.
+        */}
+        {IS_NATIVE_BUILD && <UseMyLocation onResolved={pick} />}
         {searching && (
           <p className="muted" style={{ fontSize: 12, marginTop: 6 }}>
             Searching…
@@ -443,7 +486,7 @@ function Field({
 }) {
   return (
     <div style={{ marginBottom: 14 }}>
-      <p className="overline" style={{ marginBottom: 6 }}>
+      <p className="ds-overline" style={{ marginBottom: 6 }}>
         {label}
       </p>
       {children}

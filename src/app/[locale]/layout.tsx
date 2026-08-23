@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import "../globals.css";
@@ -6,9 +6,19 @@ import { ThemeProvider } from "@/lib/theme";
 import { I18nProvider } from "@/lib/i18n-provider";
 import { AuthProvider } from "@/lib/auth/useAuth";
 import FloatingFaqButton from "@/components/layout/FloatingFaqButton";
+import { NativeShell } from "@/components/native/NativeShell";
+import { AppLoading } from "@/components/native/AppLoading";
+import { IS_NATIVE_BUILD } from "@/lib/platform";
 import { SITE_URL } from "@/lib/site";
 import { jakarta, jetbrainsMono } from "@/lib/fonts";
-import { isLocale, localeDir, localePath, LOCALE_CODES, type Locale } from "@/i18n/routing";
+import {
+  isLocale,
+  localeDir,
+  localePath,
+  LOCALE_CODES,
+  SHIPPED_LOCALES,
+  type Locale,
+} from "@/i18n/routing";
 
 /** OG wants an underscored territory tag; these are the closest match per locale. */
 const OG_LOCALE: Record<Locale, string> = {
@@ -19,10 +29,34 @@ const OG_LOCALE: Record<Locale, string> = {
   ar: "ar_AR",
 };
 
-/** Prerender all five locales rather than resolving them per request. */
+/**
+ * Prerender a tree per locale rather than resolving them per request.
+ *
+ * `SHIPPED_LOCALES`, not `LOCALE_CODES`: this is the list that decides what the
+ * static export actually writes to disk, so it is the one an app build narrows
+ * to keep four unread languages out of the APK. On the web the two are equal and
+ * all five are still prerendered. See the note in `i18n/routing.ts`.
+ */
 export function generateStaticParams() {
-  return LOCALE_CODES.map((locale) => ({ locale }));
+  return SHIPPED_LOCALES.map((locale) => ({ locale }));
 }
+
+/**
+ * `viewport-fit=cover` is what makes `env(safe-area-inset-*)` resolve to
+ * anything but zero.
+ *
+ * The shop shell has depended on those insets since it became an app shell —
+ * the tab bar's bottom padding, the sticky buy bar, the toast — but without
+ * this the page is laid out inside the safe area and every inset reads `0px`,
+ * so a phone with a home indicator draws the tab bar behind it. Set for both
+ * targets: it is equally correct for the installed PWA, and inert in a browser
+ * tab.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -51,13 +85,13 @@ export async function generateMetadata({
       "sell on WhatsApp",
       "mobile commerce",
       "ecommerce platform",
-      "WiMall",
+      "Wi-Mall",
     ],
     openGraph: {
       title: t("title"),
       description: t("shareDescription"),
       type: "website",
-      siteName: "WiMall",
+      siteName: "Wi-Mall",
       url: localePath(locale, "/"),
       locale: OG_LOCALE[locale],
       alternateLocale: LOCALE_CODES.filter((code) => code !== locale).map(
@@ -74,8 +108,8 @@ export async function generateMetadata({
     // which told crawlers that /shop, every product and every store page were
     // really the homepage. Each indexable route declares its own via
     // localeAlternates().
-    applicationName: "WiMall",
-    appleWebApp: { capable: true, title: "WiMall", statusBarStyle: "default" },
+    applicationName: "Wi-Mall",
+    appleWebApp: { capable: true, title: "Wi-Mall", statusBarStyle: "default" },
     robots: { index: true, follow: true },
   };
 }
@@ -101,10 +135,36 @@ export default async function RootLayout({ children, params }: LayoutProps) {
       suppressHydrationWarning
     >
       <head>
+        {/*
+          Put the URL back to what the app thinks it is, before anything reads it.
+
+          Capacitor's local server cannot serve an extension-less path to its own
+          file — `html5mode` routes every one of them to the root `index.html`
+          instead (see scripts/build-native.mjs). So the bootstrap navigates to
+          `/en/shop/index.html`, the real file, and this strips the `/index.html`
+          straight back off.
+
+          It has to run here, in `<head>`, ahead of Next's own scripts: the client
+          router reads `location` as it hydrates, and `usePathname` feeds the tab
+          bar's active state and the back button's "am I at the shop root?" check.
+          Both would be wrong for the whole session if this ran late.
+
+          `replaceState` rather than a navigation — no request is made, and the
+          bootstrap does not become a back destination.
+
+          Native build only; on the web no URL ever ends this way.
+        */}
+        {IS_NATIVE_BUILD && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `(function(){try{var p=location.pathname;if(p.slice(-11)==='/index.html'){history.replaceState(null,'',p.slice(0,-10)+location.search+location.hash)}}catch(e){}})()`,
+            }}
+          />
+        )}
         {/* Prevent FOUC: apply stored theme class before first paint */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('wimall-theme');if(t==='dark'||(t==null&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+            __html: `(function(){try{var t=localStorage.getItem('wi-mall-theme')||localStorage.getItem('wimall-theme');if(t==='dark'||(t==null&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
           }}
         />
         {/* The lang/dir bootstrap script that used to sit here is gone: the URL
@@ -129,6 +189,20 @@ export default async function RootLayout({ children, params }: LayoutProps) {
         <ThemeProvider>
           <I18nProvider locale={locale} messages={messages}>
             <AuthProvider>
+              {/* Renders nothing. Wires the hardware back button, the status
+                  bar, the splash and deep links on a device, and compiles away
+                  entirely in the web build. Inside AuthProvider and
+                  ThemeProvider because it reads both. */}
+              <NativeShell />
+              {/* A 3px progress line, covering the one gap between the
+                  native splash leaving (now a 200ms timer) and the session
+                  being known. Not the catalogue — that has the shop's own
+                  skeletons. Native build only: the web has no splash to hand
+                  over from, and a server-rendered page arrives with its session
+                  already resolved. Rendered here so its markup is in the
+                  exported HTML and lands on the first frame; see the component
+                  for how it leaves even when the bundle never runs. */}
+              {IS_NATIVE_BUILD && <AppLoading />}
               {children}
               {/* Sitewide, after the page content so it is last in the tab
                   order rather than ahead of the page a visitor came to read. */}

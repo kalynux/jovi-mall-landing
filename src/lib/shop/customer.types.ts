@@ -200,8 +200,24 @@ export type OrderPaymentStatus =
   | "failed"
   | "refunded";
 
-/** Group-level aggregate of the orders beneath it — lower-case, a different set. */
-export type GroupPaymentStatus = "paid" | "awaiting_payment" | "partially_paid" | "mixed";
+/**
+ * Group-level aggregate of the orders beneath it — lower-case, a different set.
+ *
+ * All eight the server's `aggregatePaymentStatus` can answer. The last four
+ * were absent here while the server had been returning them: `refunded`,
+ * `failed` and `disputed` each got their own label rather than collapsing to
+ * `mixed`, and `unknown` is what an empty group reports — deliberately, because
+ * `[].every(…)` is `true` and the honest answer to no data is not "paid".
+ */
+export type GroupPaymentStatus =
+  | "paid"
+  | "awaiting_payment"
+  | "partially_paid"
+  | "mixed"
+  | "refunded"
+  | "failed"
+  | "disputed"
+  | "unknown";
 
 /**
  * Everything from `partially_shipped` on is system-derived from the order's
@@ -233,6 +249,20 @@ export interface OrderItem {
   currency: string;
   /** Snapshot taken at checkout — later product edits do not change it. */
   freeDelivery: boolean;
+  /**
+   * The product thumbnail. `null` when the product had none.
+   *
+   * Order history with no pictures is close to unreadable on a phone, which is
+   * why this was asked for and why it is here rather than being re-fetched per
+   * line from the catalogue — a delisted product still has to render on a past
+   * order.
+   */
+  image?: FileRef | null;
+  /** Per-line delivery state, and the shipment it belongs to. */
+  delivery?: {
+    status?: string;
+    shipmentId?: string | null;
+  };
 }
 
 /**
@@ -248,22 +278,168 @@ export interface CodCollection {
   deliveryCode?: string;
 }
 
+/**
+ * The seller on an order.
+ *
+ * Both fields are nullable: an order references a vendor whose store may since
+ * have been renamed or removed, and "Order from 507f1f77bcf86cd799439aaa" is not
+ * a receipt. Fall back to the id only as a last resort.
+ */
+export interface OrderStore {
+  slug: string | null;
+  name: string | null;
+}
+
+/**
+ * What the order was actually charged.
+ *
+ * `tax` and `discount` are pinned zeros — no tax engine, no coupon model — and
+ * these are the same figures `POST /cart/quote` returns, written at checkout so
+ * the quote and the charge cannot diverge.
+ */
+export interface OrderPriceBreakdown {
+  base: number;
+  tax: number;
+  discount: number;
+  total: number;
+}
+
 export interface CustomerOrder {
   id: string;
   orderNumber: string;
   vendorId: string;
+  /** Prefer this over `vendorId` for anything a customer reads. */
+  store?: OrderStore;
+  cartId?: string | null;
   orderType: OrderType;
   total: number;
   currency: string;
+  priceBreakdown?: OrderPriceBreakdown;
   paymentMethod: PaymentMethodChoice;
   paymentStatus: OrderPaymentStatus;
   fulfillmentStatus: FulfillmentStatus;
   itemCount?: number;
+  /** Geocoded and frozen at checkout, so editing a saved address never rewrites it. */
+  deliveryAddress?: unknown | null;
   createdAt?: string;
+  updatedAt?: string;
   /** COD orders only. */
   codCollections?: CodCollection[];
   /** Present on the group-detail read, absent on the list. */
   items?: OrderItem[];
+}
+
+/** `POST /api/customer/orders/checkout` — one order per vendor, one `cartId`. */
+export interface CheckoutResult {
+  cartId: string;
+  paymentMethod: PaymentMethodChoice;
+  orders: CustomerOrder[];
+}
+
+/**
+ * A parcel, as its recipient sees it.
+ *
+ * The status vocabulary is **collapsed**, not passed through: `ShipmentStatus`
+ * has eleven members and most describe internal dispatch machinery
+ * (`assigned`, `handing_over`, `pending_agency_reassignment`). A customer is
+ * shown the five below — the same four the notification catalog already commits
+ * to, plus `preparing` for everything before a parcel physically moves — so the
+ * word in the app matches the word in the push they received.
+ *
+ * The free-text internal note on a failed attempt is never published; only the
+ * fact of an attempt and its count.
+ *
+ * ⚠ The agent's identity used to be on that list and is not any more — see
+ * `CustomerShipmentAgent` below, and the backend's ADR-A06. What replaced a
+ * blanket refusal is a narrow window, not an opening.
+ */
+export type CustomerShipmentStatus =
+  | "preparing"
+  | "shipped"
+  | "out_for_delivery"
+  | "delivered"
+  | "delivery_failed";
+
+/**
+ * The delivery company, as its customer sees it.
+ *
+ * The platform's shared `AgencyIdentity` block — byte-identical to the one the
+ * agent and agency surfaces serve, rather than a customer-only projection.
+ *
+ * The support lines are the agency's own published business contacts and are
+ * meant to be shown: a customer with a question about this parcel contacts the
+ * *agency*, which is the whole reason there is no agent phone number below.
+ */
+export interface CustomerShipmentAgency {
+  id: string;
+  /** The same string as `CustomerShipment.agencyName`. `''` for an unfilled magazin. */
+  name: string;
+  /** **Not a URL string.** `null` is the common case — draw initials from `name`. */
+  logo: FileRef | null;
+  supportPhone: string | null;
+  supportEmail: string | null;
+  supportWhatsapp: string | null;
+}
+
+/**
+ * Who is carrying the parcel, while they are carrying it (backend ADR-A06).
+ *
+ * Three fields and no more. In particular **no phone number, and there will not
+ * be one** — do not render a "call your courier" affordance; the agency's
+ * `supportPhone` is the contact path, because that is a business line its owner
+ * chose to publish and an agent's handset is not.
+ *
+ * ⚠ Render this from the field, **never** from the status. `delivery_failed`
+ * carries an agent when it maps from the internal `failed` (a retryable attempt
+ * — same courier, still holding the parcel, coming back) and `null` when it
+ * maps from `returned`, and the customer vocabulary collapses both into that
+ * one word, so the status cannot tell them apart.
+ *
+ * ⚠ `delivered` returns `null` on purpose. The disclosure is scoped to a live
+ * delivery and not stamped into order history, so this must never be cached
+ * into a local order record.
+ */
+export interface CustomerShipmentAgent {
+  /** Partial by design — "Jean T.", never the full legal name. */
+  displayName: string;
+  /** `null` is common. */
+  photo: FileRef | null;
+  /**
+   * The customer-facing status from which this block appears, echoed on the
+   * wire so the UI can explain the wait without hardcoding the policy.
+   *
+   * ⚠ It is `shipped`, not `out_for_delivery`. Those are the same English
+   * phrase and different things here: this API's `out_for_delivery` maps from
+   * the internal `agent_delivered`, i.e. the courier has already reported the
+   * handover. Naming them only from there would show a customer who came to
+   * their door *after* they came.
+   */
+  visibleFrom: CustomerShipmentStatus;
+}
+
+export interface CustomerShipment {
+  id: string;
+  status: CustomerShipmentStatus;
+  /** `null` on shipments predating the generator. Published from creation, not delivery. */
+  trackingNumber: string | null;
+  /**
+   * The delivery company's business name. Never the agent's.
+   *
+   * Duplicated inside `agency.name` and kept here because it shipped first and
+   * is already consumed. The two never disagree — the server reads this off the
+   * same block — and both go `null` on the same condition: no magazin on file.
+   */
+  agencyName: string | null;
+  /** Identity and support contacts for the company above. `null` with `agencyName`. */
+  agency: CustomerShipmentAgency | null;
+  /** `null` before an agent is bound, and `null` again once settled. See the type. */
+  agent: CustomerShipmentAgent | null;
+  /** Which order lines are in this parcel, so the UI can group them. */
+  itemIds: string[];
+  statusHistory: { status: CustomerShipmentStatus; at: string }[];
+  /** Always `null` today — nothing in the platform estimates a delivery date. */
+  estimatedDelivery: string | null;
+  failedAttempts: number;
 }
 
 /**
@@ -360,4 +536,98 @@ export interface DownloadLink {
   url: string;
   expiresAt: string;
   downloadsRemaining: number | null;
+}
+
+// ─── Cart ────────────────────────────────────────────────────────────────────
+
+/**
+ * One line of the server cart. Contract: `api-doc/customer/cart.md`.
+ *
+ * `optionsSnapshot` is the variant's `optionSignature` frozen at add time. It is
+ * a **display** string and nothing else: renaming an option value deliberately
+ * does not rewrite it, so a stale one is normal and must never be used to look a
+ * variant up. `variantId` is the key.
+ */
+export interface ServerCartItem {
+  variantId: string;
+  sku: string;
+  variantTitle: string;
+  optionsSnapshot?: string;
+  productId: string;
+  title: string;
+  vendorId: string;
+  productType: "physical" | "digital";
+  quantity: number;
+  price: number;
+  currency: string;
+}
+
+/**
+ * The whole cart.
+ *
+ * ⚠️ **One cart per customer, holding one product type.** `CartSchema.userId` is
+ * uniquely indexed, so there is no second cart to put an e-book in while a dress
+ * is in this one — adding the other type answers `409 CART_MIXED_PRODUCT_TYPES`.
+ *
+ * An empty cart has no `cartId` and no `productType`; it is not a 404.
+ */
+export interface ServerCart {
+  cartId?: string;
+  userId: string;
+  productType?: "physical" | "digital";
+  items: ServerCartItem[];
+  totalItems: number;
+}
+
+/** Why a line could not be carried over at sign-in. Surface these; do not swallow them. */
+export type CartDropReason =
+  | "PRODUCT_UNAVAILABLE"
+  | "PRODUCT_TYPE_CONFLICT"
+  | "DIGITAL_LIMIT_REACHED"
+  | "SERVICE_NOT_ALLOWED"
+  | "SERVER_CART_KEPT";
+
+export interface CartDroppedLine {
+  variantId: string;
+  reason: CartDropReason;
+}
+
+export interface MergeCartResult {
+  cart: ServerCart;
+  dropped: CartDroppedLine[];
+}
+
+export interface CartQuoteVendorLine {
+  vendorId: string;
+  subtotal: number;
+  delivery: number;
+  absorbedByVendor: number;
+}
+
+/**
+ * `POST /api/customer/cart/quote`.
+ *
+ * ⚠️ **`delivery` is 0 and `total` is the subtotal — that is the truth, not a
+ * stub.** The agency's delivery fee is real and is charged, but to the *vendor*:
+ * `splitOrder` computes `vendorNet = gross − commission − deliveryTotal`. Adding
+ * it to the customer's total would collect it twice.
+ *
+ * `absorbedByVendor` is what the seller pays, reported so the UI can say
+ * "delivery included" and mean it. It is an **estimate** and `null` when it
+ * could not be computed (a digital cart, or an agency with no pricing policy) —
+ * deliberately distinct from `0`. Never add it to a total.
+ *
+ * `tax` and `discount` are pinned zeros: there is no tax engine and no coupon
+ * model. They are present so the receipt does not change shape the day either
+ * arrives.
+ */
+export interface CartQuote {
+  currency: string;
+  subtotal: number;
+  delivery: number;
+  absorbedByVendor: number | null;
+  tax: number;
+  discount: number;
+  total: number;
+  perVendor: CartQuoteVendorLine[];
 }

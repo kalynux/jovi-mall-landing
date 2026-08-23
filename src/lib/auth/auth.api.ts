@@ -4,41 +4,73 @@ import type {
     AddRolePayload,
     AuthApiResponse,
     Role,
-    WaVerificationCodeResponse,
-    WaLinkStatusResponse,
     BrowserRefreshResponse,
+    MagicSignInResponse,
     MessageResponse,
 } from "./auth.types";
 import { apiFetch } from "@/lib/api/client";
+import { USES_BEARER_AUTH, saveFromResponse, clear as clearTokens } from "./token-store";
+
+// ─── Which namespace issues this session ─────────────────────────────────────
+/**
+ * `/api/auth/*` sets cookies; `/api/auth/mobile/*` returns the same pair in
+ * `data.tokens` and sets nothing. Same `AuthService`, same JWTs, same lifetimes,
+ * same error codes — only the delivery differs, which is why one constant can
+ * switch between them.
+ *
+ * ⚠️ **Only the four session-minting routes have a twin.** Everything below this
+ * block — `me`, `logout`, email verification, password reset — is deliberately
+ * on the shared path: those either read a credential the bearer already
+ * satisfies, or take one in the body. Do not widen this prefix into a blanket
+ * rewrite; `/api/auth/mobile/me` does not exist.
+ */
+const SESSION_NS = USES_BEARER_AUTH ? "/api/auth/mobile" : "/api/auth";
+
+/**
+ * Store the pair out of a session-minting response, then hand the response on.
+ *
+ * A browser response carries no `tokens` block and this is a no-op for it, so
+ * both targets share one call path rather than branching at each site.
+ */
+async function keepSession(res: AuthApiResponse): Promise<AuthApiResponse> {
+    await saveFromResponse(res as { tokens?: { accessToken?: string; refreshToken?: string } });
+    return res;
+}
 
 // ─── Auth API ────────────────────────────────────────────────────────────────
 
-/** POST /api/auth/login — backend sets access_token + refresh_token cookies */
+/** POST /auth/login — sets cookies on the web, returns `data.tokens` in the app. */
 export async function login(payload: LoginPayload): Promise<AuthApiResponse> {
-    return apiFetch<AuthApiResponse>("/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify(payload),
-    });
+    return keepSession(
+        await apiFetch<AuthApiResponse>(`${SESSION_NS}/login`, {
+            method: "POST",
+            body: JSON.stringify(payload),
+        })
+    );
 }
 
-/** POST /api/auth/register — backend sets cookies */
+/** POST /auth/register — same two deliveries as login. */
 export async function register(
     payload: RegisterPayload
 ): Promise<AuthApiResponse> {
-    return apiFetch<AuthApiResponse>("/api/auth/register", {
-        method: "POST",
-        body: JSON.stringify(payload),
-    });
+    return keepSession(
+        await apiFetch<AuthApiResponse>(`${SESSION_NS}/register`, {
+            method: "POST",
+            body: JSON.stringify(payload),
+        })
+    );
 }
 
-/** POST /api/auth/add-role — requires valid access_token or refresh_token cookie */
+/** POST /auth/add-role — the new pair is scoped to the role just added. */
 export async function addRole(
     payload: AddRolePayload
 ): Promise<AuthApiResponse> {
-    return apiFetch<AuthApiResponse>("/api/auth/add-role", {
-        method: "POST",
-        body: JSON.stringify(payload),
-    });
+    return keepSession(
+        await apiFetch<AuthApiResponse>(`${SESSION_NS}/add-role`, {
+            method: "POST",
+            body: JSON.stringify(payload),
+        })
+    );
 }
 
 /** GET /api/auth/me — validates session using cookies; backend auto-refreshes if needed */
@@ -47,58 +79,32 @@ export async function getMe(): Promise<AuthApiResponse> {
 }
 
 /**
- * GET /api/auth/auth-me/:role
- * Switches the active session to the given role.
- * Backend re-issues cookies scoped to the new role.
+ * GET /auth/auth-me/:role
+ * Switches the active session to the given role, re-issuing the pair scoped to
+ * it.
+ *
+ * On the bearer path this is also the launch-time session restore, and it is
+ * the one endpoint that must not be skipped: it re-issues **both** tokens at
+ * full lifetime, which is what restarts the 30-day window. A client that only
+ * ever rotated on 401 would hit a hard expiry 30 days after sign-in no matter
+ * how much the app was used.
  */
 export async function switchRole(role: Role): Promise<AuthApiResponse> {
-    return apiFetch<AuthApiResponse>(`/api/auth/auth-me/${role}`);
+    return keepSession(await apiFetch<AuthApiResponse>(`${SESSION_NS}/auth-me/${role}`));
 }
 
 /**
  * POST /api/auth/logout
- * Instructs backend to expire both access_token and refresh_token cookies.
+ *
+ * No mobile twin, and none is needed: the route clears cookies and answers 200,
+ * which is a harmless no-op for a client that has none. What actually ends a
+ * bearer session is discarding the pair, so that happens here — before the
+ * request, so a network failure cannot leave the app holding a credential it
+ * has decided to abandon.
  */
 export async function logout(): Promise<void> {
+    await clearTokens();
     await apiFetch<void>("/api/auth/logout", { method: "POST" });
-}
-
-// ─── WhatsApp Verification API ────────────────────────────────────────────────
-
-/**
- * POST /api/auth/request-wa-verification
- * Triggers the backend to send a verification command to the user's WhatsApp.
- * Returns the code, command string, deep-link, expiry, and instructions.
- *
- * @param updateOtherRoles - If true, marks ALL unverified role entities verified
- *                           once this number is successfully linked.
- */
-export async function requestWaVerification(
-    updateOtherRoles: boolean
-): Promise<WaVerificationCodeResponse> {
-    return apiFetch<WaVerificationCodeResponse>(
-        "/api/auth/request-wa-verification",
-        {
-            method: "POST",
-            body: JSON.stringify({ update_other_roles: updateOtherRoles }),
-        }
-    );
-}
-
-/**
- * GET /api/webhooks/whatsapp/link/status
- * Polls whether the authenticated user's WhatsApp number has been linked.
- * Returns { linked, wa_phone_id?, name?, bound_at? } — api-doc/whatsapp/README.md §2.
- *
- * The whole WhatsApp module is mounted under `/api/webhooks/whatsapp`; there is
- * **no `/api/whatsapp` prefix** (whatsapp/README.md:3-11). The two authenticated
- * link routes share that prefix with the public inbound webhook, which has one
- * useful consequence here: `/api/webhooks` is exempt from rate limiting
- * (rate-limits.md § "Never limited"), so the verification modal's poll never
- * spends the caller's 1200/min IP budget.
- */
-export async function getWaLinkStatus(): Promise<WaLinkStatusResponse> {
-    return apiFetch<WaLinkStatusResponse>("/api/webhooks/whatsapp/link/status");
 }
 
 // ─── Session / Email Verification API ─────────────────────────────────────────
@@ -135,4 +141,116 @@ export async function verifyEmail(token: string): Promise<MessageResponse> {
     return apiFetch<MessageResponse>(
         `/api/auth/verify-email?token=${encodeURIComponent(token)}`
     );
+}
+
+/**
+ * POST /api/auth/forgot-password
+ *
+ * ⚠️ **Always answers 200**, whether or not the identifier matches an account.
+ * Never branch the UI on the response: a different message for "no such account"
+ * turns this endpoint into an account-enumeration oracle, which is exactly what
+ * the flat 200 exists to prevent. Show the same "check your messages" screen
+ * every time.
+ *
+ * `identifier` is an email **or** an E.164 phone — WhatsApp is the primary
+ * channel for this audience, and `phone` is the required registration field
+ * while email is not. Rate-limited by the `/api/auth` bucket (20/min/IP).
+ */
+export async function forgotPassword(identifier: string): Promise<MessageResponse> {
+    return apiFetch<MessageResponse>("/api/auth/forgot-password", {
+        method: "POST",
+        body: JSON.stringify({ identifier }),
+    });
+}
+
+/**
+ * POST /api/auth/reset-password
+ *
+ * Single-use, short-lived token. `AUTH_RESET_TOKEN_INVALID` (400) covers unknown,
+ * already-used and expired alike — send the user back to request a fresh link.
+ *
+ * ⚠️ `newPassword` must satisfy the **strong** rule: 8+ characters with an
+ * upper, a lower, a digit and a symbol. That is deliberately stricter than
+ * registration, which still accepts 6 characters with no complexity rule — so a
+ * password that would have been fine at sign-up is rejected here.
+ *
+ * On success the backend stamps `password_changed_at`, which the password-epoch
+ * check turns into a global session revocation: every other device is signed
+ * out. That is intended, and worth telling the user.
+ */
+export async function resetPassword(
+    token: string,
+    newPassword: string
+): Promise<MessageResponse> {
+    return apiFetch<MessageResponse>("/api/auth/reset-password", {
+        method: "POST",
+        body: JSON.stringify({ token, newPassword }),
+    });
+}
+
+// ─── Passwordless customer sign-in ───────────────────────────────────────────
+// A customer holds a system-generated password that is disclosed to nobody, so
+// `POST /auth/login` can never work for one. They send `/login` to the WhatsApp
+// or Telegram bot and get two credentials for the same session — a link to tap
+// and a code to type. See api-doc/auth/customer-auth.md.
+//
+// ⚠️ **THE APP DEPENDS ON A BACKEND ROUTE THAT DOES NOT EXIST YET.**
+//
+// Both endpoints below are cookie-only today. `messaging-login.controller.ts`
+// calls `setAuthCookies` and its own docblock puts bearer clients out of scope:
+// "if the customer app needs this it needs an `/api/auth/mobile/magic/*` twin
+// returning `data.tokens`, exactly as the mobile namespace does elsewhere."
+//
+// Since this is the ONLY way a customer authenticates, the app cannot sign
+// anyone in until that twin ships. The prefix below is written against the
+// agreed contract, so the flow starts working the moment it lands — no
+// frontend change. Until then these calls answer 404 on the native build.
+const MAGIC_NS = USES_BEARER_AUTH ? "/api/auth/mobile/magic" : "/api/auth/magic";
+
+/**
+ * POST /api/auth/magic/link — redeem the token from a bot-issued magic link.
+ *
+ * ⚠️ **It is a POST, and it must stay one.** The link points at *our* page
+ * (`/login/magic?t=…`), not at the API, because WhatsApp and Telegram fetch
+ * URLs to build preview cards: a GET that signs you in is spent by the crawler
+ * before the user ever taps it — a dead link, every time, for every user
+ * (api-doc/auth/magic-login.md).
+ *
+ * Sets the same two HttpOnly cookies a password login does; no tokens in the
+ * body. `MAGIC_LINK_INVALID` / `MAGIC_LINK_EXPIRED` are both 401 and both mean
+ * the same thing to the user: ask the bot for a new one. Never retry the token.
+ */
+export async function magicLinkSignIn(token: string): Promise<MagicSignInResponse> {
+    const res = await apiFetch<MagicSignInResponse>(`${MAGIC_NS}/link`, {
+        method: "POST",
+        body: JSON.stringify({ token }),
+    });
+    await saveFromResponse(res as { tokens?: { accessToken?: string; refreshToken?: string } });
+    return res;
+}
+
+/**
+ * POST /api/auth/magic/code — redeem the 8-character code the bot replied with,
+ * paired with the account's phone number or email.
+ *
+ * ⚠️ **Send `code` exactly as the user typed it.** The server is already
+ * forgiving about case, spacing and dashes, and reads `O` as `0` and `I`/`L` as
+ * `1`; normalising client-side only introduces a second opinion that can
+ * disagree with the first (api-doc/auth/magic-login.md).
+ *
+ * `MAGIC_CODE_INVALID` covers a wrong code, an unknown identifier, a spent code
+ * and a code belonging to another account — one code for all four, deliberately,
+ * so the endpoint cannot be used to learn who shops here. **Never write copy
+ * that says "no account with that number".**
+ */
+export async function magicCodeSignIn(
+    identifier: string,
+    code: string
+): Promise<MagicSignInResponse> {
+    const res = await apiFetch<MagicSignInResponse>(`${MAGIC_NS}/code`, {
+        method: "POST",
+        body: JSON.stringify({ identifier, code }),
+    });
+    await saveFromResponse(res as { tokens?: { accessToken?: string; refreshToken?: string } });
+    return res;
 }

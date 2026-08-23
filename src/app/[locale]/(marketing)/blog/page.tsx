@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import JsonLd from "@/components/seo/JsonLd";
 import Breadcrumbs from "@/components/marketing/Breadcrumbs";
+import BlogIllustration from "@/components/illustrations/BlogIllustration.generated";
 import { CtaBand, PageHeader, RelatedLinks, Section } from "@/components/marketing/parts";
 import ArticleCard from "@/components/blog/ArticleCard";
 import { ArticleGrid, CategoryChips, EmptyArticleList } from "@/components/blog/parts";
@@ -99,6 +100,7 @@ export default async function BlogIndexPage({ params }: PageProps) {
         title={t("blog.title")}
         lead={t("blog.lead")}
         breadcrumbs={<Breadcrumbs trail={trail} label={t("common.breadcrumbLabel")} />}
+        illustration={<BlogIllustration />}
       />
 
       <Section>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useFormatter } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { orderGroupPath } from "@/lib/shop/shop.routes";
 import {
   AccountCard,
   AccountShell,
@@ -28,7 +29,7 @@ export default function OrdersPage() {
   return (
     <AccountShell
       title="My orders"
-      description="Each entry is one checkout. An order containing items from several vendors is split into one delivery per vendor — you paid once."
+      description="One entry per checkout, split by vendor."
     >
       <ResourceView
         status={orders.status}
@@ -99,7 +100,7 @@ function OrderGroupRow({ group }: { group: OrderGroup }) {
   const hasCod = group.orders.some(isCod);
 
   return (
-    <Link href={`/shop/account/orders/${group.cartId}`} style={{ textDecoration: "none" }}>
+    <Link href={orderGroupPath(group.cartId)} style={{ textDecoration: "none" }}>
       <AccountCard style={{ cursor: "pointer" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 9 }}>
           <div style={{ flex: 1, minWidth: 0 }}>

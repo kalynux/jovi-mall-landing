@@ -97,11 +97,6 @@ export interface AuthRoleEntity {
     business_description?: string | null;
     country?: string | null;
     payout_details?: any | null;
-    wa?: {
-        verified: boolean;
-        /** WhatsApp phone number ID — set once the number is linked */
-        wa_phone_id?: string;
-    };
     notification_preferences?: {
         email: boolean;
         whatsapp: boolean;
@@ -218,50 +213,46 @@ export interface MessageResponse {
     message: string;
 }
 
-// ─── WhatsApp Verification ───────────────────────────────────────────────────
-
-/** Response from POST /auth/request-wa-verification */
-export interface WaVerificationCodeResponse {
-    /** Short numeric/alpha code the user must send */
-    code: string;
-    /** Full command string (e.g. "VERIFY abc123") */
-    command: string;
-    /** Direct WhatsApp deep-link including the pre-filled command */
-    wa_link: string;
-    /** Seconds until this code expires */
-    expires_in_seconds: number;
-    /** Human-readable instructions to display */
-    instructions: string;
-    /** Formatted WhatsApp bot number */
-    bot_number?: string;
-}
+// ─── Passwordless customer sign-in ───────────────────────────────────────────
 
 /**
- * Response from GET /api/webhooks/whatsapp/link/status (api-doc/whatsapp/README.md §2).
+ * `data` payload of `POST /auth/magic/link` and `POST /auth/magic/code`.
  *
- * Not linked → `{ linked: false }` alone; every other field is present only
- * once the account is linked.
+ * Deliberately narrower than `AuthApiResponse`: **there is no `role_entity`
+ * here** (api-doc/auth/customer-auth.md § 2). A customer's `onboarding_step` is
+ * capped at `0` by the schema, so the one thing the other endpoints return it
+ * for — deciding between onboarding and the dashboard — has a constant answer.
+ * Both routes set the same two HttpOnly cookies a password login does.
  */
-export interface WaLinkStatusResponse {
-    linked: boolean;
-    /** The WhatsApp phone ID — the identifier that proves the link. */
-    wa_phone_id?: string;
-    /** WhatsApp profile name of the linked account. */
-    name?: string;
-    /** ISO-8601 timestamp of when the link was established. */
-    bound_at?: string;
+export interface MagicSignInResponse {
+    /** Always `"customer"` — no other role is reachable through the bot. */
+    role: Role;
+    user: RawAuthUser;
+    /**
+     * Present only on the bearer route, `/api/auth/mobile/magic/*`, which the
+     * app calls because a WebView can hold no cookie. The website's route sets
+     * two HttpOnly cookies and returns no tokens at all, so this is `undefined`
+     * there — which is why `token-store.saveFromResponse` is safe to call on
+     * both and the sign-in pages need no branch.
+     */
+    tokens?: TokenEnvelope;
 }
 
-// ─── Post-Auth Action ────────────────────────────────────────────────────────
-
 /**
- * Discriminated union returned by loginAndGetAction / switchRoleAndGetAction
- * / addRoleAndGetAction. The calling page uses it to decide whether to
- * navigate immediately or mount the WA verification modal.
+ * A token pair as `/api/auth/mobile/*` delivers it.
+ *
+ * The lifetimes are SECONDS, and they are the ones `jwt.sign` was actually
+ * given rather than a second reading of the same environment variable — see
+ * `tokenEnvelope` on the backend. We do not use them today: expiry is
+ * discovered by the 401 that `apiFetch` retries, which is one source of truth
+ * instead of two that can disagree across a clock skew.
  */
-export type PostAuthAction =
-    | { type: "redirect"; url: string }
-    | { type: "wa_gate"; roleEntity: AuthRoleEntity; redirectUrl: string };
+export interface TokenEnvelope {
+    accessToken: string;
+    refreshToken: string;
+    accessExpiresIn: number;
+    refreshExpiresIn: number;
+}
 
 // ─── Backend error contract (api-doc/errors/README.md) ───────────────────────
 

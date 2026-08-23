@@ -16,7 +16,6 @@ import { useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useRoleCta, type CtaRole } from "@/lib/auth/useRoleCta";
-import WaGateOverlay from "@/components/auth/WaGateOverlay";
 import { cn } from "@/lib/utils";
 import ModalShell from "./ModalShell";
 import WhatsAppBotPanel from "./WhatsAppBotPanel";
@@ -134,7 +133,6 @@ function NavRoleCard({
             <Loader2 className="absolute bottom-3 right-3 h-4 w-4 animate-spin text-primary-500" />
           )}
         </motion.button>
-        {cta.waGate && <WaGateOverlay gate={cta.waGate} />}
       </>
     );
   }

@@ -2,15 +2,23 @@
 
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
-import { Button, EmptyState, Icon, Skeleton } from "@/components/shop/ds";
+import { Button, EmptyState, Skeleton } from "@/components/shop/ds";
+import { useShopPageTitle } from "@/components/shop/ShopChrome";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import { translateError } from "@/lib/auth/error-translator";
+import { isNetworkError } from "@/lib/errors/is-network-error";
 import type { ResourceStatus } from "@/lib/shop/useApiResource";
 
 /**
- * The frame every `/shop/account/*` page sits in: back link, title, and the
- * session gate.
+ * The frame every `/shop/account/*` page sits in: the title, and the session
+ * gate.
+ *
+ * Neither the title nor the way back is drawn here any more — both are the
+ * header bar's, on every shop screen rather than on this one family of them.
+ * The title is still declared here, because this component is the only thing
+ * that knows it, and it reaches the bar through `useShopPageTitle`; the
+ * screen-reader heading below is what the bar cannot be, since the bar is
+ * chrome shared with pages that own an `<h1>` of their own.
  *
  * `useAuthGuard` redirects an unauthenticated visitor to `/login?return=…`, so
  * these pages never render owner-scoped data to a signed-out browser. The
@@ -28,39 +36,21 @@ export function AccountShell({
   action?: ReactNode;
   children: ReactNode;
 }) {
-  const router = useRouter();
   const { status } = useAuthGuard();
+  useShopPageTitle(title);
 
   return (
-    <div className="mx-auto max-w-[760px] px-4 py-8 sm:px-6">
-      <button
-        onClick={() => router.push("/shop/account")}
-        className="mb-4 inline-flex items-center gap-1.5"
-        style={{
-          border: "none",
-          background: "none",
-          cursor: "pointer",
-          color: "var(--text-muted)",
-          fontSize: 13,
-          fontWeight: 600,
-        }}
-      >
-        <Icon name="arrow-left" size={16} /> Account
-      </button>
+    <div className="mx-auto max-w-[760px] px-4 py-6 sm:px-6">
+      <h1 className="sr-only">{title}</h1>
 
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 20 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: "var(--text-strong)", margin: 0 }}>
-            {title}
-          </h1>
-          {description && (
-            <p className="muted" style={{ fontSize: 13.5, marginTop: 5 }}>
-              {description}
-            </p>
-          )}
+      {(description || action) && (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+          <p className="muted" style={{ flex: 1, minWidth: 0, fontSize: 13.5 }}>
+            {description}
+          </p>
+          {action}
         </div>
-        {action}
-      </div>
+      )}
 
       {/* The guard is still resolving the session — showing the page body here
           would flash owner-scoped chrome at someone about to be redirected. */}
@@ -110,10 +100,23 @@ export function ResourceError({
   fallback?: string;
 }) {
   const t = useTranslations("errors");
+
+  /**
+   * An unreachable server gets its own heading and icon.
+   *
+   * `translateError` already resolves the DESCRIPTION to "check your
+   * connection", but the heading above it still read "Something went wrong"
+   * — and a heading is what gets read first, so the screen opened by telling
+   * someone in a lift that the fault was ours and then correcting itself in
+   * smaller type. "Try again" is the right action for both, and it is the
+   * action that actually works once the signal is back.
+   */
+  const offline = isNetworkError(error);
+
   return (
     <EmptyState
-      icon="circle-alert"
-      title="Something went wrong"
+      icon={offline ? "wifi-off" : "circle-alert"}
+      title={offline ? "No connection" : "Something went wrong"}
       description={translateError(t, error, fallback)}
       actionLabel="Try again"
       actionIcon="refresh-cw"

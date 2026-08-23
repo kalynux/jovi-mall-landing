@@ -41,3 +41,33 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+
+# signing material — never commit
+*.keystore
+*.jks
+# Firebase config. Root-anchored was wrong: the file Gradle actually reads lives
+# at android/app/google-services.json. Unanchored so it is ignored wherever it lands.
+# It is not a secret (the API key ships inside every APK) but it names the project,
+# and a fork building against someone else's Firebase silently sends nothing.
+google-services.json
+/GoogleService-Info.plist
+
+# capacitor — the native projects ARE committed, per Capacitor's own guidance.
+# They carry hand-written configuration that `npx cap add` does not regenerate:
+# the deep-link intent filters, the debug-only cleartext policy, and later the
+# push-notification service. What is ignored is everything built from them, plus
+# the web assets `cap sync` copies in from out/ on every build.
+/android/app/build/
+/android/build/
+/android/.gradle/
+/android/captures/
+/android/local.properties
+/android/app/src/main/assets/public/
+/android/app/src/main/assets/capacitor.config.json
+/android/app/src/main/assets/capacitor.plugins.json
+/ios/App/Pods/
+/ios/App/App/public/
+/ios/App/App/capacitor.config.json
+/ios/App/App/capacitor.plugins.json
+/ios/DerivedData/

@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useEffect, useId, useRef } from "react";
 import { motion } from "framer-motion";
 import { useReducedMotionSafe } from "@/lib/reduced-motion";
 
@@ -23,18 +23,35 @@ export function Tabs({ value, onChange, tabs, variant = "underline" }: TabsProps
   const uid = useId();
   const shouldReduce = useReducedMotionSafe();
   const transition = shouldReduce ? { duration: 0 } : SPRING;
+  const railRef = useRef<HTMLDivElement | null>(null);
+  const activeRef = useRef<HTMLButtonElement | null>(null);
+
+  // The rail scrolls, so the selected tab can sit off-screen after a change.
+  useEffect(() => {
+    const rail = railRef.current;
+    const btn = activeRef.current;
+    if (!rail || !btn) return;
+    if (rail.scrollWidth <= rail.clientWidth) return;
+    const railBox = rail.getBoundingClientRect();
+    const btnBox = btn.getBoundingClientRect();
+    const delta = btnBox.left - railBox.left - (rail.clientWidth - btnBox.width) / 2;
+    rail.scrollTo({ left: rail.scrollLeft + delta, behavior: shouldReduce ? "auto" : "smooth" });
+  }, [value, shouldReduce]);
 
   if (variant === "pill") {
     return (
       <div
+        ref={railRef}
+        className="tab-rail"
         style={{
           display: "inline-flex",
+          maxWidth: "100%",
           gap: 4,
           background: "var(--surface-2)",
           border: "1px solid var(--border-subtle)",
           borderRadius: "var(--radius-pill)",
           padding: 4,
-          flexWrap: "wrap",
+          flexWrap: "nowrap",
         }}
       >
         {tabs.map((t) => {
@@ -42,10 +59,13 @@ export function Tabs({ value, onChange, tabs, variant = "underline" }: TabsProps
           return (
             <button
               key={t.value}
+              ref={active ? activeRef : undefined}
               type="button"
               onClick={() => onChange(t.value)}
               style={{
                 position: "relative",
+                flex: "0 0 auto",
+                whiteSpace: "nowrap",
                 border: "none",
                 cursor: "pointer",
                 fontFamily: "var(--font-sans)",
@@ -83,12 +103,12 @@ export function Tabs({ value, onChange, tabs, variant = "underline" }: TabsProps
 
   return (
     <div
+      ref={railRef}
+      className="tab-rail"
       style={{
         display: "flex",
         gap: 4,
         borderBottom: "1px solid var(--border)",
-        overflowX: "auto",
-        scrollbarWidth: "none",
       }}
     >
       {tabs.map((t) => {
@@ -96,10 +116,12 @@ export function Tabs({ value, onChange, tabs, variant = "underline" }: TabsProps
         return (
           <button
             key={t.value}
+            ref={active ? activeRef : undefined}
             type="button"
             onClick={() => onChange(t.value)}
             style={{
               position: "relative",
+              flex: "0 0 auto",
               border: "none",
               background: "transparent",
               cursor: "pointer",

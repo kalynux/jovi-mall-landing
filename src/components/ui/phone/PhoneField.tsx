@@ -42,6 +42,7 @@ import {
 } from "@/lib/phone";
 import { usePreferredCountry } from "@/lib/phone/usePreferredCountry";
 import { usePhoneErrorText } from "@/lib/phone/usePhoneErrorText";
+import InfoTooltip from "@/components/ui/InfoTooltip";
 import CountrySelect from "./CountrySelect";
 
 export interface PhoneFieldProps {
@@ -52,7 +53,7 @@ export interface PhoneFieldProps {
     onBlur?: () => void;
 
     label: string;
-    /** Visible helper text, replaced by the error when one is showing. */
+    /** The field's description, carried behind an info trigger (InfoTooltip). */
     hint?: string;
     /**
      * Error to display. Accepts a `phone.errors.*` code from PhoneSchema or any
@@ -303,28 +304,26 @@ const PhoneField = forwardRef<HTMLDivElement, PhoneFieldProps>(function PhoneFie
         return code ? translateError(code) : undefined;
     }, [error, touched, value, required, translateError]);
 
+    // The hint is in the tooltip bubble, which stays mounted whether or not it
+    // is showing, so it can be referenced unconditionally — an error no longer
+    // has to displace it, because the two no longer compete for the same line.
     const describedBy =
-        [liveError && errorId, hint && !liveError && hintId].filter(Boolean).join(" ") ||
-        undefined;
+        [liveError && errorId, hint && hintId].filter(Boolean).join(" ") || undefined;
 
-    const messages = (
-        <>
-            {hint && !liveError && (
-                <p id={hintId} className="text-xs text-[var(--text-muted)]">
-                    {hint}
-                </p>
-            )}
-            {liveError && (
-                <p
-                    id={errorId}
-                    aria-live="polite"
-                    className="text-xs font-medium text-red-500 transition-opacity duration-150"
-                >
-                    {liveError}
-                </p>
-            )}
-        </>
+    const messages = liveError && (
+        <p
+            id={errorId}
+            aria-live="polite"
+            className="text-xs font-medium text-red-500 transition-opacity duration-150"
+        >
+            {liveError}
+        </p>
     );
+
+    // Only ever one of these renders — the two variants are exclusive branches,
+    // so the shared `hintId` is never duplicated in the document.
+    const infoTrigger = (align: "start" | "end") =>
+        hint ? <InfoTooltip id={hintId} content={hint} align={align} /> : null;
 
     const requiredMark = required && (
         <span className="ml-0.5 text-red-500" aria-hidden="true">
@@ -376,6 +375,8 @@ const PhoneField = forwardRef<HTMLDivElement, PhoneFieldProps>(function PhoneFie
                 isFloating
                     ? "rounded-e-2xl pb-2 pe-4 pt-6 ps-1 placeholder:opacity-0 focus:placeholder:opacity-100 placeholder:transition-opacity placeholder:duration-200"
                     : "rounded-e-xl px-1 py-3",
+                // Clear of the info trigger parked at the trailing edge.
+                isFloating && hint && "pe-10",
                 disabled && "cursor-not-allowed"
             )}
         />
@@ -422,6 +423,11 @@ const PhoneField = forwardRef<HTMLDivElement, PhoneFieldProps>(function PhoneFie
                             {label}
                             {requiredMark}
                         </label>
+                        {hint && (
+                            <span className="absolute inset-y-0 end-0 flex w-10 items-center justify-center">
+                                {infoTrigger("end")}
+                            </span>
+                        )}
                     </div>
                 </div>
                 {messages}
@@ -432,13 +438,18 @@ const PhoneField = forwardRef<HTMLDivElement, PhoneFieldProps>(function PhoneFie
     // ── Stacked variant ─────────────────────────────────────────────────────
     return (
         <div ref={ref} className="flex flex-col gap-1.5">
-            <label
-                htmlFor={fieldId}
-                className="text-sm font-medium text-[var(--text-primary)]"
-            >
-                {label}
-                {requiredMark}
-            </label>
+            {/* Trigger beside the label, not inside it — a button within a
+                <label> swallows the click that focuses the field. */}
+            <div className="flex items-center gap-1.5">
+                <label
+                    htmlFor={fieldId}
+                    className="text-sm font-medium text-[var(--text-primary)]"
+                >
+                    {label}
+                    {requiredMark}
+                </label>
+                {infoTrigger("start")}
+            </div>
             <div className={box}>
                 {selector}
                 <span

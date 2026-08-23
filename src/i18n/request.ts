@@ -1,5 +1,5 @@
 import { getRequestConfig } from "next-intl/server";
-import { DEFAULT_LOCALE, isLocale } from "./routing";
+import { BUILD_DEFAULT_LOCALE, isShippedLocale } from "./routing";
 
 /**
  * Resolves the request's messages on the server. This is what lets a page
@@ -8,7 +8,10 @@ import { DEFAULT_LOCALE, isLocale } from "./routing";
  */
 export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale;
-  const locale = isLocale(requested) ? requested : DEFAULT_LOCALE;
+  // `isShippedLocale`, not `isLocale`: a build that ships a subset has no message
+  // bundle route for the others, so an unshipped code falls back rather than
+  // failing the dynamic import below.
+  const locale = isShippedLocale(requested) ? requested : BUILD_DEFAULT_LOCALE;
 
   return {
     locale,

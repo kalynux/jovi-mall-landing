@@ -1,11 +1,11 @@
 // ─── Brand ──────────────────────────────────────────────────────────────────
 export const BRAND = {
-    name: "WiMall",
+    name: "Wi-Mall",
     tagline: "Commerce runs on conversation.",
     description:
         "AI-powered ecommerce infrastructure for WhatsApp-first businesses. No storefront needed — just upload products and let AI sell for you.",
     whatsappNumber: "+2340000000000", // Placeholder
-    email: "hello@wimall.com",
+    email: "hello@wi-mall.com",
 };
 
 // ─── Outward destinations ───────────────────────────────────────────────────
@@ -23,6 +23,16 @@ export const BRAND = {
 export const EXTERNAL_LINKS = {
     /** WhatsApp bot number, E.164. */
     whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? BRAND.whatsappNumber,
+    /**
+     * Telegram bot username, without the leading `@`.
+     *
+     * The API knows this (`TELEGRAM_BOT_NAME`) but **serves it only on
+     * `GET /api/me/connections`, which requires a session** — useless on a
+     * sign-in page, where by definition there is none. So the storefront keeps
+     * its own copy; api-doc/auth/customer-auth.md § "The deep links" says to.
+     * Empty means "not published yet": show the command as text, not a link.
+     */
+    telegramBotName: process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME ?? "",
     /** Agent app on Google Play. Empty until the listing is live. */
     agentAndroidUrl: process.env.NEXT_PUBLIC_AGENT_APP_ANDROID_URL ?? "",
     /** Agent app on the App Store. Empty until the listing is live. */
@@ -35,13 +45,36 @@ export function buildWhatsAppUrl(text: string): string {
     return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
-// ─── Navigation ─────────────────────────────────────────────────────────────
-export const NAV_LINKS = [
-    { label: "How It Works", href: "#how-it-works" },
-    { label: "For Vendors", href: "#vendors" },
-    { label: "For Agencies", href: "#agencies" },
-    { label: "For Agents", href: "#agents" },
-];
+/**
+ * Opens the Telegram bot, or `null` when no bot name is configured.
+ *
+ * Telegram **cannot pre-fill a message** the way `wa.me?text=` can, so the
+ * command has to be shown next to the button either way — which is also what
+ * makes an unconfigured bot name survivable: the user can still type it.
+ */
+export function buildTelegramUrl(): string | null {
+    const handle = EXTERNAL_LINKS.telegramBotName.replace(/^@/, "");
+    return handle ? `https://t.me/${handle}` : null;
+}
+
+// ─── Bot commands ────────────────────────────────────────────────────────────
+/**
+ * The two commands a visitor is ever told to send, and they are **not
+ * localised**. The bot's own replies are English-only until the sender is a
+ * known account with a language on file (the platform will not guess one from a
+ * phone prefix), and the command strings themselves are matched literally
+ * server-side — a translated `/connexion` reaches no handler.
+ */
+export const BOT_COMMANDS = {
+    /** Mints a customer's magic link + 8-character sign-in code. */
+    login: "/login",
+    /** Mints a 6-character code that connects the chat to an account. */
+    connect: "/connect",
+} as const;
+
+// NOTE: `NAV_LINKS` used to live here — a third nav declaration with hardcoded
+// English labels that nothing imported. The header's menu is `MAIN_MENU` in
+// src/lib/nav/menu.ts, which is the only one now.
 
 // ─── Section IDs (for progress indicator) ───────────────────────────────────
 export const SECTION_IDS = [
@@ -51,7 +84,7 @@ export const SECTION_IDS = [
     { id: "agencies", label: "Agencies" },
     { id: "agents", label: "Agents" },
     { id: "customers", label: "Customers" },
-    { id: "why-wimall", label: "Built For You" },
+    { id: "why-wi-mall", label: "Built For You" },
     { id: "trust", label: "Trust" },
     { id: "cta", label: "Get Started" },
 ];
@@ -65,7 +98,7 @@ export const SECTION_ROLE_ACCENT: Record<string, string> = {
     agencies: "role-agency",
     agents: "role-agent",
     customers: "role-customer",
-    "why-wimall": "role-accent",
+    "why-wi-mall": "role-accent",
     trust: "role-accent",
     cta: "role-customer",
 };

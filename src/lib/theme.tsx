@@ -9,6 +9,9 @@ import {
 
 type Theme = "light" | "dark";
 
+const THEME_KEY = "wi-mall-theme";
+const PRE_RENAME_THEME_KEY = "wimall-theme";
+
 const ThemeContext = createContext<{
   theme: Theme;
   toggle: () => void;
@@ -23,7 +26,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   // On mount: read from localStorage or system preference
   useEffect(() => {
-    const stored = localStorage.getItem("wimall-theme") as Theme | null;
+    // THEME_KEY moved with the rename; PRE_RENAME_THEME_KEY is read once so a
+    // returning visitor keeps the theme they chose, then dropped. The pre-paint
+    // script in app/[locale]/layout.tsx reads the same pair — keep them in step.
+    const stored = (localStorage.getItem(THEME_KEY) ??
+      localStorage.getItem(PRE_RENAME_THEME_KEY)) as Theme | null;
+    localStorage.removeItem(PRE_RENAME_THEME_KEY);
     const preferred: Theme =
       stored ??
       (window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -36,7 +44,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const toggle = () => {
     setTheme((prev) => {
       const next: Theme = prev === "light" ? "dark" : "light";
-      localStorage.setItem("wimall-theme", next);
+      localStorage.setItem(THEME_KEY, next);
       document.documentElement.classList.toggle("dark", next === "dark");
       return next;
     });

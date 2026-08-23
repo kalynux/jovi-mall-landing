@@ -4,7 +4,7 @@
  * Mirrored from the backend's `src/core/constants/locations.json`, which today
  * contains exactly one country — Cameroon (`cm`) — with ten regions and the
  * cities inside each. That file is what validates an agency's `coverage_areas`,
- * so it is the only honest answer to "where does WiMall operate".
+ * so it is the only honest answer to "where does Wi-Mall operate".
  *
  * Region *keys* are the backend's (`far_north`, `northwest`, …) so a link from a
  * marketing page to a coverage filter can pass them straight through. Region

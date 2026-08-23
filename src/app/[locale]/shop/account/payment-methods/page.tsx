@@ -8,7 +8,7 @@ import {
   CardAction,
   ResourceView,
 } from "@/components/shop/account/AccountShell";
-import { Badge, BottomSheet, Button, EmptyState, Icon } from "@/components/shop/ds";
+import { Badge, BottomSheet, Button, ConfirmDialog, EmptyState, Icon } from "@/components/shop/ds";
 import { useToast } from "@/components/shop/providers";
 import { translateError } from "@/lib/auth/error-translator";
 import { isValidPhone, toE164 } from "@/lib/phone";
@@ -39,6 +39,8 @@ export default function PaymentMethodsPage() {
   const methods = useApiResource<SavedPaymentMethod[]>(() => listPaymentMethods());
   const [sheetOpen, setSheetOpen] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  /** The method the shopper has asked to remove, held until they confirm. */
+  const [pendingRemoval, setPendingRemoval] = useState<SavedPaymentMethod | null>(null);
   const { flash, flashError } = useToast();
   const t = useTranslations("errors");
 
@@ -61,7 +63,7 @@ export default function PaymentMethodsPage() {
   return (
     <AccountShell
       title="Payment methods"
-      description="Saved for faster checkout. Only the label is stored here — your card and wallet details stay with the payment provider."
+      description="Saved for faster checkout."
       action={
         <Button size="sm" leadingIcon="plus" onClick={() => setSheetOpen(true)}>
           Add
@@ -95,7 +97,7 @@ export default function PaymentMethodsPage() {
                   onMakeDefault={() =>
                     run(m.id, () => setDefaultPaymentMethod(m.id), "Default payment method updated")
                   }
-                  onRemove={() => run(m.id, () => removePaymentMethod(m.id), "Payment method removed")}
+                  onRemove={() => setPendingRemoval(m)}
                 />
               ))}
             </div>
@@ -112,6 +114,26 @@ export default function PaymentMethodsPage() {
           flash("Payment method added");
         }}
       />
+
+      <ConfirmDialog
+        open={pendingRemoval !== null}
+        title="Remove this payment method?"
+        tone="danger"
+        icon="trash-2"
+        confirmLabel="Remove"
+        cancelLabel="Keep it"
+        busy={pendingRemoval !== null && busyId === pendingRemoval.id}
+        onConfirm={async () => {
+          const method = pendingRemoval;
+          if (!method) return;
+          await run(method.id, () => removePaymentMethod(method.id), "Payment method removed");
+          setPendingRemoval(null);
+        }}
+        onCancel={() => setPendingRemoval(null)}
+      >
+        <strong>{pendingRemoval?.display_label}</strong> will no longer be offered at checkout.
+        Nothing already paid for is affected.
+      </ConfirmDialog>
     </AccountShell>
   );
 }
@@ -242,7 +264,7 @@ function AddMethodSheet({
         </div>
       }
     >
-      <p className="overline" style={{ marginBottom: 8 }}>
+      <p className="ds-overline" style={{ marginBottom: 8 }}>
         Provider
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
@@ -321,7 +343,7 @@ function AddMethodSheet({
 
       <p className="muted" style={{ fontSize: 12, marginTop: 14, lineHeight: 1.5 }}>
         Cards are saved automatically the first time you pay with one — there is nothing to
-        enter here, and no card number is ever stored by WiMall.
+        enter here, and no card number is ever stored by Wi-Mall.
       </p>
     </BottomSheet>
   );

@@ -3,17 +3,35 @@
 import type { ChangeEvent } from "react";
 import { Icon } from "./Icon";
 
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
 export interface SelectProps {
   value: string;
   onChange: (e: ChangeEvent<HTMLSelectElement>) => void;
-  options: readonly string[];
+  /**
+   * Either bare strings (value === label) or `{ value, label }` pairs.
+   *
+   * The pairs exist because the catalog's sort values are a wire contract —
+   * `price_asc` is sent verbatim as `?sort=` — while the option a shopper reads
+   * is "Price: low to high". Before the catalogue was real those were the same
+   * string, which only worked because nothing was ever sent anywhere.
+   */
+  options: readonly string[] | readonly SelectOption[];
   size?: "sm" | "md";
   leadingIcon?: string;
   "aria-label"?: string;
 }
 
+function normalize(options: SelectProps["options"]): readonly SelectOption[] {
+  return options.map((o) => (typeof o === "string" ? { value: o, label: o } : o));
+}
+
 export function Select({ value, onChange, options, size = "md", leadingIcon, ...rest }: SelectProps) {
   const h = size === "sm" ? 40 : 44;
+  const items = normalize(options);
   return (
     <div
       style={{
@@ -26,6 +44,10 @@ export function Select({ value, onChange, options, size = "md", leadingIcon, ...
         border: "1.5px solid var(--border)",
         borderRadius: "var(--radius-input)",
         position: "relative",
+        // A <select> is as wide as its widest option, which is a translated
+        // string here — so on a phone it is capped rather than trusted.
+        maxWidth: "100%",
+        minWidth: 0,
       }}
     >
       {leadingIcon && <Icon name={leadingIcon} size={16} style={{ color: "var(--text-muted)" }} />}
@@ -45,11 +67,14 @@ export function Select({ value, onChange, options, size = "md", leadingIcon, ...
           color: "var(--text-strong)",
           cursor: "pointer",
           paddingRight: 16,
+          minWidth: 0,
+          maxWidth: "100%",
+          textOverflow: "ellipsis",
         }}
       >
-        {options.map((o) => (
-          <option key={o} value={o}>
-            {o}
+        {items.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
           </option>
         ))}
       </select>

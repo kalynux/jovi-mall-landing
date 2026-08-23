@@ -3,21 +3,20 @@ import { HelpCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
+import { IS_NATIVE_BUILD } from "@/lib/platform";
 
 /**
- * Persistent shortcut to /faq, bottom-right on every page.
+ * Persistent shortcut to /faq, bottom-right on the marketing and auth pages.
  *
- * Mounted in the root layout rather than per-page so it survives every route —
- * including the auth and shop trees, where "what does this cost / how does
- * delivery work" is exactly the question that stalls someone mid-flow.
+ * Mounted in the root layout rather than per-page so it survives every route.
+ * Two routes opt out:
  *
- * Two placement facts it has to respect:
- *
- *  • It hides on /faq itself. A button that scrolls you to the page you are
- *    already on is noise.
- *  • The shop's bottom tab bar is `fixed bottom-0` and mobile-only, so on /shop
- *    routes the button lifts above it below `md`. Without that it sits on top of
- *    the cart tab.
+ *  • /faq itself. A button that opens the page you are already on is noise.
+ *  • The whole /shop tree. The shop is an app shell with its own bottom tab
+ *    bar, and a floating circle over that is one hovering control too many —
+ *    it sat on top of the product grid and, on the tab bar's own line, on top
+ *    of the cart tab. The shortcut lives in the account menu there instead,
+ *    alongside the other settings rows.
  *
  * Deliberately physical `right`, not logical `end`: the landing's section rail
  * (SectionProgressIndicator) is also pinned physically right, and mirroring only
@@ -29,9 +28,21 @@ export default function FloatingFaqButton() {
   // Locale-stripped, so "/fr/faq" reads back as "/faq".
   const pathname = usePathname();
 
-  if (pathname === "/faq") return null;
+  /**
+   * Never in the app.
+   *
+   * The `/shop` opt-out below already covers most of the app, but the bundle
+   * also carries the `(auth)` screens — and there this rendered a floating
+   * circle linking to `/faq`, a MARKETING route the export never wrote. Tapping
+   * it was a client-side navigation to nothing.
+   *
+   * Not worth routing to the in-app browser either: a help shortcut hovering
+   * over a sign-in form is not something the app wants, and the shop's own
+   * shortcut lives in the account menu, which opens the real site properly.
+   */
+  if (IS_NATIVE_BUILD) return null;
 
-  const overShopNav = pathname.startsWith("/shop");
+  if (pathname === "/faq" || pathname.startsWith("/shop")) return null;
 
   return (
     <Link
@@ -47,7 +58,7 @@ export default function FloatingFaqButton() {
         // Icon-only circle on phones, labelled pill from sm up — a bare "?" is
         // ambiguous once there is room to say what it opens.
         "h-12 w-12 justify-center sm:h-auto sm:w-auto sm:px-4 sm:py-2.5",
-        overShopNav ? "bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-5" : "bottom-5"
+        "bottom-5"
       )}
     >
       <HelpCircle className="h-5 w-5 flex-shrink-0" aria-hidden="true" />

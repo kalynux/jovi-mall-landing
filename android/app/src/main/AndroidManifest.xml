@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <activity
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
+            android:name=".MainActivity"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBarLaunch"
+            android:launchMode="singleTask"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!--
+              Deep links. Both filters deliver to NativeShell's `appUrlOpen`
+              listener, which keeps only the path and query and hands them to
+              the in-app router.
+
+              The custom scheme works with no server-side setup, which is what
+              makes it the right target for a payment return: it can be relied
+              on the day the app is installed.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="wimall" />
+            </intent-filter>
+
+            <!--
+              App Links for the real domain, so a magic sign-in link tapped in
+              WhatsApp opens the app rather than the browser. This is the flow
+              the whole customer sign-in depends on.
+
+              `autoVerify` requires https://wi-mall.com/.well-known/assetlinks.json
+              to be served, naming this package and the release signing
+              certificate's SHA-256 fingerprint. UNTIL THAT FILE IS PUBLISHED
+              THESE LINKS OPEN THE BROWSER, silently — verification failure is
+              not an install-time error. Check with:
+
+                  adb shell pm get-app-links com.wimall.shop
+
+              Paths are scoped to what the app can actually render: everything
+              under the shop, and the magic-link redemption page. A marketing
+              URL keeps opening in the browser, which is correct — those pages
+              are not in the bundle.
+            -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="wi-mall.com" android:pathPrefix="/shop" />
+                <data android:scheme="https" android:host="wi-mall.com" android:pathPrefix="/login/magic" />
+                <data android:scheme="https" android:host="www.wi-mall.com" android:pathPrefix="/shop" />
+                <data android:scheme="https" android:host="www.wi-mall.com" android:pathPrefix="/login/magic" />
+            </intent-filter>
+
+        </activity>
+
+        <!--
+          ── How a push notification is drawn ─────────────────────────────────
+
+          Both of these are read by Firebase Messaging's own notification
+          builder, which is what draws the notification in BOTH cases that
+          matter: the SDK draws it directly when the app is backgrounded or
+          killed, and `PushNotificationsPlugin.fireNotification` calls the same
+          builder when a message arrives in the foreground. Neither path goes
+          through any code of ours, so the manifest is the only place to say
+          what it should look like.
+
+          The icon is the load-bearing one. Since API 21 a status-bar icon is
+          composited from its ALPHA CHANNEL ALONE — the colour is thrown away —
+          and with no value here the builder falls back to `@mipmap/ic_launcher`,
+          whose alpha is a solid rounded square. That fallback is a featureless
+          white blob, which is what this app would have shipped.
+          `ic_stat_wi_mall` is the mark drawn as a stencil instead, with the face
+          punched through to transparent so it survives the flattening.
+
+          The colour tints that stencil, the app name in the shade header, and
+          the collapsed chip. Left unset the system picks a neutral grey.
+        -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_wi_mall" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_color" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"></meta-data>
+        </provider>
+    </application>
+
+    <!-- Permissions -->
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!--
+      Notifications, for order and shipment updates. Android 13+ refuses to show
+      one until the shopper has granted this, and targetSdk is 36.
+
+      Declared here even though `firebase-messaging` already contributes it
+      through the merger — which is exactly the reason to. A permission the app
+      cannot function without should not depend on a transitive dependency
+      continuing to declare it; a Firebase upgrade that dropped the line would
+      take push with it, silently, and the merged manifest is not something
+      anyone reads on a routine release.
+
+      NOT requested at launch. `enablePush()` asks after the first order is
+      placed, where there is a reason to want the updates; the dialog is offered
+      once and a denial is effectively permanent. See `lib/native/push.ts`.
+    -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!--
+      Location, for the "Use my current location" button on the address form and
+      nothing else. It is requested at that press, never at launch.
+
+      COARSE only, deliberately. The coordinate is handed straight to
+      `GET /api/geo/reverse`, which resolves to a street or a quartier — a
+      precision the network provider already reaches in about a second, without
+      waking the GPS radio or asking for the stronger permission. Adding FINE
+      would cost battery and a harder consent dialog to gain accuracy that is
+      discarded by the next call. `capacitor/geolocation` is configured to match
+      via `enableHighAccuracy: false` in `lib/native/location.ts`.
+
+      `android:required="false"` so the app still installs on a device with no
+      location hardware — everything else in the shop works without it.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-feature android:name="android.hardware.location" android:required="false" />
+    <uses-feature android:name="android.hardware.location.network" android:required="false" />
+</manifest>

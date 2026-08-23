@@ -11,8 +11,8 @@ import {
   ROLES_WITH_BUSINESS_NAME,
   type AddRoleFormValues,
 } from "@/lib/auth/auth.schemas";
-import { addRoleAndGetAction, redirectToOnboarding, logoutAndRedirect } from "@/lib/auth/auth.service";
-import { isUiRole, type UiRole, type AuthRoleEntity } from "@/lib/auth/auth.types";
+import { addRoleAndGetRedirect, redirectToOnboarding } from "@/lib/auth/auth.service";
+import { isUiRole, type UiRole } from "@/lib/auth/auth.types";
 import { mapApiErrors, parseRootType } from "@/lib/auth/form-errors";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import AuthCard from "@/components/auth/AuthCard";
@@ -20,7 +20,6 @@ import AuthFormField from "@/components/auth/AuthFormField";
 import { GlobalError } from "@/components/auth/GlobalError";
 import RolePicker from "@/components/auth/RolePicker";
 import { AnimatePresence, motion } from "framer-motion";
-import { WhatsAppVerificationModal } from "@/components/auth/WhatsAppVerificationModal";
 
 type ConfirmState = { newRole: UiRole; redirectUrl: string } | null;
 
@@ -30,7 +29,7 @@ function AddRoleContent() {
   const tAuthMe = useTranslations("authMe");
   const tErrors = useTranslations("errors");
 
-  const { user, role, role_entity, status, waGateRequired } = useAuthGuard();
+  const { user, role, status } = useAuthGuard();
   const roleParam = useSearchParams().get("role");
 
   // Both of these are `null` until the visitor acts, at which point their
@@ -38,12 +37,6 @@ function AddRoleContent() {
   const [pickedRole, setPickedRole] = useState<UiRole | null>(null);
   const [calloutOpen, setCalloutOpen] = useState<boolean | null>(null);
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
-
-  // WA gate state — set after addRoleAndGetAction returns type === "wa_gate"
-  const [waGateData, setWaGateData] = useState<{
-    roleEntity: AuthRoleEntity;
-    redirectUrl: string;
-  } | null>(null);
 
   const {
     register,
@@ -87,35 +80,6 @@ function AddRoleContent() {
     );
   }
 
-  // ── WA gate (bypass-via-reload fix) ───────────────────────────────────────
-  // useAuthGuard computes waGateRequired from the restoreSession() response,
-  // so a direct navigation or hard reload still enforces the gate.
-  if (waGateRequired && role_entity) {
-    return (
-      <WhatsAppVerificationModal
-        roleEntity={role_entity}
-        onSuccess={() => {
-          // After WA verification, send them to their current role's dashboard
-          if (role) window.location.href = `/`;
-        }}
-        onLogout={logoutAndRedirect}
-      />
-    );
-  }
-
-  // ── WA gate from add-role action ───────────────────────────────────────────
-  if (waGateData) {
-    return (
-      <WhatsAppVerificationModal
-        roleEntity={waGateData.roleEntity}
-        onSuccess={() => {
-          window.location.href = waGateData.redirectUrl;
-        }}
-        onLogout={logoutAndRedirect}
-      />
-    );
-  }
-
   // Roles the user already holds (excluding admin — not shown in UI)
   const heldRoles: UiRole[] = (user?.roles ?? []).filter(
     (r): r is UiRole => r !== "admin"
@@ -135,23 +99,12 @@ function AddRoleContent() {
 
   const onSubmit = async (data: AddRoleFormValues) => {
     try {
-      const { newRole, action } = await addRoleAndGetAction({
+      const { newRole, redirectUrl } = await addRoleAndGetRedirect({
         ...data,
         role: selectedRole!,
       });
 
-      if (action.type === "wa_gate") {
-        setWaGateData({
-          roleEntity: action.roleEntity,
-          redirectUrl: action.redirectUrl,
-        });
-      } else {
-        // No WA gate — go directly to confirm screen
-        setConfirmState({
-          newRole: newRole as UiRole,
-          redirectUrl: action.url,
-        });
-      }
+      setConfirmState({ newRole: newRole as UiRole, redirectUrl });
     } catch (err) {
       mapApiErrors(err, setError, tErrors);
     }

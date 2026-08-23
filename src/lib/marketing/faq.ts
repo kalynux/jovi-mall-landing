@@ -14,7 +14,7 @@
 
 export const FAQ_IDS = [
   // General
-  "whatIsWimall",
+  "whatIsWiMall",
   "howShopping",
   "needApp",
   "whereAvailable",
@@ -49,7 +49,7 @@ export type FaqId = (typeof FAQ_IDS)[number];
 export const FAQ_GROUPS: { key: string; items: readonly FaqId[] }[] = [
   {
     key: "general",
-    items: ["whatIsWimall", "howShopping", "needApp", "whereAvailable", "languages", "shopperCost"],
+    items: ["whatIsWiMall", "howShopping", "needApp", "whereAvailable", "languages", "shopperCost"],
   },
   {
     key: "selling",
@@ -74,6 +74,13 @@ export const FAQ_GROUPS: { key: string; items: readonly FaqId[] }[] = [
 ];
 
 /** The four questions each role page answers inline before linking to /faq. */
+export const CUSTOMER_FAQ: readonly FaqId[] = [
+  "howShopping",
+  "needApp",
+  "shopperCost",
+  "cashOnDelivery",
+];
+
 export const VENDOR_FAQ: readonly FaqId[] = [
   "vendorWebsite",
   "vendorCost",

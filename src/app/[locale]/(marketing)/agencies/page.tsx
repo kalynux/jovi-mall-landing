@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import JsonLd from "@/components/seo/JsonLd";
 import Breadcrumbs from "@/components/marketing/Breadcrumbs";
+import AgenciesIllustration from "@/components/illustrations/AgenciesIllustration.generated";
 import FaqList from "@/components/marketing/FaqList";
 import {
   CardGrid,
@@ -76,6 +77,7 @@ export default async function AgenciesPage({ params }: PageProps) {
         title={t("agencies.title")}
         lead={t("agencies.lead")}
         breadcrumbs={<Breadcrumbs trail={trail} label={t("common.breadcrumbLabel")} />}
+        illustration={<AgenciesIllustration />}
       />
 
       <div className="role-agency">

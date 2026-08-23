@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 // Deliberately mismatched pair: the router is the locale-aware one, so a
 // redirect from /fr/auth-me lands on /fr/login rather than the English page.
 // The pathname is not — the `return` param has to carry the full prefixed path
@@ -7,78 +7,65 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import type { AuthUser, AuthStatus, Role, AuthRoleEntity } from "./auth.types";
-import { restoreSession } from "./auth.service";
-import { requiresWaVerification } from "./wa-verification-gate";
+import { useAuth } from "./useAuth";
+import { isShopPath } from "@/lib/shop/shop.routes";
 
 interface GuardResult {
     user: AuthUser | null;
     role: Role | null;
     role_entity: AuthRoleEntity | null;
     status: AuthStatus;
-    /**
-     * True when the authenticated user's role entity has not completed
-     * WhatsApp verification. Derived from `role_entity` via
-     * `requiresWaVerification()` — no extra network call.
-     *
-     * Pages that use useAuthGuard should render <WhatsAppVerificationModal>
-     * when this is true, preventing access to the page content.
-     */
-    waGateRequired: boolean;
 }
 
 /**
- * Client-side route guard for auth-protected pages (/add-role, /auth-me).
+ * Client-side route guard for auth-protected pages (/add-role, /auth-me, and
+ * every `/shop/account/*` and `/shop/checkout` screen).
  *
- * On mount, verifies the session via GET /api/auth/me.
- * If unauthenticated → redirects to /login?return=<current-path>.
- * If authenticated but WA not verified → sets waGateRequired = true.
+ * If the session is over → redirects to /login?return=<current-path>.
+ *
+ * A session past the 90-day cap answers `401 AUTH_SESSION_CAP_REACHED`, which
+ * `restoreSession` reports as signed-out like any other 401 — correct, and the
+ * only correct handling: no credential the client holds can fix it, so the
+ * sign-in page is the destination and a retry would loop.
+ *
+ * ── It reads the provider now; it does not verify on its own ─────────────────
+ *
+ * This used to call `restoreSession()` itself, in an effect keyed on
+ * `[router, pathname]`. Two consequences, both bad. It issued a SECOND
+ * `GET /auth/me` beside the one `AuthProvider` had already made — on every
+ * mount and again on every navigation between account screens, so moving from
+ * Orders to Addresses cost a round trip whose only job was to re-learn what the
+ * provider already knew. And because it kept its own copy of the answer, a
+ * request that merely failed to arrive was indistinguishable, here, from a
+ * server that had ended the session — so it redirected, and that is the
+ * "kicked out to the login page" report.
+ *
+ * `AuthProvider` is the one thing that asks, and it is the one thing that knows
+ * the difference (see `SessionOutcome`). This hook now reads that state and
+ * decides one thing: whether to leave. `status === "unauthenticated"` reaches
+ * it only when the server actually said so, or when we have never managed to
+ * ask at all — never because a single request was lost.
  *
  * Usage:
- *   const { user, role, role_entity, status, waGateRequired } = useAuthGuard();
+ *   const { user, role, role_entity, status } = useAuthGuard();
  *   if (status === 'loading') return <Spinner />;
- *   if (waGateRequired && role_entity) return <WhatsAppVerificationModal ... />;
  */
 export function useAuthGuard(): GuardResult {
     const router = useRouter();
     const pathname = usePathname();
-    const [state, setState] = useState<GuardResult>({
-        user: null,
-        role: null,
-        role_entity: null,
-        status: "loading",
-        waGateRequired: false,
-    });
+    const { user, role, role_entity, status } = useAuth();
 
     useEffect(() => {
-        let cancelled = false;
+        if (status !== "unauthenticated") return;
 
-        restoreSession().then((authState) => {
-            if (cancelled) return;
+        const from = pathname ?? "/";
+        const returnPath = encodeURIComponent(from);
+        // Bounced out of the storefront — so the visitor is a shopper, and
+        // `/login` can open on customer sign-in instead of asking which of four
+        // roles they are. Everywhere else still asks.
+        const roleParam = isShopPath(from) ? "&role=customer" : "";
+        router.replace(`/login?return=${returnPath}${roleParam}`);
+    }, [status, router, pathname]);
 
-            if (authState.status === "unauthenticated") {
-                const returnPath = encodeURIComponent(pathname ?? "/");
-                router.replace(`/login?return=${returnPath}`);
-                return;
-            }
-
-            const waGateRequired =
-                authState.role_entity != null
-                    ? requiresWaVerification(authState.role_entity)
-                    : false;
-
-            setState({
-                user: authState.user,
-                role: authState.role,
-                role_entity: authState.role_entity,
-                status: authState.status,
-                waGateRequired,
-            });
-        });
-
-        return () => {
-            cancelled = true;
-        };
-    }, [router, pathname]);
-
-    return state;
+    return { user, role, role_entity, status };
 }

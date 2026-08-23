@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 /* ============================================================
-   WiMall Design System — tokens (ported from WiMallDesignSystem_cc21b6)
-   Warm-neutral base + emerald "WiMall" green primary + amber accent.
+   Wi-Mall Design System — tokens (ported from WiMallDesignSystem_cc21b6)
+   Warm-neutral base + emerald "Wi-Mall" green primary + amber accent.
    Light values on :root, dark values on html.dark.
    ============================================================ */
 :root {
-  /* ---- Brand green (WiMall green — jade/emerald) ---- */
+  /* ---- Brand green (Wi-Mall green — jade/emerald) ---- */
   --green-50:  #E9FBF2;
   --green-100: #C7F5DE;
   --green-200: #93E9C1;
@@ -265,6 +265,31 @@ html.dark,
     system-ui, sans-serif;
 }
 
+/* ─── Safe areas ─────────────────────────────────────────────────────────────
+   One name per edge, because on Android there are two sources for them and
+   neither is trustworthy on its own.
+
+   `env(safe-area-inset-*)` is the standard, and on iOS it is the whole answer.
+   In an Android WebView it reports anything only once Capacitor's built-in
+   SystemBars plugin passes the window insets through to the page, which it does
+   for WebView 140+ with `viewport-fit=cover` and not before. On an older WebView
+   it insets the view itself instead, so `env()` correctly reads 0 — and on
+   Android 15+ it ALSO publishes the real numbers as `--safe-area-inset-*` custom
+   properties on `<html>`, injected from native. On a device whose WebView is too
+   old to pass insets through, those properties are the only accurate figures
+   there are.
+
+   `max()` takes whichever of the two is actually reporting. Both resolve to 0 in
+   a browser tab, so every rule that uses these is inert on the web.
+
+   The `0px` fallbacks are load-bearing: an `env()` with no fallback invalidates
+   the whole declaration where it is unsupported, which would take the padding
+   with it. */
+:root {
+  --sa-top: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
+  --sa-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px));
+}
+
 /* ─── Base layer ─────────────────────────────────────────────────────────── */
 @layer base {
   html {
@@ -393,11 +418,31 @@ html.dark,
 
   /* ---- Shop design-system utility classes (ported) ---- */
   .sec-title { font-size: 18px; font-weight: 800; letter-spacing: -0.015em; color: var(--text-strong); margin: 0; }
-  .overline { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text-subtle); margin: 0; }
+  /*
+     Named `ds-overline`, not `overline`, and that prefix is load-bearing.
+
+     "overline" is also a Tailwind text-decoration utility, and utilities sit in
+     a later cascade layer than components — so Tailwind won, and every
+     small-caps section label in the shop was drawn with a literal line above it:
+     "CATEGORY", "SORT BY", "MARKETPLACE", "RECENT". Specificity cannot fix it,
+     because layer order outranks specificity; only a name Tailwind does not
+     claim does. It typographically means the overline of a text block, which is
+     what this is, so the prefix is the smallest change that keeps the name.
+  */
+  .ds-overline { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text-subtle); margin: 0; }
   .muted { color: var(--text-muted); font-size: 13px; }
   .divider { height: 1px; background: var(--border-subtle); }
   .row-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0; scrollbar-width: none; }
+  /* `type="search"` buys the right on-screen keyboard and the right semantics,
+     and throws in a clear button Chrome and Safari draw themselves — which sat
+     beside the one the shop search already renders, two ✕ in one field. Ours
+     stays: it also resets the query, which the native one does not. */
+  .no-native-clear::-webkit-search-cancel-button,
+  .no-native-clear::-webkit-search-decoration { -webkit-appearance: none; appearance: none; display: none; }
   .row-chips::-webkit-scrollbar { display: none; }
+  /* Horizontal tab rail: scrolls instead of wrapping when the labels outgrow the width. */
+  .tab-rail { overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; overscroll-behavior-x: contain; }
+  .tab-rail::-webkit-scrollbar { display: none; }
   .field {
     width: 100%; font-family: var(--font-sans); font-size: 15px; color: var(--text-strong);
     background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-input);
@@ -416,16 +461,138 @@ html.dark,
   @media (min-width: 1280px) { .pgrid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
   .plist { display: flex; flex-direction: column; gap: 10px; }
 
+  /* ---- Mobile app shell (shop) ----
+     Below `md` the shop is laid out like an installed app rather than a
+     document: the shell is exactly one viewport tall, the middle pane is the
+     only thing that scrolls, and the page itself never does.
+
+     That is what makes the header and the tab bar *genuinely* fixed. A
+     `position: fixed` bar is still anchored to the layout viewport, so on a
+     phone it drifts twice — sideways when a too-wide row lets the visual
+     viewport pan, and out of frame while the browser's collapsing toolbar
+     animates on a downward scroll. Neither can happen when the document has no
+     scroll of its own. The pane also clips horizontally, so an oversized row is
+     contained instead of dragging the whole app with it.
+
+     Above `md` every rule here is inert: the window scrolls as it always did
+     and the header falls back to `position: sticky`. */
+  /* The header paints its own background up under the status bar.
+
+     The native shell sets `overlaysWebView: true`, so the OS reserves no strip
+     and the page starts at pixel zero — behind the clock and the battery icon.
+     Padding rather than a margin so the surface colour and the bottom border
+     still read as one bar, instead of leaving a transparent gap the wallpaper
+     shows through.
+
+     Inert everywhere else: both halves of `--sa-top` resolve to 0 without
+     `viewport-fit=cover`, and to 0 in a browser tab even with it. */
+  .shop-header { padding-top: var(--sa-top, 0px); }
+
+  /* The auth screens are in the app bundle too, and have the same problem for
+     the same reason — their own top bar starts at pixel zero, behind the clock.
+     They are an ordinary scrolling column rather than a fixed shell, so the
+     inset goes on the outer frame rather than on a bar that has to stay opaque.
+     `safe-area-inset-bottom` as well: these forms reach the bottom edge on a
+     short screen, where a home indicator would sit over the submit button. */
+  .auth-frame {
+    padding-top: var(--sa-top, 0px);
+    padding-bottom: var(--sa-bottom, 0px);
+  }
+
+  /* Android's gesture pill overlays the bottom ~24dp of the screen, and an
+     Android WebView too old for Capacitor to pass insets through to reports that
+     strip as 0 — which puts the pill over the tab labels. This is the floor the
+     bar's own `max()` takes when that happens; a real inset (48dp for the
+     three-button bar) is larger and wins.
+
+     Android only, and `NativeShell` is what sets the attribute. iOS reports its
+     34px correctly, and an iPhone with no home indicator reports 0 and should
+     get no band at all — a global floor would give it one for nothing. */
+  html[data-platform="android"] .shop-tabbar { --tabbar-floor: 24px; }
+
+  .shop-shell { display: flex; flex-direction: column; min-height: 100svh; }
+  .shop-shell-main { flex: 1 1 auto; display: flex; flex-direction: column; }
+  .shop-toast { bottom: 24px; }
+
+  @media (max-width: 767.98px) {
+    .shop-shell {
+      height: 100vh;
+      height: 100dvh;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .shop-shell-main {
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      overscroll-behavior-y: contain;
+    }
+    /* The tab bar owns the bottom of the screen below `md`, so the toast sits
+       above it rather than on the Cart tab it is usually reporting about.
+
+       `--tabbar-h` is the bar's MEASURED height, published by `ShopBottomNav`
+       from a ResizeObserver — safe-area padding, font scale and all. It
+       replaces a hard-coded 72px that was a guess at that height and only
+       happened to clear it: at a large system font size the bar grows past 72
+       and the toast landed on the Cart tab it was reporting about. The 72px
+       here is a first-paint fallback for the frame before the observer runs.
+
+       The var goes to 0 when the bar is not rendered (a route without it) or
+       is hidden (see the keyboard rule in the utilities layer), and the toast
+       drops to the bottom edge on its own. */
+    .shop-toast { bottom: calc(12px + var(--tabbar-h, 72px)); }
+
+    /* Typing: the bar is gone and the viewport already ends at the top of the
+       keyboard, so the toast sits just above the keys. Stated rather than left
+       to `--tabbar-h` reaching 0, because a ResizeObserver report is a frame
+       behind the attribute and the toast would jump. */
+    [data-keyboard="open"] .shop-toast { bottom: 12px; }
+  }
+
   /* Sticky action bar (mobile buy bar) */
   .stickybar {
     background: var(--surface); border-top: 1px solid var(--border); box-shadow: var(--shadow-bar);
-    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    padding: 12px 16px calc(12px + var(--sa-bottom, 0px));
     display: flex; gap: 12px; align-items: center;
+  }
+
+  /* …but below `md` it is NOT the bottom-most thing on screen: it sticks to the
+     foot of the scroll pane, and the tab bar is underneath it clearing the home
+     indicator already. Repeating the inset here reserved the strip twice and
+     left an empty band between the pay button and the tabs. */
+  @media (max-width: 767.98px) {
+    .stickybar { padding-bottom: 12px; }
   }
 }
 
 /* ─── Utilities layer ────────────────────────────────────────────────────── */
 @layer utilities {
+  /* ── The tab bar steps aside for the keyboard ──────────────────────────────
+
+     A bottom bar that is still on screen while someone types is the one thing a
+     bottom bar must never be. The shell is a `100dvh` column with
+     `overflow: hidden` and the bar is its last flex item, so when the platform
+     shrinks the WebView to make room for the keyboard the WHOLE column is
+     re-laid-out into the strip above the keys — and the bar, still last, lands
+     on top of the field. Nothing about `position` avoids that; the bar is not
+     fixed, deliberately (see ShopBottomNav), and a fixed one would be pinned to
+     the same shrunken viewport anyway.
+
+     So it is removed from the column for as long as the keyboard is up, which
+     is also what a native tab bar does. `display: none` rather than a transform
+     or visibility: the flex column has to give the space back to the pane, so
+     the field can scroll into view above the keys.
+
+     `<html data-keyboard="open">` is set by `lib/native/keyboard.ts` from the
+     platform's own keyboard events, so this is native-only and inert on the web.
+
+     It sits with the utilities on purpose, because it is competing with one:
+     Tailwind's `flex` on the bar also sets `display`. This selector is more
+     specific, so it would win from anywhere — but Tailwind emits `@layer
+     utilities` last, and a rule declared here is after `.flex` in the output as
+     well, which is what keeps it winning if the bar's classes ever change. */
+  [data-keyboard="open"] .shop-tabbar { display: none; }
+
   /* Per-section role accent — set via SectionShell, consumed by children. */
   .role-accent { --role: var(--accent); }
   .role-vendor { --role: var(--accent-vendor); }
@@ -448,7 +615,17 @@ html.dark,
   }
 
   @media (prefers-reduced-motion: reduce) {
-    *, ::before, ::after {
+    /* The marketing illustrations are exempt on purpose.
+       Windows reports this preference whenever Settings → Accessibility →
+       Visual effects → "Animation effects" is off — a common non-accessibility
+       choice — and collapsing every keyframe to 0.01ms made all eight scenes
+       look simply broken rather than considerately still. Their still tier is
+       HONOR_REDUCED_MOTION in lib/reduced-motion, applied through the data-play
+       attribute each component sets; see the Illustrations section below.
+       This carve-out has to live here: the rule is `!important` inside a cascade
+       layer, and layered important declarations beat unlayered ones whatever
+       their specificity, so no later override could reach it. */
+    *:not(.il, .il *), ::before, ::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
@@ -888,36 +1065,36 @@ html.dark .orb-sweep-beam { mix-blend-mode: screen; opacity: 0.05; }
 /* ---- Shared keyframes ---------------------------------------------------- */
 
 @keyframes il-rise {
-  from { opacity: 0; transform: translateY(26px) scale(0.97); }
+  from { opacity: 0; transform: translateY(44px) scale(0.94); }
   60%  { opacity: 1; }
   to   { opacity: 1; transform: none; }
 }
 @keyframes il-slide-in {
-  from { opacity: 0; transform: translateX(-52px); }
+  from { opacity: 0; transform: translateX(-86px); }
   to   { opacity: 1; transform: none; }
 }
 @keyframes il-drop {
-  0%   { opacity: 0; transform: translateY(-46px) scale(0.9); }
-  55%  { opacity: 1; transform: translateY(6px) scale(1.04); }
-  75%  { transform: translateY(-3px) scale(0.99); }
+  0%   { opacity: 0; transform: translateY(-72px) scale(0.86); }
+  55%  { opacity: 1; transform: translateY(11px) scale(1.07); }
+  75%  { transform: translateY(-5px) scale(0.985); }
   100% { opacity: 1; transform: none; }
 }
 @keyframes il-float {
   0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
+  50%      { transform: translateY(-13px); }
 }
 @keyframes il-breathe {
   0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.012); }
+  50%      { transform: scale(1.028); }
 }
 @keyframes il-swing {
-  0%, 100% { transform: rotate(-3.2deg); }
-  50%      { transform: rotate(3.2deg); }
+  0%, 100% { transform: rotate(-6.5deg); }
+  50%      { transform: rotate(6.5deg); }
 }
 @keyframes il-ping {
   0%   { opacity: 0;    transform: scale(0.4); }
   25%  { opacity: 0.55; }
-  100% { opacity: 0;    transform: scale(2.6); }
+  100% { opacity: 0;    transform: scale(3.4); }
 }
 
 /* ---- /vendors — online-revenue: paid orders land, one after another ------- */
@@ -927,8 +1104,8 @@ html.dark .orb-sweep-beam { mix-blend-mode: screen; opacity: 0.05; }
 .il-online-revenue[data-play="true"] .il-card2,
 .il-online-revenue[data-play="true"] .il-card3 {
   animation:
-    il-slide-in 0.62s cubic-bezier(0.22, 1, 0.36, 1) backwards,
-    il-float 7s ease-in-out infinite;
+    il-slide-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards,
+    il-float 4s ease-in-out infinite;
 }
 /* The board fills top-down, so the delays follow the reading order rather than
    the paint order. Each card then floats on its own phase. */
@@ -937,7 +1114,7 @@ html.dark .orb-sweep-beam { mix-blend-mode: screen; opacity: 0.05; }
 .il-online-revenue[data-play="true"] .il-card3 { animation-delay: 0.54s, 5.6s; }
 
 .il-online-revenue[data-play="true"] .il-figure {
-  animation: il-breathe 5.5s ease-in-out 0.6s infinite;
+  animation: il-breathe 4.2s ease-in-out 0.6s infinite;
 }
 
 /* ---- /agencies — deliveries: an addressed order, then the hand-off -------- */
@@ -945,23 +1122,23 @@ html.dark .orb-sweep-beam { mix-blend-mode: screen; opacity: 0.05; }
 
 .il-deliveries[data-play="true"] .il-pin {
   animation:
-    il-drop 0.85s cubic-bezier(0.34, 1.4, 0.64, 1) 0.15s backwards,
-    il-float 4.6s ease-in-out 1.1s infinite;
+    il-drop 0.72s cubic-bezier(0.34, 1.4, 0.64, 1) 0.15s backwards,
+    il-float 3.6s ease-in-out 1.1s infinite;
 }
 .il-deliveries[data-play="true"] .il-stack {
-  animation: il-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation: il-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 .il-deliveries[data-play="true"] .il-parcel {
-  animation: il-float 5.2s ease-in-out 0.9s infinite;
+  animation: il-float 4s ease-in-out 0.9s infinite;
 }
 .il-deliveries[data-play="true"] .il-boxRight {
-  animation: il-float 5.2s ease-in-out 3.5s infinite;
+  animation: il-float 4s ease-in-out 3.5s infinite;
 }
 .il-deliveries[data-play="true"] .il-personLeft {
-  animation: il-breathe 6s ease-in-out infinite;
+  animation: il-breathe 4.6s ease-in-out infinite;
 }
 .il-deliveries[data-play="true"] .il-personRight {
-  animation: il-breathe 6s ease-in-out 2.4s infinite;
+  animation: il-breathe 4.6s ease-in-out 2.4s infinite;
 }
 
 /* ---- /agents — on-the-way: a run in progress ------------------------------ */
@@ -971,34 +1148,34 @@ html.dark .orb-sweep-beam { mix-blend-mode: screen; opacity: 0.05; }
    floating rather than riding. */
 @keyframes il-ride {
   0%, 100% { transform: translateY(0) rotate(0deg); }
-  25%      { transform: translateY(-2.5px) rotate(-0.35deg); }
-  60%      { transform: translateY(1.5px) rotate(0.25deg); }
+  25%      { transform: translateY(-5.5px) rotate(-0.8deg); }
+  60%      { transform: translateY(3.5px) rotate(0.55deg); }
 }
 /* The box is strapped to the rack, so it lags the frame it sits on. */
 @keyframes il-jostle {
   0%, 100% { transform: translateY(0) rotate(0deg); }
-  30%      { transform: translateY(-3px) rotate(-1.1deg); }
-  65%      { transform: translateY(2px) rotate(0.7deg); }
+  30%      { transform: translateY(-7px) rotate(-2.6deg); }
+  65%      { transform: translateY(4.5px) rotate(1.6deg); }
 }
 @keyframes il-flutter {
   0%, 100% { transform: rotate(0deg); }
-  35%      { transform: rotate(-2.6deg); }
-  70%      { transform: rotate(1.6deg); }
+  35%      { transform: rotate(-6deg); }
+  70%      { transform: rotate(3.6deg); }
 }
 /* Ground rushing the other way — the bike itself never moves, so this is what
    actually says the run is under way. */
 @keyframes il-speed {
-  0%   { opacity: 0;    transform: translateX(52px) scaleX(0.5); }
-  18%  { opacity: 0.55; }
-  70%  { opacity: 0.28; }
-  100% { opacity: 0;    transform: translateX(-190px) scaleX(1.25); }
+  0%   { opacity: 0;    transform: translateX(78px) scaleX(0.5); }
+  18%  { opacity: 0.7; }
+  70%  { opacity: 0.36; }
+  100% { opacity: 0;    transform: translateX(-260px) scaleX(1.35); }
 }
 
-.il-on-the-way[data-play="true"] .il-rig  { animation: il-ride 1.15s ease-in-out infinite; }
-.il-on-the-way[data-play="true"] .il-box  { animation: il-jostle 1.15s ease-in-out 0.06s infinite; }
-.il-on-the-way[data-play="true"] .il-hair { animation: il-flutter 1.15s ease-in-out 0.12s infinite; }
+.il-on-the-way[data-play="true"] .il-rig  { animation: il-ride 0.95s ease-in-out infinite; }
+.il-on-the-way[data-play="true"] .il-box  { animation: il-jostle 0.95s ease-in-out 0.06s infinite; }
+.il-on-the-way[data-play="true"] .il-hair { animation: il-flutter 0.95s ease-in-out 0.12s infinite; }
 .il-on-the-way[data-play="true"] .il-speed {
-  animation: il-speed 1.5s linear infinite;
+  animation: il-speed 1.15s linear infinite;
   animation-delay: calc(var(--n) * 0.31s);
 }
 
@@ -1008,32 +1185,32 @@ html.dark .orb-sweep-beam { mix-blend-mode: screen; opacity: 0.05; }
 /* Up fast, down slow — the shape of an actual hop. */
 @keyframes il-hop {
   0%, 100% { transform: translateY(0); }
-  30%      { transform: translateY(-9px); }
-  55%      { transform: translateY(-7px); }
+  30%      { transform: translateY(-18px); }
+  55%      { transform: translateY(-14px); }
 }
 @keyframes il-spark {
-  0%   { opacity: 0;   transform: translateY(10px) scale(0.4); }
+  0%   { opacity: 0;   transform: translateY(14px) scale(0.35); }
   30%  { opacity: 0.9; }
-  100% { opacity: 0;   transform: translateY(-46px) scale(1.05); }
+  100% { opacity: 0;   transform: translateY(-72px) scale(1.15); }
 }
 
 .il-happy-customer[data-play="true"] .il-body {
-  animation: il-hop 2.2s cubic-bezier(0.4, 0, 0.35, 1) infinite;
+  animation: il-hop 1.7s cubic-bezier(0.4, 0, 0.35, 1) infinite;
 }
 /* The bags hang off her hands, so they ride the same beat a fraction behind it
    and swing on a longer period of their own. */
 .il-happy-customer[data-play="true"] .il-bagL {
   animation:
-    il-hop 2.2s cubic-bezier(0.4, 0, 0.35, 1) 0.09s infinite,
+    il-hop 1.7s cubic-bezier(0.4, 0, 0.35, 1) 0.09s infinite,
     il-swing 3.3s ease-in-out infinite;
 }
 .il-happy-customer[data-play="true"] .il-bagR {
   animation:
-    il-hop 2.2s cubic-bezier(0.4, 0, 0.35, 1) 0.13s infinite,
+    il-hop 1.7s cubic-bezier(0.4, 0, 0.35, 1) 0.13s infinite,
     il-swing 3.3s ease-in-out 1.65s infinite;
 }
 .il-happy-customer[data-play="true"] .il-spark {
-  animation: il-spark 2.8s ease-out infinite;
+  animation: il-spark 2.2s ease-out infinite;
   animation-delay: calc(0.5s + var(--n) * 0.42s);
 }
 
@@ -1046,13 +1223,13 @@ html.dark .orb-sweep-beam { mix-blend-mode: screen; opacity: 0.05; }
    plans actually looks like. */
 @keyframes il-consider {
   0%, 12.5%, 100% { transform: translateY(0) scale(1); }
-  5%              { transform: translateY(-7px) scale(1.07); }
+  5%              { transform: translateY(-14px) scale(1.12); }
 }
 
 .il-decide[data-play="true"] [class^="il-scrap"] {
   animation:
-    il-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards,
-    il-consider 8s ease-in-out infinite;
+    il-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards,
+    il-consider 6.4s ease-in-out infinite;
 }
 .il-decide[data-play="true"] .il-scrap1 { animation-delay: 0.05s, 0.9s; }
 .il-decide[data-play="true"] .il-scrap2 { animation-delay: 0.12s, 1.9s; }
@@ -1062,31 +1239,31 @@ html.dark .orb-sweep-beam { mix-blend-mode: screen; opacity: 0.05; }
 .il-decide[data-play="true"] .il-scrap6 { animation-delay: 0.40s, 5.9s; }
 .il-decide[data-play="true"] .il-scrap7 { animation-delay: 0.47s, 6.9s; }
 .il-decide[data-play="true"] .il-scrap8 { animation-delay: 0.54s, 7.9s; }
-.il-decide[data-play="true"] .il-figure { animation: il-breathe 5.8s ease-in-out infinite; }
+.il-decide[data-play="true"] .il-figure { animation: il-breathe 4.4s ease-in-out infinite; }
 
 /* ---- /blog — reading-time: settled in with a guide ------------------------ */
 
 
 @keyframes il-glow {
-  0%, 100% { opacity: 0.82; }
+  0%, 100% { opacity: 0.6; }
   50%      { opacity: 1; }
 }
 @keyframes il-sway {
-  0%, 100% { transform: rotate(-1.6deg); }
-  50%      { transform: rotate(1.6deg); }
+  0%, 100% { transform: rotate(-3.6deg); }
+  50%      { transform: rotate(3.6deg); }
 }
 @keyframes il-steam {
-  0%   { opacity: 0;    transform: translateY(6px) scale(0.7); }
-  25%  { opacity: 0.55; }
-  100% { opacity: 0;    transform: translateY(-40px) scale(1.15); }
+  0%   { opacity: 0;    transform: translateY(8px) scale(0.6); }
+  25%  { opacity: 0.7; }
+  100% { opacity: 0;    transform: translateY(-62px) scale(1.3); }
 }
 
-.il-reading-time[data-play="true"] .il-lamp   { animation: il-glow 4.2s ease-in-out infinite; }
-.il-reading-time[data-play="true"] .il-tablet { animation: il-float 6.5s ease-in-out infinite; }
-.il-reading-time[data-play="true"] .il-plant  { animation: il-sway 7.5s ease-in-out infinite; }
-.il-reading-time[data-play="true"] .il-scene  { animation: il-breathe 7s ease-in-out infinite; }
+.il-reading-time[data-play="true"] .il-lamp   { animation: il-glow 3.2s ease-in-out infinite; }
+.il-reading-time[data-play="true"] .il-tablet { animation: il-float 4s ease-in-out infinite; }
+.il-reading-time[data-play="true"] .il-plant  { animation: il-sway 5.5s ease-in-out infinite; }
+.il-reading-time[data-play="true"] .il-scene  { animation: il-breathe 5.4s ease-in-out infinite; }
 .il-reading-time[data-play="true"] .il-steam {
-  animation: il-steam 4.4s ease-out infinite;
+  animation: il-steam 3.4s ease-out infinite;
   animation-delay: calc(var(--n) * 1.45s);
 }
 
@@ -1094,28 +1271,28 @@ html.dark .orb-sweep-beam { mix-blend-mode: screen; opacity: 0.05; }
 
 
 @keyframes il-tilt {
-  0%, 100% { transform: translateY(0) rotate(-0.9deg); }
-  50%      { transform: translateY(-8px) rotate(0.9deg); }
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50%      { transform: translateY(-17px) rotate(2deg); }
 }
 
 .il-questions[data-play="true"] .il-mark {
   animation:
-    il-rise 0.75s cubic-bezier(0.34, 1.3, 0.64, 1) backwards,
-    il-tilt 5.4s ease-in-out 0.8s infinite;
+    il-rise 0.65s cubic-bezier(0.34, 1.3, 0.64, 1) backwards,
+    il-tilt 4.2s ease-in-out 0.8s infinite;
 }
 /* The dot belongs to the glyph, so it lands with the stem — just late enough
    to read as a separate piece of it. */
 .il-questions[data-play="true"] .il-dot {
   animation:
-    il-rise 0.75s cubic-bezier(0.34, 1.3, 0.64, 1) 0.12s backwards,
-    il-float 5.4s ease-in-out 1.0s infinite;
+    il-rise 0.65s cubic-bezier(0.34, 1.3, 0.64, 1) 0.12s backwards,
+    il-float 4.2s ease-in-out 1.0s infinite;
 }
 .il-questions[data-play="true"] .il-bubbles {
-  animation: il-float 6s ease-in-out infinite, il-breathe 9s ease-in-out infinite;
+  animation: il-float 4.6s ease-in-out infinite, il-breathe 6.5s ease-in-out infinite;
   animation-delay: calc(var(--n) * 0.65s), calc(var(--n) * 0.4s);
 }
-.il-questions[data-play="true"] .il-personL { animation: il-breathe 6.4s ease-in-out infinite; }
-.il-questions[data-play="true"] .il-personR { animation: il-breathe 6.4s ease-in-out 3.2s infinite; }
+.il-questions[data-play="true"] .il-personL { animation: il-breathe 5s ease-in-out infinite; }
+.il-questions[data-play="true"] .il-personR { animation: il-breathe 5s ease-in-out 3.2s infinite; }
 
 /* ---- /cameroon — world: coverage, city by city ---------------------------- */
 
@@ -1123,35 +1300,290 @@ html.dark .orb-sweep-beam { mix-blend-mode: screen; opacity: 0.05; }
 /* The ring is a flat ellipse drawn in perspective, so a full rotation would
    swing it out of plane. A degree and a half suggests the orbit and keeps it. */
 @keyframes il-orbit {
-  0%, 100% { transform: rotate(-1.4deg); }
-  50%      { transform: rotate(1.4deg); }
+  0%, 100% { transform: rotate(-3deg); }
+  50%      { transform: rotate(3deg); }
 }
 
-.il-world[data-play="true"] .il-ring   { animation: il-orbit 12s ease-in-out infinite; }
-.il-world[data-play="true"] .il-globe  { animation: il-breathe 9s ease-in-out infinite; }
-.il-world[data-play="true"] .il-figure { animation: il-breathe 6.2s ease-in-out infinite; }
+.il-world[data-play="true"] .il-ring   { animation: il-orbit 8s ease-in-out infinite; }
+.il-world[data-play="true"] .il-globe  { animation: il-breathe 6.5s ease-in-out infinite; }
+.il-world[data-play="true"] .il-figure { animation: il-breathe 4.8s ease-in-out infinite; }
 
 /* Pins land left to right, and each one's ring fires as it touches down. */
 .il-world[data-play="true"] .il-pinA,
 .il-world[data-play="true"] .il-pinB,
 .il-world[data-play="true"] .il-pinC {
   animation:
-    il-drop 0.8s cubic-bezier(0.34, 1.4, 0.64, 1) backwards,
-    il-float 5s ease-in-out infinite;
+    il-drop 0.68s cubic-bezier(0.34, 1.4, 0.64, 1) backwards,
+    il-float 4s ease-in-out infinite;
 }
 .il-world[data-play="true"] .il-pinA { animation-delay: 0.15s, 1.2s; }
 .il-world[data-play="true"] .il-pinB { animation-delay: 0.42s, 2.9s; }
 .il-world[data-play="true"] .il-pinC { animation-delay: 0.69s, 4.6s; }
 
 .il-world[data-play="true"] .il-ping {
-  animation: il-ping 2.6s ease-out infinite;
+  animation: il-ping 2s ease-out infinite;
   animation-delay: calc(0.55s + var(--n) * 0.27s);
 }
 
-/* ---- Reduced motion: keep the composed frame, drop every loop. The
-   motion-only elements stay at the opacity="0" they ship with, so what is left
-   is the illustration exactly as unDraw drew it. */
+/* ---- The three company scenes --------------------------------------------
+
+   /about, /careers and /contact share a constraint the other eight do not:
+   every prop in them is held in a hand. So a prop is either merged into the
+   figure holding it and moves with the hand (/about), or the figure holds still
+   and only what is drawn on the prop moves (/careers, /contact). See the note
+   above their entries in scripts/gen-illustrations.mjs.
+   ------------------------------------------------------------------------- */
+
+/* ---- /about — about-us: the three of them, and what they are holding ------ */
+
+/* Shallower than il-swing: these are shrubs framing the scene, not a pendulum,
+   and the pivot is their base, so the tips travel much further than the angle
+   suggests. */
+@keyframes il-rustle {
+  0%, 100% { transform: rotate(-1.6deg); }
+  50%      { transform: rotate(1.6deg); }
+}
+
+.il-about-us[data-play="true"] .il-plantL { animation: il-rustle 6.2s ease-in-out infinite; }
+.il-about-us[data-play="true"] .il-plantR { animation: il-rustle 6.2s ease-in-out 2.4s infinite; }
+
+/* Three people, three phases — a shared one would read as a single organism.
+   Each part includes the prop that figure is holding, so the clipboard, badge
+   and card breathe with the hands rather than sliding out of them. */
+.il-about-us[data-play="true"] .il-figureL { animation: il-breathe 4.6s ease-in-out infinite; }
+.il-about-us[data-play="true"] .il-figureC { animation: il-breathe 5.2s ease-in-out 1.5s infinite; }
+.il-about-us[data-play="true"] .il-figureR { animation: il-breathe 4.9s ease-in-out 3.1s infinite; }
+
+/* ---- /careers — careers: applications arriving on the board --------------- */
+
+/* The figure and the board it holds are both still. That stillness is what
+   makes the rows possible: they are drawn on the board, so the board has to be
+   a fixed surface for them to arrive onto. They land and stay landed — no
+   idle float, because a row drifting over the paper it is printed on reads as
+   a rendering fault rather than as life. */
+.il-careers[data-play="true"] .il-rowA,
+.il-careers[data-play="true"] .il-rowB,
+.il-careers[data-play="true"] .il-rowC {
+  animation: il-slide-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.il-careers[data-play="true"] .il-rowA { animation-delay: 0.16s; }
+.il-careers[data-play="true"] .il-rowB { animation-delay: 0.40s; }
+.il-careers[data-play="true"] .il-rowC { animation-delay: 0.64s; }
+
+/* The single brand-green mark on the board, pulsing about its own centre —
+   the one continuous sign of life in an otherwise still scene. */
+.il-careers[data-play="true"] .il-tag { animation: il-breathe 3.4s ease-in-out 1s infinite; }
+
+/* ---- /contact — contact-us: a message being written ----------------------- */
+
+/* Lines appear one by one: someone is typing. Staggered off `--n` because each
+   line is a single element of one part. */
+.il-contact-us[data-play="true"] .il-lines {
+  animation: il-slide-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(0.35s + var(--n) * 0.22s);
+}
+
+/* Its own keyframe rather than il-tilt: that one lifts 17px, which is a third
+   of this glyph's height — right for the oversized mark on /faq, far too much
+   for a 47px one sitting inside a card. */
+@keyframes il-nudge {
+  0%, 100% { transform: translateY(0) rotate(-2.5deg); }
+  50%      { transform: translateY(-4px) rotate(2.5deg); }
+}
+
+/* The question mark lands first, then settles into a sway. */
+.il-contact-us[data-play="true"] .il-mark {
+  animation:
+    il-drop 0.7s cubic-bezier(0.34, 1.4, 0.64, 1) 0.15s backwards,
+    il-nudge 5.6s ease-in-out 1.4s infinite;
+}
+
+/* A ring leaving the question — the question going out and waiting on an
+   answer. Injected at the root rather than tagged onto artwork, so it is the
+   one thing here attached to nobody's hand. */
+.il-contact-us[data-play="true"] .il-ping {
+  animation: il-ping 3.4s ease-out infinite;
+  animation-delay: calc(1.2s + var(--n) * 1.1s);
+}
+
+/* ---- Hero placement -------------------------------------------------------
+
+   The illustration rides the top inline-end corner of a PageHeader, behind the
+   copy — and moves to the inline-start on its own in Arabic, because every
+   offset here is logical rather than left/right.
+
+   It is sized against two budgets at once. These eight scenes run from 2.28:1
+   (the rider) to 0.48:1 (the customer), so a width-only rule would make the
+   portrait ones tower over the header and the landscape ones sprawl across it.
+   Each component ships its own ratio as `--il-ar` and the width resolves to
+   whichever budget binds first, so every page gets art of the same weight.
+
+   Mobile keeps it in the flow underneath the text. A picture behind body copy
+   on a 360px screen costs more legibility than the atmosphere is worth, and
+   there is no spare margin to bleed into. It is promoted to a background layer
+   only at `lg`, where the copy stops at `max-w-3xl` and leaves a real gutter.
+   ------------------------------------------------------------------------- */
+
+.il-hero-art {
+  --il-hero-h: 11rem;
+  --il-hero-w: 17rem;
+
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2.5rem;
+  pointer-events: none;
+}
+
+.il-hero-art > .il {
+  width: min(var(--il-hero-w), calc(var(--il-hero-h) * var(--il-ar, 1)));
+  height: auto;
+}
+
+/* Tablet: more room, still in the flow. */
+@media (min-width: 640px) {
+  .il-hero-art {
+    --il-hero-h: 14rem;
+    --il-hero-w: 22rem;
+    margin-top: 3rem;
+  }
+}
+
+/* Desktop: the background layer the design asks for.
+   Anchored to the block-end and hung past it, so the scene reliably crosses the
+   header's bottom border into the section below whatever the copy's length —
+   anchoring the top instead would leave short headers with no bleed at all.
+   z-index -1 keeps it inside the copy's own stacking context, so it can sit over
+   the ambient wash and the next section's background but never over their text. */
+@media (min-width: 1024px) {
+  .il-hero-art {
+    --il-hero-h: 20rem;
+    --il-hero-w: 33rem;
+
+    position: absolute;
+    z-index: -1;
+    inset-block-start: auto;
+    inset-block-end: -2.5rem;
+    inset-inline-end: 1.5rem;
+    margin-top: 0;
+    opacity: 0.92;
+
+    /* One gradient does both jobs: dissolve toward the copy on the inline-start
+       and toward the section below on the block-end, so neither the overlap nor
+       the bleed ends on a hard edge. */
+    mask-image: linear-gradient(to bottom left, #000 34%, transparent 86%);
+  }
+
+  [dir="rtl"] .il-hero-art {
+    mask-image: linear-gradient(to bottom right, #000 34%, transparent 86%);
+  }
+}
+
+@media (min-width: 1280px) {
+  .il-hero-art {
+    --il-hero-h: 23rem;
+    --il-hero-w: 38rem;
+    inset-inline-end: 0;
+    inset-block-end: -3rem;
+  }
+}
+
+/* ---- The still tier lives in the component, not here.
+
+   There is deliberately no reduced-motion media query for these. Windows reports
+   the reduce preference whenever Settings → Accessibility → Visual effects →
+   "Animation effects" is off — a common non-accessibility choice — and a media
+   query here froze all eight scenes for everyone in that state, which is
+   indistinguishable from the animations simply being broken.
+
+   Instead each component withholds `data-play="true"` when
+   `useSignatureReducedMotion()` says so, which is gated by HONOR_REDUCED_MOTION
+   in lib/reduced-motion. Every rule above hangs off that attribute, so the flag
+   is a complete off switch: flip it and these go still alongside the orbital
+   background and the hero card, from one place.
+
+   The motion-only elements ship with opacity="0" in the markup, so a still
+   illustration is exactly what unDraw drew — nothing frozen mid-frame. */
+
+/* ── The app's start-up progress line ─────────────────────────────────────────
+
+   Rendered by the locale layout in the NATIVE build only
+   (`components/native/AppLoading`), so none of this is reachable on the web.
+
+   It covers the one thing between the splash leaving — a 200ms timer, see
+   capacitor.config.ts — and a usable storefront: resolving the session. The
+   catalogue that loads after it has the shop's own skeletons, which are a
+   better loading state than a shell can draw, so this deliberately stops there.
+
+   A 3px line and not a screen. The exported HTML already paints the header, the
+   tab bar and the product skeletons, and a full-bleed overlay hid all of it to
+   avoid a much smaller flash — the avatar and cart badge settling once the
+   session is known. Styled here rather than inline so it is in the stylesheet
+   the WebView must parse anyway, and therefore lands on the first frame. */
+.app-loading {
+  position: fixed;
+  /* Below the status bar, which overlays the WebView — same inset the header
+     pads by. `env()` alone is not enough on Android; see the note on --sa-top. */
+  top: var(--sa-top, 0px);
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 2147483000;
+  overflow: hidden;
+  pointer-events: none;
+  transform-origin: 50% 50%;
+
+  /* Two animations, doing unrelated jobs.
+
+     `enter` grows the line out of the centre after a 150ms delay, with `both`
+     holding it invisible until then — so a session that resolves quickly, which
+     is the normal case, never shows a flash of chrome at all.
+
+     `giveup` is the exit that needs no JavaScript. Every other way out of this
+     runs in the bundle, and a bundle that never executes would otherwise trade
+     a stuck splash for a stuck progress bar. At 12s the CSS engine fades it
+     regardless. Well past the 8s JS cap, so it never pre-empts the normal
+     path. */
+  animation:
+    app-loading-enter 260ms ease-out 150ms both,
+    app-loading-giveup 400ms ease 12s forwards;
+}
+
+.app-loading[data-done="true"] {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 200ms ease, visibility 0s linear 200ms;
+}
+
+.app-loading__bar {
+  display: block;
+  height: 100%;
+  width: 42%;
+  border-radius: 0 3px 3px 0;
+  /* The brand green as a literal, not var(--brand): that token flips with the
+     theme, and this line is a continuation of the splash, which is one colour
+     in both. Matches SplashScreen.backgroundColor and @color/splash_background. */
+  background: #068554;
+  animation: app-loading-slide 1.15s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@keyframes app-loading-enter {
+  from { opacity: 0; transform: scaleX(0.15); }
+  to   { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes app-loading-slide {
+  0%   { transform: translateX(-105%) scaleX(0.7); }
+  55%  { transform: translateX(70%)   scaleX(1); }
+  100% { transform: translateX(245%)  scaleX(0.7); }
+}
+
+@keyframes app-loading-giveup {
+  to { opacity: 0; visibility: hidden; }
+}
+
+/* A shopper who asked the OS for less motion still needs to see that something
+   is happening, so the line stays — it just stops travelling. */
 @media (prefers-reduced-motion: reduce) {
-  .il,
-  .il [class^="il-"] { animation: none !important; }
+  .app-loading { animation: app-loading-giveup 400ms ease 12s forwards; }
+  .app-loading__bar { width: 100%; animation: none; }
 }

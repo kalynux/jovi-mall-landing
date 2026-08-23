@@ -1,0 +1,24 @@
+{
+  // The app build's TypeScript project.
+  //
+  // Identical to tsconfig.json except for one entry it drops: the base config
+  // includes `.next/dev/types/**/*.ts`, which the *dev server* generates and
+  // rewrites whenever the route tree changes. `build-native.mjs` renames route
+  // files out of the way for the duration of the build, so a dev server running
+  // alongside it regenerates that file mid-typecheck and the build fails on a
+  // syntax error in a file nobody wrote:
+  //
+  //     .next/dev/types/routes.d.ts:83:30  Type error: ';' expected.
+  //
+  // Pointed at by `typescript.tsconfigPath` in next.config.ts, so it applies to
+  // the native build only.
+  "extends": "./tsconfig.json",
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
+}

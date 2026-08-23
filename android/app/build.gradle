@@ -1,0 +1,118 @@
+apply plugin: 'com.android.application'
+
+/**
+ * ── One source for the version number ────────────────────────────────────────
+ *
+ * `package.json` is it. The app, the web build and (later) `CFBundleVersion`
+ * all describe the same release, and three hand-maintained numbers drift the
+ * first time someone ships in a hurry.
+ *
+ * `versionCode` is derived rather than stored because Play requires a single
+ * always-increasing integer, and semver is three. major*10000 + minor*100 +
+ * patch keeps the ordering semver already has, and leaves room for 99 minors
+ * and 99 patches between majors.
+ */
+def packageJson = new groovy.json.JsonSlurper().parseText(file("../../package.json").text)
+def semver = (packageJson.version as String).split(/[.+-]/)
+def appVersionName = packageJson.version as String
+def appVersionCode = semver[0].toInteger() * 10000 + semver[1].toInteger() * 100 + semver[2].toInteger()
+
+/**
+ * ── Release signing, from the environment ────────────────────────────────────
+ *
+ * Never committed and never defaulted. The keystore lives outside the repo
+ * (`*.keystore` is git-ignored, which is a backstop, not the plan) and every
+ * value arrives as an environment variable, so CI supplies them as secrets and
+ * a developer machine supplies them from a file it keeps to itself.
+ *
+ * When they are absent the release build is left UNSIGNED rather than falling
+ * back to the debug key. A debug-signed "release" installs and runs, which is
+ * exactly what makes that fallback dangerous: it is discovered at upload time,
+ * or worse, not at all.
+ */
+def keystorePath = System.getenv("WI_MALL_KEYSTORE")
+def keystorePassword = System.getenv("WI_MALL_KEYSTORE_PASSWORD")
+def keystoreAlias = System.getenv("WI_MALL_KEY_ALIAS")
+def keystoreKeyPassword = System.getenv("WI_MALL_KEY_PASSWORD")
+def canSignRelease = keystorePath?.trim() && keystorePassword?.trim() && keystoreAlias?.trim() && keystoreKeyPassword?.trim() && file(keystorePath).exists()
+
+if (!canSignRelease) {
+    logger.lifecycle("wi-mall: release signing config not set (WI_MALL_KEYSTORE*) — release builds will be unsigned.")
+}
+
+android {
+    namespace = "com.wimall.shop"
+    compileSdk = rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "com.wimall.shop"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode appVersionCode
+        versionName appVersionName
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    signingConfigs {
+        if (canSignRelease) {
+            release {
+                storeFile file(keystorePath)
+                storePassword keystorePassword
+                keyAlias keystoreAlias
+                keyPassword keystoreKeyPassword
+            }
+        }
+    }
+    buildTypes {
+        release {
+            /**
+             * R8 and resource shrinking apply to release builds only, which is
+             * why the 27 MB debug APK says nothing about what ships. The keep
+             * rules in proguard-rules.pro cover Capacitor's reflective plugin
+             * loading — the one thing minification reliably breaks here.
+             *
+             * ⚠ A minified build has NOT been run on a device. Smoke-test one
+             * before any store upload: the failure mode is a plugin that
+             * silently no-ops rather than a build that fails.
+             */
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (canSignRelease) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

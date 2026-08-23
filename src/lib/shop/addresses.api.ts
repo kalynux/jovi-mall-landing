@@ -27,6 +27,26 @@ export async function addAddress(
   });
 }
 
+/**
+ * PATCH /api/customer/addresses/:id — edit in place.
+ *
+ * Editing used to mean delete + re-add, which mints a **new** `_id` while past
+ * orders still reference the old one through `deliveryAddressId`. Editing in
+ * place is what keeps that reference meaningful, so prefer this over the pair.
+ *
+ * Note this does **not** change which address is the default —
+ * `PATCH /addresses/:id/default` owns that.
+ */
+export async function updateAddress(
+  id: string,
+  payload: Partial<AddAddressPayload>,
+): Promise<CustomerProfile> {
+  return apiFetch<CustomerProfile>(
+    `/api/customer/addresses/${encodeURIComponent(id)}`,
+    { method: "PATCH", body: JSON.stringify(payload) },
+  );
+}
+
 /** DELETE /api/customer/addresses/:id */
 export async function removeAddress(id: string): Promise<CustomerProfile> {
   return apiFetch<CustomerProfile>(
@@ -66,4 +86,28 @@ export async function searchAddresses(
   // The route wraps its candidates as `{ provider, query, results }`; tolerate a
   // bare array too rather than blanking the picker if that ever changes.
   return Array.isArray(data) ? data : (data.results ?? []);
+}
+
+/**
+ * GET /api/geo/reverse — a coordinate to the address at it.
+ *
+ * The other half of the picker, and what makes "use my current location"
+ * possible: it returns the **same `GeoCandidate`** shape `searchAddresses`
+ * produces, so an address obtained from the handset's GPS is stored, validated
+ * and priced by exactly the same code as one typed and picked from a list.
+ * There is no second path to keep in step.
+ *
+ * Answers `null` when the geocoder has nothing at that point — which is a real
+ * outcome rather than a failure, and the caller should say so and offer the
+ * search box. Same auth as the search route: any signed-in user.
+ */
+export async function reverseGeocode(
+  lat: number,
+  lng: number,
+): Promise<GeoCandidate | null> {
+  const params = new URLSearchParams({ lat: String(lat), lng: String(lng) });
+  const data = await apiFetch<{ result?: GeoCandidate | null }>(
+    `/api/geo/reverse?${params}`,
+  );
+  return data?.result ?? null;
 }

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The launch splash.
+
+  ── Why a layer-list and not the eleven PNGs Capacitor scaffolds ─────────────
+
+  This drawable is used two ways, and a bitmap cannot serve both. It is the
+  launch window's `android:background` (styles.xml, AppTheme.NoActionBarLaunch)
+  where it must be opaque and full-bleed, and it is the drawable the
+  SplashScreen plugin puts in an ImageView, where the default scale type is
+  FIT_XY — which stretches. A device-shaped PNG therefore distorts the mark on
+  every handset whose aspect ratio is not the one it was cut for, and the shop's
+  splash is on screen for as long as the session takes to restore.
+
+  A colour layer plus a centre-gravity bitmap has no such problem: the green
+  stretches (invisibly, it is flat), and `android:gravity="center"` draws the
+  mark at its intrinsic size, so the per-density `splash_logo` is what fixes its
+  physical size. One file instead of eleven, and nothing to re-cut when a new
+  screen shape appears.
+
+  Generated artwork: `npm run gen:app-icons`.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:drawable="@color/splash_background" />
+
+    <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@drawable/splash_logo" />
+    </item>
+
+</layer-list>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The adaptive launcher icon.
+
+  `monochrome` is the themed-icon layer (Android 13+): when the shopper turns
+  on themed icons the launcher discards the two layers above it and tints this
+  one from the wallpaper palette, using its ALPHA only. So it is a stencil, not
+  the mark — `ic_launcher_monochrome` is the bag with the face punched through
+  to transparent, generated at the same inset as the foreground so the icon does
+  not shift when the theme is toggled.
+
+  Artwork: `npm run gen:app-icons`.
+-->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+    <monochrome android:drawable="@mipmap/ic_launcher_monochrome"/>
+</adaptive-icon>

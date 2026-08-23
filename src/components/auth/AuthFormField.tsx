@@ -2,11 +2,16 @@
 import { forwardRef, useState, useCallback } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import InfoTooltip from "@/components/ui/InfoTooltip";
 
 interface AuthFormFieldProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
   error?: string;
+  /**
+   * The field's description. Carried behind an info trigger rather than as a
+   * standing line under the input — see InfoTooltip for why.
+   */
   hint?: string;
   /**
    * "stacked" (default) — label above the input.
@@ -15,6 +20,23 @@ interface AuthFormFieldProps
    * one <label htmlFor>, the same describedby wiring.
    */
   variant?: "stacked" | "floating";
+  /**
+   * A labelled action rendered inside the trailing edge of the field, in the
+   * same slot the password eye occupies — "Get code" on the sign-in code box.
+   *
+   * Inside the field rather than beside it because the action *is about this
+   * value*: it is how you obtain the thing the input wants. A button on the
+   * next line reads as a second, competing submit.
+   *
+   * Floating variant only, and never together with a password toggle — the two
+   * would fight for the same 44px.
+   */
+  trailingAction?: {
+    label: string;
+    onClick: () => void;
+    /** Reflected as aria-expanded when the action opens a dialog. */
+    expanded?: boolean;
+  };
 }
 
 /**
@@ -28,7 +50,10 @@ interface AuthFormFieldProps
  * sibling-relative container instead of wrapping with another <input>.
  */
 const AuthFormField = forwardRef<HTMLInputElement, AuthFormFieldProps>(
-  ({ label, error, hint, className, id, type, variant = "stacked", ...props }, ref) => {
+  (
+    { label, error, hint, className, id, type, variant = "stacked", trailingAction, ...props },
+    ref
+  ) => {
     const fieldId = id ?? label.toLowerCase().replace(/\s+/g, "-");
     const errorId = `${fieldId}-error`;
     const hintId = `${fieldId}-hint`;
@@ -42,6 +67,9 @@ const AuthFormField = forwardRef<HTMLInputElement, AuthFormFieldProps>(
     // Resolved input type: respect toggle only for password fields
     const resolvedType = isPassword ? (visible ? "text" : "password") : type;
 
+    // The hint text now lives in the tooltip bubble, which stays mounted
+    // whether or not it is showing — so pointing the input at it here keeps the
+    // description available on field focus, not only on the trigger.
     const describedBy =
       [error && errorId, hint && hintId].filter(Boolean).join(" ") || undefined;
 
@@ -51,24 +79,14 @@ const AuthFormField = forwardRef<HTMLInputElement, AuthFormFieldProps>(
       </span>
     );
 
-    const messages = (
-      <>
-        {hint && !error && (
-          <p id={hintId} className="text-xs text-[var(--text-muted)]">
-            {hint}
-          </p>
-        )}
-
-        {error && (
-          <p
-            id={errorId}
-            aria-live="polite"
-            className="text-xs text-red-500 font-medium transition-opacity duration-150"
-          >
-            {error}
-          </p>
-        )}
-      </>
+    const messages = error && (
+      <p
+        id={errorId}
+        aria-live="polite"
+        className="text-xs text-red-500 font-medium transition-opacity duration-150"
+      >
+        {error}
+      </p>
     );
 
     // ── Floating variant ────────────────────────────────────────────────────
@@ -98,7 +116,16 @@ const AuthFormField = forwardRef<HTMLInputElement, AuthFormFieldProps>(
                 "outline-none transition-all duration-200",
                 "hover:border-[var(--border-strong)]",
                 "focus:border-primary-400 focus:bg-[var(--surface)] focus:ring-2 focus:ring-primary-500/20",
-                isPassword && "pe-11",
+                // Room for whichever affordances sit at the trailing edge.
+                // The action pill is the widest of them and is measured off its
+                // own text, so the reservation is generous rather than exact.
+                trailingAction
+                  ? "pe-[7.25rem]"
+                  : isPassword && hint
+                    ? "pe-[5.25rem]"
+                    : isPassword
+                      ? "pe-11"
+                      : hint && "pe-10",
                 error && "border-red-400 focus:border-red-500 focus:ring-red-500/20",
                 className
               )}
@@ -117,6 +144,36 @@ const AuthFormField = forwardRef<HTMLInputElement, AuthFormFieldProps>(
               {label}
               {requiredMark}
             </label>
+
+            {hint && (
+              <span
+                className={cn(
+                  "absolute inset-y-0 flex w-10 items-center justify-center",
+                  // Clears the eye toggle's w-11 when a field carries both.
+                  isPassword ? "end-11" : "end-0"
+                )}
+              >
+                <InfoTooltip id={hintId} content={hint} align="end" />
+              </span>
+            )}
+
+            {trailingAction && (
+              <button
+                type="button"
+                onClick={trailingAction.onClick}
+                aria-controls={fieldId}
+                aria-haspopup="dialog"
+                aria-expanded={trailingAction.expanded}
+                className={cn(
+                  "absolute end-2 top-1/2 -translate-y-1/2 rounded-xl px-3 py-1.5",
+                  "bg-[var(--accent-light)] font-display text-xs font-semibold text-primary-600",
+                  "transition-colors duration-150 hover:bg-primary-100",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                )}
+              >
+                {trailingAction.label}
+              </button>
+            )}
 
             {isPassword && (
               <button
@@ -149,13 +206,18 @@ const AuthFormField = forwardRef<HTMLInputElement, AuthFormFieldProps>(
     // ── Stacked variant (default) ───────────────────────────────────────────
     return (
       <div className="flex flex-col gap-1.5">
-        <label
-          htmlFor={fieldId}
-          className="text-sm font-medium text-[var(--text-primary)]"
-        >
-          {label}
-          {requiredMark}
-        </label>
+        {/* The trigger is a sibling of the <label>, never a child — a button
+            inside a label swallows the click that focuses the input. */}
+        <div className="flex items-center gap-1.5">
+          <label
+            htmlFor={fieldId}
+            className="text-sm font-medium text-[var(--text-primary)]"
+          >
+            {label}
+            {requiredMark}
+          </label>
+          {hint && <InfoTooltip id={hintId} content={hint} align="start" />}
+        </div>
 
         {/* Wrapper: relative only when password so the toggle button can be
             positioned inside. Plain div for all other types — autofill

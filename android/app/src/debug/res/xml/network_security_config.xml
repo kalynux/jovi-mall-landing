@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Debug builds only. This file lives under src/debug/, so it is compiled into
+  the debug APK and CANNOT reach a release build — which is the whole point:
+  Android blocks cleartext HTTP by default, and that default must survive to
+  production untouched.
+
+  It exists because `NEXT_PUBLIC_API_URL` points at a plain-HTTP address during
+  development. `localhost` on a handset is the handset, so a device or emulator
+  has to be given the workstation's LAN address — 10.0.2.2 for the standard
+  Android emulator, or a 192.168.x.x for a physical phone on the same network.
+
+  Add your own machine's address below; do not widen this to
+  `cleartextTrafficPermitted="true"` for all domains, which would also permit
+  plain HTTP to the production API if someone ever mistyped the URL.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- The Android emulator's alias for the host machine's loopback. -->
+        <domain includeSubdomains="false">10.0.2.2</domain>
+
+        <!--
+          The workstation's Tailscale address. This is the one a physical phone
+          uses: both devices are on the same tailnet, so it works from any
+          network rather than only on shared Wi-Fi, and the address does not
+          change when the router hands out a new DHCP lease.
+
+          Keep it in step with NATIVE_API_URL in .env.local — that sets the URL
+          the app calls, and this is what permits the plain-HTTP call to it.
+        -->
+        <domain includeSubdomains="false">100.124.149.1</domain>
+
+        <!-- A physical device on the same Wi-Fi, if the tailnet is not up. -->
+        <domain includeSubdomains="false">192.168.1.1</domain>
+    </domain-config>
+</network-security-config>

@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { createContext, useCallback, useContext, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Icon } from "@/components/shop/ds";
+import { errorFeedback } from "@/lib/native/haptics";
 
 export type ToastVariant = "success" | "error";
 
@@ -45,6 +46,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const show = useCallback((message: string, variant: ToastVariant) => {
+    /**
+     * A failure gets a buzz as well as a banner.
+     *
+     * The toast is the only signal something went wrong, and on a phone it
+     * appears above the tab bar where a thumb often is. The haptic is what
+     * catches someone already moving on — and it is fired here, once, rather
+     * than at each of the couple of dozen `flashError` call sites.
+     *
+     * Fire-and-forget, silent on the web, and silent for anyone with reduced
+     * motion on.
+     */
+    if (variant === "error") void errorFeedback();
+
     setToast({ message, variant });
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setToast(null), DURATION[variant]);
@@ -68,10 +82,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12 }}
+            // `bottom` lives in the class, not here: below `md` it has to clear
+            // the tab bar, and an inline value would outrank the media query.
+            className="shop-toast"
             style={{
               position: "fixed",
               left: "50%",
-              bottom: 24,
               transform: "translateX(-50%)",
               zIndex: 500,
               display: "flex",

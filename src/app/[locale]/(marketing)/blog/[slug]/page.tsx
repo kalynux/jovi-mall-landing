@@ -256,6 +256,7 @@ export default async function ArticlePage({ params }: PageProps) {
               width={article.cover.width}
               height={article.cover.height}
               className="aspect-[16/9] w-full object-cover lg:aspect-[21/9]"
+              
             />
           ) : (
             <CoverArt seed={article.id} variant="hero" className="aspect-[16/9] w-full lg:aspect-[21/9]" />

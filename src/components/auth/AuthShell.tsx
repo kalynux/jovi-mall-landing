@@ -17,6 +17,7 @@
 import { Link } from "@/i18n/navigation";
 import { usePathname } from "@/i18n/navigation";
 import WiMallMark from "@/components/brand/WiMallMark.generated";
+import { homePath, normalizePath } from "@/lib/shop/shop.routes";
 import { BRAND } from "@/lib/constants";
 import AuthPageControls from "@/components/auth/AuthPageControls";
 import { useTranslations } from "next-intl";
@@ -44,13 +45,25 @@ function AuthBackdrop() {
 export default function AuthShell({ children }: { children: React.ReactNode }) {
   const t = useTranslations("auth");
   const pathname = usePathname();
-  const isSplit = SPLIT_ROUTES.includes(pathname);
+  /**
+   * Normalised, and it has to be.
+   *
+   * The app build sets `trailingSlash: true`, so `usePathname()` answers
+   * "/login/" on a device while SPLIT_ROUTES is written "/login". The plain
+   * comparison was therefore false in the app and true on the web — which put
+   * the header BACK on the one screen that had just been redesigned without
+   * one: a logo, a language menu and a theme toggle across the top of the
+   * app's sign-in page, above a card that already knew not to draw them.
+   *
+   * Same trap as the bottom tab bar's, and the same fix — see `normalizePath`.
+   */
+  const isSplit = SPLIT_ROUTES.includes(normalizePath(pathname));
 
   if (isSplit) {
     return (
       <div className="min-h-screen bg-[var(--bg-app)]">
         <AuthBackdrop />
-        <main className="flex min-h-screen items-center justify-center px-3 py-6 sm:px-6 sm:py-10">
+        <main className="flex min-h-screen items-center justify-center px-4 py-6 sm:px-6 sm:py-10">
           {children}
         </main>
       </div>
@@ -58,12 +71,12 @@ export default function AuthShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] flex flex-col">
+    <div className="auth-frame min-h-screen bg-[var(--bg)] flex flex-col">
       {/* Top bar */}
       <header className="flex items-center justify-between px-6 py-4 flex-shrink-0">
         {/* Logo */}
         <Link
-          href="/"
+          href={homePath()}
           className="flex items-center gap-2 group"
           aria-label={t("backToHome")}
         >

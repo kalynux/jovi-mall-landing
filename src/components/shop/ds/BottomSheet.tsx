@@ -2,7 +2,9 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
+import { useHydrated } from "@/lib/use-hydrated";
 import { IconButton } from "./IconButton";
 
 export interface BottomSheetProps {
@@ -11,26 +13,74 @@ export interface BottomSheetProps {
   title?: string;
   footer?: ReactNode;
   children: ReactNode;
+  /**
+   * Stacks this sheet above another one.
+   *
+   * The filter sheet opens a second sheet for the category list, and DOM order
+   * alone is not enough to keep it on top — both are `position: fixed` at the
+   * same z-index, and the inner one is a descendant of a motion element that
+   * creates its own stacking context.
+   */
+  layer?: "default" | "top";
 }
+
+/**
+ * How many `layer="top"` sheets are open right now.
+ *
+ * Escape belongs to the topmost sheet, and listener order cannot decide that:
+ * both sheets bind to `document`, and the OUTER one registers first, so it
+ * would win every time. A count is the only thing either sheet can consult that
+ * describes the stack rather than the binding order.
+ */
+let openTopSheets = 0;
 
 /**
  * Responsive dialog: a bottom sheet on mobile, a centered modal on `sm+`.
  * Adapts the design's mobile-only BottomSheet for the web.
  */
-export function BottomSheet({ open, onClose, title, footer, children }: BottomSheetProps) {
+export function BottomSheet({ open, onClose, title, footer, children, layer = "default" }: BottomSheetProps) {
+  /**
+   * A stacked sheet is rendered from inside the sheet below it, whose panel is
+   * a `motion.div`. While that panel is animating it carries a `transform`,
+   * and a transformed ancestor makes `position: fixed` resolve against *it*
+   * rather than the viewport — so the inner sheet would land inside the outer
+   * one instead of over the screen. A portal takes it out of that subtree.
+   *
+   * Only the stacked case: portalling the ordinary sheet would change where
+   * every existing caller's markup ends up for no benefit.
+   *
+   * `useHydrated` rather than an effect that sets state: there is no
+   * `document` during SSR, and this is the project's `useSyncExternalStore`
+   * answer to exactly that question — server and hydrating render both say
+   * false, so the two passes agree without a cascading re-render.
+   */
+  const hydrated = useHydrated();
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    if (layer === "top") openTopSheets += 1;
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      // A sheet underneath a stacked one stays put: the key closed the sheet
+      // the visitor is actually looking at.
+      if (layer !== "top" && openTopSheets > 0) return;
+      onClose();
+    };
     document.addEventListener("keydown", onKey);
+
+    // Nesting is safe here: the inner sheet's `prev` is the outer's "hidden",
+    // so unwinding in either order lands back on the page's own value.
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
     return () => {
+      if (layer === "top") openTopSheets -= 1;
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [open, onClose]);
+  }, [open, onClose, layer]);
 
-  return (
+  const sheet = (
     <AnimatePresence>
       {open && (
         <motion.div
@@ -42,7 +92,7 @@ export function BottomSheet({ open, onClose, title, footer, children }: BottomSh
           style={{
             position: "fixed",
             inset: 0,
-            zIndex: 400,
+            zIndex: layer === "top" ? 420 : 400,
             background: "var(--scrim)",
             display: "flex",
             justifyContent: "center",
@@ -55,6 +105,12 @@ export function BottomSheet({ open, onClose, title, footer, children }: BottomSh
             exit={{ y: 40, opacity: 0 }}
             transition={{ type: "spring", stiffness: 380, damping: 34 }}
             onClick={(e) => e.stopPropagation()}
+            // Announced as a dialog rather than as an unlabelled box of divs: a
+            // screen reader lands in the panel with no idea it is modal, and the
+            // scrim behind it is a click target it cannot see.
+            role="dialog"
+            aria-modal="true"
+            aria-label={title}
             className="w-full sm:max-w-[480px] rounded-t-[28px] sm:rounded-[20px]"
             style={{
               background: "var(--surface)",
@@ -67,6 +123,11 @@ export function BottomSheet({ open, onClose, title, footer, children }: BottomSh
           >
             <div
               style={{
+                // The grab handle below is absolutely positioned, and without a
+                // positioned ancestor here it resolved against the fixed scrim —
+                // so on mobile it drew a stray pill at the top of the *screen*,
+                // above the site header, instead of on the sheet.
+                position: "relative",
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
@@ -110,4 +171,11 @@ export function BottomSheet({ open, onClose, title, footer, children }: BottomSh
       )}
     </AnimatePresence>
   );
+
+  if (layer === "top") {
+    // Nothing until hydration — one frame of no sheet, which is the frame
+    // before the open animation would have started anyway.
+    return hydrated ? createPortal(sheet, document.body) : null;
+  }
+  return sheet;
 }

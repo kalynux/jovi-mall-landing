@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Wi-Mall</string>
+    <string name="title_activity_main">Wi-Mall</string>
+    <string name="package_name">com.wimall.shop</string>
+    <string name="custom_url_scheme">com.wimall.shop</string>
+</resources>

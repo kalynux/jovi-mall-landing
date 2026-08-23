@@ -17,11 +17,21 @@ import { LOCALE_CODES, localePath } from "@/i18n/routing";
  * app/(auth)/layout.tsx, and adding a Disallow here would block the fetch that
  * lets a crawler read it.
  */
+/**
+ * `/shop/p` and `/shop/store` are the app's query-string addresses for a
+ * product and a store. They exist in the web build too — one codebase — and
+ * each is a second URL for a document that already has a canonical one, so
+ * neither should be offered to a crawler. Both also carry `robots: { index:
+ * false }` in their own metadata, which is the control that actually works;
+ * this is the cheaper one that stops the fetch.
+ */
 const PRIVATE_PATHS = [
   "/shop/cart",
   "/shop/checkout",
   "/shop/saved",
   "/shop/account",
+  "/shop/p",
+  "/shop/store",
 ];
 
 export default function robots(): MetadataRoute.Robots {

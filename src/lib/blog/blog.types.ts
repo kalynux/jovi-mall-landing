@@ -84,7 +84,7 @@ export type BlockType = Block["type"];
  * job title and bio are, because "Head of Merchant Growth" is not.
  *
  * `type` is what the `author` node in the structured data becomes. A house
- * byline like "The WiMall team" is an Organization; emitting it as a Person
+ * byline like "The Wi-Mall team" is an Organization; emitting it as a Person
  * would assert that a human being by that name exists, which is the same class
  * of claim as the invented review counts `lib/seo/jsonld.ts` refuses to make.
  */

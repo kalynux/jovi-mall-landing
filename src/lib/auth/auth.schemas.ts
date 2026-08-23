@@ -142,15 +142,34 @@ export const RegisterSchema = z
         agency_name: z.string().optional(),
     })
     .superRefine((data, ctx) => {
+        /**
+         * ⚠️ **`email` is required for a vendor, and api-doc says otherwise.**
+         *
+         * api-doc/auth/README.md § POST /auth/register marks `email` "Optional
+         * for **every** role, including vendor". The vendor *model* disagrees:
+         * `email: { type: String, required: true, unique: true }`
+         * (jovi-mall/src/modules/vendors/vendor.model.ts:387). It is the only
+         * one of the four role models that does — agency, agent and customer all
+         * register without one.
+         *
+         * The disagreement is not academic: `POST /auth/register` with a vendor
+         * and no email answers **500 INTERNAL_SERVER_ERROR**, not a 400, because
+         * the Mongoose validation error escapes as an unhandled failure.
+         * Verified against the running backend, 2026-08-20.
+         *
+         * So this rule stays until the backend is fixed, and it is kept here
+         * rather than left to the server on purpose: a client-side "Email is
+         * required" is a field the user can fix, while the alternative is an
+         * opaque "Something went wrong" with a requestId.
+         */
+        if (data.role === "vendor" && !data.email?.trim()) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Email is required for vendors",
+                path: ["email"],
+            });
+        }
         if (data.role === "vendor") {
-            // Email is required for vendors
-            if (!data.email?.trim()) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    message: "Email is required for vendors",
-                    path: ["email"],
-                });
-            }
             refineBusinessName(
                 data.business_name,
                 "business_name",
@@ -211,3 +230,113 @@ export const AddRoleSchema = z
     });
 
 export type AddRoleFormValues = z.infer<typeof AddRoleSchema>;
+
+// ─── Password reset ──────────────────────────────────────────────────────────
+
+/**
+ * `POST /api/auth/forgot-password` takes an email **or** an E.164 phone in one
+ * field.
+ *
+ * Not validated into one shape or the other here on purpose: the backend accepts
+ * both, and guessing which the user meant in order to reject the other is how a
+ * legitimate identifier gets refused before it is ever sent. A non-empty string
+ * is the real rule; the endpoint answers 200 either way.
+ */
+export const ForgotPasswordSchema = z.object({
+    identifier: z.string().trim().min(3, "Enter your phone number or email"),
+});
+
+export type ForgotPasswordFormValues = z.infer<typeof ForgotPasswordSchema>;
+
+/**
+ * `POST /api/auth/reset-password`.
+ *
+ * ⚠️ **Stricter than `RegisterSchema` above, and that is not a mistake.** Reset
+ * uses the backend's `PasswordStrengthSchema` — 8 characters with an upper, a
+ * lower, a digit and a symbol — which `PATCH /api/me/password` also enforces,
+ * while registration still accepts 6 characters with no complexity rule. The two
+ * genuinely disagree server-side; mirroring the loose rule here would let a user
+ * submit a password the API then rejects.
+ */
+export const ResetPasswordSchema = z
+    .object({
+        password: z
+            .string()
+            .min(8, "Password must be at least 8 characters")
+            .regex(/[a-z]/, "Include a lowercase letter")
+            .regex(/[A-Z]/, "Include an uppercase letter")
+            .regex(/[0-9]/, "Include a number")
+            .regex(/[^A-Za-z0-9]/, "Include a symbol"),
+        confirm: z.string(),
+    })
+    .refine((data) => data.password === data.confirm, {
+        message: "The two passwords do not match",
+        path: ["confirm"],
+    });
+
+export type ResetPasswordFormValues = z.infer<typeof ResetPasswordSchema>;
+
+// ─── Passwordless customer sign-in ───────────────────────────────────────────
+
+/**
+ * `POST /api/auth/magic/code` — the 8-character code the bot replies with,
+ * paired with the phone or email it was minted for.
+ *
+ * The identifier is validated the same way `LoginSchema` validates its own: a
+ * phone gets the country selector and E.164 normalisation, an email does not,
+ * and the form asks which is being entered rather than guessing.
+ *
+ * ⚠️ **`code` is deliberately barely validated.** The server is already
+ * forgiving about case, spacing, dashes, `O`/`0` and `I`/`L`, and it wants the
+ * string verbatim (api-doc/auth/magic-login.md). A client-side strip or
+ * uppercase is a second opinion that can only disagree with the first — so the
+ * rule here is "not empty, not absurd", and the server decides.
+ */
+export const MagicCodeSchema = z
+    .object({
+        identifier_type: IdentifierTypeSchema,
+        identifier: z.string().trim(),
+        code: z
+            .string()
+            .trim()
+            .min(1, "Enter the code the bot sent you")
+            .max(32, "That is not a sign-in code"),
+    })
+    .superRefine((data, ctx) => {
+        if (data.identifier_type === "phone") {
+            const error = validatePhone(data.identifier, { required: true });
+            if (error) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: phoneErrorMessage(error),
+                    path: ["identifier"],
+                });
+            }
+            return;
+        }
+
+        if (!data.identifier) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Email is required",
+                path: ["identifier"],
+            });
+            return;
+        }
+        if (!z.string().email().safeParse(data.identifier).success) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Invalid email",
+                path: ["identifier"],
+            });
+        }
+    })
+    .transform((data) => ({
+        ...data,
+        identifier:
+            data.identifier_type === "phone"
+                ? (toE164(data.identifier) ?? data.identifier)
+                : data.identifier,
+    }));
+
+export type MagicCodeFormValues = z.infer<typeof MagicCodeSchema>;

@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon } from "./Icon";
+import { selectionFeedback } from "@/lib/native/haptics";
 
 export interface QtyStepperProps {
   value: number;
@@ -17,7 +18,13 @@ export function QtyStepper({ value, onChange, max = 99, min = 1, size = "md" }: 
       type="button"
       aria-label={delta > 0 ? "Increase quantity" : "Decrease quantity"}
       disabled={disabled}
-      onClick={() => onChange(Math.min(max, Math.max(min, value + delta)))}
+      onClick={() => {
+        const next = Math.min(max, Math.max(min, value + delta));
+        // Only when the number actually moved: a tick at the ceiling says
+        // something changed when nothing did. Silent on the web.
+        if (next !== value) void selectionFeedback();
+        onChange(next);
+      }}
       style={{
         width: dim,
         height: dim,

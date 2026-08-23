@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import JsonLd from "@/components/seo/JsonLd";
 import Breadcrumbs from "@/components/marketing/Breadcrumbs";
+import AgentsIllustration from "@/components/illustrations/AgentsIllustration.generated";
 import FaqList from "@/components/marketing/FaqList";
 import {
   CheckList,
@@ -75,6 +76,7 @@ export default async function AgentsPage({ params }: PageProps) {
         title={t("agents.title")}
         lead={t("agents.lead")}
         breadcrumbs={<Breadcrumbs trail={trail} label={t("common.breadcrumbLabel")} />}
+        illustration={<AgentsIllustration />}
       />
 
       <div className="role-agent">

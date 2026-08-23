@@ -37,15 +37,12 @@ export type BackendErrorCode =
     | "AUTH_EMAIL_ALREADY_VERIFIED"
     | "AUTH_EMAIL_MISSING"
     | "AUTH_VERIFY_TOKEN_INVALID"
-    | "AUTH_WA_ALREADY_VERIFIED"
     | "AUTH_PROFILE_NOT_FOUND"
-    | "AUTH_PHONE_REQUIRED_FOR_WA"
     | "AUTH_UNSUPPORTED_ROLE"
     | "AUTH_REFRESH_TOKEN_INVALID"
     | "AUTH_SESSION_EXPIRED"
     | "AUTH_USER_NOT_FOUND"
     | "AUTH_ROLE_PROFILE_NOT_FOUND"
-    | "AUTH_WA_PHONE_ID_REQUIRED"
     | "AUTH_FORBIDDEN"
     | "AUTH_OAUTH_STATE_INVALID"
     | "AUTH_OAUTH_STATE_EXPIRED"
@@ -57,6 +54,86 @@ export type BackendErrorCode =
      * load-bearing"). Clear local state and send the user to sign-in.
      */
     | "AUTH_PASSWORD_CHANGED"
+    /**
+     * 400. The password-reset token is unknown, already used or expired.
+     *
+     * Distinct from `AUTH_VERIFY_TOKEN_INVALID`, which is the *email* verification
+     * link. Both are single-use; only this one ends at a form the user can retry
+     * from, so it must send them back to request a fresh link rather than to
+     * sign-in.
+     */
+    | "AUTH_RESET_TOKEN_INVALID"
+    /**
+     * 403. `User.status` is not `active`. Raised **after** the password check,
+     * so it is never an oracle for which accounts exist.
+     */
+    | "AUTH_ACCOUNT_SUSPENDED"
+    /**
+     * 403. The vendor *profile* is inactive — a different axis from the account
+     * above, and its own code because the remedy differs.
+     */
+    | "AUTH_VENDOR_SUSPENDED"
+    /**
+     * 401. **The one 401 on this API that no credential the client holds can
+     * fix.** Every token carries `auth_time`, the second the account holder last
+     * proved a credential; it is copied unchanged through every refresh and
+     * every `auth-me`, so once the sign-in passes 90 days a refresh mints a
+     * token that fails the same check. Route to sign-in and never retry — a
+     * client that retries loops until it is killed
+     * (api-doc/auth/README.md § "The 90-day absolute cap").
+     */
+    | "AUTH_SESSION_CAP_REACHED"
+    // ─── Passwordless customer sign-in (api-doc/auth/magic-login.md) ───────────
+    /** 401. The magic link is unknown, malformed, or already spent. */
+    | "MAGIC_LINK_INVALID"
+    /** 401. The magic link was real and is past its 10 minutes. */
+    | "MAGIC_LINK_EXPIRED"
+    /**
+     * 401, and **deliberately undifferentiated**: a wrong code, an unknown
+     * identifier, an already-spent code and a code belonging to another account
+     * all answer with this one. Anything finer would turn the endpoint into a
+     * registration oracle — post a phone number with a junk code and learn from
+     * the error whether that person shops here. So the copy must never say "no
+     * account with that number".
+     */
+    | "MAGIC_CODE_INVALID"
+    /**
+     * 401. Only reachable *after* the code has been matched to the account the
+     * identifier names, so unlike the code above it confirms nothing to a
+     * guesser and can safely read as expiry.
+     */
+    | "MAGIC_CODE_EXPIRED"
+    /** 429. More than 5 attempts in 10 minutes against one identifier. */
+    | "MAGIC_ATTEMPTS_EXCEEDED"
+    /**
+     * 400. A Telegram sender shared somebody else's contact card. Only a contact
+     * whose Telegram `user_id` is the sender's own is accepted — without that
+     * check, forwarding a victim's contact would be a one-message takeover.
+     */
+    | "MAGIC_CONTACT_UNVERIFIED"
+    // ─── Messaging connections (api-doc/connections/README.md) ─────────────────
+    /**
+     * 400. Wrong, malformed, or already used — one code for all three, so a
+     * response cannot confirm whether a guessed code was ever real.
+     */
+    | "CONNECTION_CODE_INVALID"
+    /**
+     * 400. The code was real and is past its 10 minutes. **Genuinely different
+     * from INVALID and should read differently** — expiry is the common failure
+     * and "send the command again" is the fix, while INVALID means check what
+     * you typed.
+     */
+    | "CONNECTION_CODE_EXPIRED"
+    /** 429. More than 5 redeem attempts in 10 minutes, per account. */
+    | "CONNECTION_CODE_ATTEMPTS_EXCEEDED"
+    /**
+     * 409. That messaging identity belongs to a different platform account.
+     * Ownership is never transferred silently. The error says nothing about the
+     * other account on purpose — do not present it as "this number belongs to X".
+     */
+    | "MESSAGING_IDENTITY_ALREADY_LINKED"
+    /** 404. Nothing connected on that channel. */
+    | "MESSAGING_CONNECTION_NOT_FOUND"
     // ─── Payment ───────────────────────────────────────────────────────────────
     | "PAYMENT_ORDER_NOT_FOUND"
     | "PAYMENT_ORDER_ALREADY_PAID"
@@ -79,6 +156,8 @@ export type BackendErrorCode =
     | "PAYMENT_CART_MIXED_CURRENCY"
     | "PAYMENT_REFERENCE_REQUIRED"
     | "PAYMENT_ORDER_IS_COD"
+    | "PAYMENT_OPERATOR_UNDETERMINED"
+    | "PAYMENT_CURRENCY_NOT_SUPPORTED"
     | "STRIPE_WEBHOOK_SIGNATURE_INVALID"
     // ─── Refund ────────────────────────────────────────────────────────────────
     | "REFUND_NOT_ELIGIBLE"
@@ -125,8 +204,10 @@ export type BackendErrorCode =
     | "DIGITAL_ENTITLEMENT_CONFIG_MISSING"
     | "DIGITAL_ENTITLEMENT_CONFIG_INACTIVE"
     // ─── WhatsApp ──────────────────────────────────────────────────────────────
-    | "WHATSAPP_ROLE_NOT_SUPPORTED"
-    | "WHATSAPP_NOT_LINKED"
+    // Account linking left this family entirely: `WHATSAPP_NOT_LINKED` and
+    // `WHATSAPP_ROLE_NOT_SUPPORTED` came from `GET /webhooks/whatsapp/link/status`
+    // and its unlink twin, both deleted. Connection state is the MESSAGING_* /
+    // CONNECTION_* codes above now (api-doc/connections/README.md).
     | "WHATSAPP_LINK_FAILED"
     | "WHATSAPP_INVALID_PAYLOAD"
     | "WHATSAPP_POLICY_VIOLATION"
@@ -176,6 +257,22 @@ export type BackendErrorCode =
     | "ORDER_PRODUCT_NOT_FOUND"
     | "ORDER_VENDOR_NOT_FOUND"
     | "ORDER_NO_DELIVERY_AGENCY"
+    /**
+     * 422. A physical checkout with no address the platform can route to.
+     *
+     * `details.reason` distinguishes two situations that need different UI:
+     * `no_delivery_address` (prompt for one) and `selected_address_not_geocoded`
+     * (they *did* choose one, but typed it by hand instead of picking it from
+     * `GET /api/geo/search`, so it has no coordinates — reopen the picker on the
+     * address they already chose).
+     *
+     * Deliberately **not** `ADDRESS_GEO_REQUIRED`, which exists at 400: that one
+     * is a malformed payload, this is a business rule on a well-formed request.
+     * Raised by checkout and by `POST /api/customer/cart/quote`, which is the
+     * main reason to send `deliveryAddressId` to the quote — it catches this
+     * before the pay button.
+     */
+    | "ORDER_DELIVERY_ADDRESS_REQUIRED"
     | "CANCELLATION_NOT_ALLOWED"
     // ─── Shipment ──────────────────────────────────────────────────────────────
     | "SHIPMENT_NOT_FOUND"
@@ -389,6 +486,8 @@ export type BackendErrorCode =
     // ─── User ──────────────────────────────────────────────────────────────────
     | "USER_NOT_FOUND"
     | "USER_INVALID_PASSWORD"
+    | "ACCOUNT_CLOSURE_ROLE_NOT_ELIGIBLE"
+    | "ACCOUNT_CLOSURE_ORDERS_IN_FLIGHT"
     // ─── Store ─────────────────────────────────────────────────────────────────
     | "STORE_NOT_FOUND"
     | "STORE_SLUG_TAKEN"
@@ -413,6 +512,16 @@ export type BackendErrorCode =
     | "CART_PRODUCT_NOT_FOUND"
     | "CART_SERVICE_PRODUCT_NOT_ALLOWED"
     | "CART_VARIANT_NOT_FOUND"
+    /**
+     * 404. That line is not in the cart — raised by the quantity `PATCH` and the
+     * per-variant `DELETE`.
+     *
+     * Distinct from `CART_VARIANT_NOT_FOUND`, which means the variant does not
+     * exist in the *catalogue*. This one means it exists and simply is not in
+     * this cart: a stale tab, or another device removed it. Reload the cart
+     * rather than reporting a broken product.
+     */
+    | "CART_ITEM_NOT_FOUND"
     | "CART_VARIANT_PRODUCT_MISMATCH"
     | "CART_DIGITAL_QUANTITY_MUST_BE_ONE"
     | "CART_MIXED_PRODUCT_TYPES"

@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import JsonLd from "@/components/seo/JsonLd";
 import Breadcrumbs from "@/components/marketing/Breadcrumbs";
+import CameroonIllustration from "@/components/illustrations/CameroonIllustration.generated";
 import FaqList from "@/components/marketing/FaqList";
 import {
   CardGrid,
@@ -79,6 +80,7 @@ export default async function CameroonPage({ params }: PageProps) {
         title={t("country.title")}
         lead={t("country.lead")}
         breadcrumbs={<Breadcrumbs trail={trail} label={t("common.breadcrumbLabel")} />}
+        illustration={<CameroonIllustration />}
       />
 
       <Section title={t("country.why.title")}>

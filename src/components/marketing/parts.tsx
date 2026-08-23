@@ -36,6 +36,7 @@ export function PageHeader({
   breadcrumbs,
   actions,
   aside,
+  illustration,
 }: {
   accent?: Accent;
   eyebrow: string;
@@ -44,9 +45,25 @@ export function PageHeader({
   breadcrumbs?: ReactNode;
   actions?: ReactNode;
   aside?: ReactNode;
+  /**
+   * The page's animated scene. Purely atmospheric — it is hidden from assistive
+   * tech and sized by `.il-hero-art` in globals.css, which keeps it in the flow
+   * beneath the copy on phones and only promotes it to a background layer at
+   * `lg`, where there is room for it to sit behind the text without costing
+   * legibility.
+   */
+  illustration?: ReactNode;
 }) {
   return (
-    <header className={cn("relative overflow-hidden border-b border-[var(--border)]", accent)}>
+    // `overflow-x-clip` rather than `overflow-hidden`: the ambient washes still
+    // need containing sideways, but the illustration is meant to bleed past the
+    // bottom edge into the section below, which `hidden` would cut off.
+    <header
+      className={cn(
+        "relative overflow-x-clip overflow-y-visible border-b border-[var(--border)]",
+        accent
+      )}
+    >
       {/* Layered ambient: a broad role wash from the top edge, a concentrated
           glow off the corner for depth, and a whisper of grain — all static,
           so the hero reads loud without a single frame of animation on the thin
@@ -80,7 +97,9 @@ export function PageHeader({
       />
       <div className="container-xl relative z-10 px-4 sm:px-6 lg:px-8 pt-12 pb-16 lg:pt-24 lg:pb-24">
         {breadcrumbs}
-        <div className="mt-7 grid gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+        {/* The copy keeps its own stacking level so the illustration, which sits
+            at z-index -1 inside this container, can never wash over it. */}
+        <div className="relative z-10 mt-7 grid gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div className="max-w-3xl">
             <p className="inline-flex items-center gap-2 rounded-pill border border-role-soft bg-role-soft px-3.5 py-1.5 font-display text-[11px] font-bold uppercase tracking-[0.16em] text-role">
               <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-role" />
@@ -96,6 +115,11 @@ export function PageHeader({
           </div>
           {aside && <div className="lg:max-w-xs">{aside}</div>}
         </div>
+        {illustration && (
+          <div aria-hidden="true" className="il-hero-art">
+            {illustration}
+          </div>
+        )}
       </div>
     </header>
   );
@@ -400,6 +424,39 @@ export function RelatedLinks({
 
 /* ─── Closing call to action ──────────────────────────────────────────────── */
 
+/**
+ * A CTA destination that may live outside the app.
+ *
+ * The customer CTA is a `wa.me` deep link, and the localised `Link` is the
+ * wrong element for it twice over: it exists to prefix in-app paths with the
+ * locale, and an outward hop should not replace the page the reader is on. An
+ * absolute href therefore falls back to a plain anchor with the usual
+ * `noopener` guard; everything else routes as before.
+ */
+function CtaLink({
+  href,
+  className,
+  children,
+}: {
+  href: string;
+  className: string;
+  children: ReactNode;
+}) {
+  if (/^https?:\/\//.test(href)) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
+        {children}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={href} className={className}>
+      {children}
+    </Link>
+  );
+}
+
 export function CtaBand({
   title,
   body,
@@ -466,20 +523,20 @@ export function CtaBand({
               {primaryRole ? (
                 <RoleCtaButton role={primaryRole} fallbackLabel={primary.label} variant="primary" size="md" />
               ) : (
-                <Link
+                <CtaLink
                   href={primary.href}
                   className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-primary-700 to-primary-500 px-6 py-3 font-display font-semibold text-white shadow-[0_0_20px_rgba(13,160,107,0.35)] transition-shadow hover:shadow-[0_0_34px_rgba(13,160,107,0.6)]"
                 >
                   {primary.label}
-                </Link>
+                </CtaLink>
               )}
               {secondary && (
-                <Link
+                <CtaLink
                   href={secondary.href}
                   className="inline-flex items-center justify-center rounded-xl border border-white/25 bg-white/5 px-6 py-3 font-display font-semibold text-white transition-colors hover:border-white/40 hover:bg-white/10"
                 >
                   {secondary.label}
-                </Link>
+                </CtaLink>
               )}
             </div>
             {finePrint && <p className="mt-5 text-xs text-white/50">{finePrint}</p>}

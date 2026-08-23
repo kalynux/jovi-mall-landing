@@ -82,7 +82,7 @@ const faq = (...items: { question: string; answer: string }[]): Block => ({ type
 export const BLOG_AUTHORS: Author[] = [
   {
     id: "wimall-editorial",
-    name: "The WiMall team",
+    name: "The Wi-Mall team",
     type: "Organization",
     translations: {
       en: {
@@ -97,7 +97,7 @@ export const BLOG_AUTHORS: Author[] = [
   },
   {
     id: "wimall-product",
-    name: "WiMall Product",
+    name: "Wi-Mall Product",
     type: "Organization",
     translations: {
       en: {
@@ -192,7 +192,7 @@ export const BLOG_ARTICLES: Article[] = [
           ),
           p(
             txt(
-              "Handing delivery to a registered agency changes the arithmetic in a way worth being precise about. On WiMall the delivery fee does not go to the platform at all — the agency keeps it, minus whatever cut it has contracted with the agent who actually rides. You are buying dispatch, not renting a middleman."
+              "Handing delivery to a registered agency changes the arithmetic in a way worth being precise about. On Wi-Mall the delivery fee does not go to the platform at all — the agency keeps it, minus whatever cut it has contracted with the agent who actually rides. You are buying dispatch, not renting a middleman."
             )
           ),
           ul(
@@ -209,7 +209,7 @@ export const BLOG_ARTICLES: Article[] = [
           ),
           quote(
             "The store was never the thing customers wanted. They wanted an answer, a price and a delivery date — and a chat thread is a perfectly good place to get all three.",
-            "WiMall product notes"
+            "Wi-Mall product notes"
           ),
 
           h2("getting-started", "What it takes to start"),
@@ -228,7 +228,7 @@ export const BLOG_ARTICLES: Article[] = [
             {
               question: "Do I need a registered business to sell on WhatsApp?",
               answer:
-                "To open a WiMall vendor account you need a country and payout details. Whether your trade needs to be registered with the authorities is a separate question and depends on what you sell and at what volume — it is not something the platform decides for you.",
+                "To open a Wi-Mall vendor account you need a country and payout details. Whether your trade needs to be registered with the authorities is a separate question and depends on what you sell and at what volume — it is not something the platform decides for you.",
             },
             {
               question: "Can I keep my existing WhatsApp number?",
@@ -312,7 +312,7 @@ export const BLOG_ARTICLES: Article[] = [
           ),
           p(
             txt(
-              "Confier la livraison à une agence enregistrée change le calcul d'une manière qu'il vaut la peine d'énoncer précisément. Sur WiMall, les frais de livraison ne vont pas du tout à la plateforme : l'agence les conserve, moins la part contractuelle du livreur qui roule effectivement. Vous achetez du dispatch, vous ne louez pas un intermédiaire."
+              "Confier la livraison à une agence enregistrée change le calcul d'une manière qu'il vaut la peine d'énoncer précisément. Sur Wi-Mall, les frais de livraison ne vont pas du tout à la plateforme : l'agence les conserve, moins la part contractuelle du livreur qui roule effectivement. Vous achetez du dispatch, vous ne louez pas un intermédiaire."
             )
           ),
           ul(
@@ -344,7 +344,7 @@ export const BLOG_ARTICLES: Article[] = [
             {
               question: "Faut-il une entreprise enregistrée pour vendre sur WhatsApp ?",
               answer:
-                "Pour ouvrir un compte vendeur WiMall, il faut un pays et des coordonnées de versement. Savoir si votre activité doit être déclarée auprès des autorités est une question distincte, qui dépend de ce que vous vendez et à quel volume — ce n'est pas la plateforme qui en décide.",
+                "Pour ouvrir un compte vendeur Wi-Mall, il faut un pays et des coordonnées de versement. Savoir si votre activité doit être déclarée auprès des autorités est une question distincte, qui dépend de ce que vous vendez et à quel volume — ce n'est pas la plateforme qui en décide.",
             },
             {
               question: "Puis-je garder mon numéro WhatsApp actuel ?",
@@ -399,7 +399,7 @@ export const BLOG_ARTICLES: Article[] = [
           ),
           p(
             txt(
-              "On WiMall these are reached through NotchPay and MyCoolPay, which between them cover the three networks. From the seller's side the relevant thing is that this is a confirmed, instant payment — you know it succeeded before the parcel leaves."
+              "On Wi-Mall these are reached through NotchPay and MyCoolPay, which between them cover the three networks. From the seller's side the relevant thing is that this is a confirmed, instant payment — you know it succeeded before the parcel leaves."
             )
           ),
           note(
@@ -435,7 +435,7 @@ export const BLOG_ARTICLES: Article[] = [
           ),
           quote(
             "A first-time customer is not choosing between paying now and paying on delivery. They are choosing between paying on delivery and not ordering.",
-            "WiMall product notes"
+            "Wi-Mall product notes"
           ),
 
           h2("when-money-arrives", "When the money actually reaches you"),
@@ -468,7 +468,7 @@ export const BLOG_ARTICLES: Article[] = [
           h2("delivery-fee", "One thing that is not a payment question"),
           p(
             txt(
-              "The delivery fee is not part of what the platform takes. It goes to the agency that did the delivering, less the cut contracted with the agent who rode it. No share of it reaches WiMall. This confuses people who assume a marketplace takes a percentage of everything, so it is worth being explicit: commission is on the goods, and only on the goods."
+              "The delivery fee is not part of what the platform takes. It goes to the agency that did the delivering, less the cut contracted with the agent who rode it. No share of it reaches Wi-Mall. This confuses people who assume a marketplace takes a percentage of everything, so it is worth being explicit: commission is on the goods, and only on the goods."
             )
           ),
           faq(
@@ -524,7 +524,7 @@ export const BLOG_ARTICLES: Article[] = [
           ),
           p(
             txt(
-              "Sur WiMall, on y accède via NotchPay et MyCoolPay, qui couvrent à eux deux les trois réseaux. Du point de vue du vendeur, ce qui compte est qu'il s'agit d'un paiement confirmé et immédiat : vous savez qu'il a abouti avant que le colis ne parte."
+              "Sur Wi-Mall, on y accède via NotchPay et MyCoolPay, qui couvrent à eux deux les trois réseaux. Du point de vue du vendeur, ce qui compte est qu'il s'agit d'un paiement confirmé et immédiat : vous savez qu'il a abouti avant que le colis ne parte."
             )
           ),
           note(
@@ -589,7 +589,7 @@ export const BLOG_ARTICLES: Article[] = [
           h2("frais-livraison", "Une chose qui n'est pas une question de paiement"),
           p(
             txt(
-              "Les frais de livraison ne font pas partie de ce que prend la plateforme. Ils reviennent à l'agence qui a livré, moins la part contractuelle du livreur qui a roulé. Aucune fraction n'arrive à WiMall. Cela surprend ceux qui supposent qu'une place de marché prélève un pourcentage sur tout : la commission porte sur la marchandise, et uniquement sur elle."
+              "Les frais de livraison ne font pas partie de ce que prend la plateforme. Ils reviennent à l'agence qui a livré, moins la part contractuelle du livreur qui a roulé. Aucune fraction n'arrive à Wi-Mall. Cela surprend ceux qui supposent qu'une place de marché prélève un pourcentage sur tout : la commission porte sur la marchandise, et uniquement sur elle."
             )
           ),
           faq(
@@ -700,7 +700,7 @@ export const BLOG_ARTICLES: Article[] = [
           ),
           quote(
             "The margin on a delivery is the fee minus the rider's cut. That is the whole formula, and there is no third party in it.",
-            "WiMall product notes"
+            "Wi-Mall product notes"
           ),
 
           h2("onboarding", "What onboarding asks for"),
@@ -932,7 +932,7 @@ export const BLOG_ARTICLES: Article[] = [
           ),
           quote(
             "The catalog is not documentation for your products. It is the answer to the message a customer has not sent yet.",
-            "WiMall product notes"
+            "Wi-Mall product notes"
           ),
 
           h2("checklist", "A description that works"),
@@ -1055,7 +1055,7 @@ export const BLOG_ARTICLES: Article[] = [
           ),
           quote(
             "Chat is the best place to have a conversation and the worst place to store one.",
-            "WiMall product notes"
+            "Wi-Mall product notes"
           ),
           faq(
             {

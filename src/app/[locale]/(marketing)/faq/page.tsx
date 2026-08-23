@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import JsonLd from "@/components/seo/JsonLd";
 import Breadcrumbs from "@/components/marketing/Breadcrumbs";
+import FaqIllustration from "@/components/illustrations/FaqIllustration.generated";
 import FaqList from "@/components/marketing/FaqList";
 import { CtaBand, PageHeader, RelatedLinks, Section } from "@/components/marketing/parts";
 import { breadcrumbJsonLd, faqPageJsonLd } from "@/lib/seo/jsonld";
@@ -75,6 +76,7 @@ export default async function FaqPage({ params }: PageProps) {
         title={t("faq.title")}
         lead={t("faq.lead")}
         breadcrumbs={<Breadcrumbs trail={trail} label={t("common.breadcrumbLabel")} />}
+        illustration={<FaqIllustration />}
       />
 
       {groups.map((group, i) => (

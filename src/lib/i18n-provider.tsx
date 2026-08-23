@@ -6,7 +6,18 @@ import {
   type AbstractIntlMessages,
 } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import { LOCALE_CODES, localeDir, type Locale } from "@/i18n/routing";
+import { SHIPPED_LOCALES, localeDir, type Locale } from "@/i18n/routing";
+import { IS_NATIVE_BUILD } from "@/lib/platform";
+
+/**
+ * Where the app remembers the shopper's language.
+ *
+ * ⚠ Mirrored in `scripts/build-native.mjs`, which reads this exact key from the
+ * locale bootstrap (`out/index.html`). Renaming it here alone would not fail
+ * anything — the app would just silently forget the language on every launch,
+ * which is the bug this constant was added to fix.
+ */
+const STORED_LOCALE_KEY = "wi-mall-locale";
 
 export type { Locale };
 
@@ -23,8 +34,18 @@ const LOCALE_LABELS: Record<Locale, string> = {
   ar: "العربية",
 };
 
+/**
+ * The languages to offer, in every picker — the shop's LanguageSheet, the auth
+ * screens' control, and the marketing navbar.
+ *
+ * `SHIPPED_LOCALES` rather than `LOCALE_CODES` so an app build that ships a
+ * subset offers a subset. On a device the difference is not cosmetic: the export
+ * writes no tree for an unshipped locale, and there is no server to 404 the
+ * request, so offering one would be a row that navigates the WebView to a file
+ * that does not exist. On the web every locale ships and this is all five.
+ */
 export const LOCALES: { code: Locale; label: string; dir: "ltr" | "rtl" }[] =
-  LOCALE_CODES.map((code) => ({
+  SHIPPED_LOCALES.map((code) => ({
     code,
     label: LOCALE_LABELS[code],
     dir: localeDir(code),
@@ -75,6 +96,35 @@ export function useLocale() {
   const setLocale = useCallback(
     (next: Locale) => {
       if (next === locale) return;
+
+      /**
+       * ── Remember it, on the app only ───────────────────────────────────────
+       *
+       * On the web the locale IS the URL and the middleware resolves it on every
+       * request, so there is nothing to remember and this branch is compiled
+       * out entirely.
+       *
+       * The app has no middleware and no persisted URL: Capacitor cold-starts at
+       * the bundle root every time, and `out/index.html` decides the language
+       * from this key, falling back to `navigator.language`. Without the write,
+       * that read never found anything and a shopper who chose French was back
+       * in English on the next launch.
+       *
+       * `localStorage` and not `platform/storage` — which would be Capacitor
+       * Preferences on a device — because the bootstrap is a bare HTML page that
+       * runs before any plugin exists and can only read the WebView's own
+       * storage synchronously. A language preference is also not session-grade
+       * data: losing it to a storage sweep costs one tap.
+       */
+      if (IS_NATIVE_BUILD) {
+        try {
+          localStorage.setItem(STORED_LOCALE_KEY, next);
+        } catch {
+          // Private mode, a full quota, storage disabled. The switch below still
+          // works; only the memory of it is lost.
+        }
+      }
+
       startTransition(() => {
         router.replace(pathname, { locale: next });
       });

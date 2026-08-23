@@ -51,8 +51,18 @@ export function Button({
   ...rest
 }: ButtonProps) {
   const s = sizeMap[size];
+  /**
+   * Never an implicit submit.
+   *
+   * A <button> with no `type` is a submit button whenever it happens to sit
+   * inside a <form>, which turns "Reset", "Cancel" and every ghost action into
+   * a form submission the moment someone wraps them in one. The one call site
+   * that does want to submit — the connection-code form in ChatChannels — says
+   * `type="submit"`, and still wins: this is declared before the spread.
+   */
   return (
     <button
+      type="button"
       {...rest}
       disabled={disabled}
       className={className ? `ds-btn ${className}` : "ds-btn"}

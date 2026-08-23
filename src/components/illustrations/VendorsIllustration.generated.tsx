@@ -2,27 +2,38 @@
 // GENERATED FILE — do not edit by hand.
 //
 // A vendor watching paid orders land one after another. Drawn by Katerina Limpitsouni for unDraw (undraw.co), recoloured
-// to the WiMall green and cut into animated parts for /vendors.
+// to the Wi-Mall green and cut into animated parts for /vendors.
 //
 // The motion is CSS, scoped by the `il-online-revenue` class in globals.css, and it
-// starts when the illustration scrolls into view. `prefers-reduced-motion`
-// stops all of it.
+// starts when the illustration scrolls into view. It stops only when
+// HONOR_REDUCED_MOTION is switched on in lib/reduced-motion — deliberately not
+// on the raw OS setting, which Windows reports as `reduce` for a common
+// non-accessibility preference.
 //
 // Regenerate with: npm run gen:illustrations
 // ─────────────────────────────────────────────────────────────────────────────
 "use client";
-import { useRef, type SVGProps } from "react";
+import { useRef, type CSSProperties, type SVGProps } from "react";
 import { useInView } from "framer-motion";
+import { useSignatureReducedMotion } from "@/lib/reduced-motion";
 import { cn } from "@/lib/utils";
+
+/** Width ÷ height of the artwork. Layout rules size against it — see `.il-hero-art`. */
+const ASPECT = 1.1394;
 
 interface VendorsIllustrationProps extends Omit<SVGProps<SVGSVGElement>, "ref"> {
   /** Accessible name. Omit to hide the illustration from assistive tech. */
   title?: string;
 }
 
-export default function VendorsIllustration({ title, className, ...props }: VendorsIllustrationProps) {
+export default function VendorsIllustration({ title, className, style, ...props }: VendorsIllustrationProps) {
   const ref = useRef<SVGSVGElement>(null);
   const inView = useInView(ref, { once: true, amount: 0.25 });
+  // Every rule in globals.css hangs off data-play, so withholding it is the
+  // whole still tier. Routed through the signature flag rather than a CSS media
+  // query: Windows reports `reduce` whenever "Animation effects" is off, which
+  // silently froze these for a large share of visitors. See lib/reduced-motion.
+  const still = useSignatureReducedMotion();
 
   return (
     <svg
@@ -31,8 +42,9 @@ export default function VendorsIllustration({ title, className, ...props }: Vend
       xmlns="http://www.w3.org/2000/svg"
       role="img"
       aria-hidden={title ? undefined : true}
-      data-play={inView ? "true" : "false"}
+      data-play={inView && !still ? "true" : "false"}
       className={cn("il il-online-revenue", className)}
+      style={{ "--il-ar": ASPECT, ...style } as CSSProperties}
       {...props}
     >
       {title ? <title>{title}</title> : null}

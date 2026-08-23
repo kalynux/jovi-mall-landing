@@ -10,8 +10,16 @@
  * centred column — just the form. A phone has one job on this screen, and the
  * brand pitch would only push the first field below the fold.
  *
- * The shell carries its own logo and locale/theme controls, which is why the
- * (auth) layout skips its header on these two routes — see that file.
+ * Below `sm` the card itself goes too, and so does the brand row.
+ *
+ * On a phone the card was a border drawn 12px inside a border: the viewport is
+ * already the container, so the rounded surface only narrowed the form it held.
+ * The brand row is the more expensive of the two — a logo, a language menu and
+ * a theme toggle spending the top of a sign-in screen on three things nobody
+ * came here to do, while the field they did come for sat under them. All three
+ * are still one tap away from the page this screen leads to. From `sm` up
+ * there is room for the chrome and it comes back unchanged, which is why the
+ * (auth) layout still skips its own header on these two routes — see that file.
  */
 import { Link } from "@/i18n/navigation";
 import { ArrowLeftRight, Zap } from "lucide-react";
@@ -23,6 +31,7 @@ import { cn } from "@/lib/utils";
 import AuthPageControls from "@/components/auth/AuthPageControls";
 import AuthShowcase from "@/components/auth/AuthShowcase";
 import WiMallMark from "@/components/brand/WiMallMark.generated";
+import { homePath } from "@/lib/shop/shop.routes";
 
 interface AuthSplitShellProps {
   mode: "login" | "register";
@@ -143,16 +152,17 @@ export default function AuthSplitShell({
       className={cn(
         // Narrow contained card until the showcase pane appears at `lg`.
         "relative mx-auto w-full max-w-md sm:max-w-lg lg:max-w-6xl",
-        "rounded-[28px] border border-[var(--border)] bg-[var(--surface)]",
-        "shadow-[var(--shadow-xl)] overflow-hidden",
+        // No card chrome on a phone — the viewport is the container there.
+        "sm:rounded-[28px] sm:border sm:border-[var(--border)] sm:bg-[var(--surface)]",
+        "sm:shadow-[var(--shadow-xl)] sm:overflow-hidden",
         "grid lg:grid-cols-[minmax(0,1.02fr)_minmax(0,1fr)]"
       )}
     >
       {/* ── Form pane ──────────────────────────────────────────────────────── */}
-      <div className="flex flex-col px-6 py-7 sm:px-10 sm:py-9 lg:px-12">
-        {/* Brand row */}
-        <div className="flex items-center justify-between gap-4">
-          <Link href="/" className="group flex items-center gap-2" aria-label={t("backToHome")}>
+      <div className="flex flex-col px-0 py-2 sm:px-10 sm:py-9 lg:px-12">
+        {/* Brand row — `sm` and up only. See the note at the top of the file. */}
+        <div className="hidden items-center justify-between gap-4 sm:flex">
+          <Link href={homePath()} className="group flex items-center gap-2" aria-label={t("backToHome")}>
             <WiMallMark className="h-8 w-8 transition-transform duration-200 group-hover:scale-110" />
             <span className="font-display text-lg font-bold tracking-tight text-[var(--text-primary)]">
               {BRAND.name}
@@ -161,8 +171,9 @@ export default function AuthSplitShell({
           <AuthPageControls />
         </div>
 
-        {/* Heading block */}
-        <div className="mt-8 lg:mt-12">
+        {/* Heading block. The top margin is the brand row's clearance, so on a
+            phone — where there is no brand row — it collapses to nothing. */}
+        <div className="mt-0 sm:mt-8 lg:mt-12">
           {eyebrow && (
             <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary-400/30 bg-[var(--accent-light)] px-3 py-1 text-xs font-display font-semibold text-primary-600">
               <Zap className="h-3 w-3" aria-hidden="true" />

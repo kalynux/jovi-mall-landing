@@ -1,0 +1,97 @@
+# Frontend CI — the landing app and its Android target.
+#
+# The backend keeps its own workflows in `backend/jovi-mall/.github/workflows`,
+# including the two suites MOBILE-APP-PLAN.md names (`test:messaging-login` and
+# `test:mobile-auth`). They are not duplicated here: this repository cannot run
+# them, and a copy would drift.
+#
+# ⚠ UNVERIFIED. This file has never run — it was written from the commands in
+# MOBILE-APP-PLAN.md, not from a green pipeline. Expect the first run to need
+# adjusting, and treat a failure here as a bug in this file until proven
+# otherwise.
+#
+# ── The web build needs a reachable API ──────────────────────────────────────
+#
+# `npm run build` is not hermetic: `/pricing` refuses to publish without real
+# prices, so the build fails when nothing answers. CI therefore needs
+# `NEXT_PUBLIC_API_URL` pointing at a staging API that is up. There is no
+# offline fallback, and adding one would mean shipping invented prices — which
+# is the thing that check exists to prevent.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  web:
+    name: Web build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - name: Build (web)
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+        run: npm run build
+
+  android:
+    name: Android release
+    runs-on: ubuntu-latest
+    # The web build is the cheaper signal and shares every type error, so there
+    # is no point spending an Android toolchain on a branch that fails it.
+    needs: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - run: npm ci
+
+      # `NATIVE_API_URL` is deliberately separate from NEXT_PUBLIC_API_URL —
+      # see MOBILE-APP-PLAN.md. For a CI build it is the production API.
+      - name: Static export
+        env:
+          NATIVE_API_URL: ${{ secrets.NATIVE_API_URL }}
+        run: npm run build:native
+
+      - run: npx cap sync android
+
+      # Restores the keystore from a base64 secret. Written outside the workspace
+      # so a stray `actions/upload-artifact` on the repo cannot pick it up.
+      - name: Restore signing key
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+
+      - name: Assemble release
+        env:
+          WI_MALL_KEYSTORE: ${{ runner.temp }}/release.keystore
+          WI_MALL_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          WI_MALL_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          WI_MALL_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        working-directory: android
+        # Unsigned when the secrets are absent (a fork's PR, for instance) —
+        # build.gradle leaves the signing config off rather than falling back to
+        # the debug key, so this still proves the app compiles.
+        run: ./gradlew assembleRelease
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error

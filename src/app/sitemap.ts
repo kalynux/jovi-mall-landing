@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
-import { CATALOG_IS_MOCK, getVendors, listProducts } from "@/lib/shop/shop.api";
+import { listAllProducts, listAllStores } from "@/lib/shop/catalog.api";
+import { productPath, storePath } from "@/lib/shop/shop.routes";
 import { blogSitemapEntries } from "@/lib/blog/blog.api";
 import { absoluteUrl } from "@/lib/site";
 import { DEFAULT_LOCALE, LOCALE_CODES, localePath, type Locale } from "@/i18n/routing";
@@ -14,19 +15,22 @@ import { MARKETING_SITEMAP_ROUTES } from "@/lib/marketing/routes";
  * the other four. That is the sitemap form of hreflang, and it means a crawler
  * that only fetches the sitemap still discovers all five language variants.
  *
- * No `lastModified`: the catalog carries no timestamps, and a fabricated date
- * (today, on every build) trains crawlers to ignore the field. Add it when
- * products come from the API with real `updatedAt` values.
+ * `lastModified` is optional and only ever passed where a **real** timestamp
+ * exists — products carry `updatedAt` now, marketing routes do not. A fabricated
+ * date (today, on every build) trains crawlers to ignore the field, which is
+ * worse than omitting it.
  */
 function entry(
   path: string,
   changeFrequency: "daily" | "weekly" | "monthly",
-  priority: number
+  priority: number,
+  lastModified?: string
 ) {
   return {
     url: absoluteUrl(localePath(DEFAULT_LOCALE, path)),
     changeFrequency,
     priority,
+    ...(lastModified ? { lastModified: new Date(lastModified) } : {}),
     alternates: {
       languages: Object.fromEntries(
         LOCALE_CODES.map((locale) => [locale, absoluteUrl(localePath(locale, path))])
@@ -68,17 +72,18 @@ function variantEntry(
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   /**
-   * Product and store URLs are submitted only once the catalogue is real.
+   * Products and stores are real now, so they are submitted.
    *
-   * While `CATALOG_IS_MOCK` holds, every one of them renders an invented
-   * product at a price nobody charges, from a vendor that does not exist.
-   * Submitting those is asking Google to index fabricated commercial listings —
-   * worse than leaving them out, and hard to undo once they rank. `/shop`
-   * itself still ships: it is a real page that carries its own demo notice.
+   * Both are walked page by page rather than fetched once: the list endpoints
+   * cap `limit` at 100, and the previous call here passed no arguments at all —
+   * which against a real API would have silently submitted the first 20 products
+   * in the catalogue and no more.
+   *
+   * `listAllStores` returns only stores with something publishable, because the
+   * API excludes empty ones from the directory on purpose — submitting a
+   * storefront with nothing for sale asks Google to index a soft-404.
    */
-  const [{ data: products }, vendors] = CATALOG_IS_MOCK
-    ? [{ data: [] as Awaited<ReturnType<typeof listProducts>>["data"] }, []]
-    : await Promise.all([listProducts(), getVendors()]);
+  const [products, stores] = await Promise.all([listAllProducts(), listAllStores()]);
 
   // Empty while the blog is unlaunched — see BLOG_IS_PLACEHOLDER.
   const blog = await blogSitemapEntries();
@@ -99,7 +104,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       variantEntry(item.pathByLocale, item.changeFrequency, item.priority, item.lastModified)
     ),
     entry("/shop", "daily", 0.8),
-    ...vendors.map((vendor) => entry(`/shop/stores/${vendor.slug}`, "weekly", 0.6)),
-    ...products.map((product) => entry(`/shop/products/${product.slug}`, "weekly", 0.7)),
+    ...stores.map((store) => entry(storePath(store.slug), "weekly", 0.6)),
+    // Nested under the store — the canonical product URL. `updatedAt` is the
+    // product's own, so a crawler re-fetches a repriced item and leaves the rest.
+    ...products.map((product) =>
+      entry(productPath(product.store.slug, product.slug), "weekly", 0.7, product.updatedAt)
+    ),
   ];
 }

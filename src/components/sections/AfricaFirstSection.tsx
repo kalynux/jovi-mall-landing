@@ -5,7 +5,7 @@ import { Smartphone, MessageCircle, Wifi } from "lucide-react";
 import SectionLabel from "@/components/ui/SectionLabel";
 import AnimatedSection from "@/components/ui/AnimatedSection";
 import SectionShell from "@/components/ui/SectionShell";
-import CTAButton from "@/components/ui/CTAButton";
+import LinkButton from "@/components/ui/LinkButton";
 import { useCardTilt } from "@/components/ui/useCardTilt";
 import { useSignatureReducedMotion, useReducedMotionSafe } from "@/lib/reduced-motion";
 import { cn } from "@/lib/utils";
@@ -252,7 +252,7 @@ export default function AfricaFirstSection() {
   const t = useTranslations("africaFirst");
 
   return (
-    <SectionShell id="why-wimall" glow="top">
+    <SectionShell id="why-wi-mall" glow="top">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center" ref={ref}>
         {/* Left: Phone */}
         <AnimatedSection direction="left" delay={0.1}>
@@ -296,9 +296,13 @@ export default function AfricaFirstSection() {
           </div>
 
           <div className="mt-7">
-            <CTAButton variant="primary" size="md" href="#" showArrow>
+            {/* "Learn Our Story" pointed at "#" until /about existed. It must be
+                a LinkButton, not a CTAButton: CTAButton renders a raw <a href>,
+                which drops the locale prefix and would send a /fr reader to the
+                English page. */}
+            <LinkButton href="/about" variant="primary" size="md" showArrow>
               {t("ctaPrimary")}
-            </CTAButton>
+            </LinkButton>
           </div>
         </AnimatedSection>
       </div>

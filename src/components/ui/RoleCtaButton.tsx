@@ -20,7 +20,6 @@ import { Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useRoleCta, type CtaRole } from "@/lib/auth/useRoleCta";
-import WaGateOverlay from "@/components/auth/WaGateOverlay";
 import CTAButton from "./CTAButton";
 import LinkButton from "./LinkButton";
 import AgentAppDialog from "./AgentAppDialog";
@@ -161,8 +160,6 @@ export default function RoleCtaButton({
             {role === "agent" && (
                 <AgentAppDialog isOpen={agentDialogOpen} onClose={() => setAgentDialogOpen(false)} cta={cta} />
             )}
-
-            {cta.waGate && <WaGateOverlay gate={cta.waGate} />}
         </div>
     );
 }

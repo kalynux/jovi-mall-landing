@@ -1,5 +1,5 @@
 {
-  "name": "landing",
+  "name": "wi-mall",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,11 +7,31 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "dev:native": "node scripts/build-native.mjs --dev",
+    "build:native": "node scripts/build-native.mjs",
+    "native:restore": "node scripts/build-native.mjs --restore",
+    "native:apk": "node scripts/build-native.mjs --apk",
+    "native:sync": "npm run build:native && npx cap sync",
+    "native:android": "npm run native:sync && npx cap open android",
+    "native:ios": "npm run native:sync && npx cap open ios",
     "gen:phone-countries": "node scripts/gen-phone-countries.mjs src/lib/phone/countries.generated.ts",
     "gen:app-icons": "node scripts/gen-app-icons.mjs",
     "gen:illustrations": "node scripts/gen-illustrations.mjs"
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/browser": "^8.0.4",
+    "@capacitor/clipboard": "^8.0.1",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/geolocation": "^8.2.2",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/keyboard": "^8.0.5",
+    "@capacitor/network": "^8.0.1",
+    "@capacitor/preferences": "^8.0.1",
+    "@capacitor/push-notifications": "^8.1.2",
+    "@capacitor/share": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3",
     "@hookform/resolvers": "^5.2.2",
     "clsx": "^2.1.1",
     "framer-motion": "^12.34.3",
@@ -27,6 +47,9 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/ios": "^8.5.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

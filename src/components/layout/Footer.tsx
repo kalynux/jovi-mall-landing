@@ -37,7 +37,7 @@ export default function Footer() {
         { label: nav("vendors"), href: "/vendors" },
         { label: nav("agencies"), href: "/agencies" },
         { label: nav("agents"), href: "/agents" },
-        { label: nav("customers"), href: "#customers" },
+        { label: nav("customers"), href: "/customers" },
       ],
     },
     {
@@ -53,11 +53,15 @@ export default function Footer() {
       // The blog moved up into "Learn" and became a real href. It sat here as a
       // dead "#" beside About/Careers/Contact, which is the wrong company: it is
       // something to read, and a sitewide link is what lets its articles rank.
+      //
+      // These three were dead "#" stubs until the pages behind them existed.
+      // They are also in the header's "Company" dropdown now, but the footer
+      // link stays: it is what puts them in front of a crawler on every page.
       label: t("company"),
       links: [
-        { label: t("about"), href: "#" },
-        { label: t("careers"), href: "#" },
-        { label: t("contact"), href: "#" },
+        { label: t("about"), href: "/about" },
+        { label: t("careers"), href: "/careers" },
+        { label: t("contact"), href: "/contact" },
       ],
     },
     {

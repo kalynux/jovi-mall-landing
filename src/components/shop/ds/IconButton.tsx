@@ -37,8 +37,19 @@ export function IconButton({
     };
   }
 
+  /**
+   * Never an implicit submit.
+   *
+   * A <button> with no `type` inside a <form> is a submit button, and these are
+   * decorative-by-position: the shop's search row puts Filters and Layout beside
+   * the field, inside its form, so pressing Enter in the box ran the FIRST of
+   * them instead of searching, and clicking either one submitted the form as a
+   * side effect. Declared before the spread, so a caller that genuinely wants a
+   * submit can still say so.
+   */
   return (
     <button
+      type="button"
       {...rest}
       aria-label={label}
       title={label}

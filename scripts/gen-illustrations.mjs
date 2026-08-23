@@ -191,6 +191,92 @@ const SPEC = {
     selfPivot: ["bubbles"],
   },
 
+  // ---------------------------------------------------------------------------
+  // A rule these three share, learned from a colour-coded render of the sources:
+  // **every prop in them is held in a hand.** The clipboard, the round badge and
+  // the card on /about, the CV on /careers, the question card and the phone on
+  // /contact — all of them are gripped by a figure rather than free-standing.
+  //
+  // So a prop is never its own animated part. Either it is merged into the
+  // figure holding it (and moves with the hand, which is what /about does), or
+  // the figure is left still and only the things drawn *on* the prop move (which
+  // is what /careers and /contact do). Animating a held prop independently pulls
+  // it out of the hand — the one failure mode this artwork invites.
+  // ---------------------------------------------------------------------------
+
+  "about-us": {
+    component: "AboutIllustration",
+    page: "/about",
+    alt: "Three people holding up the things they have built together",
+    parts: {
+      ground: [0],
+      plantR: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      plantL: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+      // Each figure carries its prop: the centre one's clipboard (23–34), the
+      // left one's round badge (59–63), the right one's card (73–77).
+      figureC: [21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49],
+      figureL: [50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 81, 82, 83, 84],
+      figureR: [64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80],
+    },
+    // Figures scale about the ground under their own feet; shrubs sway from
+    // their base, where they actually meet the ground.
+    pivots: {
+      plantR: [771, 556], plantL: [300, 580],
+      figureC: [460, 534], figureL: [225, 590], figureR: [670, 590],
+    },
+  },
+
+  careers: {
+    component: "CareersIllustration",
+    page: "/careers",
+    alt: "Someone holding up an application board with candidates on it",
+    parts: {
+      figure: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12],
+      card: [10, 11],
+      photo: [16, 17, 18, 19, 20],
+      tag: [13],
+      rowA: [25, 26, 27],
+      rowB: [22, 23, 24],
+      rowC: [14, 15, 21],
+    },
+    // The figure and the board it holds are both still, which is what lets the
+    // three candidate rows animate: they are drawn on the board, so the board
+    // has to be a fixed surface for them to arrive onto.
+    selfPivot: ["tag"],
+  },
+
+  "contact-us": {
+    component: "ContactIllustration",
+    page: "/contact",
+    alt: "A message being written, with someone waiting to answer it",
+    parts: {
+      ground: [2],
+      card: [1],
+      // The grey swoosh linking the two figures. Static: both of its ends are
+      // anchored to something, so any motion opens a gap at one end.
+      arc: [19],
+      mark: [20, 21, 22, 23, 24, 25, 26, 27],
+      lines: [28, 29, 30],
+      personL: [0, 14, 15, 16, 17, 18, 31, 32, 33],
+      // 3 and 4 are the phone, merged in because the right figure is holding it.
+      personR: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+    },
+    stagger: ["lines"],
+    pivots: { mark: [313, 100] },
+    // A ring leaving the question mark — the only motion here that is not drawn
+    // on the card, and the one thing in the scene that can move without being
+    // attached to a hand.
+    extras: {
+      position: "append",
+      markup: [0, 1]
+        .map(
+          (k) =>
+            `<circle className="il-ping il-n${k}" cx="313" cy="60" r="26" fill="none" stroke="${BRAND}" strokeWidth="3" opacity="0" />`
+        )
+        .join("\n      "),
+    },
+  },
+
   world: {
     component: "CameroonIllustration",
     page: "/cameroon",
@@ -426,6 +512,12 @@ function build(slug, spec) {
   const viewBox = svg.match(/viewBox="([^"]+)"/)?.[1];
   if (!viewBox) throw new Error(`${slug}.svg has no viewBox`);
 
+  // These eight range from 2.28:1 to 0.48:1, so any layout that budgets width
+  // alone makes the portrait ones tower and the landscape ones sprawl. The
+  // ratio ships as `--il-ar` and the hero rules size against both budgets.
+  const [, , vw, vh] = viewBox.trim().split(/[\s,]+/).map(Number);
+  const aspect = +(vw / vh).toFixed(4);
+
   // Order matters: wrapParts reads plain SVG attributes, toJsx rewrites them.
   svg = scopeIds(svg, slug);
   svg = wrapParts(svg, spec);
@@ -444,27 +536,38 @@ function build(slug, spec) {
 // GENERATED FILE — do not edit by hand.
 //
 // ${spec.alt}. Drawn by Katerina Limpitsouni for unDraw (undraw.co), recoloured
-// to the WiMall green and cut into animated parts for ${spec.page}.
+// to the Wi-Mall green and cut into animated parts for ${spec.page}.
 //
 // The motion is CSS, scoped by the \`il-${slug}\` class in globals.css, and it
-// starts when the illustration scrolls into view. \`prefers-reduced-motion\`
-// stops all of it.
+// starts when the illustration scrolls into view. It stops only when
+// HONOR_REDUCED_MOTION is switched on in lib/reduced-motion — deliberately not
+// on the raw OS setting, which Windows reports as \`reduce\` for a common
+// non-accessibility preference.
 //
 // Regenerate with: npm run gen:illustrations
 // ─────────────────────────────────────────────────────────────────────────────
 "use client";
-import { useRef, type SVGProps } from "react";
+import { useRef, type CSSProperties, type SVGProps } from "react";
 import { useInView } from "framer-motion";
+import { useSignatureReducedMotion } from "@/lib/reduced-motion";
 import { cn } from "@/lib/utils";
+
+/** Width ÷ height of the artwork. Layout rules size against it — see \`.il-hero-art\`. */
+const ASPECT = ${aspect};
 
 interface ${spec.component}Props extends Omit<SVGProps<SVGSVGElement>, "ref"> {
   /** Accessible name. Omit to hide the illustration from assistive tech. */
   title?: string;
 }
 
-export default function ${spec.component}({ title, className, ...props }: ${spec.component}Props) {
+export default function ${spec.component}({ title, className, style, ...props }: ${spec.component}Props) {
   const ref = useRef<SVGSVGElement>(null);
   const inView = useInView(ref, { once: true, amount: 0.25 });
+  // Every rule in globals.css hangs off data-play, so withholding it is the
+  // whole still tier. Routed through the signature flag rather than a CSS media
+  // query: Windows reports \`reduce\` whenever "Animation effects" is off, which
+  // silently froze these for a large share of visitors. See lib/reduced-motion.
+  const still = useSignatureReducedMotion();
 
   return (
     <svg
@@ -473,8 +576,9 @@ export default function ${spec.component}({ title, className, ...props }: ${spec
       xmlns="http://www.w3.org/2000/svg"
       role="img"
       aria-hidden={title ? undefined : true}
-      data-play={inView ? "true" : "false"}
+      data-play={inView && !still ? "true" : "false"}
       className={cn("il il-${slug}", className)}
+      style={{ "--il-ar": ASPECT, ...style } as CSSProperties}
       {...props}
     >
       {title ? <title>{title}</title> : null}
