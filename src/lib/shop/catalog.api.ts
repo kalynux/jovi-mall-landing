@@ -31,6 +31,7 @@ import { API_BASE, type ListMeta } from "@/lib/api/client";
 import type {
   CategoryCount,
   Product,
+  ProductListItem,
   ProductListQuery,
   ProductListResponse,
   Store,
@@ -358,4 +359,70 @@ export async function listAllStores(cap = 2000): Promise<Store[]> {
   } while (page <= pages && all.length < cap);
 
   return all.slice(0, cap);
+}
+
+/**
+ * One entry of the related-products strip.
+ *
+ * `orders` is the number of **distinct past orders** containing both this
+ * product and the subject — buying three of something in one order is one piece
+ * of evidence, not three. It is `null` whenever the list came from the
+ * `same_category` fallback.
+ *
+ * ⚠ It is computed from a **bounded sample** (the most recent 500 paid orders
+ * within a year), so it is evidence of a pattern rather than an audited total.
+ * "Bought together 14 times" is fine; "14 customers" is not.
+ */
+export interface RelatedProduct {
+  product: ProductListItem;
+  orders: number | null;
+}
+
+/**
+ * Which signal produced a related strip.
+ *
+ * 🔴 **This is part of the contract, not diagnostics, and the heading must
+ * follow it.** A strip headed "customers also bought" that is really ordered by
+ * category recency is a claim about other shoppers that is not true — which is
+ * exactly why the backend publishes the label rather than keeping it to itself.
+ * It will not make the claim on your behalf, and it will not let you make it by
+ * accident.
+ *
+ * `same_category` is the common case on a young catalogue: most products have
+ * never been bought alongside anything yet.
+ */
+export type RelatedSource = "co_purchase" | "same_category";
+
+/**
+ * GET /api/public/products/:productId/related — unauthenticated.
+ *
+ * An empty `data` is a **`200`**, never a 404: "nothing is related to this yet"
+ * is a successful answer. The subject never appears in its own strip, and —
+ * unlike a wishlist entry — an unavailable product is **dropped, not degraded**,
+ * because nobody chose this list and a card that cannot be bought is just
+ * broken.
+ *
+ * The ranking is cached for six hours but the cards are not, so price, stock and
+ * store state are always live.
+ */
+export async function listRelatedProducts(
+  productId: string,
+): Promise<{ items: RelatedProduct[]; source: RelatedSource }> {
+  const result = await request<RelatedProduct[]>(
+    `/api/public/products/${encodeURIComponent(productId)}/related`,
+  );
+
+  // A strip is an enhancement, not the page. A subject that has gone off sale
+  // answers 404 here, and that must not take down a product page that rendered
+  // fine from its own read.
+  if (!result.ok) return { items: [], source: "same_category" };
+
+  const meta = result.meta as (Partial<ListMeta> & { source?: RelatedSource }) | undefined;
+
+  // Default to the fallback label: claiming co-purchase without being told so is
+  // the one mistake this field exists to prevent.
+  return {
+    items: Array.isArray(result.data) ? result.data : [],
+    source: meta?.source === "co_purchase" ? "co_purchase" : "same_category",
+  };
 }

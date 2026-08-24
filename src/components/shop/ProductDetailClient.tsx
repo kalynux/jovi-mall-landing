@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { ProductDetail } from "./ProductDetail";
 import { EmptyState, Skeleton } from "@/components/shop/ds";
 import { ResourceError } from "@/components/shop/account/AccountShell";
-import { getProduct, getProductById, listStoreProducts } from "@/lib/shop/catalog.api";
+import { getProduct, getProductById, listStoreProducts, listRelatedProducts } from "@/lib/shop/catalog.api";
 import type { Product, ProductListItem } from "@/lib/shop/shop.types";
 
 /**
@@ -49,7 +49,12 @@ function ProductResolver({ locale }: { locale: string }) {
   type Settled =
     | { status: "error"; error: unknown }
     | { status: "missing" }
-    | { status: "ready"; product: Product; moreFromStore: ProductListItem[] };
+    | {
+        status: "ready";
+        product: Product;
+        moreFromStore: ProductListItem[];
+        related: { items: { product: ProductListItem; orders: number | null }[]; source: "co_purchase" | "same_category" };
+      };
 
   const [nonce, setNonce] = useState(0);
   const token = `${id ?? ""}|${storeSlug ?? ""}|${productSlug ?? ""}#${nonce}`;
@@ -73,9 +78,10 @@ function ProductResolver({ locale }: { locale: string }) {
       if (!product) return { status: "missing" as const };
 
       /**
-       * "More from this store", not "related products" — there is no
-       * recommender. Asks for one more than it shows so the product already on
-       * screen can be dropped without leaving a gap.
+       * "More from this store" — a plain query over the vendor's catalogue,
+       * which is a different claim from the recommender strip below it. Asks for
+       * one more than it shows so the product already on screen can be dropped
+       * without leaving a gap.
        *
        * Its failure is swallowed on purpose: a strip below the fold is not
        * worth replacing a product page with an error.
@@ -84,7 +90,11 @@ function ProductResolver({ locale }: { locale: string }) {
         .then(({ data }) => data.filter((item) => item.id !== product.id).slice(0, 6))
         .catch(() => [] as ProductListItem[]);
 
-      return { status: "ready" as const, product, moreFromStore };
+      // The recommender. Its own failure is already swallowed inside
+      // `listRelatedProducts`, which answers an empty same-category strip.
+      const related = await listRelatedProducts(product.id);
+
+      return { status: "ready" as const, product, moreFromStore, related };
     };
 
     resolve()
@@ -135,6 +145,8 @@ function ProductResolver({ locale }: { locale: string }) {
       product={state.product}
       locale={locale}
       moreFromStore={state.moreFromStore}
+      related={state.related.items}
+      relatedSource={state.related.source}
     />
   );
 }

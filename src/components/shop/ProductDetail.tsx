@@ -70,8 +70,19 @@ import { publicUrl } from "@/lib/shop/shop.types";
 interface Props {
   product: Product;
   locale: string;
-  /** Same-store products, fetched server-side. Not a recommender — there isn't one. */
+  /** Same-store products, fetched server-side. A plain query, not a recommender. */
   moreFromStore?: ProductListItem[];
+  /** The platform's recommender strip. */
+  related?: ProductListItem[] | { product: ProductListItem; orders: number | null }[];
+  /**
+   * 🔴 Which signal produced `related`, and therefore what the heading may
+   * claim. `co_purchase` is genuinely behavioural; `same_category` is the
+   * fallback and is the common case on a young catalogue. Heading a
+   * category-recency list "customers also bought" is a claim about other
+   * shoppers that is not true, which is why the backend publishes this rather
+   * than letting a client assume.
+   */
+  relatedSource?: "co_purchase" | "same_category";
 }
 
 /** Order-insensitive set equality — a variant's selection is a set, not a list. */
@@ -79,7 +90,13 @@ function sameSelection(a: readonly string[], b: readonly string[]): boolean {
   return a.length === b.length && a.every((id) => b.includes(id));
 }
 
-export function ProductDetail({ product: p, locale, moreFromStore = [] }: Props) {
+export function ProductDetail({
+  product: p,
+  locale,
+  moreFromStore = [],
+  related = [],
+  relatedSource = "same_category",
+}: Props) {
   const router = useRouter();
   const { addItem, productType, count } = useCart();
   const { isFavorite, toggle } = useFavorites();
@@ -106,6 +123,20 @@ export function ProductDetail({ product: p, locale, moreFromStore = [] }: Props)
   useEffect(() => {
     void recordView(p.id);
   }, [p.id]);
+
+  /**
+   * The endpoint returns `{ product, orders }` rows; a caller may also pass bare
+   * rows. `orders` is deliberately not rendered — it is drawn from a bounded
+   * sample of recent orders, so it is evidence of a pattern rather than an
+   * audited total, and a precise-looking count invites being read as one.
+   */
+  const relatedItems = useMemo<ProductListItem[]>(
+    () =>
+      related.map((entry) =>
+        "product" in entry ? entry.product : entry,
+      ),
+    [related],
+  );
 
   const store = p.store;
   const isService = p.type === "service";
@@ -649,6 +680,37 @@ export function ProductDetail({ product: p, locale, moreFromStore = [] }: Props)
           {tab === "reviews" && <ProductReviews productId={p.id} rating={p.rating} />}
         </div>
       </div>
+
+      {/* The recommender. Its heading is decided by `meta.source`, never by us. */}
+      {relatedItems.length > 0 && (
+        <div style={{ marginTop: 32 }}>
+          <p className="ds-overline" style={{ marginBottom: 12 }}>
+            {relatedSource === "co_purchase" ? "Frequently bought together" : "More in this category"}
+          </p>
+          <div style={{ display: "flex", gap: 16, overflowX: "auto", paddingBottom: 8, scrollbarWidth: "none" }}>
+            {relatedItems.map((item) => (
+              <div key={item.id} style={{ width: 190, flexShrink: 0 }}>
+                <ProductCard
+                  title={item.title}
+                  image={publicUrl(item.image)}
+                  rating={item.rating}
+                  type={item.type}
+                  price={item.price}
+                  compareAt={item.compareAtPrice}
+                  currency={item.currency}
+                  priceRange={item.priceRange}
+                  vendorName={item.store.name}
+                  showVendor
+                  favorite={isFavorite(item.id)}
+                  onToggleFavorite={() => toggle(item.id)}
+                  inStock={item.inStock}
+                  href={productPathFor(item)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* More from this store — a real query, not a recommender. */}
       {moreFromStore.length > 0 && (
