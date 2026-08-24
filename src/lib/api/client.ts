@@ -118,12 +118,23 @@ async function send(
     options: RequestInit,
     accessToken?: string
 ): Promise<{ res: Response; body: Record<string, unknown> }> {
+    /**
+     * `FormData` must NOT carry an explicit content type.
+     *
+     * A multipart body is only parseable with the boundary token the browser
+     * generates, and it puts that in the header it writes itself. Setting
+     * `Content-Type: multipart/form-data` by hand omits the boundary and the
+     * server rejects the body as malformed — so the header is dropped entirely
+     * here rather than guessed at.
+     */
+    const isMultipart = options.body instanceof FormData;
+
     const res = await fetch(`${API_BASE}${path}`, {
         ...options,
         signal: requestSignal(options.signal),
         credentials: "include", // always send both cookies
         headers: {
-            "Content-Type": "application/json",
+            ...(isMultipart ? {} : { "Content-Type": "application/json" }),
             ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
             ...(options.headers ?? {}),
         },

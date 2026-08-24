@@ -61,6 +61,8 @@ const EXACT_TITLES: Record<string, string> = {
   "/shop/account/downloads": "My downloads",
   "/shop/account/reviews": "My reviews",
   "/shop/account/security": "Sign-in details",
+  "/shop/account/support": "Support",
+  "/shop/account/support/new": "New ticket",
   "/shop/account/close": "Close account",
   "/shop/p": "Product",
   "/shop/store": "Store",
@@ -103,6 +105,7 @@ const EXACT_PARENTS: Record<string, string> = {
   "/shop/checkout/success": "/shop",
   "/shop/account/order": "/shop/account/orders",
   "/shop/account/notifications/settings": "/shop/account/notifications",
+  "/shop/account/support/new": "/shop/account/support",
 };
 
 /**
@@ -121,6 +124,7 @@ export function shopParentPath(pathname: string): string {
   if (exact) return exact;
 
   if (/^\/shop\/account\/orders\/[^/]+$/.test(here)) return "/shop/account/orders";
+  if (/^\/shop\/account\/support\/[^/]+$/.test(here)) return "/shop/account/support";
   if (here.startsWith("/shop/account/")) return "/shop/account";
 
   return "/shop";
