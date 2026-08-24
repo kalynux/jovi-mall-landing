@@ -40,22 +40,20 @@ function ConfirmEmailContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
-  const [status, setStatus] = useState<Status>("confirming");
-  const [message, setMessage] = useState<string | null>(null);
+  // A link with no token is knowable at render time, so it is the initial state
+  // rather than something an effect discovers and then re-renders to report.
+  const [status, setStatus] = useState<Status>(token ? "confirming" : "error");
+  const [message, setMessage] = useState<string | null>(
+    token ? null : "That link is missing its token. Open the most recent email and try again.",
+  );
 
   // The token is single-use, so a StrictMode double-invoke would spend it and
   // then report the second call's "invalid" as the outcome.
   const startedRef = useRef(false);
 
   useEffect(() => {
-    if (startedRef.current) return;
+    if (!token || startedRef.current) return;
     startedRef.current = true;
-
-    if (!token) {
-      setStatus("error");
-      setMessage("That link is missing its token. Open the most recent email and try again.");
-      return;
-    }
 
     let cancelled = false;
     confirmEmailChange(token)
