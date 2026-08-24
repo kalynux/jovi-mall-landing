@@ -36,6 +36,7 @@ import {
   type StatusChip,
 } from "@/lib/shop/order-status";
 import { publicUrl } from "@/lib/shop/shop.types";
+import { DeliveryTracking } from "@/components/shop/account/DeliveryTracking";
 import { ReviewDisclosure } from "@/components/shop/account/ReviewForm";
 import { useApiResource } from "@/lib/shop/useApiResource";
 import type {
@@ -590,6 +591,13 @@ function Shipments({
             </div>
 
             <Carrier agency={shipment.agency} agencyName={shipment.agencyName} agent={shipment.agent} />
+
+            {/* Live position, once the carrying agent is disclosed. The panel
+                asks jovi-mall who this customer may watch before it opens a
+                socket, and renders nothing when the answer is nobody — which is
+                the resting state, and is expected for a while after an order
+                ships because a grant is not pushed. */}
+            <DeliveryTracking shipmentId={shipment.id} hasAgent={Boolean(shipment.agent)} />
 
             {shipment.statusHistory.length > 0 && (
               <ol style={{ listStyle: "none", margin: "10px 0 0", padding: 0 }}>
