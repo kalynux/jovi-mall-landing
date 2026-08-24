@@ -21,11 +21,11 @@ import { useCart, useFavorites, useToast } from "@/components/shop/providers";
 import { CART_OFFLINE_MESSAGE } from "@/lib/shop/cart-errors";
 import { useShopPageTitle } from "@/components/shop/ShopChrome";
 import { discountPct, formatMoney } from "@/lib/shop/format";
-import { openApp } from "@/lib/native/links";
 import { tapFeedback } from "@/lib/native/haptics";
 import { productPathFor, storePath } from "@/lib/shop/shop.routes";
 import { recordView } from "@/lib/shop/saved.api";
 import { ProductReviews } from "@/components/shop/ProductReviews";
+import { BookingPanel } from "@/components/shop/BookingPanel";
 import type {
   CancellationPolicy,
   Product,
@@ -534,7 +534,7 @@ export function ProductDetail({ product: p, locale, moreFromStore = [] }: Props)
             />
             <div className="order-2 w-full min-w-0 sm:w-auto sm:flex-1">
               {isService ? (
-                <BookAction store={store} />
+                <BookingPanel product={p} />
               ) : (
                 <Button
                   block
@@ -757,41 +757,6 @@ function LanguageNote({ contentLanguage, locale }: { contentLanguage: string; lo
     >
       <Icon name="languages" size={13} /> Written in {name}
     </span>
-  );
-}
-
-/**
- * Services are booked with the seller.
- *
- * The calendar this used to show was invented — six hardcoded days and six
- * hardcoded times, none of which came from anywhere. There *is* a real booking
- * API (`/api/products/:id/availability`, slot lock, book), and wiring it is its
- * own piece of work; until then the honest action is the seller's own WhatsApp,
- * which the store record actually carries.
- */
-function BookAction({ store }: { store: Product["store"] }) {
-  if (!store.supportWhatsapp) {
-    return (
-      <Button block size="lg" disabled leadingIcon="calendar-clock">
-        Booking opens soon
-      </Button>
-    );
-  }
-
-  const href = `https://wa.me/${store.supportWhatsapp.replace(/[^\d]/g, "")}`;
-  return (
-    <Button
-      block
-      size="lg"
-      elevated
-      leadingIcon="message-circle"
-      // `openApp`, not `openExternal`: a `wa.me` link belongs to WhatsApp, and
-      // routing it through the in-app browser would open WhatsApp Web inside
-      // our app instead of the WhatsApp on the shopper's phone.
-      onClick={() => void openApp(href)}
-    >
-      Book with {store.name}
-    </Button>
   );
 }
 
