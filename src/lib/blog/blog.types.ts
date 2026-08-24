@@ -1,10 +1,16 @@
 /**
  * The article content model.
  *
- * This file is the contract. `blog.fixtures.ts` satisfies it today and a CMS
- * satisfies it tomorrow, so everything the pages render is described here and
- * nowhere else — see `landing/BACKEND-BLOG-REQUIREMENTS.md` for the endpoint
- * shapes that produce it.
+ * This file is the contract. **The CMS satisfies it** — the pages read
+ * `/api/public/articles` through `blog.api.ts` — so everything they render is
+ * described here and nowhere else. See `api-doc/public/articles.md` for the
+ * endpoint shapes that produce it, and `public/BACKEND-BLOG-REQUIREMENTS.md`
+ * for the record of what was asked for.
+ *
+ * This used to read "`blog.fixtures.ts` satisfies it today and a CMS satisfies
+ * it tomorrow". Tomorrow arrived: that file is **unwired and imported by
+ * nothing**, kept only as five drafted articles awaiting a decision (its own
+ * header sets out the options). It is not a fallback and nothing reads it.
  *
  * Three decisions are worth stating up front, because they are the ones that
  * cost something to change later.
