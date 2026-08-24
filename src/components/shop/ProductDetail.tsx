@@ -29,6 +29,7 @@ import type {
   ProductListItem,
   ReturnPolicy,
 } from "@/lib/shop/shop.types";
+import { publicUrl } from "@/lib/shop/shop.types";
 
 /**
  * The product page.
@@ -320,7 +321,7 @@ export function ProductDetail({ product: p, locale, moreFromStore = [] }: Props)
                   aria-label={`Image ${i + 1}`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={im.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}  />
+                  <img src={publicUrl(im) ?? "/no_product_image.png"} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}  />
                 </button>
               ))}
             </div>

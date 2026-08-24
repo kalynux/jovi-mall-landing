@@ -28,18 +28,74 @@ export type { ListMeta };
 export type ProductType = "physical" | "digital" | "service";
 
 /**
+ * How a stored file may be read (api-doc/files/private-files.md § 1).
+ *
+ * `public` carries a URL anything can fetch. `authorized` carries **no URL at
+ * all** — the bytes are reachable only through a route that checks who is
+ * asking, which for a customer is the digital-download token flow.
+ */
+export type FileAccess = "public" | "authorized";
+
+/**
  * A file resolved by the backend's file service.
  *
- * `url` is the only field every surface needs; the rest ride along because the
- * API sends them and an `<img>` occasionally wants the original name for `alt`.
+ * ⚠ **`url` is `string | null`, and it used to always be a string.**
+ * Since Phase 4 the `digital/` and `shipments/` trees are served from a guarded
+ * mount, so their files resolve with no URL. `url` and `access` derive from the
+ * same predicate server-side and can never disagree:
+ *
+ * ```ts
+ * url    = isPrivate ? null : storage.getPublicUrl(file.key)
+ * access = isPrivate ? 'authorized' : 'public'
+ * ```
+ *
+ * The backend chose a *type* change over a differently-shaped string on purpose:
+ * an authorized path looks exactly like a public one, so a client keeping
+ * `<img src={url}>` would have rendered nothing for signed-out visitors and
+ * failed silently. `null` fails at the point of use instead.
+ *
+ * 🔴 **`url === null` does not mean "no file".** `id`, `key`, `mimeType`, `size`
+ * and `originalName` are all still populated — render a name and a download
+ * action, never an empty slot. Use {@link publicUrl} rather than reading `url`.
+ *
+ * For this app the practical impact is narrow: product imagery, avatars, store
+ * logos and banners are **public and unchanged**. Digital product assets and
+ * delivery-proof photos are not.
  */
 export interface FileDetail {
   id: string;
   key?: string;
-  url: string;
+  /** `null` whenever `access === "authorized"`. See the note above. */
+  url: string | null;
+  /** Always present on a current backend. Branch on this, not on `url`. */
+  access?: FileAccess;
   mimeType?: string;
   size?: number;
   originalName?: string;
+}
+
+/**
+ * The URL to put in an `<img>` or an `<a href>`, or `null` if there isn't one.
+ *
+ * Checks `access` before `url` so that an unclassified tree — which the backend
+ * treats as **private by default** — cannot leak a path this client then fails
+ * to fetch. Accepts `null`/`undefined` so callers can pass an optional file
+ * straight through without a guard of their own.
+ */
+export function publicUrl(file: FileDetail | null | undefined): string | null {
+  if (!file || file.access === "authorized") return null;
+  return file.url ?? null;
+}
+
+/**
+ * Does this file need an authorized route to read?
+ *
+ * `access` is always present on a current backend; the `url === null` fallback
+ * covers a response from a deploy that predates the field.
+ */
+export function isAuthorizedFile(file: FileDetail | null | undefined): boolean {
+  if (!file) return false;
+  return file.access === "authorized" || file.url === null;
 }
 
 export interface PriceRange {

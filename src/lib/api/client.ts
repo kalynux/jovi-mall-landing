@@ -369,6 +369,20 @@ export async function apiFetchWithMeta<T, M = Record<string, unknown>>(
  *
  * A response with no `meta` (some endpoints return a bare array) yields a
  * synthesised single-page block, so callers never have to null-check it.
+ *
+ * ── `pagination` is the same block under a different key ─────────────────────
+ *
+ * Three endpoints name it `pagination` rather than `meta`: `GET
+ * /api/customer/tickets` and the two `tickets/reference/{orders,products}`
+ * lookups (api-doc/README.md § 4). The fields inside — `total`, `page`,
+ * `limit`, `pages` — are identical; only the key differs, and the backend has
+ * declined to unify them because it would break the vendor and agency apps that
+ * already read `pagination`.
+ *
+ * Reading both here rather than at the three call sites means a caller never has
+ * to know which of the two its endpoint happens to use, and a fourth endpoint
+ * adopting either key needs no change. `meta` wins when both are somehow
+ * present, since it is the documented default.
  */
 export async function apiFetchList<T, M = Record<string, unknown>>(
     path: string,
@@ -376,9 +390,14 @@ export async function apiFetchList<T, M = Record<string, unknown>>(
 ): Promise<{ data: T[]; meta: ListMeta & M }> {
     const { body } = await request(path, options);
 
-    const envelope = body as { success?: boolean; data?: unknown; meta?: unknown };
+    const envelope = body as {
+        success?: boolean;
+        data?: unknown;
+        meta?: unknown;
+        pagination?: unknown;
+    };
     const data = (Array.isArray(envelope?.data) ? envelope.data : []) as T[];
-    const meta = (envelope?.meta ?? {}) as Partial<ListMeta> & M;
+    const meta = (envelope?.meta ?? envelope?.pagination ?? {}) as Partial<ListMeta> & M;
 
     return {
         data,

@@ -17,6 +17,7 @@ import { breadcrumbJsonLd, productJsonLd } from "@/lib/seo/jsonld";
 import { localeAlternates } from "@/lib/seo/alternates";
 import { productPath, storePath } from "@/lib/shop/shop.routes";
 import { isLocale } from "@/i18n/routing";
+import { publicUrl } from "@/lib/shop/shop.types";
 
 interface PageProps {
   params: Promise<{ locale: string; storeSlug: string; productSlug: string }>;
@@ -52,7 +53,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title,
       description,
-      images: product.images.slice(0, 1).map((image) => image.url),
+      // `publicUrl` filters out authorized files, which have no URL a crawler
+      // could fetch. Product imagery is public, so this is normally a no-op.
+      images: product.images
+        .map((image) => publicUrl(image))
+        .filter((url): url is string => url !== null)
+        .slice(0, 1),
       url: path,
       type: "website",
     },

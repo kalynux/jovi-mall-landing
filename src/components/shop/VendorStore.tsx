@@ -12,6 +12,7 @@ import { productPathFor, storePath } from "@/lib/shop/shop.routes";
 import { openApp } from "@/lib/native/links";
 import { shareLink } from "@/lib/native/share";
 import type { ListMeta, ProductListItem, ProductType, Store } from "@/lib/shop/shop.types";
+import { publicUrl } from "@/lib/shop/shop.types";
 
 /**
  * A store page.
@@ -130,10 +131,10 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
       {/* Banner. Nullable — a store with none gets a flat brand panel rather
           than a broken image. */}
       <div style={{ position: "relative" }}>
-        {store.banner ? (
+        {publicUrl(store.banner) ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={store.banner.url}
+            src={publicUrl(store.banner) ?? undefined}
             alt=""
             style={{ width: "100%", height: 200, objectFit: "cover", display: "block" }}
             
