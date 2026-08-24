@@ -193,9 +193,49 @@ export default function BookingDetailPage({
         </p>
       )}
 
+      {/* A booking is created `unpaid` — paying is a separate step, and until it
+          happens a `confirmed` booking is swept and auto-cancelled after a
+          grace period. A `pending` one is never swept, because waiting on the
+          vendor is not the customer's fault. */}
+      {b.requiresPayment && (b.paymentStatus === "unpaid" || b.paymentStatus === "failed") && (
+        <div
+          style={{
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-lg)",
+            padding: 14,
+            marginBottom: 12,
+          }}
+        >
+          <div style={{ fontWeight: 700, fontSize: 14.5, marginBottom: 4 }}>
+            {formatMoney(b.priceSnapshot, b.currency)} to pay
+          </div>
+          <p className="muted" style={{ fontSize: 13, margin: "0 0 10px" }}>
+            {b.status === "confirmed"
+              ? "Your appointment is held. Pay to keep it — unpaid bookings are released after a while."
+              : "You can pay once the seller has accepted."}
+          </p>
+          <Button
+            size="sm"
+            disabled={b.status !== "confirmed"}
+            onClick={() => router.push(`/shop/account/bookings/${bookingId}/pay`)}
+          >
+            Pay now
+          </Button>
+        </div>
+      )}
+
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {cancellable && (
-          <Button variant="secondary" size="sm" disabled={busy} onClick={() => setConfirmCancel(true)}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => router.push(`/shop/account/bookings/${bookingId}/reschedule`)}
+          >
+            Move to another time
+          </Button>
+        )}
+        {cancellable && (
+          <Button variant="ghost" size="sm" disabled={busy} onClick={() => setConfirmCancel(true)}>
             Cancel booking
           </Button>
         )}

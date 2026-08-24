@@ -6,7 +6,7 @@ import { Avatar, Badge, Button, ConfirmDialog, Skeleton } from "@/components/sho
 import { useToast } from "@/components/shop/providers";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import { useApiResource } from "@/lib/shop/useApiResource";
-import { uploadFiles, CUSTOMER_MAX_FILE_BYTES } from "@/lib/shop/files.api";
+import { uploadAttachments, maxBytesFor, uploadViolations } from "@/lib/shop/files.api";
 import {
   addTicketNote,
   attachToTicket,
@@ -84,7 +84,7 @@ export default function TicketDetailPage({
         return;
       }
 
-      const tooBig = files.find((f) => f.size > CUSTOMER_MAX_FILE_BYTES);
+      const tooBig = files.find((f) => f.size > maxBytesFor(f));
       if (tooBig) {
         flash(`${tooBig.name} is too large.`);
         return;
@@ -94,11 +94,20 @@ export default function TicketDetailPage({
       try {
         // Two steps by design: the bytes go to the shared file service, and only
         // the returned id is attached to the ticket.
-        const uploaded = await uploadFiles(files.slice(0, room));
+        const uploaded = await uploadAttachments(files.slice(0, room));
         for (const file of uploaded) await attachToTicket(ticketId, file.id);
         attachments.reload();
-      } catch {
-        flash("Could not attach that file.");
+      } catch (err) {
+        // Name the offending file rather than the batch — the same reason the
+        // create form does.
+        const violations = uploadViolations(err);
+        flash(
+          violations.length > 0
+            ? violations
+                .map((v) => `${v.fileName ?? "That file"}: ${v.message ?? v.code}`)
+                .join(" · ")
+            : "Could not attach that file.",
+        );
       } finally {
         setBusy(false);
       }

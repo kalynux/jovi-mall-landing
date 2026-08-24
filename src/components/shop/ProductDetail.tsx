@@ -662,6 +662,7 @@ export function ProductDetail({ product: p, locale, moreFromStore = [] }: Props)
                 <ProductCard
                   title={item.title}
                   image={publicUrl(item.image)}
+                  rating={item.rating}
                   type={item.type}
                   price={item.price}
                   compareAt={item.compareAtPrice}

@@ -316,35 +316,7 @@ export async function getTicket(id: string): Promise<Ticket> {
   return apiFetch<Ticket>(`/api/customer/tickets/${encodeURIComponent(id)}`);
 }
 
-/**
- * PATCH /api/customer/tickets/:id — subject and/or description only.
- *
- * At least one is required. Note the asymmetry with creation: `description` is
- * capped at 700 chars on create and 10000 here.
- */
-export async function updateTicket(
-  id: string,
-  patch: { subject?: string; description?: string },
-): Promise<Ticket> {
-  return apiFetch<Ticket>(`/api/customer/tickets/${encodeURIComponent(id)}`, {
-    method: "PATCH",
-    body: JSON.stringify(patch),
-  });
-}
 
-/**
- * PATCH /api/customer/tickets/:id/status
- *
- * ⚠ A `waiting_on_<role>` status can only be set when a participant with that
- * role is on the ticket, and an unchanged status is a `400`. In practice the
- * only transitions a customer screen should offer are reopening and closing.
- */
-export async function setTicketStatus(id: string, status: TicketStatus): Promise<Ticket> {
-  return apiFetch<Ticket>(`/api/customer/tickets/${encodeURIComponent(id)}/status`, {
-    method: "PATCH",
-    body: JSON.stringify({ status }),
-  });
-}
 
 /** POST /api/customer/tickets/:id/close */
 export async function closeTicket(id: string): Promise<Ticket> {

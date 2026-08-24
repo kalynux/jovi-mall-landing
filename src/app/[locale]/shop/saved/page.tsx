@@ -280,6 +280,7 @@ export default function SavedPage() {
                 key={entry.productId}
                 title={entry.product.title}
                 image={publicUrl(entry.product.image)}
+                rating={entry.product.rating}
                 type={entry.product.type}
                 price={entry.product.price}
                 compareAt={entry.product.compareAtPrice}

@@ -6,7 +6,12 @@ import { Button, Select, Skeleton } from "@/components/shop/ds";
 import { useToast } from "@/components/shop/providers";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import { useApiResource } from "@/lib/shop/useApiResource";
-import { CUSTOMER_MAX_FILE_BYTES, uploadFiles, type UploadedFile } from "@/lib/shop/files.api";
+import {
+  maxBytesFor,
+  uploadAttachments,
+  uploadViolations,
+  type UploadedFile,
+} from "@/lib/shop/files.api";
 import {
   createTicket,
   listTicketOrderRefs,
@@ -92,17 +97,27 @@ export default function NewTicketPage() {
 
   const pickFiles = useCallback(
     async (picked: File[]) => {
-      const tooBig = picked.find((f) => f.size > CUSTOMER_MAX_FILE_BYTES);
+      const tooBig = picked.find((f) => f.size > maxBytesFor(f));
       if (tooBig) {
         flash(`${tooBig.name} is too large.`);
         return;
       }
       setBusy(true);
       try {
-        const uploaded = await uploadFiles(picked.slice(0, 5 - files.length));
+        const uploaded = await uploadAttachments(picked.slice(0, 5 - files.length));
         setFiles((prev) => [...prev, ...uploaded]);
-      } catch {
-        flash("Could not upload that file.");
+      } catch (err) {
+        // `UPLOAD_POLICY_VIOLATION` names each offending file, which is the only
+        // information the person can act on — "could not upload" leaves them
+        // guessing which of five files was the problem.
+        const violations = uploadViolations(err);
+        flash(
+          violations.length > 0
+            ? violations
+                .map((v) => `${v.fileName ?? "That file"}: ${v.message ?? v.code}`)
+                .join(" · ")
+            : "Could not upload that file.",
+        );
       } finally {
         setBusy(false);
       }

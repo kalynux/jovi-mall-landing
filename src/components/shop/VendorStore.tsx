@@ -23,9 +23,11 @@ import { publicUrl } from "@/lib/shop/shop.types";
  * tabs below now navigate (`?type=`) rather than re-slicing an array, so the
  * counts are the API's and the tab state survives a reload.
  *
- * Gone with the mock: the star rating, the review count and the "Reviews" tab
- * that printed both. There is no review model in the backend, and a store page
- * is precisely where an invented 4.8 reads as a fact about a real business.
+ * Gone with the mock: the store's own star rating, its review count and the
+ * "Reviews" tab that printed both. Product reviews exist now and appear on each
+ * product page, but **a store carries no aggregate on the wire** — so a figure
+ * here would have to be invented, and a store page is precisely where an
+ * invented 4.8 reads as a fact about a real business.
  */
 
 interface Props {
@@ -121,6 +123,7 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
       key={item.id}
       title={item.title}
       image={publicUrl(item.image)}
+      rating={item.rating}
       type={item.type}
       price={item.price}
       compareAt={item.compareAtPrice}

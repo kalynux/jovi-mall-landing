@@ -127,8 +127,6 @@ export async function getAvailability(
 
 /* ── 2 · Locking ─────────────────────────────────────────────────────────── */
 
-/** How long a lock survives without being spent. */
-export const SLOT_LOCK_MINUTES = 15;
 
 /**
  * POST /api/products/:productId/slots/:slotId/lock

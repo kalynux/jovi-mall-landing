@@ -14,8 +14,7 @@
  *
  * See api-doc/uploads/README.md and api-doc/files/private-files.md.
  */
-import { apiFetch, apiFetchList } from "@/lib/api/client";
-import type { ListMeta } from "./shop.types";
+import { apiFetch } from "@/lib/api/client";
 
 /** One uploaded file as the upload and list routes return it. */
 export interface UploadedFile {
@@ -83,50 +82,9 @@ export async function uploadVideos(videos: File[]): Promise<UploadedFile[]> {
   return Array.isArray(data) ? data : [];
 }
 
-export interface ListFilesQuery {
-  page?: number;
-  limit?: number;
-  search?: string;
-  mimeType?: string;
-  category?: string;
-  sort?: string;
-}
 
-/** GET /api/files — the caller's own files. */
-export async function listFiles(
-  query: ListFilesQuery = {},
-): Promise<{ data: UploadedFile[]; meta: ListMeta }> {
-  const qs = new URLSearchParams();
-  for (const [key, value] of Object.entries(query)) {
-    if (value !== undefined && value !== "") qs.set(key, String(value));
-  }
-  const s = qs.toString();
-  return apiFetchList<UploadedFile>(`/api/files${s ? `?${s}` : ""}`);
-}
 
-/** GET /api/files/:id — `404` when not found *or* not owned. */
-export async function getFile(id: string): Promise<UploadedFile> {
-  return apiFetch<UploadedFile>(`/api/files/${encodeURIComponent(id)}`);
-}
 
-/** PATCH /api/files/:id — only `originalName` is editable. */
-export async function renameFile(id: string, originalName: string): Promise<UploadedFile> {
-  return apiFetch<UploadedFile>(`/api/files/${encodeURIComponent(id)}`, {
-    method: "PATCH",
-    body: JSON.stringify({ originalName }),
-  });
-}
-
-/**
- * DELETE /api/files/:id — soft-delete, marking the file for garbage collection.
- *
- * **Only succeeds when nothing still references the file.** One still attached
- * to a ticket or a product cannot be deleted until it is detached, which is why
- * a UI should offer "remove from this ticket" rather than "delete file".
- */
-export async function deleteFile(id: string): Promise<void> {
-  await apiFetch<unknown>(`/api/files/${encodeURIComponent(id)}`, { method: "DELETE" });
-}
 
 /**
  * Why a single file was refused.
@@ -145,4 +103,31 @@ export interface UploadViolation {
 export function uploadViolations(err: unknown): UploadViolation[] {
   const details = (err as { details?: { violations?: UploadViolation[] } })?.details;
   return Array.isArray(details?.violations) ? details.violations : [];
+}
+
+/**
+ * Upload a mixed pick of images, documents and videos.
+ *
+ * Videos have their **own route** with its own limits — 70 MB and, for a
+ * customer, exactly one — so a mixed selection is split rather than posted
+ * wholesale to `/files/upload`. That route would accept a video (it classifies
+ * by detected type and has a `videos/` tree), but it would apply the wrong
+ * ceiling and the wrong count limit, so the failure would arrive as a confusing
+ * `413` rather than as "one video at a time".
+ *
+ * Returns everything that uploaded, from both routes.
+ */
+export async function uploadAttachments(files: File[]): Promise<UploadedFile[]> {
+  const videos = files.filter((f) => f.type.startsWith("video/"));
+  const rest = files.filter((f) => !f.type.startsWith("video/"));
+
+  const out: UploadedFile[] = [];
+  if (rest.length > 0) out.push(...(await uploadFiles(rest)));
+  if (videos.length > 0) out.push(...(await uploadVideos(videos)));
+  return out;
+}
+
+/** The ceiling that applies to one picked file, by kind. */
+export function maxBytesFor(file: File): number {
+  return file.type.startsWith("video/") ? MAX_VIDEO_BYTES : CUSTOMER_MAX_FILE_BYTES;
 }

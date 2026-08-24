@@ -1,5 +1,6 @@
 "use client";
 
+import { Rating } from "./Rating";
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
 import type { PriceRange, ProductType } from "@/lib/shop/shop.types";
@@ -24,6 +25,14 @@ export interface ProductCardProps {
   priceRange?: PriceRange;
   vendorName?: string;
   showVendor?: boolean;
+  /**
+   * The published-review aggregate, or `null` when nobody has reviewed it.
+   *
+   * The API sends `null` rather than a zero-count object, so there is no
+   * "0.0 (0)" state to suppress — absent means absent. This card carried an
+   * invented rating once; the difference now is that the number is real.
+   */
+  rating?: { average: number; count: number } | null;
   /**
    * A real backend field, unlike the free-text delivery label this card used to
    * take. It is a boolean promise about this product, not a description.
@@ -106,6 +115,7 @@ export function ProductCard(props: ProductCardProps) {
     priceRange,
     vendorName,
     showVendor,
+    rating,
     freeDelivery,
     favorite,
     onToggleFavorite,
@@ -142,6 +152,12 @@ export function ProductCard(props: ProductCardProps) {
       {showVendor && vendorName && (
         <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600, marginBottom: 3 }}>
           {vendorName}
+        </div>
+      )}
+
+      {rating && (
+        <div style={{ marginBottom: 3 }}>
+          <Rating value={rating.average} count={rating.count} size={12} />
         </div>
       )}
       {titleEl}

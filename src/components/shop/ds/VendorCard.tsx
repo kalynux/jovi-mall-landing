@@ -26,10 +26,14 @@ export interface VendorCardProps {
 /**
  * Compact store header used to group the catalog by vendor.
  *
- * Carried a star rating and a review count until the catalogue went real. There
- * is no review system in the platform — those numbers were fixtures, and a store
- * card is exactly the surface where an invented 4.8 would be read as a fact
- * about a real business.
+ * Carried a star rating and a review count until the catalogue went real, when
+ * both turned out to be fixtures.
+ *
+ * Product reviews exist now, but **a store still carries no aggregate of its
+ * own** — `GET /api/public/stores` publishes none, and averaging the products on
+ * screen would invent one from whichever page happened to load. A store card is
+ * exactly the surface where a made-up 4.8 reads as a fact about a real
+ * business, so it stays out until the API has a number for it.
  */
 export function VendorCard({
   name,

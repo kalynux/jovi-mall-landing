@@ -90,16 +90,6 @@ export function publicUrl(file: FileDetail | null | undefined): string | null {
   return file.url ?? null;
 }
 
-/**
- * Does this file need an authorized route to read?
- *
- * `access` is always present on a current backend; the `url === null` fallback
- * covers a response from a deploy that predates the field.
- */
-export function isAuthorizedFile(file: FileDetail | null | undefined): boolean {
-  if (!file) return false;
-  return file.access === "authorized" || file.url === null;
-}
 
 export interface PriceRange {
   min: number;

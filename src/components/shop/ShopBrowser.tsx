@@ -247,6 +247,7 @@ export function ShopBrowser({ products, meta, categories, query }: Props) {
       compareAt={product.compareAtPrice}
       currency={product.currency}
       priceRange={product.priceRange}
+      rating={product.rating}
       vendorName={product.store.name}
       showVendor={showVendor}
       freeDelivery={product.freeDelivery}
@@ -659,9 +660,14 @@ function Pagination({
  * Every control here maps to a real query parameter.
  *
  * The sheet used to also offer a minimum star rating, a "delivery available"
- * toggle and a popularity sort. None of the three has anything behind it — there
- * is no review system, `freeDelivery` is not a filterable field, and nothing
- * tracks sales — so they are gone rather than left on screen doing nothing.
+ * toggle and a popularity sort. None of the three has a **query parameter**
+ * behind it: `GET /api/public/products` takes no `minRating`, `freeDelivery` is
+ * not filterable, and nothing tracks sales — so they are gone rather than left
+ * on screen doing nothing.
+ *
+ * ⚠ Ratings themselves are real now and the cards show them. That does not make
+ * a rating *filter* possible: filtering client-side would silently apply to one
+ * page of a paginated result, which is worse than not offering it.
  *
  * Sort is phone-only. On a desktop it is already a dropdown in the toolbar, and
  * duplicating it here would give one setting two controls that can disagree

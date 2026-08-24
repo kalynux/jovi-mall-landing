@@ -206,16 +206,3 @@ export async function clearRecentlyViewed(): Promise<number> {
   return typeof data?.removed === "number" ? data.removed : 0;
 }
 
-/**
- * 🔴 The cap is the entire retention policy.
- *
- * `CUSTOMER_RECENTLY_VIEWED_CAP`, default 20, enforced on write by evicting the
- * oldest. **There is no TTL and no age-based pruning** — a cap rather than a
- * time window is deliberate, because a TTL prunes on Mongo's own schedule and a
- * customer browsing quickly would see a list that is sometimes 20 long and
- * sometimes 200.
- *
- * ⚠ **A cap is not a page size.** `?limit` is how many rows you fetch; this is
- * how many rows exist. Asking for `?limit=100` returns at most 20.
- */
-export const RECENTLY_VIEWED_CAP = 20;
