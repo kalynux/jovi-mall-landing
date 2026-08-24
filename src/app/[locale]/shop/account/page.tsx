@@ -75,6 +75,7 @@ const MENU: MenuRow[] = [
   },
   { icon: "download", label: "My downloads", href: "/shop/account/downloads" },
   { icon: "star", label: "My reviews", href: "/shop/account/reviews" },
+  { icon: "shield", label: "Sign-in details", href: "/shop/account/security" },
   // Where the shop's help shortcut lives now. It used to be a circle floating
   // over every shop page, which on a phone meant a third hovering control
   // competing with the tab bar and the cards' quick-add buttons — and a
