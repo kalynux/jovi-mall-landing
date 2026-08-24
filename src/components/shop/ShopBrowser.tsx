@@ -35,6 +35,7 @@ import type {
   ProductType,
   SortKey,
 } from "@/lib/shop/shop.types";
+import { publicUrl } from "@/lib/shop/shop.types";
 
 /**
  * The browse controls. Rendering happens on the server; this owns the inputs.
@@ -90,7 +91,7 @@ interface Props {
 export function ShopBrowser({ products, meta, categories, query }: Props) {
   const router = useRouter();
   const { addItem } = useCart();
-  const { isFavorite, toggle } = useFavorites();
+  const { isFavorite, toggle, syncGrid } = useFavorites();
   const { flash } = useToast();
 
   const [pending, startTransition] = useTransition();
@@ -102,6 +103,18 @@ export function ShopBrowser({ products, meta, categories, query }: Props) {
   const [categorySheetOpen, setCategorySheetOpen] = useState(false);
   const [draft, setDraft] = useState<ProductListQuery>(query);
   const [search, setSearch] = useState(query.q ?? "");
+
+  /**
+   * Fill the hearts for this page of results.
+   *
+   * One `saved-among` call for the whole grid — the endpoint exists for exactly
+   * this, and it is why a card does not have to ask on its own. Keyed on the
+   * rendered ids so paging or refiltering re-asks and scrolling does not.
+   */
+  const renderedIds = products.map((p) => p.id).join(",");
+  useEffect(() => {
+    if (renderedIds) syncGrid(renderedIds.split(","));
+  }, [renderedIds, syncGrid]);
 
   // The URL is authoritative: a back/forward step or a link with different
   // params must move the controls, not just the grid.
@@ -228,7 +241,7 @@ export function ShopBrowser({ products, meta, categories, query }: Props) {
       key={product.id}
       layout={list ? "list" : "grid"}
       title={product.title}
-      image={product.image?.url ?? null}
+      image={publicUrl(product.image)}
       type={product.type}
       price={product.price}
       compareAt={product.compareAtPrice}

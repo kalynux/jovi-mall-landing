@@ -2,146 +2,360 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
-import { EmptyState, ProductCard, Skeleton } from "@/components/shop/ds";
+import { Button, ConfirmDialog, EmptyState, ProductCard, Skeleton, Tabs } from "@/components/shop/ds";
 import { useCart, useFavorites, useToast } from "@/components/shop/providers";
 import { CART_OFFLINE_MESSAGE } from "@/lib/shop/cart-errors";
 import { getProductById } from "@/lib/shop/catalog.api";
-import { productPath } from "@/lib/shop/shop.routes";
-import type { Product } from "@/lib/shop/shop.types";
+import {
+  clearRecentlyViewed,
+  listRecentlyViewed,
+  listWishlist,
+  type CustomerCatalogEntry,
+} from "@/lib/shop/saved.api";
+import { resolveQuickAdd } from "@/lib/shop/quick-add";
+import { productPathFor } from "@/lib/shop/shop.routes";
+import { useAuth } from "@/lib/auth/useAuth";
+import { publicUrl, type ProductListItem } from "@/lib/shop/shop.types";
+
+type Tab = "saved" | "viewed";
 
 /**
- * Saved products.
+ * Saved products, and recently viewed.
  *
- * Favourites are a set of product **ids** in localStorage — they always were,
- * and there is still no wishlist endpoint (Tier 3; it is the one Tier 3 item
- * asked for first in `BACKEND-SHOP-FOLLOWUP.md`). What changed is that there is
- * no in-memory catalogue to look them up in any more, so each is fetched by id.
+ * ── Both lists live on the server now ────────────────────────────────────────
  *
- * Two consequences worth knowing:
+ * Saved used to be a set of ids in `localStorage`, resolved one `GET` per id,
+ * which meant it did not survive a device change, a cleared browser or a sign-in
+ * on a phone. `GET /api/customer/wishlist` returns the rows directly — one
+ * request for the page instead of N, already ordered newest-save-first.
+ * Recently viewed had no implementation at all.
  *
- *  - A favourite that has since been delisted, archived or suspended resolves to
- *    `null` and is **dropped from the list, and from the saved set**. Leaving it
- *    would mean re-fetching a 404 on every visit forever.
- *  - This list does not follow a shopper to another device, and never has.
+ * A signed-out shopper still gets the local saved list, because the wishlist
+ * routes are customer-only and there is no anonymous wishlist server-side. That
+ * path is unchanged, including its one-`GET`-per-id resolution, and
+ * `FavoritesProvider` replays those ids to the server on sign-in. Recently
+ * viewed has no local equivalent, so it asks the visitor to sign in rather than
+ * inventing one.
+ *
+ * ── 🔴 A row can outlive its product ─────────────────────────────────────────
+ *
+ * Nothing cascades into either collection: a vendor can archive a listing, an
+ * agency can suspend one over unpaid storage, an administrator can take one
+ * down. The read degrades those rows rather than dropping them — `productId` and
+ * `at` survive and `product` is `null` — and the list deliberately **does not
+ * shrink**, so `meta.total` matches what is rendered.
+ *
+ * So a `null` product renders a tombstone with a working remove button, not an
+ * empty slot and not a filtered-out row. It is also why this page no longer
+ * un-saves anything on its own: the old version dropped ids that failed to
+ * resolve, which under these semantics would silently delete a save for a
+ * product that was merely suspended and is coming back.
  */
 export default function SavedPage() {
   const router = useRouter();
+  const { status } = useAuth();
+  const signedIn = status === "authenticated";
   const { favorites, toggle } = useFavorites();
   const { addItem } = useCart();
   const { flash } = useToast();
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<Tab>("saved");
 
-  // `favorites` is a Set and a new instance each render, so the effect keys on a
-  // stable string of its contents rather than the set itself.
-  const ids = Array.from(favorites).sort().join(",");
+  const [saved, setSaved] = useState<CustomerCatalogEntry[]>([]);
+  const [savedLoading, setSavedLoading] = useState(true);
+
+  const [viewed, setViewed] = useState<CustomerCatalogEntry[]>([]);
+  const [viewedLoading, setViewedLoading] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
+
+  // `favorites` is a Set and a new instance each render, so the anonymous
+  // effect keys on a stable string of its contents rather than the set itself.
+  const localIds = Array.from(favorites).sort().join(",");
 
   useEffect(() => {
-    let cancelled = false;
-    const list = ids ? ids.split(",") : [];
+    if (status === "loading") return;
 
-    if (list.length === 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setProducts([]);
-      setLoading(false);
-      return;
-    }
+    let cancelled = false;
 
     (async () => {
-      setLoading(true);
-      const resolved = await Promise.all(list.map((id) => getProductById(id).catch(() => null)));
-      if (cancelled) return;
+      setSavedLoading(true);
 
-      const found = resolved.filter((p): p is Product => p !== null);
-      setProducts(found);
-      setLoading(false);
+      if (signedIn) {
+        try {
+          const { data } = await listWishlist({ limit: 100 });
+          if (!cancelled) setSaved(data);
+        } catch {
+          if (!cancelled) setSaved([]);
+        } finally {
+          if (!cancelled) setSavedLoading(false);
+        }
+        return;
+      }
 
-      // Forget the ones that no longer resolve. `toggle` on an id already in the
-      // set removes it, which is exactly what a gone product needs.
-      const alive = new Set(found.map((p) => p.id));
-      for (const id of list) if (!alive.has(id)) toggle(id);
+      // Signed out: the local ids are all there is, and each needs resolving.
+      const list = localIds ? localIds.split(",") : [];
+      if (list.length === 0) {
+        if (!cancelled) {
+          setSaved([]);
+          setSavedLoading(false);
+        }
+        return;
+      }
+
+      const resolved = await Promise.all(
+        list.map(async (id) => {
+          const product = await getProductById(id).catch(() => null);
+          return {
+            productId: id,
+            at: "",
+            // A full `Product` is a superset of the list row the card needs.
+            product: (product as unknown as ProductListItem) ?? null,
+          } satisfies CustomerCatalogEntry;
+        }),
+      );
+
+      if (!cancelled) {
+        setSaved(resolved);
+        setSavedLoading(false);
+      }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [ids, toggle]);
+  }, [signedIn, status, localIds]);
+
+  // Recently viewed is fetched when its tab is first opened — it is the
+  // secondary list, and the cap means there is never more than one page of it.
+  useEffect(() => {
+    if (tab !== "viewed" || !signedIn) return;
+
+    let cancelled = false;
+    (async () => {
+      setViewedLoading(true);
+      try {
+        const { data } = await listRecentlyViewed({ limit: 100 });
+        if (!cancelled) setViewed(data);
+      } catch {
+        if (!cancelled) setViewed([]);
+      } finally {
+        if (!cancelled) setViewedLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tab, signedIn]);
 
   const quickAdd = useCallback(
-    async (product: Product) => {
-      if (product.type === "service" || product.options.length > 0 || product.variants.length > 1) {
-        router.push(productPath(product.store.slug, product.slug));
-        return;
+    async (productId: string) => {
+      try {
+        const outcome = await resolveQuickAdd(productId);
+
+        if (outcome.kind === "unavailable") {
+          flash("That product is no longer available.");
+          return;
+        }
+        if (outcome.kind === "choose") {
+          router.push(productPathFor(outcome.product));
+          return;
+        }
+
+        const added = await addItem(outcome.product, outcome.variant);
+        if (added.kind === "added") flash("Added to cart");
+        // Before the `else`, which sends the shopper to the product page to make
+        // a choice. A dead connection is not a choice to make, and routing them
+        // there would answer a connectivity failure with a page that cannot load
+        // either.
+        else if (added.kind === "offline") flash(CART_OFFLINE_MESSAGE);
+        else if (added.kind === "error") flash(added.message);
+        else router.push(productPathFor(outcome.product));
+      } catch {
+        flash("Could not add that to your cart. Please try again.");
       }
-      const variant = product.variants.find((v) => v.id === product.defaultVariantId) ?? product.variants[0];
-      if (!variant?.inStock) {
-        flash("That product is out of stock.");
-        return;
-      }
-      const outcome = await addItem(product, variant);
-      if (outcome.kind === "added") flash("Added to cart");
-      // Before the `else`, which sends the shopper to the product page to make a
-      // choice. A dead connection is not a choice to make, and routing them
-      // there would answer a connectivity failure with a page that cannot load
-      // either.
-      else if (outcome.kind === "offline") flash(CART_OFFLINE_MESSAGE);
-      else if (outcome.kind === "error") flash(outcome.message);
-      else router.push(productPath(product.store.slug, product.slug));
     },
-    [addItem, flash, router]
+    [addItem, flash, router],
   );
+
+  const removeSaved = useCallback(
+    (productId: string) => {
+      toggle(productId);
+      setSaved((prev) => prev.filter((e) => e.productId !== productId));
+    },
+    [toggle],
+  );
+
+  const clearHistory = useCallback(async () => {
+    setConfirmClear(false);
+    const previous = viewed;
+    setViewed([]);
+    try {
+      await clearRecentlyViewed();
+    } catch {
+      setViewed(previous);
+      flash("Could not clear your history. Please try again.");
+    }
+  }, [viewed, flash]);
+
+  const entries = tab === "saved" ? saved : viewed;
+  const loading = tab === "saved" ? savedLoading : viewedLoading;
 
   return (
     <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-6">
       {/* The visible title is the header bar's, on every shop screen. */}
       <h1 className="sr-only">Saved</h1>
-      {!loading && (
-        <p className="muted" style={{ marginBottom: 14 }}>
-          {products.length} item{products.length === 1 ? "" : "s"}
-        </p>
-      )}
 
-      {loading ? (
+      <div style={{ marginBottom: 14 }}>
+        <Tabs
+          value={tab}
+          onChange={(v) => setTab(v as Tab)}
+          tabs={[
+            { value: "saved", label: "Saved", count: saved.length || undefined },
+            { value: "viewed", label: "Recently viewed" },
+          ]}
+        />
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          marginBottom: 14,
+        }}
+      >
+        {!loading && (
+          <p className="muted" style={{ margin: 0 }}>
+            {entries.length} item{entries.length === 1 ? "" : "s"}
+          </p>
+        )}
+        {tab === "viewed" && signedIn && entries.length > 0 && !loading && (
+          <Button variant="ghost" size="sm" onClick={() => setConfirmClear(true)}>
+            Clear history
+          </Button>
+        )}
+      </div>
+
+      {/* Recently viewed is customer-only and has no anonymous equivalent, so
+          this asks rather than pretending the list is empty. */}
+      {tab === "viewed" && !signedIn && status !== "loading" ? (
+        <EmptyState
+          icon="clock"
+          title="Sign in to see what you've viewed"
+          description="Your browsing history follows your account, not this device."
+          actionLabel="Sign in"
+          onAction={() => router.push("/login")}
+        />
+      ) : loading ? (
         <div className="pgrid">
           {Array.from({ length: Math.min(4, favorites.size || 2) }).map((_, i) => (
             <Skeleton key={i} height={280} />
           ))}
         </div>
-      ) : products.length === 0 ? (
-        <EmptyState
-          icon="heart"
-          title="No favorites yet"
-          description="Tap the heart on any product to save it here."
-          actionLabel="Browse products"
-          onAction={() => router.push("/shop")}
-        />
+      ) : entries.length === 0 ? (
+        tab === "saved" ? (
+          <EmptyState
+            icon="heart"
+            title="No favorites yet"
+            description="Tap the heart on any product to save it here."
+            actionLabel="Browse products"
+            onAction={() => router.push("/shop")}
+          />
+        ) : (
+          <EmptyState
+            icon="clock"
+            title="Nothing viewed yet"
+            description="Products you open will show up here."
+            actionLabel="Browse products"
+            onAction={() => router.push("/shop")}
+          />
+        )
       ) : (
         <div className="pgrid">
-          {products.map((product) => {
-            const variant =
-              product.variants.find((v) => v.id === product.defaultVariantId) ?? product.variants[0];
-            return (
+          {entries.map((entry) =>
+            entry.product ? (
               <ProductCard
-                key={product.id}
-                title={product.title}
-                image={product.images[0]?.url ?? null}
-                type={product.type}
-                price={variant?.price ?? 0}
-                compareAt={variant?.compareAtPrice}
-                currency={variant?.currency}
-                vendorName={product.store.name}
+                key={entry.productId}
+                title={entry.product.title}
+                image={publicUrl(entry.product.image)}
+                type={entry.product.type}
+                price={entry.product.price}
+                compareAt={entry.product.compareAtPrice}
+                currency={entry.product.currency}
+                priceRange={entry.product.priceRange}
+                vendorName={entry.product.store.name}
                 showVendor
-                freeDelivery={product.freeDelivery}
-                inStock={product.variants.some((v) => v.inStock)}
-                favorite
-                onToggleFavorite={() => toggle(product.id)}
-                onQuickAdd={() => void quickAdd(product)}
-                href={productPath(product.store.slug, product.slug)}
+                freeDelivery={entry.product.freeDelivery}
+                inStock={entry.product.inStock}
+                favorite={tab === "saved" || favorites.has(entry.productId)}
+                onToggleFavorite={
+                  tab === "saved" ? () => removeSaved(entry.productId) : () => toggle(entry.productId)
+                }
+                onQuickAdd={() => void quickAdd(entry.productId)}
+                href={productPathFor(entry.product)}
               />
-            );
-          })}
+            ) : (
+              <UnavailableEntry
+                key={entry.productId}
+                // A viewed row is history: there is nothing to un-save, and the
+                // only way to remove one is to clear the whole list.
+                onRemove={tab === "saved" ? () => removeSaved(entry.productId) : undefined}
+              />
+            ),
+          )}
         </div>
+      )}
+
+      <ConfirmDialog
+        open={confirmClear}
+        title="Clear your history?"
+        tone="danger"
+        icon="clock"
+        confirmLabel="Clear history"
+        onConfirm={() => void clearHistory()}
+        onCancel={() => setConfirmClear(false)}
+      >
+        This forgets every product you have viewed. It cannot be undone.
+      </ConfirmDialog>
+    </div>
+  );
+}
+
+/**
+ * A row whose product no longer resolves.
+ *
+ * Deliberately says nothing about *why*. Deleted and merely-suspended are
+ * indistinguishable in the response on purpose — telling them apart would leak a
+ * vendor's catalogue state to anyone who once saved one of their products, the
+ * same oracle the public catalogue refuses to be when it answers 404 rather
+ * than 403.
+ */
+function UnavailableEntry({ onRemove }: { onRemove?: () => void }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 10,
+        minHeight: 280,
+        padding: 16,
+        border: "1px solid var(--border)",
+        borderRadius: 14,
+        background: "var(--surface-2, transparent)",
+        textAlign: "center",
+      }}
+    >
+      <p className="muted" style={{ margin: 0 }}>
+        This item is no longer available.
+      </p>
+      {onRemove && (
+        <Button variant="secondary" size="sm" onClick={onRemove}>
+          Remove
+        </Button>
       )}
     </div>
   );

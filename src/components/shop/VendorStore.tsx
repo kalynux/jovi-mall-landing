@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { isNetworkError } from "@/lib/errors/is-network-error";
 import { useRouter } from "@/i18n/navigation";
 import { Avatar, Badge, Button, EmptyState, Icon, ProductCard, Tabs } from "@/components/shop/ds";
@@ -46,7 +46,18 @@ const TYPE_TABS: { value: string; label: string; type?: ProductType }[] = [
 export function VendorStore({ store, products, meta, activeType }: Props) {
   const router = useRouter();
   const { addItem } = useCart();
-  const { isFavorite, toggle } = useFavorites();
+  const { isFavorite, toggle, syncGrid } = useFavorites();
+
+  /**
+   * Fill the hearts for this page of the store's grid.
+   *
+   * One `saved-among` call rather than one per card. `products` is a server
+   * prop, so this re-asks when the tab or page changes and not otherwise.
+   */
+  const renderedIds = products.map((p) => p.id).join(",");
+  useEffect(() => {
+    if (renderedIds) syncGrid(renderedIds.split(","));
+  }, [renderedIds, syncGrid]);
   const { flash } = useToast();
 
   // Names the seller in the header bar; the route alone only knows "Store".
@@ -109,7 +120,7 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
     <ProductCard
       key={item.id}
       title={item.title}
-      image={item.image?.url ?? null}
+      image={publicUrl(item.image)}
       type={item.type}
       price={item.price}
       compareAt={item.compareAtPrice}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import {
   Avatar,
@@ -23,6 +23,7 @@ import { discountPct, formatMoney } from "@/lib/shop/format";
 import { openApp } from "@/lib/native/links";
 import { tapFeedback } from "@/lib/native/haptics";
 import { productPathFor, storePath } from "@/lib/shop/shop.routes";
+import { recordView } from "@/lib/shop/saved.api";
 import type {
   CancellationPolicy,
   Product,
@@ -85,6 +86,24 @@ export function ProductDetail({ product: p, locale, moreFromStore = [] }: Props)
   // The header bar says which product this is, so a shopper who has scrolled
   // past the <h1> still knows. Route-derived it could only say "Product".
   useShopPageTitle(p.title);
+
+  /**
+   * Record that this product was opened.
+   *
+   * `POST /api/customer/recently-viewed` carries no timestamp and cannot be made
+   * to — the server clock is the only source, because the list is ordered *and*
+   * capped by that value and a client-supplied one would be a client-chosen
+   * position in a bounded list.
+   *
+   * Re-viewing moves the entry to the head rather than duplicating it, so firing
+   * this on every open is correct and needs no de-duplication here. It is
+   * best-effort: `recordView` swallows the 403 a signed-out visitor gets and the
+   * 404 for a product that just became unpublishable, because opening a page
+   * must not fail on a history write.
+   */
+  useEffect(() => {
+    void recordView(p.id);
+  }, [p.id]);
 
   const store = p.store;
   const isService = p.type === "service";
@@ -618,7 +637,7 @@ export function ProductDetail({ product: p, locale, moreFromStore = [] }: Props)
               <div key={item.id} style={{ width: 190, flexShrink: 0 }}>
                 <ProductCard
                   title={item.title}
-                  image={item.image?.url ?? null}
+                  image={publicUrl(item.image)}
                   type={item.type}
                   price={item.price}
                   compareAt={item.compareAtPrice}
