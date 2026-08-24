@@ -1,16 +1,21 @@
 /**
  * schema.org graph builders.
  *
- * One deliberate omission throughout: no `aggregateRating` or `review` nodes.
- * `rating`, `reviews` and `sales` on Product/Vendor are fixture values (see the
- * MOCK markers in shop.types.ts), and publishing invented review counts as
- * structured data is a Google spam-policy violation that earns a manual action.
- * Wire them in when the review data is real.
+ * `aggregateRating` is emitted on `Product` **if and only if** the API sent a
+ * non-null `rating`. The backend never sends a zero-count summary — a product
+ * nobody has reviewed carries `rating: null` — so there is no branch to get
+ * wrong and no way to publish an invented review count, which is a Google
+ * review-snippet spam-policy violation that earns a manual action.
+ *
+ * No `review` nodes anywhere: the public review route publishes no author
+ * identity, and a `Review` without an `author` is not worth emitting.
+ * `sales` on Product/Vendor is still a fixture and stays out.
  */
 import { BRAND } from "@/lib/constants";
 import { absoluteUrl, SITE_URL } from "@/lib/site";
 import { localePath, type Locale } from "@/i18n/routing";
 import type { Product, Store } from "@/lib/shop/shop.types";
+import { publicUrl } from "@/lib/shop/shop.types";
 import { productPath, storePath } from "@/lib/shop/shop.routes";
 
 export type JsonLdNode = Record<string, unknown>;
@@ -346,10 +351,13 @@ export function blogJsonLd(
  * and there is no `vendorId` on the public API at all: a store is addressed by
  * slug so an internal id never becomes a public identifier.
  *
- * `aggregateRating` and `review` stay **absent**. There is still no review model
- * in the platform, and publishing invented review counts is a Google
- * spam-policy violation that earns a manual action. Do not add them until a real
- * review system exists.
+ * `aggregateRating` is emitted only when `product.rating` is non-null. That
+ * null is the entire guard: the backend never sends `{ average: 0, count: 0 }`,
+ * so an unreviewed product is indistinguishable from one with no rating data and
+ * there is nothing to synthesise a zero from. Do not add one.
+ *
+ * `review` nodes stay absent — the public route publishes no author identity, and
+ * schema.org wants an `author` on each.
  */
 export function productJsonLd(locale: Locale, product: Product): JsonLdNode {
   const url = localeUrl(locale, productPath(product.store.slug, product.slug));
@@ -395,13 +403,28 @@ export function productJsonLd(locale: Locale, product: Product): JsonLdNode {
     "@id": `${url}#product`,
     name: product.title,
     description: product.description,
-    image: product.images.map((image) => image.url),
+    image: product.images
+      .map((image) => publicUrl(image))
+      .filter((url): url is string => url !== null),
     category: product.category,
     // `sku` is published per variant now, and is already globally unique and
     // already shown to the customer on cart and order lines — so it is safe to
     // emit, and `Offer` wants a stable identifier for rich results.
     ...(product.variants[0]?.sku ? { sku: product.variants[0].sku } : {}),
     brand: { "@type": "Brand", name: product.store.name },
+    // Emitted if and only if the API sent an aggregate. `average` arrives at two
+    // decimals and is passed through unrounded — it is the platform's number.
+    ...(product.rating
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: product.rating.average,
+            reviewCount: product.rating.count,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
     offers,
   };
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { publicUrl } from "@/lib/shop/shop.types";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
@@ -73,6 +74,7 @@ const MENU: MenuRow[] = [
     },
   },
   { icon: "download", label: "My downloads", href: "/shop/account/downloads" },
+  { icon: "star", label: "My reviews", href: "/shop/account/reviews" },
   // Where the shop's help shortcut lives now. It used to be a circle floating
   // over every shop page, which on a phone meant a third hovering control
   // competing with the tab bar and the cards' quick-add buttons — and a
@@ -114,9 +116,9 @@ export default function AccountPage() {
           </>
         ) : p ? (
           <>
-            {p.avatar ? (
+            {publicUrl(p.avatar) ? (
               <Image
-                src={p.avatar.url}
+                src={publicUrl(p.avatar) as string}
                 alt=""
                 width={58}
                 height={58}

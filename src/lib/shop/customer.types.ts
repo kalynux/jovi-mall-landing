@@ -15,20 +15,21 @@
  * (`PATCH` takes `avatarFileId`; reads return a resolved `avatar` file object).
  */
 
+import type { FileDetail } from "./shop.types";
+
 /**
- * A resolved uploaded file. The single way the backend surfaces any file
- * reference — product media, store branding, customer avatars — never a bare
- * URL string. `url` is computed per storage provider at read time, so always
- * use it as given rather than building one from `key`.
+ * A resolved uploaded file - the single way the backend surfaces any file
+ * reference, never a bare URL string.
+ *
+ * This is the **same wire shape** as the storefront's `FileDetail`, built by the
+ * same backend resolver, so it is now that type rather than a second declaration
+ * of it. The two were written independently before the marketing and account
+ * halves of this app met, and keeping both is how one of them ends up missing a
+ * field - which is exactly what happened when the backend added `access`.
+ *
+ * 🔴 `url` is `string | null`. Read it through `publicUrl()`, not directly.
  */
-export interface FileRef {
-  id: string;
-  key: string;
-  url: string;
-  mimeType: string;
-  size: number;
-  originalName?: string;
-}
+export type FileRef = FileDetail;
 
 // ─── Geo ─────────────────────────────────────────────────────────────────────
 

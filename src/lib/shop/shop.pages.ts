@@ -59,6 +59,7 @@ const EXACT_TITLES: Record<string, string> = {
   "/shop/account/notifications": "Notifications",
   "/shop/account/notifications/settings": "Notification settings",
   "/shop/account/downloads": "My downloads",
+  "/shop/account/reviews": "My reviews",
   "/shop/account/close": "Close account",
   "/shop/p": "Product",
   "/shop/store": "Store",

@@ -11,11 +11,14 @@
  * ── What is NOT here, and why ────────────────────────────────────────────────
  *
  * The previous version of this file carried `rating`, `reviews`, `sales` and a
- * `delivery` label marked `// MOCK`. There is still no review system, nothing
- * tracks sales, and delivery has no per-product label — so they are deleted
- * rather than left as optional fields that would quietly invite a component to
- * render a zero. `freeDelivery` (a real boolean) is the only survivor of that
- * group.
+ * `delivery` label marked `// MOCK`. Nothing tracks sales and delivery has no
+ * per-product label, so those stay deleted rather than sit here as optional
+ * fields that would quietly invite a component to render a zero.
+ *
+ * `rating` is back, and it is real this time — the review system shipped in
+ * backend Phase 6 · 6.E.4, so every product row and detail body carries it. It
+ * is `null` when nobody has reviewed the product and **never a zero-count
+ * object**, which is the property the JSON-LD depends on.
  *
  * There is also no stock **count**. `inStock` is a boolean everywhere, because a
  * precise count on a page cached for five minutes is wrong the moment it is
@@ -103,6 +106,30 @@ export interface PriceRange {
   max: number;
 }
 
+/**
+ * The published-review aggregate for a product.
+ *
+ * 🔴 **`null`, never a zero-count object.** A product nobody has reviewed
+ * carries `rating: null`, exactly as one with no rating data at all would. That
+ * is deliberate on the backend's side and it is what makes the JSON-LD rule
+ * unmissable: emit `aggregateRating` if and only if this is non-null.
+ * Synthesising `ratingValue: 0` / `reviewCount: 0` from a null is a Google
+ * review-snippet spam-policy violation that earns a manual action.
+ *
+ * `average` is carried to **two decimals**, not one — the same number feeds the
+ * agent trust composite, not just a star widget.
+ */
+export interface ProductRating {
+  average: number;
+  count: number;
+  /**
+   * The 1–5 histogram. **Detail bodies only** — a list row carries
+   * `{ average, count }` and no distribution, because a grid has nowhere to
+   * draw one.
+   */
+  distribution?: Record<"1" | "2" | "3" | "4" | "5", number>;
+}
+
 /** The seller as a product row carries them. Never a `vendorId` — see catalog.md. */
 export interface ProductStoreRef {
   slug: string;
@@ -131,6 +158,13 @@ export interface ProductListItem {
 
   /** Thumbnail only. `null` when the product has no usable image. */
   image: FileDetail | null;
+
+  /**
+   * `{ average, count }` — no distribution on a row. `null` when unreviewed;
+   * the key is always present.
+   */
+  rating: ProductRating | null;
+
   store: ProductStoreRef;
 
   freeDelivery: boolean;
@@ -264,6 +298,13 @@ export interface Product {
    * than present French copy as though it were the Portuguese translation.
    */
   contentLanguage: string;
+
+  /**
+   * Carries the 1–5 `distribution` as well as the average and count, so the
+   * reviews panel renders its histogram without a second request. `null` when
+   * nobody has reviewed it.
+   */
+  rating: ProductRating | null;
 
   /** Full gallery, thumbnail first. */
   images: FileDetail[];

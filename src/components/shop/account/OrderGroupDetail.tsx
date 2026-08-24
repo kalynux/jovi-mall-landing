@@ -35,6 +35,8 @@ import {
   pendingCollections,
   type StatusChip,
 } from "@/lib/shop/order-status";
+import { publicUrl } from "@/lib/shop/shop.types";
+import { ReviewDisclosure } from "@/components/shop/account/ReviewForm";
 import { useApiResource } from "@/lib/shop/useApiResource";
 import type {
   CodCollection,
@@ -184,6 +186,20 @@ function VendorOrderCard({
   const t = useTranslations("errors");
 
   const fulfillment = fulfillmentChip(order.fulfillmentStatus);
+
+  /**
+   * A cheap pre-filter for "has this arrived at all".
+   *
+   * Deliberately not the real test — completion is `completion.confirmed_at`
+   * server-side, set by the customer confirming delivery, the COD cash handover
+   * or the auto-confirm sweep, and none of those is visible from here. The
+   * eligibility endpoint is the authority; this only avoids drawing a rate
+   * button on an order that is still being packed.
+   */
+  const reviewable =
+    order.fulfillmentStatus === "delivered" ||
+    order.fulfillmentStatus === "fulfilled" ||
+    order.fulfillmentStatus === "partially_delivered";
   const payment = paymentChip(order.paymentStatus);
   const cod = isCod(order);
   const collections = pendingCollections(order);
@@ -277,7 +293,7 @@ function VendorOrderCard({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={item.image?.url ?? "/no_product_image.png"}
+                src={publicUrl(item.image) ?? "/no_product_image.png"}
                 alt=""
                 style={{
                   width: 42,
@@ -310,6 +326,33 @@ function VendorOrderCard({
               </span>
             </div>
           ))}
+
+          {/* Rating is earned by a *completed* order, which server-side means
+              `completion.confirmed_at` rather than `fulfillment_status`. This
+              only pre-filters the obviously-too-early cases so the page does not
+              offer a button that leads straight to a 422; the eligibility read
+              inside the form is what actually decides, and it is the authority. */}
+          {reviewable && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+                marginTop: 4,
+                paddingTop: 8,
+                borderTop: "1px solid var(--border-subtle)",
+              }}
+            >
+              {order.items.map((item) => (
+                <ReviewDisclosure
+                  key={`review-${item.id}`}
+                  subjectType="product"
+                  subjectId={item.productId}
+                  label={item.title}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -589,6 +632,20 @@ function Shipments({
               </p>
             )}
 
+            {/* A delivered parcel can be rated. The review names no agent and
+                must not: attribution happens server-side, and the carrier block
+                above is a separate disclosure that does not license naming one
+                here. */}
+            {shipment.status === "delivered" && (
+              <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--border-subtle)" }}>
+                <ReviewDisclosure
+                  subjectType="delivery"
+                  subjectId={shipment.id}
+                  label="this delivery"
+                />
+              </div>
+            )}
+
             {!cod && shipment.status === "out_for_delivery" && (
               <div style={{ display: "flex", marginTop: 8 }}>
                 <div style={{ flex: 1 }} />
@@ -672,7 +729,7 @@ function Carrier({
     <div style={{ marginTop: 9, display: "flex", flexDirection: "column", gap: 9 }}>
       {name && (
         <div style={{ display: "flex", alignItems: "center", gap: 9, flexWrap: "wrap" }}>
-          <Avatar name={name} src={agency?.logo?.url} size={28} shape="squircle" />
+          <Avatar name={name} src={publicUrl(agency?.logo) ?? undefined} size={28} shape="squircle" />
           <div style={{ minWidth: 0 }}>
             <p style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-strong)", margin: 0 }}>
               {name}
@@ -719,7 +776,7 @@ function Carrier({
             padding: "7px 9px",
           }}
         >
-          <Avatar name={agent.displayName} src={agent.photo?.url} size={28} />
+          <Avatar name={agent.displayName} src={publicUrl(agent.photo) ?? undefined} size={28} />
           <div style={{ minWidth: 0 }}>
             <p style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-strong)", margin: 0 }}>
               {agent.displayName}

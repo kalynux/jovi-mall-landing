@@ -14,6 +14,7 @@ import {
   PriceDisplay,
   ProductCard,
   QtyStepper,
+  Rating,
   Tabs,
 } from "@/components/shop/ds";
 import { useCart, useFavorites, useToast } from "@/components/shop/providers";
@@ -24,6 +25,7 @@ import { openApp } from "@/lib/native/links";
 import { tapFeedback } from "@/lib/native/haptics";
 import { productPathFor, storePath } from "@/lib/shop/shop.routes";
 import { recordView } from "@/lib/shop/saved.api";
+import { ProductReviews } from "@/components/shop/ProductReviews";
 import type {
   CancellationPolicy,
   Product,
@@ -264,7 +266,7 @@ export function ProductDetail({ product: p, locale, moreFromStore = [] }: Props)
     { value: "desc", label: "Description" },
     { value: "specs", label: isDigital ? "What’s included" : "Specifications" },
     { value: "policies", label: "Returns & cancellation" },
-    { value: "reviews", label: "Reviews" },
+    { value: "reviews", label: "Reviews", count: p.rating?.count || undefined },
   ];
 
   return (
@@ -367,6 +369,28 @@ export function ProductDetail({ product: p, locale, moreFromStore = [] }: Props)
             {store.verified && <Icon name="badge-check" size={14} style={{ color: "var(--brand)" }} />}
             <Icon name="chevron-right" size={14} style={{ color: "var(--text-subtle)" }} />
           </button>
+
+          {/* Only when the API sent an aggregate. It is null (never a
+              zero-count) for a product nobody has reviewed, so there is no
+              "0.0 (0)" to render and nothing to suppress. */}
+          {p.rating && (
+            <button
+              type="button"
+              onClick={() => setTab("reviews")}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                border: "none",
+                background: "none",
+                padding: 0,
+                marginBottom: 8,
+                cursor: "pointer",
+              }}
+            >
+              <Rating value={p.rating.average} count={p.rating.count} />
+            </button>
+          )}
 
           <h1
             style={{
@@ -622,7 +646,7 @@ export function ProductDetail({ product: p, locale, moreFromStore = [] }: Props)
             </div>
           )}
           {tab === "policies" && <PolicyBlock store={store} />}
-          {tab === "reviews" && <ReviewsBlock />}
+          {tab === "reviews" && <ProductReviews productId={p.id} rating={p.rating} />}
         </div>
       </div>
 
@@ -927,19 +951,3 @@ function InfoCard({ title, icon, children }: { title: string; icon: string; chil
   );
 }
 
-/**
- * There is still no review or rating model anywhere in the backend, so there is
- * still nothing to show. Fabricated testimonials are the one kind of mock data
- * that keeps doing damage after launch — `seo/jsonld.ts` omits `aggregateRating`
- * for the same reason, and publishing invented review counts is a Google
- * spam-policy violation that earns a manual action.
- */
-function ReviewsBlock() {
-  return (
-    <EmptyState
-      icon="message-square"
-      title="No reviews yet"
-      description="Ratings and reviews are coming to Wi-Mall. Nothing here is invented in the meantime."
-    />
-  );
-}
