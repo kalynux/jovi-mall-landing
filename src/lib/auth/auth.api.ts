@@ -8,6 +8,7 @@ import type {
     MagicSignInResponse,
     MessageResponse,
 } from "./auth.types";
+import { AuthError } from "./auth.types";
 import { apiFetch } from "@/lib/api/client";
 import { USES_BEARER_AUTH, saveFromResponse, clear as clearTokens } from "./token-store";
 
@@ -133,14 +134,42 @@ export async function sendEmailVerification(): Promise<MessageResponse> {
 }
 
 /**
- * GET /api/auth/verify-email?token=...
- * Confirms an email address from the token embedded in the verification link.
- * Public endpoint — called by the /verify-email page when the user clicks through.
+ * Confirm a registration email address from the token in the verification link.
+ *
+ * Public — the link is opened in a mail client, which is routinely not the
+ * browser that registered and often not the same device. This marks
+ * `email_verified` on the role profile; it mints no session and signs nobody in.
+ *
+ * ── 🔴 POST first, GET only as a fallback — and the order is the point ───────
+ *
+ * `POST /api/auth/verify-email` is the endpoint this flow wants, for the reason
+ * `PasswordResetService` and the email-*change* confirm both spell out: mail
+ * clients, link scanners and corporate relays **prefetch** URLs to build preview
+ * cards, so a `GET` that mutates is spent before the person ever taps it. The
+ * older `GET /api/auth/verify-email?token=` still exists and still works, so
+ * links already sitting in inboxes keep resolving.
+ *
+ * The fallback fires only on 404/405 — "this deployment has no POST route" — and
+ * is safe precisely because those statuses mean nothing was spent. Any other
+ * failure (an invalid token, an expired one) is the real answer and propagates.
+ *
+ * ⚠ **Delete the fallback once every environment is on a backend that serves the
+ * POST.** It exists to bridge the rollout, not as a permanent second path.
  */
 export async function verifyEmail(token: string): Promise<MessageResponse> {
-    return apiFetch<MessageResponse>(
-        `/api/auth/verify-email?token=${encodeURIComponent(token)}`
-    );
+    try {
+        return await apiFetch<MessageResponse>("/api/auth/verify-email", {
+            method: "POST",
+            body: JSON.stringify({ token }),
+        });
+    } catch (error) {
+        const status = error instanceof AuthError ? error.statusCode : undefined;
+        if (status !== 404 && status !== 405) throw error;
+
+        return apiFetch<MessageResponse>(
+            `/api/auth/verify-email?token=${encodeURIComponent(token)}`
+        );
+    }
 }
 
 /**

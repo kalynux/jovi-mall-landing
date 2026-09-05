@@ -8,7 +8,26 @@
         "errorBody": "Este enlace de verificación no es válido o ha caducado. Solicita uno nuevo.",
         "missingToken": "No se proporcionó ningún token de verificación.",
         "goToLogin": "Continuar para iniciar sesión",
-        "backToLogin": "Volver a iniciar sesión"
+        "backToLogin": "Volver a iniciar sesión",
+        "rateLimited": "Demasiados intentos desde tu red. Espera un minuto y vuelve a abrir el enlace.",
+        "tokenSpent": "Este enlace ya no es válido. Puede haber caducado, o puede que tu correo ya esté verificado: inicia sesión para comprobarlo o solicita un enlace nuevo desde tu cuenta."
+    },
+    "confirmEmail": {
+        "title": "Confirmar tu correo",
+        "confirming": "Confirmando tu correo…",
+        "successTitle": "Correo actualizado",
+        "successBody": "A partir de ahora inicias sesión con {email}.",
+        "successBodyGeneric": "Esta es la dirección con la que inicias sesión ahora.",
+        "errorTitle": "No se pudo confirmar",
+        "missingToken": "A este enlace le falta el token. Abre el correo más reciente e inténtalo de nuevo.",
+        "expired": "Este enlace ha caducado. Vuelve a solicitar el cambio desde los ajustes de tu cuenta.",
+        "invalid": "Este enlace no es válido. Comprueba que has abierto el correo más reciente.",
+        "notPending": "No hay ningún cambio de correo pendiente de confirmación. Puede que ya esté hecho.",
+        "taken": "Otra cuenta ya inicia sesión con esa dirección. Empieza el cambio de nuevo con otra.",
+        "network": "No pudimos conectar con Wi-Mall. Revisa tu conexión y abre el enlace otra vez.",
+        "generic": "No pudimos confirmar ese cambio. Inténtalo de nuevo.",
+        "backToAccount": "Volver a mi cuenta",
+        "rateLimited": "Demasiados intentos desde tu red. Espera un minuto y vuelve a abrir el enlace."
     },
     "meta": {
         "langName": "Español",

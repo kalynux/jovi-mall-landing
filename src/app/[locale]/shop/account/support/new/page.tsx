@@ -6,6 +6,7 @@ import { Button, Select, Skeleton } from "@/components/shop/ds";
 import { useToast } from "@/components/shop/providers";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import { useApiResource } from "@/lib/shop/useApiResource";
+import { ticketPath } from "@/lib/shop/shop.routes";
 import {
   maxBytesFor,
   uploadAttachments,
@@ -139,7 +140,7 @@ export default function NewTicketPage() {
         trackingNumber: trackingNumber.trim() || undefined,
         attachments: files.map((f) => f.id),
       });
-      router.replace(`/shop/account/support/${ticket._id}`);
+      router.replace(ticketPath(ticket._id));
     } catch (err) {
       const gaps = missingRequiredInfo(err);
       if (gaps.length > 0) {

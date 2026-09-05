@@ -62,12 +62,29 @@ const APP = join(APP_ROOT, "[locale]");
  * `/shop/account/order?id=…` — which are ordinary static files that resolve
  * against the live API on open. `shop.routes.ts` picks the shape per target, so
  * no link, sitemap entry or JSON-LD block on the web changed.
+ *
+ * ── Bookings and support threads ─────────────────────────────────────────────
+ * The same export error, and the reason the app build failed outright from the
+ * day support tickets landed until these two lines were added:
+ * `bookings/[bookingId]` — with `/pay`, `/balance` and `/reschedule` under it —
+ * and `support/[ticketId]` are five dynamic routes that nobody listed here when
+ * they were written.
+ *
+ * Dropping them from the app the way `(marketing)` is dropped was never an
+ * option: a booking is a service somebody bought and has to pay for, and a
+ * ticket is a problem they raised and are waiting on an answer to. Both are
+ * things the app must be able to open. So they have query-string twins of their
+ * own — `/shop/account/booking?id=…` and `/shop/account/ticket?id=…`, wired up
+ * in `components/shop/account/QueryScreens.tsx` — and it is only the nested
+ * spellings that are left out here.
  */
 const EXCLUDED_TREES = [
   join(APP, "(marketing)"),
   join(APP, "shop", "stores"),
   join(APP, "shop", "p", "[productId]"),
   join(APP, "shop", "account", "orders", "[cartId]"),
+  join(APP, "shop", "account", "bookings", "[bookingId]"),
+  join(APP, "shop", "account", "support", "[ticketId]"),
 ];
 
 /**

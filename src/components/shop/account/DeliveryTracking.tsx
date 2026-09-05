@@ -1,8 +1,10 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, Icon } from "@/components/shop/ds";
 import { openApp } from "@/lib/native/links";
+import { HAS_MAP_TILES, MAP_HEIGHT, parseDropOff } from "@/lib/shop/map";
 import {
   DeliveryTracker,
   formatDistance,
@@ -12,6 +14,32 @@ import {
   type AgentPosition,
   type RevocationReason,
 } from "@/lib/shop/tracking.api";
+
+/**
+ * Leaflet, and the map built on it, arrive only when there is something to draw.
+ *
+ * 🔴 `ssr: false` is not optional: Leaflet touches `window` as it loads, and
+ * this app is prerendered on the server for the web and exported to static HTML
+ * for the packaged app. The chunk is fetched the first time a shopper watches a
+ * delivery on a build that has tiles configured, and never otherwise.
+ */
+const DeliveryMap = dynamic(() => import("./DeliveryMap"), {
+  ssr: false,
+  // Reserves the height the map will take, so the panel does not jump when the
+  // chunk lands. Styled here rather than in the map's own stylesheet, which is
+  // in the very chunk this is standing in for.
+  loading: () => (
+    <div
+      style={{
+        height: MAP_HEIGHT,
+        marginBottom: 10,
+        borderRadius: "var(--radius-md)",
+        border: "1px solid var(--border)",
+        background: "var(--surface-sunken)",
+      }}
+    />
+  ),
+});
 
 /**
  * The live position of the agent carrying one shipment.
@@ -44,19 +72,40 @@ export function DeliveryTracking({
   shipmentId,
   /** True once the shipment discloses a carrying agent (ADR-A06). */
   hasAgent,
+  /**
+   * The order's `deliveryAddress` — the drop-off, geocoded and frozen at
+   * checkout. Passed straight through as `unknown`: validating it is
+   * `parseDropOff`'s job, and a shipment whose order has no usable one simply
+   * gets a map with a single pin.
+   */
+  deliveryAddress,
+  /** The carrying agent's partial display name, for the courier's map label. */
+  agentName,
 }: {
   shipmentId: string;
   hasAgent: boolean;
+  deliveryAddress?: unknown;
+  agentName?: string | null;
 }) {
   // Both conditions are known at render time, so they gate the mount rather
   // than being discovered by an effect that then re-renders to report them.
   // Splitting here also means no socket machinery is constructed for the many
   // shipments that have no agent yet.
   if (!hasAgent || !GEO_TRACKER_URL) return null;
-  return <LiveTracking shipmentId={shipmentId} />;
+  return (
+    <LiveTracking shipmentId={shipmentId} deliveryAddress={deliveryAddress} agentName={agentName} />
+  );
 }
 
-function LiveTracking({ shipmentId }: { shipmentId: string }) {
+function LiveTracking({
+  shipmentId,
+  deliveryAddress,
+  agentName,
+}: {
+  shipmentId: string;
+  deliveryAddress?: unknown;
+  agentName?: string | null;
+}) {
   const [agentId, setAgentId] = useState<string | null>(null);
   const [watchable, setWatchable] = useState<boolean | null>(null);
   const [position, setPosition] = useState<AgentPosition | null>(null);
@@ -135,6 +184,15 @@ function LiveTracking({ shipmentId }: { shipmentId: string }) {
     return `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
   }, [position]);
 
+  /**
+   * The second pin.
+   *
+   * Nothing here is sent anywhere: the socket resolves its own destination from
+   * the same order record server-side, so drawing this locally cannot disagree
+   * with the ETA — and `subscribe` must never carry a client-held `destination`.
+   */
+  const dropOff = useMemo(() => parseDropOff(deliveryAddress), [deliveryAddress]);
+
   // Nothing to offer: no agent disclosed yet, no geo-tracker configured, or this
   // delivery is not one the customer may watch.
   if (watchable !== true) return null;
@@ -158,6 +216,20 @@ function LiveTracking({ shipmentId }: { shipmentId: string }) {
 
       {position ? (
         <>
+          {/* The map is the optional half of this panel. With no tile provider
+              configured there is nothing to draw it on, and everything below —
+              the ETA, the distance, the handoff to the device's own map — is
+              exactly what shipped before it existed. */}
+          {HAS_MAP_TILES && (
+            <DeliveryMap
+              courier={position.position}
+              recordedAt={position.recordedAt}
+              headingDegrees={position.headingDegrees}
+              courierName={agentName}
+              dropOff={dropOff}
+            />
+          )}
+
           <div style={{ display: "flex", gap: 18, flexWrap: "wrap", marginBottom: 8 }}>
             {/* The ETA is optional and its absence is normal — it arrives late,
                 it is throttled to once per 30s, and plenty of deliveries never
@@ -188,8 +260,9 @@ function LiveTracking({ shipmentId }: { shipmentId: string }) {
               variant="secondary"
               size="sm"
               leadingIcon="map-pin"
-              // The device's own map app, rather than a tile layer this app does
-              // not have — it is the honest way to show a point on a map today.
+              // Still here with a map above it, and not redundant: the device's
+              // own map app is full screen, knows where the shopper is standing,
+              // and can give them directions. This panel does none of that.
               onClick={() => void openApp(mapHref)}
             >
               Open in maps

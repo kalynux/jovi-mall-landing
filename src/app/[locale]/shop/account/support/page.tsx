@@ -12,6 +12,7 @@ import {
   type Ticket,
   type TicketStatus,
 } from "@/lib/shop/tickets.api";
+import { ticketPath } from "@/lib/shop/shop.routes";
 
 /** Open-ish vs done, which is the only split a customer cares about. */
 const OPEN_STATUSES: TicketStatus[] = [
@@ -102,7 +103,7 @@ export default function SupportPage() {
             <TicketRow
               key={ticket._id}
               ticket={ticket}
-              onOpen={() => router.push(`/shop/account/support/${ticket._id}`)}
+              onOpen={() => router.push(ticketPath(ticket._id))}
             />
           ))}
         </div>

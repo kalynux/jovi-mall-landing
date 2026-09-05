@@ -5,6 +5,7 @@ import { Badge, EmptyState, Skeleton } from "@/components/shop/ds";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import { useApiResource } from "@/lib/shop/useApiResource";
 import { formatMoney } from "@/lib/shop/format";
+import { bookingPath } from "@/lib/shop/shop.routes";
 import {
   BOOKING_PAYMENT_LABEL,
   BOOKING_STATUS_LABEL,
@@ -54,7 +55,7 @@ export default function BookingsPage() {
             <BookingRow
               key={booking._id}
               booking={booking}
-              onOpen={() => router.push(`/shop/account/bookings/${booking._id}`)}
+              onOpen={() => router.push(bookingPath(booking._id))}
             />
           ))}
         </div>

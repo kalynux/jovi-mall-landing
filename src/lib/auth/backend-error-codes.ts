@@ -488,6 +488,30 @@ export type BackendErrorCode =
     | "USER_INVALID_PASSWORD"
     | "ACCOUNT_CLOSURE_ROLE_NOT_ELIGIBLE"
     | "ACCOUNT_CLOSURE_ORDERS_IN_FLIGHT"
+    /**
+     * ─── Contact change (`login_email` / `login_phone`) ──────────────────────
+     *
+     * ⚠ `CONTACT_CHANGE_EXPIRED` and `CONTACT_CHANGE_TOKEN_INVALID` are separate
+     * codes on purpose, and the contract asks callers not to collapse them:
+     * *"start again"* and *"check the link you clicked"* are different
+     * instructions to a person holding a dead link.
+     *
+     * `CONTACT_CHANGE_IDENTIFIER_TAKEN` reaches the **confirm** screen, not only
+     * the request form — the address was free when the change was opened and
+     * somebody claimed it in the hour since, which the service re-checks so the
+     * swap answers 409 rather than hitting the unique index and answering 500.
+     *
+     * `CONTACT_CHANGE_PHONE_UNPROVEN` means there is no WhatsApp connection
+     * matching the pending number. There is no OTP in this flow — a Telegram
+     * connection does not count, because a `chat_id` bears no relation to any
+     * phone number. Route it to the connections screen.
+     */
+    | "CONTACT_CHANGE_SAME_IDENTIFIER"
+    | "CONTACT_CHANGE_IDENTIFIER_TAKEN"
+    | "CONTACT_CHANGE_NOT_PENDING"
+    | "CONTACT_CHANGE_EXPIRED"
+    | "CONTACT_CHANGE_TOKEN_INVALID"
+    | "CONTACT_CHANGE_PHONE_UNPROVEN"
     // ─── Store ─────────────────────────────────────────────────────────────────
     | "STORE_NOT_FOUND"
     | "STORE_SLUG_TAKEN"

@@ -9,8 +9,8 @@ import {
   PaymentMethodPicker,
   paymentChannel,
   paymentReady,
-  type PaymentOption,
 } from "@/components/shop/PaymentMethodPicker";
+import { useSavedPayment } from "@/components/shop/useSavedPayment";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import { ApiError } from "@/lib/auth/auth.types";
 import { isNetworkError } from "@/lib/errors/is-network-error";
@@ -18,6 +18,7 @@ import { quoteCart } from "@/lib/shop/cart.api";
 import { checkout } from "@/lib/shop/orders.api";
 import { getProfile } from "@/lib/shop/profile.api";
 import { initiatePayment, isSettledFailure } from "@/lib/shop/payments.api";
+import { rememberPaymentAttempt } from "@/lib/shop/payment-attempts";
 import { formatMoney } from "@/lib/shop/format";
 import type { CartQuote, SavedAddress } from "@/lib/shop/customer.types";
 
@@ -62,13 +63,10 @@ export default function CheckoutPage() {
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [addressId, setAddressId] = useState<string | null>(null);
   const [quote, setQuote] = useState<CartQuote | null>(null);
-  const [option, setOption] = useState<PaymentOption>(CHECKOUT_OPTIONS[0]);
-  const [phone, setPhone] = useState("");
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
-  const isCod = option.isCod === true;
   const isDigital = productType === "digital";
   /**
    * Cash on delivery is dropped for a digital cart: there is nothing to hand
@@ -85,6 +83,18 @@ export default function CheckoutPage() {
   // Digital orders have nothing to deliver, so the backend ignores the address
   // entirely for them — asking would be a step with no purpose.
   const needsAddress = !isDigital;
+
+  /**
+   * The payment form, preloaded with whatever the shopper has saved.
+   *
+   * Preselecting their default is the whole reason the account page calls these
+   * "saved for faster checkout" — until this existed nothing on any pay screen
+   * had ever read them, so every checkout started on MTN with an empty field no
+   * matter what was saved.
+   */
+  const payForm = useSavedPayment(payOptions, status === "authenticated");
+  const { option, phone } = payForm;
+  const isCod = option.isCod === true;
 
   /* ── Saved addresses ───────────────────────────────────────────────────── */
 
@@ -175,6 +185,11 @@ export default function CheckoutPage() {
         channel: paymentChannel(option, phone),
       });
 
+      // The one moment this id is knowable — nothing on the order side ever
+      // returns it. The order screen's "Check payment" reads it back to force a
+      // gateway re-check; see `payment-attempts`.
+      await rememberPaymentAttempt(result.cartId, payment.transactionId);
+
       const params = new URLSearchParams({
         group: result.cartId,
         transaction: payment.transactionId,
@@ -209,7 +224,11 @@ export default function CheckoutPage() {
     }
   }, [isCod, needsAddress, addressId, clear, option, phone, router, refresh]);
 
-  if (status === "loading" || (status === "authenticated" && loadingProfile)) {
+  // `payForm.ready` joins the gate rather than getting a spinner of its own: the
+  // picker must not mount before the saved wallet has landed in the field, or
+  // the number arrives as an edit and the operator detection overrides the rail
+  // the shopper themselves declared. See `useSavedPayment`.
+  if (status === "loading" || (status === "authenticated" && (loadingProfile || !payForm.ready))) {
     return (
       <div className="mx-auto max-w-[760px] px-4 py-8 sm:px-6">
         <Skeleton height={28} width="40%" />
@@ -342,12 +361,14 @@ export default function CheckoutPage() {
         Payment method
       </p>
       <PaymentMethodPicker
+        key={payForm.formKey}
         options={payOptions}
         value={option}
-        onChange={setOption}
+        onChange={payForm.setOption}
         phone={phone}
-        onPhoneChange={setPhone}
+        onPhoneChange={payForm.setPhone}
         disabled={placing}
+        saved={payForm}
       />
 
       {option.id === "card" && (

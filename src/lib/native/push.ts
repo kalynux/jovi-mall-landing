@@ -11,8 +11,9 @@ import { registerDevice, unregisterDevice, type DevicePlatform } from "@/lib/sho
  *
  * It talks to the plugin and to the device registry, and nothing else. Deciding
  * *where* a tapped notification goes is a fact about the shop's URLs, so it
- * lives in `lib/shop/push-routing.ts` instead — same split as every other file
- * in this folder, and what keeps the routing testable without a device.
+ * lives in `lib/shop/notification-routing.ts` instead — same split as every
+ * other file in this folder, and what keeps the routing testable without a
+ * device.
  *
  * ── Why the permission is not requested here at launch ───────────────────────
  *

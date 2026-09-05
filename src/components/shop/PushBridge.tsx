@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { IS_NATIVE_BUILD } from "@/lib/platform";
 import { startPushListeners } from "@/lib/native/push";
-import { resolvePushDestination } from "@/lib/shop/push-routing";
+import { resolvePushDestination } from "@/lib/shop/notification-routing";
 import { useNotifications } from "./providers";
 
 /**

@@ -19,6 +19,7 @@ import {
   removePaymentMethod,
   setDefaultPaymentMethod,
 } from "@/lib/shop/payment-methods.api";
+import { forgetWalletNumber, rememberWalletNumber } from "@/lib/shop/wallet-numbers";
 import { useApiResource } from "@/lib/shop/useApiResource";
 import type { PaymentMethodType, SavedPaymentMethod } from "@/lib/shop/customer.types";
 
@@ -126,7 +127,16 @@ export default function PaymentMethodsPage() {
         onConfirm={async () => {
           const method = pendingRemoval;
           if (!method) return;
-          await run(method.id, () => removePaymentMethod(method.id), "Payment method removed");
+          await run(
+            method.id,
+            async () => {
+              await removePaymentMethod(method.id);
+              // Only after the server agrees it is gone — a failed delete
+              // leaves a method that checkout should still be able to prefill.
+              await forgetWalletNumber(method.id);
+            },
+            "Payment method removed",
+          );
           setPendingRemoval(null);
         }}
         onCancel={() => setPendingRemoval(null)}
@@ -227,7 +237,7 @@ function AddMethodSheet({
     setSaving(true);
     try {
       const label = MOMO_PROVIDERS.find((p) => p.id === provider)?.label ?? "Mobile money";
-      await addPaymentMethod({
+      const created = await addPaymentMethod({
         provider,
         // The wallet IS the phone number for mobile money: the gateway keys the
         // customer and the instrument on the same E.164 value.
@@ -238,6 +248,17 @@ function AddMethodSheet({
         last4: e164.slice(-4),
         is_default: isDefault,
       });
+
+      /**
+       * This is the only moment the app will ever hold this number again.
+       *
+       * The two `e164` fields above are stored server-side and never returned —
+       * so a checkout that wants to prefill the wallet has nothing to read
+       * unless the device writes it down here. Keyed on the id the server just
+       * assigned, and verified against `last4` when it is read back.
+       */
+      await rememberWalletNumber(created.id, e164);
+
       setPhone("");
       setIsDefault(false);
       onAdded();

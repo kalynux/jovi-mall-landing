@@ -8,7 +8,26 @@
         "errorBody": "Ce lien de vérification est invalide ou a expiré. Veuillez en demander un nouveau.",
         "missingToken": "Aucun jeton de vérification n'a été fourni.",
         "goToLogin": "Continuer vers la connexion",
-        "backToLogin": "Retour à la connexion"
+        "backToLogin": "Retour à la connexion",
+        "rateLimited": "Trop de tentatives depuis votre réseau. Patientez une minute, puis rouvrez le lien.",
+        "tokenSpent": "Ce lien n'est plus valide. Il a peut-être expiré, ou votre e-mail est peut-être déjà vérifié — connectez-vous pour le savoir, ou demandez un nouveau lien depuis votre compte."
+    },
+    "confirmEmail": {
+        "title": "Confirmer votre e-mail",
+        "confirming": "Confirmation de votre e-mail…",
+        "successTitle": "E-mail mis à jour",
+        "successBody": "Vous vous connectez désormais avec {email}.",
+        "successBodyGeneric": "C'est désormais l'adresse avec laquelle vous vous connectez.",
+        "errorTitle": "Confirmation impossible",
+        "missingToken": "Il manque le jeton dans ce lien. Ouvrez l'e-mail le plus récent et réessayez.",
+        "expired": "Ce lien a expiré. Redemandez le changement depuis les paramètres de votre compte.",
+        "invalid": "Ce lien n'est pas valide. Vérifiez que vous avez ouvert l'e-mail le plus récent.",
+        "notPending": "Aucun changement d'e-mail n'est en attente de confirmation. Il est peut-être déjà effectué.",
+        "taken": "Un autre compte utilise désormais cette adresse pour se connecter. Recommencez avec une autre adresse.",
+        "network": "Impossible de joindre Wi-Mall. Vérifiez votre connexion et rouvrez le lien.",
+        "generic": "Nous n'avons pas pu confirmer ce changement. Veuillez réessayer.",
+        "backToAccount": "Retour à mon compte",
+        "rateLimited": "Trop de tentatives depuis votre réseau. Patientez une minute, puis rouvrez le lien."
     },
     "meta": {
         "langName": "Français",

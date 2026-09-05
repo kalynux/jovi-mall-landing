@@ -83,12 +83,32 @@ Nothing about the account changes yet. A confirmation link goes to **the new add
 the storefront:
 
 ```
-{STOREFRONT_URL}/account/confirm-email?token={token}
+{STOREFRONT_URL}/account/confirm-email?token={token}&app={role}
 ```
 
 ⚠ **The storefront must POST that token, not GET it.** The link lands on a storefront page, which
 reads `?token=` and calls `POST /api/auth/email-change/confirm`. A `GET` that mutates is spent by
 whatever prefetches the mail — link scanners, corporate relays, the mail client's own preview.
+
+### 3.1 🔴 One page serves all four apps, and `app=` is the only role-aware part
+
+`STOREFRONT_URL` is a **single environment variable with no role branch**, so a vendor, an agency
+and an agent all land on the storefront's `/account/confirm-email`. That is correct rather than
+accidental: the confirm reads no `req.auth`, takes no actor, resolves the account from the hash of
+the token, and then syncs the new address onto **every** role profile the account holds. The
+confirmation is genuinely role-free — there is nothing for a per-dashboard copy of the page to do
+differently, and each copy would be a second place for the POST-not-GET rule to be got wrong.
+
+What the confirm response *cannot* answer is **where to send the person afterwards**: it carries
+`{ email }` and no role. So the request half — which is authenticated and does know the actor —
+stamps `app={role}` into the link, and the page uses it to offer one correct way back.
+
+⚠ **`app=` is a role key, never a URL.** The page maps it through a compile-time table; an
+unrecognised value falls back to the storefront's own links. A `?return=<url>` parameter would be an
+open redirect on a page that is reachable with no session.
+
+⚠ **Treat it as advisory.** Links minted before it existed carry no `app=`, and an account can hold
+several roles anyway, so the page must render something sensible when it is absent.
 
 **Window: 1 hour** (`CONTACT_CHANGE_EMAIL_TTL_SECONDS`). Deliberately shorter than the 24-hour
 registration verification window — that token proves an address somebody just typed into a signup
@@ -178,13 +198,23 @@ over an email edit would be a surprise with no security story behind it.
 
 | Code | Status | When |
 |---|---|---|
-| `CONTACT_CHANGE_SAME_IDENTIFIER` | 400 | the new value equals the current one |
+| `CONTACT_CHANGE_SAME_IDENTIFIER` | 422 | the new value equals the current one |
 | `CONTACT_CHANGE_IDENTIFIER_TAKEN` | 409 | another account already signs in with it |
-| `CONTACT_CHANGE_NOT_PENDING` | 404 | confirming or cancelling with nothing in flight |
-| `CONTACT_CHANGE_EXPIRED` | 400 | the window lapsed — **start again** |
+| `CONTACT_CHANGE_NOT_PENDING` | 409 | confirming or cancelling with nothing in flight |
+| `CONTACT_CHANGE_EXPIRED` | 422 | the window lapsed — **start again** |
 | `CONTACT_CHANGE_TOKEN_INVALID` | 400 | the token does not resolve — **check the link** |
-| `CONTACT_CHANGE_PHONE_UNPROVEN` | 400 | no WhatsApp connection matching the pending number |
+| `CONTACT_CHANGE_PHONE_UNPROVEN` | 422 | no WhatsApp connection matching the pending number |
 | `VALIDATION_ERROR` | 400 | malformed email/phone, unknown body key, token over 512 chars |
+
+> **Statuses corrected 2026-08-24** against `contact-change.service.ts`, which passes each one to
+> `createAppError` explicitly. The previous table had four of them wrong (`SAME_IDENTIFIER` 400,
+> `NOT_PENDING` 404, `EXPIRED` 400, `PHONE_UNPROVEN` 400). **Branch on `code`, never on status** —
+> that is what makes this class of drift survivable, and three of these codes share a status anyway.
+
+⚠ **`CONTACT_CHANGE_IDENTIFIER_TAKEN` reaches the confirm screen, not only the request form.** The
+address was free when the change was opened and somebody claimed it in the hour since. The service
+re-checks at confirm time deliberately: without it the swap hits the sparse unique index and answers
+500 instead of 409.
 
 ⚠ **`CONTACT_CHANGE_EXPIRED` and `CONTACT_CHANGE_TOKEN_INVALID` are separate codes on purpose** —
 *"start again"* and *"check the link you clicked"* are different instructions to a user. Do not

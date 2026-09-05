@@ -51,7 +51,14 @@ export async function getContact(): Promise<ContactState> {
  * PATCH /api/me/email — open an email change.
  *
  * Nothing about the account changes yet. A confirmation link goes to **the new
- * address**, pointing at `{STOREFRONT_URL}/account/confirm-email?token=…`.
+ * address**, pointing at
+ * `{STOREFRONT_URL}/account/confirm-email?token=…&app={role}`.
+ *
+ * That `app=` hint is the *only* thing about the flow that is role-aware, and it
+ * is stamped here — at the authenticated half — because the confirm half has no
+ * session to read a role from. It decides nothing about the change itself; it
+ * decides which dashboard the success screen offers a way back to. See
+ * `lib/me/confirm-origin.ts`.
  *
  * **Window: 1 hour** — deliberately shorter than the 24-hour registration
  * verification window, because that token proves an address somebody just typed
@@ -89,9 +96,18 @@ export async function requestEmailChange(email: string): Promise<PendingContactC
  * Being on the auth router, this inherits the **credential rate-limit bucket**
  * (20/min) rather than the general one — it spends a bearer secret, which is
  * what that bucket is for.
+ *
+ * ⚠ `CONTACT_CHANGE_IDENTIFIER_TAKEN` can arrive **here**, not only at request
+ * time: the address was free when the change was opened and somebody claimed it
+ * in the hour since. The service re-checks deliberately — without it the swap
+ * hits the sparse unique index and answers 500 instead of 409.
+ *
+ * Returns the address that is now the account's sign-in, so the success screen
+ * can name it rather than saying "your email" about a value the person may have
+ * typed an hour ago on another device.
  */
-export async function confirmEmailChange(token: string): Promise<void> {
-  await apiFetch<unknown>("/api/auth/email-change/confirm", {
+export async function confirmEmailChange(token: string): Promise<{ email: string }> {
+  return apiFetch<{ email: string }>("/api/auth/email-change/confirm", {
     method: "POST",
     body: JSON.stringify({ token }),
   });

@@ -8,7 +8,26 @@
         "errorBody": "This verification link is invalid or has expired. Please request a new one.",
         "missingToken": "No verification token was provided.",
         "goToLogin": "Continue to sign in",
-        "backToLogin": "Back to sign in"
+        "backToLogin": "Back to sign in",
+        "rateLimited": "Too many attempts from your network. Wait a minute, then open the link again.",
+        "tokenSpent": "This link is no longer valid. It may have expired, or your email may already be verified — sign in to check, or request a new link from your account."
+    },
+    "confirmEmail": {
+        "title": "Confirm your email",
+        "confirming": "Confirming your email…",
+        "successTitle": "Email updated",
+        "successBody": "You now sign in with {email}.",
+        "successBodyGeneric": "This is the address you sign in with now.",
+        "errorTitle": "Could not confirm",
+        "missingToken": "That link is missing its token. Open the most recent email and try again.",
+        "expired": "That link has expired. Request the change again from your account settings.",
+        "invalid": "That link is not valid. Check that you opened the most recent email.",
+        "notPending": "There is no email change waiting to be confirmed. It may already be done.",
+        "taken": "Another account now signs in with that address. Start the change again with a different one.",
+        "network": "We could not reach Wi-Mall. Check your connection and open the link again.",
+        "generic": "We could not confirm that change. Please try again.",
+        "backToAccount": "Back to my account",
+        "rateLimited": "Too many attempts from your network. Wait a minute, then open the link again."
     },
     "meta": {
         "langName": "English",

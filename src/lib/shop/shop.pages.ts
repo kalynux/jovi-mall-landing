@@ -45,15 +45,21 @@ export function isShopTab(pathname: string): boolean {
 }
 
 /**
- * `/shop/account/order` and `/shop/store` are the app's query-string forms of
- * routes the web addresses by path — see `shop.routes.ts`. Both shapes are
- * listed so the header is right on either target.
+ * `/shop/account/order`, `/shop/account/booking`, `/shop/account/ticket` and
+ * `/shop/store` are the app's query-string forms of routes the web addresses
+ * by path — see `shop.routes.ts`. Both shapes are listed so the header is right
+ * on either target.
  */
 const EXACT_TITLES: Record<string, string> = {
   "/shop/checkout": "Checkout",
   "/shop/checkout/success": "Order confirmed",
   "/shop/account/orders": "My orders",
   "/shop/account/order": "Order details",
+  "/shop/account/booking": "Booking",
+  "/shop/account/booking/pay": "Booking payment",
+  "/shop/account/booking/balance": "Pay the balance",
+  "/shop/account/booking/reschedule": "Move your booking",
+  "/shop/account/ticket": "Ticket",
   "/shop/account/addresses": "Addresses",
   "/shop/account/payment-methods": "Payment methods",
   "/shop/account/notifications": "Notifications",
@@ -71,6 +77,11 @@ const EXACT_TITLES: Record<string, string> = {
 
 const PATTERN_TITLES: [RegExp, string][] = [
   [/^\/shop\/account\/orders\/[^/]+$/, "Order details"],
+  [/^\/shop\/account\/bookings\/[^/]+$/, "Booking"],
+  [/^\/shop\/account\/bookings\/[^/]+\/pay$/, "Booking payment"],
+  [/^\/shop\/account\/bookings\/[^/]+\/balance$/, "Pay the balance"],
+  [/^\/shop\/account\/bookings\/[^/]+\/reschedule$/, "Move your booking"],
+  [/^\/shop\/account\/support\/[^/]+$/, "Ticket"],
   [/^\/shop\/stores\/[^/]+\/products\/[^/]+$/, "Product"],
   [/^\/shop\/stores\/[^/]+$/, "Store"],
   [/^\/shop\/p\/[^/]+$/, "Product"],
@@ -105,6 +116,11 @@ const EXACT_PARENTS: Record<string, string> = {
   "/shop/checkout": "/shop/cart",
   "/shop/checkout/success": "/shop",
   "/shop/account/order": "/shop/account/orders",
+  "/shop/account/booking": "/shop/account/bookings",
+  "/shop/account/booking/pay": "/shop/account/bookings",
+  "/shop/account/booking/balance": "/shop/account/bookings",
+  "/shop/account/booking/reschedule": "/shop/account/bookings",
+  "/shop/account/ticket": "/shop/account/support",
   "/shop/account/notifications/settings": "/shop/account/notifications",
   "/shop/account/support/new": "/shop/account/support",
 };
@@ -126,7 +142,7 @@ export function shopParentPath(pathname: string): string {
 
   if (/^\/shop\/account\/orders\/[^/]+$/.test(here)) return "/shop/account/orders";
   if (/^\/shop\/account\/support\/[^/]+$/.test(here)) return "/shop/account/support";
-  if (/^\/shop\/account\/bookings\/[^/]+$/.test(here)) return "/shop/account/bookings";
+  if (/^\/shop\/account\/bookings\/[^/]+/.test(here)) return "/shop/account/bookings";
   if (here.startsWith("/shop/account/")) return "/shop/account";
 
   return "/shop";

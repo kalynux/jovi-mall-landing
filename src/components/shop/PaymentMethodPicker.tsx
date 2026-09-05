@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Icon } from "@/components/shop/ds";
+import { Chip, Icon } from "@/components/shop/ds";
 import { PhoneField } from "@/components/ui/phone";
 import { isValidPhone, toE164 } from "@/lib/phone";
 import { detectCameroonOperator } from "@/lib/shop/cm-operator";
+import type { SavedPaymentMethod } from "@/lib/shop/customer.types";
 import type { PaymentChannel, PaymentGateway, PhoneOperator } from "@/lib/shop/payments.api";
+// Type-only, so the cycle with `useSavedPayment` (which imports
+// `optionForSavedMethod` from here) is erased at compile time, not a real one.
+import type { SavedPayment } from "./useSavedPayment";
 
 /**
  * Choosing how to pay, in one place.
@@ -131,6 +135,56 @@ export function paymentReady(option: PaymentOption, phone: string): boolean {
   return !option.needsPhone || isValidPhone(phone);
 }
 
+/**
+ * The rail a saved payment method is paid over, if this screen offers it.
+ *
+ * A saved method and a payment option are not the same kind of thing. The
+ * account page saves an *instrument* — this wallet, that card — while the rows
+ * here are the *rails* the platform can charge over. So preselecting a saved
+ * method means finding its rail, and the join has to be done on two fields
+ * because two writers populate them differently:
+ *
+ *   - `brand` is what `customer/payment-methods.md` documents for a method
+ *     enrolled through a gateway (`MTN`, `ORANGE`, `visa`).
+ *   - `provider` is what the account page's own add form writes
+ *     (`mtn_momo`, `orange_money`, `moov_money`), leaving `brand` null.
+ *
+ * `null` is a real answer, not a failure: a `bank_transfer` method, or a Moov
+ * wallet — which the add form offers because the operator exists and
+ * `PhoneOperator` names it, but which neither gateway is wired to charge — has
+ * no row here. The caller leaves its own default selected rather than
+ * preselecting a rail the shopper cannot pay on.
+ */
+export function optionForSavedMethod(
+  method: Pick<SavedPaymentMethod, "method_type" | "provider" | "brand">,
+  options: PaymentOption[],
+): PaymentOption | null {
+  if (method.method_type === "card") {
+    return options.find((o) => !o.needsPhone && !o.isCod) ?? null;
+  }
+  if (method.method_type !== "mobile_money") return null;
+
+  // `brand` first and `provider` only as a fallback, rather than matching
+  // against the two concatenated: they can disagree, and when they do the
+  // gateway's own `brand` is the field that describes the instrument it will
+  // actually charge. Concatenating would let whichever operator was tested
+  // first win an argument it has no business winning.
+  const operator = operatorNamedBy(method.brand) ?? operatorNamedBy(method.provider);
+  if (!operator) return null;
+
+  return options.find((o) => o.operator === operator) ?? null;
+}
+
+/** The operator a `brand` or `provider` string names, if it names one. */
+function operatorNamedBy(value: string | null | undefined): PhoneOperator | null {
+  const text = (value ?? "").toUpperCase();
+  if (!text) return null;
+  // Substring rather than equality because the same operator arrives spelt
+  // three ways across the two writers — `MTN`, `mtn_momo`, `MTN Mobile Money`.
+  const match = (["MTN", "ORANGE", "MOOV"] as const).find((o) => text.includes(o));
+  return match ?? null;
+}
+
 export function PaymentMethodPicker({
   options,
   value,
@@ -138,6 +192,7 @@ export function PaymentMethodPicker({
   phone,
   onPhoneChange,
   disabled,
+  saved,
 }: {
   options: PaymentOption[];
   value: PaymentOption;
@@ -145,6 +200,11 @@ export function PaymentMethodPicker({
   phone: string;
   onPhoneChange: (phone: string) => void;
   disabled?: boolean;
+  /**
+   * The shopper's saved methods, from `useSavedPayment`. Optional: a screen
+   * that does not offer them renders exactly what it always did.
+   */
+  saved?: SavedPayment;
 }) {
   const detection = value.needsPhone ? detectCameroonOperator(phone) : { status: "unknown" as const };
   const detected = detection.status === "detected" ? detection.operator : null;
@@ -159,7 +219,23 @@ export function PaymentMethodPicker({
    * into a different network, at which point a stale override is exactly the
    * bug this exists to prevent, and the fresh answer wins.
    */
-  const applied = useRef<string | null>(null);
+  const applied = useRef<string | null | undefined>(undefined);
+  /**
+   * Seeded from the *first* render's detection, which is what makes a prefilled
+   * number safe.
+   *
+   * A field that already had a number in it when this mounted was not typed
+   * here — it came from a saved payment method, whose network the shopper
+   * declared themselves when they saved it. Cameroon has number portability, so
+   * an Orange wallet on an MTN-prefix number is a real account, and without this
+   * the mount would read the prefix, decide "MTN", and switch the row out from
+   * under a selection that was already correct.
+   *
+   * An empty field seeds `null` — identical to the old starting state, so a
+   * checkout with nothing saved behaves exactly as it always has, and editing
+   * the number afterwards still lets a fresh detection win.
+   */
+  if (applied.current === undefined) applied.current = detected;
   useEffect(() => {
     if (!detected) {
       // Reset, so re-typing the same network after clearing the field
@@ -176,6 +252,8 @@ export function PaymentMethodPicker({
 
   return (
     <>
+      {saved && <SavedMethodBar saved={saved} disabled={disabled} />}
+
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
         {options.map((o) => {
           const selected = o.id === value.id;
@@ -293,6 +371,77 @@ export function PaymentMethodPicker({
         </div>
       )}
     </>
+  );
+}
+
+/**
+ * What the shopper has already saved, above the rails.
+ *
+ * Two shapes, because one saved method and several are different problems. With
+ * one there is nothing to choose, only something to explain — the rail below is
+ * preselected and the field may already be filled, and without a word for it
+ * that reads as the page having guessed. With several, the explanation matters
+ * less than the switch: the labels carry their own `••••1234`, so a chip row
+ * says which wallet is being charged more directly than a sentence could.
+ *
+ * The number hint survives both. It is the cross-device case — the rail came
+ * from the saved method, but only the handset that saved the wallet ever knew
+ * its number — and there the label is the instruction.
+ */
+function SavedMethodBar({ saved, disabled }: { saved: SavedPayment; disabled?: boolean }) {
+  const { usable, active, usingSaved, apply, option, phone } = saved;
+  if (usable.length === 0 || !active) return null;
+
+  const needsNumber = usingSaved && option.needsPhone && !isValidPhone(phone);
+  const many = usable.length > 1;
+
+  return (
+    <div style={{ marginBottom: 12 }}>
+      {many && (
+        <div style={{ display: "flex", gap: 7, flexWrap: "wrap", marginBottom: needsNumber ? 8 : 0 }}>
+          {usable.map((m) => (
+            <Chip
+              key={m.id}
+              size="sm"
+              icon={m.method_type === "card" ? "credit-card" : "smartphone"}
+              selected={usingSaved && active.id === m.id}
+              disabled={disabled}
+              onClick={() => void apply(m)}
+            >
+              {m.display_label}
+            </Chip>
+          ))}
+        </div>
+      )}
+
+      {/* With a chip row above, the plain "using your saved X" only repeats the
+          selected chip — so it earns its place solely when it has the number
+          instruction to carry. */}
+      {usingSaved && (needsNumber || !many) && (
+        <p
+          className="muted"
+          style={{
+            display: "flex",
+            gap: 7,
+            alignItems: "flex-start",
+            fontSize: 12.5,
+            lineHeight: 1.5,
+            margin: 0,
+          }}
+        >
+          <Icon
+            name="wallet"
+            size={14}
+            style={{ color: "var(--brand)", flexShrink: 0, marginTop: 2 }}
+          />
+          <span>
+            {needsNumber
+              ? `Enter the number for your saved ${active.display_label} below.`
+              : `Using your saved ${active.display_label}.`}
+          </span>
+        </p>
+      )}
+    </div>
   );
 }
 

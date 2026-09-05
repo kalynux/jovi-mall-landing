@@ -7,6 +7,7 @@ import { useToast } from "@/components/shop/providers";
 import { useAuth } from "@/lib/auth/useAuth";
 import { openApp } from "@/lib/native/links";
 import { formatMoney } from "@/lib/shop/format";
+import { bookingPath } from "@/lib/shop/shop.routes";
 import {
   createBooking,
   getAvailability,
@@ -135,7 +136,7 @@ export function BookingPanel({ product }: { product: Product }) {
       );
       // The lock is released by the booking itself, so nothing to give back.
       setHeld(null);
-      router.push(`/shop/account/bookings/${booking._id}`);
+      router.push(bookingPath(booking._id));
     } catch (err) {
       const code = (err as { code?: string })?.code;
       const message =

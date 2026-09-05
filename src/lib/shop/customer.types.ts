@@ -158,11 +158,22 @@ export interface AddAddressPayload {
 
 // ─── Saved payment methods (`/api/me/payment-methods`) ───────────────────────
 
+/**
+ * What a read of `/api/me/payment-methods` actually carries.
+ *
+ * Note what is *not* here. `gateway_customer_id` and `gateway_instrument_id`
+ * are accepted on write and stored, but the backend never returns them on any
+ * endpoint — it treats them as secrets. They were declared optional here, which
+ * reads as "sometimes present" and is wrong in the direction that matters: for
+ * mobile money the instrument id **is** the wallet's phone number, so anything
+ * reaching for it to prefill a payment got `undefined` and fell back to asking
+ * the shopper to retype their own number. `lib/shop/wallet-numbers` is how that
+ * number is recovered instead.
+ */
 export interface SavedPaymentMethod {
   id: string;
+  /** Gateway or wallet, e.g. `stripe`, `notchpay`, `mtn_momo`, `orange_money`. */
   provider: string;
-  gateway_customer_id?: string;
-  gateway_instrument_id?: string;
   method_type: PaymentMethodType;
   display_label: string;
   brand?: string | null;
@@ -532,7 +543,13 @@ export interface DigitalEntitlement {
   createdAt?: string;
 }
 
-/** `POST /api/digital/download-links` — the `url` is single-use, so mint one per click. */
+/**
+ * `POST /api/digital/download-links` — the `url` is single-use, so mint one per click.
+ *
+ * The backend sends `url` as a bare path (`/api/digital/download/<token>`);
+ * `createDownloadLink` prefixes the API base before returning it, so what
+ * arrives here is absolute and safe to navigate to.
+ */
 export interface DownloadLink {
   url: string;
   expiresAt: string;

@@ -1,0 +1,223 @@
+/* ============================================================================
+   Delivery map — Leaflet, dressed as part of the shop.
+
+   Co-located rather than folded into globals.css, which is loaded by every
+   visitor to the marketing site. These rules only mean anything alongside
+   `leaflet/dist/leaflet.css`, which is imported by the same lazily-loaded
+   component, so they travel in the same chunk and cost nothing to anyone who
+   never opens a live delivery.
+
+   Leaflet's own stylesheet is deliberately plain, which makes it easy to skin:
+   everything below either re-colours one of its controls with a design token or
+   styles a `divIcon` this app supplies.
+   ============================================================================ */
+
+.wm-map {
+  position: relative;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  /* The tile grid is square-cornered; this is what rounds it. */
+  overflow: hidden;
+  background: var(--surface-sunken);
+}
+
+.wm-map__canvas {
+  height: 100%;
+  width: 100%;
+}
+
+/* Leaflet hardcodes its own font stack on the container. */
+.wm-map .leaflet-container {
+  height: 100%;
+  width: 100%;
+  background: var(--surface-sunken);
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.wm-map__recentre {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  /* Above every Leaflet pane: its controls sit at 800–1000. */
+  z-index: 1100;
+}
+
+/* ─── Controls ───────────────────────────────────────────────────────────── */
+
+.wm-map .leaflet-bar {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+}
+
+.wm-map .leaflet-bar a,
+.wm-map .leaflet-bar a:hover {
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  background: var(--surface);
+  color: var(--text-body);
+  border-bottom-color: var(--border);
+}
+
+.wm-map .leaflet-bar a:hover {
+  background: var(--surface-2);
+}
+
+.wm-map .leaflet-bar a.leaflet-disabled {
+  background: var(--surface-2);
+  color: var(--text-subtle);
+}
+
+.wm-map .leaflet-control-attribution {
+  padding: 1px 6px;
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
+}
+
+.wm-map .leaflet-control-attribution a {
+  color: var(--text-muted);
+  text-decoration: underline;
+}
+
+/* ─── Popups ─────────────────────────────────────────────────────────────── */
+
+.wm-map .leaflet-popup-content-wrapper,
+.wm-map .leaflet-popup-tip {
+  background: var(--surface);
+  color: var(--text-body);
+  box-shadow: var(--shadow-md);
+}
+
+.wm-map .leaflet-popup-content {
+  margin: 8px 12px;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.wm-map-popup__meta {
+  color: var(--text-muted);
+}
+
+/* ─── The two pins ───────────────────────────────────────────────────────── */
+
+/* A custom `className` replaces Leaflet's `leaflet-div-icon`, so its white box
+   never applies — but say so anyway, because that default is easy to inherit
+   back by accident. */
+.wm-map-pin {
+  background: transparent;
+  border: 0;
+}
+
+.wm-map-pin--courier {
+  color: var(--brand);
+}
+
+.wm-map-pin--drop {
+  color: var(--text-strong);
+  /* Lifts the pin off whatever the tiles put behind it. */
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
+
+/* The hole in the teardrop. A literal white would vanish into the pin in dark
+   mode, where `--text-strong` is very nearly white itself. */
+.wm-map-pin--drop circle {
+  fill: var(--surface);
+}
+
+.wm-map-pin__core,
+.wm-map-pin__pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+}
+
+.wm-map-pin__core {
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  background: var(--brand);
+  border: 2.5px solid var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.wm-map-pin__pulse {
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  background: var(--brand);
+  animation: wm-map-pulse 2.4s ease-out infinite;
+}
+
+/* The arrow orbits the dot: the wrapper fills the icon box and rotates about its
+   centre, carrying the glyph pinned to its top edge. */
+.wm-map-pin__heading {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+  transition: transform var(--dur-base, 200ms) linear, opacity 150ms linear;
+}
+
+.wm-map-pin__heading svg {
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  margin-left: -6.5px;
+  color: var(--brand);
+}
+
+@keyframes wm-map-pulse {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.5;
+  }
+  70%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* ─── The courier's recent path ──────────────────────────────────────────── */
+
+/* Leaflet writes `stroke` and `stroke-opacity` as presentation attributes, which
+   any stylesheet rule outranks — so the trail can be a themed colour rather than
+   a literal passed in JavaScript. */
+.wm-map-trail {
+  stroke: var(--brand);
+  stroke-opacity: 0.5;
+  stroke-linecap: round;
+  stroke-dasharray: 1 7;
+}
+
+/* ─── Dark mode ──────────────────────────────────────────────────────────── */
+
+/* With no dark tile template configured, the light tiles are inverted in place.
+   It is a genuine approximation: street tiles come out convincingly dark, and
+   satellite imagery comes out as a photographic negative — which is exactly what
+   NEXT_PUBLIC_MAP_TILE_URL_DARK exists to avoid. Only the tile pane is touched,
+   so pins, the trail and every control keep their real colours. */
+html.dark .wm-map[data-dark-tiles="false"] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9);
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  /* The dot stays — it is the thing being watched — but it stops breathing. */
+  .wm-map-pin__pulse {
+    animation: none;
+    opacity: 0.25;
+    transform: scale(1.8);
+  }
+
+  .wm-map-pin__heading {
+    transition: none;
+  }
+}

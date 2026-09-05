@@ -23,6 +23,8 @@ import {
   resendDeliveryCode,
 } from "@/lib/shop/orders.api";
 import { PayGroupSheet } from "@/components/shop/account/PayGroupSheet";
+import { isSettledFailure, verifyPayment } from "@/lib/shop/payments.api";
+import { forgetPaymentAttempt, readPaymentAttempt } from "@/lib/shop/payment-attempts";
 import {
   canCancel,
   canConfirmDelivery,
@@ -73,7 +75,7 @@ export function OrderGroupDetail({ cartId }: { cartId: string }) {
       >
         {(g) => (
           <>
-            <GroupSummary group={g} />
+            <GroupSummary group={g} onRefreshed={group.set} />
 
             {g.orders.map((order) => (
               <VendorOrderCard
@@ -96,14 +98,120 @@ export function OrderGroupDetail({ cartId }: { cartId: string }) {
  * The pay call-to-action is the reason this is a component rather than markup
  * inside the render prop: it owns the sheet's open state, and `ResourceView`'s
  * children are a function, so a hook could not live there.
+ *
+ * ── Why there is a "check" beside the "pay" ──────────────────────────────────
+ *
+ * Mobile money settles asynchronously. The shopper approves the prompt on their
+ * handset and the money moves some seconds — occasionally some minutes — later,
+ * through the gateway's callback. Between those two moments this page says
+ * "waiting to be paid" and offers a Pay button, which to someone who has just
+ * paid reads as "that didn't work, do it again" — the one instruction we do not
+ * want to give them. The check answers the question they actually have.
+ *
+ * `onRefreshed` replaces the loaded group rather than re-running the loader, so
+ * the handler can *see* the new state and say what changed. `reload()` returns
+ * nothing, and a check that silently re-renders is indistinguishable from a
+ * check that did nothing.
  */
-function GroupSummary({ group }: { group: OrderGroup }) {
+function GroupSummary({
+  group,
+  onRefreshed,
+}: {
+  group: OrderGroup;
+  onRefreshed: (next: OrderGroup) => void;
+}) {
   const format = useFormatter();
+  const t = useTranslations("errors");
+  const { flash } = useToast();
   const [paying, setPaying] = useState(false);
+  const [checking, setChecking] = useState(false);
+  /**
+   * The last check's answer, kept inline rather than flashed.
+   *
+   * A toast is the wrong shape for "not through yet": it is the answer to a
+   * question the shopper deliberately asked, it runs to a sentence or two, and
+   * it sits above a Pay button it exists to talk them out of pressing. It has
+   * to stay on screen. The one outcome that *is* a toast is success — the block
+   * this note lives in unmounts the moment the order is paid.
+   */
+  const [checked, setChecked] = useState<{ tone: "info" | "danger"; message: string } | null>(null);
 
   const payment = groupPaymentChip(group.paymentStatus);
   const payable = canPayGroup(group);
   const due = payableTotal(group);
+
+  const check = useCallback(async () => {
+    setChecking(true);
+    setChecked(null);
+
+    try {
+      /*
+       * 1. Force the gateway to be re-asked, when this device knows what to ask
+       *    about. `verify` needs a transaction id and no order endpoint returns
+       *    one, so this is the id written down at `initiate` — see
+       *    `payment-attempts`. Absent for a shopper who paid on another device,
+       *    which is why it is an enhancement to the check and not the check.
+       */
+      let refused = false;
+      const transactionId = await readPaymentAttempt(group.cartId);
+      if (transactionId) {
+        try {
+          refused = isSettledFailure((await verifyPayment(transactionId)).status);
+        } catch {
+          // A verify that errors is not a failed payment — the transaction may
+          // still be settling, and the callback settles it without us. Fall
+          // through to the order, which is the state the shopper is shown.
+        }
+      }
+
+      /*
+       * 2. Re-read the order either way. This is what makes the button work at
+       *    all for the shopper who paid elsewhere, and it is also the authority:
+       *    `verify` reports the transaction, the order reports whether the money
+       *    landed against it.
+       */
+      const next = await getOrderGroup(group.cartId);
+      onRefreshed(next);
+
+      const remaining = payableTotal(next);
+
+      if (remaining === 0) {
+        await forgetPaymentAttempt(group.cartId);
+        // The whole payable block — this note included — is gone on the next
+        // render, so the good news has to be said somewhere that outlives it.
+        flash(
+          next.paymentStatus === "paid"
+            ? "Payment received — your order is confirmed."
+            : "There is nothing left to pay on this order.",
+        );
+      } else if (remaining < due) {
+        setChecked({
+          tone: "info",
+          message: `Part of your order has been paid. ${formatMoney(remaining, group.currency)} is still due.`,
+        });
+      } else if (refused) {
+        await forgetPaymentAttempt(group.cartId);
+        setChecked({
+          tone: "danger",
+          message:
+            "That payment did not go through, and nothing was charged. Your order is still held — you can pay for it again.",
+        });
+      } else {
+        setChecked({
+          tone: "info",
+          message:
+            "Not through yet. Mobile money can take a few minutes to clear — this order updates by itself as soon as your provider confirms, so there is no need to pay again.",
+        });
+      }
+    } catch (err) {
+      setChecked({
+        tone: "danger",
+        message: translateError(t, err, "We couldn't check this payment. Please try again."),
+      });
+    } finally {
+      setChecking(false);
+    }
+  }, [due, flash, group.cartId, group.currency, onRefreshed, t]);
 
   return (
     <>
@@ -139,7 +247,13 @@ function GroupSummary({ group }: { group: OrderGroup }) {
 
         {/* Unpaid, and payable. Checkout writes the orders before it charges
             anything, so this is the ordinary state after a declined prompt —
-            not an error, and the copy says so. */}
+            not an error, and the copy says so.
+
+            The copy used to open with "Nothing has been charged", which is a
+            claim this screen is not in a position to make: an approved
+            mobile-money prompt that has not settled yet looks identical from
+            here, and telling that shopper their money is untouched is how they
+            end up paying twice. */}
         {payable && (
           <div
             style={{
@@ -149,16 +263,60 @@ function GroupSummary({ group }: { group: OrderGroup }) {
             }}
           >
             <p style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--text-body)", margin: "0 0 10px" }}>
-              This order is waiting to be paid. Nothing has been charged and your items are held —
-              pay now to have the seller start on it.
+              This order is waiting to be paid and your items are held — pay now to have the
+              seller start on it.
             </p>
             <Button
               block
               leadingIcon="wallet"
+              disabled={checking}
               onClick={() => setPaying(true)}
             >
               Pay {formatMoney(due, group.currency)}
             </Button>
+
+            {/* Secondary, and deliberately so: to a shopper who has not paid
+                yet this is noise, and the one who has is looking for it. */}
+            <Button
+              block
+              variant="secondary"
+              leadingIcon="refresh-cw"
+              disabled={checking}
+              style={{ marginTop: 8 }}
+              onClick={() => void check()}
+            >
+              {checking ? "Checking…" : "Already paid? Check now"}
+            </Button>
+
+            {checked && (
+              <div
+                role="status"
+                style={{
+                  display: "flex",
+                  gap: 9,
+                  alignItems: "flex-start",
+                  marginTop: 10,
+                  border: `1px solid var(--${checked.tone === "danger" ? "danger-border" : "border"})`,
+                  background:
+                    checked.tone === "danger" ? "var(--danger-bg)" : "var(--surface-sunken)",
+                  borderRadius: "var(--radius-md)",
+                  padding: "11px 13px",
+                }}
+              >
+                <Icon
+                  name={checked.tone === "danger" ? "triangle-alert" : "hourglass"}
+                  size={16}
+                  style={{
+                    color: checked.tone === "danger" ? "var(--danger)" : "var(--text-muted)",
+                    flexShrink: 0,
+                    marginTop: 1,
+                  }}
+                />
+                <p style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--text-body)", margin: 0 }}>
+                  {checked.message}
+                </p>
+              </div>
+            )}
           </div>
         )}
       </AccountCard>
@@ -406,7 +564,15 @@ function VendorOrderCard({
 
       {/* Parcels. Physical orders only — a digital order has nothing to ship. */}
       {order.orderType === "physical" && (
-        <Shipments orderId={order.id} isCod={cod} onChanged={onChanged} />
+        <Shipments
+          orderId={order.id}
+          isCod={cod}
+          // Where this order is going, for the live map's second pin. It belongs
+          // to the order, not the parcel — the shipment read has no address of
+          // any kind — so it has to come from here.
+          deliveryAddress={order.deliveryAddress}
+          onChanged={onChanged}
+        />
       )}
 
       {collections.map((c) => (
@@ -517,10 +683,12 @@ const SHIPMENT_LABEL: Record<
 function Shipments({
   orderId,
   isCod: cod,
+  deliveryAddress,
   onChanged,
 }: {
   orderId: string;
   isCod: boolean;
+  deliveryAddress?: unknown;
   onChanged: () => void;
 }) {
   const [shipments, setShipments] = useState<CustomerShipment[] | null>(null);
@@ -597,7 +765,12 @@ function Shipments({
                 socket, and renders nothing when the answer is nobody — which is
                 the resting state, and is expected for a while after an order
                 ships because a grant is not pushed. */}
-            <DeliveryTracking shipmentId={shipment.id} hasAgent={Boolean(shipment.agent)} />
+            <DeliveryTracking
+              shipmentId={shipment.id}
+              hasAgent={Boolean(shipment.agent)}
+              deliveryAddress={deliveryAddress}
+              agentName={shipment.agent?.displayName}
+            />
 
             {shipment.statusHistory.length > 0 && (
               <ol style={{ listStyle: "none", margin: "10px 0 0", padding: 0 }}>

@@ -8,7 +8,7 @@
  */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { OrderGroupClient } from "@/components/shop/account/OrderGroupClient";
+import { OrderGroupClient } from "@/components/shop/account/QueryScreens";
 import { isLocale } from "@/i18n/routing";
 
 export const metadata: Metadata = {

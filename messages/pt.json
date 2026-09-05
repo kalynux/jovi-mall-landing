@@ -8,7 +8,26 @@
         "errorBody": "Este link de verificação é inválido ou expirou. Solicite um novo.",
         "missingToken": "Nenhum token de verificação foi fornecido.",
         "goToLogin": "Continuar para iniciar sessão",
-        "backToLogin": "Voltar a iniciar sessão"
+        "backToLogin": "Voltar a iniciar sessão",
+        "rateLimited": "Demasiadas tentativas a partir da sua rede. Aguarde um minuto e abra o link novamente.",
+        "tokenSpent": "Este link já não é válido. Pode ter expirado, ou o seu e-mail pode já estar verificado — inicie sessão para confirmar, ou peça um novo link na sua conta."
+    },
+    "confirmEmail": {
+        "title": "Confirmar o seu e-mail",
+        "confirming": "A confirmar o seu e-mail…",
+        "successTitle": "E-mail atualizado",
+        "successBody": "A partir de agora inicia sessão com {email}.",
+        "successBodyGeneric": "É este o endereço com que inicia sessão a partir de agora.",
+        "errorTitle": "Não foi possível confirmar",
+        "missingToken": "Falta o token neste link. Abra o e-mail mais recente e tente novamente.",
+        "expired": "Este link expirou. Peça a alteração novamente nas definições da sua conta.",
+        "invalid": "Este link não é válido. Verifique se abriu o e-mail mais recente.",
+        "notPending": "Não há nenhuma alteração de e-mail a aguardar confirmação. Pode já estar concluída.",
+        "taken": "Outra conta passou a iniciar sessão com esse endereço. Recomece a alteração com outro.",
+        "network": "Não foi possível contactar a Wi-Mall. Verifique a ligação e abra o link novamente.",
+        "generic": "Não foi possível confirmar essa alteração. Tente novamente.",
+        "backToAccount": "Voltar à minha conta",
+        "rateLimited": "Demasiadas tentativas a partir da sua rede. Aguarde um minuto e abra o link novamente."
     },
     "meta": {
         "langName": "Português",

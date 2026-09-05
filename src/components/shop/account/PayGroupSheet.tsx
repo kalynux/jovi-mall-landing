@@ -3,17 +3,18 @@
 import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { BottomSheet, Button, Icon } from "@/components/shop/ds";
+import { BottomSheet, Button, Icon, Skeleton } from "@/components/shop/ds";
 import {
   MOBILE_MONEY_OPTIONS,
   PaymentMethodPicker,
   paymentChannel,
   paymentReady,
-  type PaymentOption,
 } from "@/components/shop/PaymentMethodPicker";
+import { useSavedPayment } from "@/components/shop/useSavedPayment";
 import { translateError } from "@/lib/auth/error-translator";
 import { formatMoney } from "@/lib/shop/format";
 import { initiatePayment, isSettledFailure } from "@/lib/shop/payments.api";
+import { rememberPaymentAttempt } from "@/lib/shop/payment-attempts";
 import { payableOrders, payableTotal } from "@/lib/shop/order-status";
 import type { OrderGroup } from "@/lib/shop/customer.types";
 
@@ -64,8 +65,15 @@ export function PayGroupSheet({
 }) {
   const router = useRouter();
   const t = useTranslations("errors");
-  const [option, setOption] = useState<PaymentOption>(MOBILE_MONEY_OPTIONS[0]);
-  const [phone, setPhone] = useState("");
+  /**
+   * Loaded only once the sheet opens.
+   *
+   * It is mounted on every payable order — see the note at its call site — so
+   * fetching on mount would put a saved-methods request behind every order card
+   * the shopper so much as looks at.
+   */
+  const payForm = useSavedPayment(MOBILE_MONEY_OPTIONS, open);
+  const { option, phone } = payForm;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -86,6 +94,13 @@ export function PayGroupSheet({
         gateway: option.gateway,
         channel: paymentChannel(option, phone),
       });
+
+      // Write the transaction id down before leaving. It is returned exactly
+      // once, and the order screen's "Check payment" needs it to force a
+      // gateway re-check — see `payment-attempts`. Awaited rather than fired
+      // and forgotten because the push below unmounts this sheet; it never
+      // rejects, so it cannot cost the shopper their payment.
+      await rememberPaymentAttempt(group.cartId, payment.transactionId);
 
       const params = new URLSearchParams({
         group: group.cartId,
@@ -114,7 +129,7 @@ export function PayGroupSheet({
     }
   }, [group.cartId, option, phone, router, t]);
 
-  const canPay = paymentReady(option, phone) && !busy;
+  const canPay = payForm.ready && paymentReady(option, phone) && !busy;
 
   return (
     <BottomSheet
@@ -186,14 +201,23 @@ export function PayGroupSheet({
         </div>
       )}
 
-      <PaymentMethodPicker
-        options={MOBILE_MONEY_OPTIONS}
-        value={option}
-        onChange={setOption}
-        phone={phone}
-        onPhoneChange={setPhone}
-        disabled={busy}
-      />
+      {/* Held back until the saved methods have answered: a wallet number that
+          lands after the picker mounts arrives as an edit, and the operator
+          detection overrides the rail it came from. See `useSavedPayment`. */}
+      {payForm.ready ? (
+        <PaymentMethodPicker
+          key={payForm.formKey}
+          options={MOBILE_MONEY_OPTIONS}
+          value={option}
+          onChange={payForm.setOption}
+          phone={phone}
+          onPhoneChange={payForm.setPhone}
+          disabled={busy}
+          saved={payForm}
+        />
+      ) : (
+        <Skeleton height={180} />
+      )}
     </BottomSheet>
   );
 }

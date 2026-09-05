@@ -11,6 +11,11 @@ wrong, the app is wrong.
 >    refreshed. Two breaking changes and one capability the app is reimplementing client-side.
 > 2. **[`auth/customer-auth.md`](./auth/customer-auth.md)** — **why there is no signup form.**
 >    If you read one page, read that one.
+>
+> Newest change: **[`FRONTEND-CHANGELOG-email-verification.md`](./FRONTEND-CHANGELOG-email-verification.md)**
+> (2026-08-24) — this app now serves **both** emailed-token pages for all four Wi-Mall apps.
+> Registration verification moved off the API and onto `/verify-email`, and both links carry
+> `app=<role>` so the page knows which dashboard to send the person back to.
 
 ---
 
@@ -209,11 +214,11 @@ fifteen minutes in while browsers carried on.
 
 ## 9 · How this folder relates to the backend, and how to keep it that way
 
-**63 files. 53 are byte-identical mirrors** of `jovi-mall/api-doc/` (48) and `geo-tracker/api-doc/` (5).
+**65 files. 55 are byte-identical mirrors** of `jovi-mall/api-doc/` (50) and `geo-tracker/api-doc/` (5).
 
 | Class | Count | Files |
 |---|---:|---|
-| **Mirror** | 53 | byte-identical to its backend counterpart. **Do not edit** — fix the backend and re-copy |
+| **Mirror** | 55 | byte-identical to its backend counterpart. **Do not edit** — fix the backend and re-copy |
 | **Authored** | 6 | no backend counterpart: `MIGRATION-2026-08.md` · `ROUTE-MAP.md` · `tracking/README.md` · `customer/reviews.md` · `files/private-files.md` · `error-codes.ts` |
 | **Deliberately diverged** | 4 | `README.md` (this page) · `customer/saved-and-viewed.md` · `me/contact-change.md` · `me/account-closure.md` — a backend page exists at the same path; these carry app-specific content it does not |
 

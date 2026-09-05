@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { useRouter } from "@/i18n/navigation";
 import {
   AccountCard,
   AccountShell,
@@ -12,6 +12,7 @@ import { Button, Chip, EmptyState, Icon } from "@/components/shop/ds";
 import { useNotifications, useToast } from "@/components/shop/providers";
 import { translateError } from "@/lib/auth/error-translator";
 import { listNotifications, markAllRead, markRead } from "@/lib/shop/notifications.api";
+import { resolveNotificationDestination } from "@/lib/shop/notification-routing";
 import type { NotificationListMeta } from "@/lib/shop/notifications.api";
 import { useApiResource } from "@/lib/shop/useApiResource";
 import type { CustomerNotification, NotificationAggregate } from "@/lib/shop/customer.types";
@@ -208,22 +209,7 @@ function NotificationRow({
           </p>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 9, flexWrap: "wrap" }}>
-            {/* `action.path` is relative to the storefront; `action.url` is the
-                absolute form the backend builds only when STOREFRONT_URL is set.
-                The relative one is what belongs in an in-app link. */}
-            {n.action?.path && (
-              <Link
-                href={`/shop/${n.action.path.replace(/^\/+/, "")}`}
-                style={{
-                  fontSize: 12.5,
-                  fontWeight: 700,
-                  color: "var(--brand-hover)",
-                  textDecoration: "none",
-                }}
-              >
-                {n.action.label} →
-              </Link>
-            )}
+            {n.action?.path && <NotificationAction notification={n} />}
             <div style={{ flex: 1 }} />
             {!n.isRead && (
               <Button variant="ghost" size="sm" leadingIcon="check" onClick={onRead}>
@@ -234,5 +220,62 @@ function NotificationRow({
         </div>
       </div>
     </AccountCard>
+  );
+}
+
+/**
+ * The row's action — "View order", "View booking", "Track delivery".
+ *
+ * ── Why a button and not a link ──────────────────────────────────────────────
+ *
+ * The destination is not knowable at render time. An order notification names
+ * the `orderId` and the group screen is keyed by `cartId`, so an `href` written
+ * straight from `action.path` is either wrong — which is what it was, and how
+ * every one of these taps ended on "Webpage not available" in the app and a 404
+ * on the web — or the result of one API call per row before the list can paint.
+ *
+ * Resolving on the tap costs that lookup once, for the one notification the
+ * shopper actually opened. Nothing is lost by dropping the anchor: this screen
+ * is owner-scoped and `noindex`, so there is no URL here worth copying,
+ * crawling or opening in a second tab.
+ *
+ * `resolveNotificationDestination` never throws and always answers, so a failed
+ * lookup lands on the order list rather than leaving the button spinning.
+ */
+function NotificationAction({ notification: n }: { notification: CustomerNotification }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+
+  const open = useCallback(async () => {
+    setBusy(true);
+    const target = await resolveNotificationDestination(n.action?.path, {
+      type: n.aggregateType,
+      id: n.aggregateId,
+    });
+    router.push(target);
+    setBusy(false);
+  }, [router, n.action?.path, n.aggregateType, n.aggregateId]);
+
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      aria-busy={busy}
+      onClick={() => void open()}
+      style={{
+        appearance: "none",
+        border: "none",
+        background: "none",
+        padding: 0,
+        font: "inherit",
+        fontSize: 12.5,
+        fontWeight: 700,
+        color: "var(--brand-hover)",
+        cursor: busy ? "progress" : "pointer",
+        opacity: busy ? 0.6 : 1,
+      }}
+    >
+      {n.action?.label} →
+    </button>
   );
 }

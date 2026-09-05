@@ -146,3 +146,72 @@ export function productPathFor(product: {
 }): string {
   return productPath(product.store.slug, product.slug);
 }
+
+/**
+ * ── Bookings and support threads ─────────────────────────────────────────────
+ *
+ * Same split as the four above, and for the same reason: `bookings/[bookingId]`
+ * — with `/pay`, `/balance` and `/reschedule` under it — and `support/[ticketId]`
+ * are dynamic segments, and there is no honest set of ids to prerender. A
+ * customer's appointments and tickets are theirs, unbounded, and change without
+ * a rebuild.
+ *
+ * These two are not the catalogue, though. An order group can be reached from a
+ * list, but a *booking* is a service somebody bought and a *ticket* is a problem
+ * they raised — both are things the app has to be able to open, not browse past.
+ * So they get the query-string treatment rather than being left out of the
+ * bundle: `/shop/account/booking?id=…` and `/shop/account/ticket?id=…` are
+ * ordinary static files that resolve against the live API on open.
+ *
+ * The web keeps its nested paths unchanged. `build-native.mjs` drops the
+ * dynamic trees from the app build, and these functions are what keep every
+ * link pointing at whichever shape the current target has.
+ */
+
+/** The bookings list. Static, so it is in every build. */
+export const BOOKING_LIST = `${SHOP_ROOT}/account/bookings`;
+
+/** The support ticket list. Static, so it is in every build. */
+export const TICKET_LIST = `${SHOP_ROOT}/account/support`;
+
+/** One appointment. */
+export function bookingPath(bookingId: string): string {
+  return bookingScreen("", bookingId);
+}
+
+/** Pay for a booking that was created unpaid. */
+export function bookingPayPath(bookingId: string): string {
+  return bookingScreen("pay", bookingId);
+}
+
+/** Settle what a completed booking turned out to cost above the quote. */
+export function bookingBalancePath(bookingId: string): string {
+  return bookingScreen("balance", bookingId);
+}
+
+/** Move a booking to another slot. */
+export function bookingReschedulePath(bookingId: string): string {
+  return bookingScreen("reschedule", bookingId);
+}
+
+/** One support thread. */
+export function ticketPath(ticketId: string): string {
+  if (IS_NATIVE_BUILD) {
+    return `${SHOP_ROOT}/account/ticket?id=${encodeURIComponent(ticketId)}`;
+  }
+  return `${TICKET_LIST}/${encodeURIComponent(ticketId)}`;
+}
+
+/**
+ * The four booking screens differ only by their last segment, so they are one
+ * function — the alternative is the same target branch written four times, and
+ * the next screen added would be the one that forgot it.
+ */
+function bookingScreen(step: "" | "pay" | "balance" | "reschedule", bookingId: string): string {
+  const id = encodeURIComponent(bookingId);
+  if (IS_NATIVE_BUILD) {
+    const base = `${SHOP_ROOT}/account/booking${step ? `/${step}` : ""}`;
+    return `${base}?id=${id}`;
+  }
+  return `${BOOKING_LIST}/${id}${step ? `/${step}` : ""}`;
+}
