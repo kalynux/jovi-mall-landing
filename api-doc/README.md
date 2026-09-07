@@ -122,7 +122,7 @@ the payment routes.** Filed as **F-34**.
 |---|---|
 | [`MIGRATION-2026-08.md`](./MIGRATION-2026-08.md) | what changed, and what must not be "fixed" |
 | [`ROUTE-MAP.md`](./ROUTE-MAP.md) | **all 141 routes → the one document that covers each** |
-| [`error-codes.ts`](./error-codes.ts) | the registry — **603 codes**, copied from backend source |
+| [`error-codes.ts`](./error-codes.ts) | the registry — **640 codes**, re-counted from backend source 2026-09-08 (the file was already current; this line was behind) |
 
 ### Marketing & storefront
 | | |
@@ -214,18 +214,32 @@ fifteen minutes in while browsers carried on.
 
 ## 9 · How this folder relates to the backend, and how to keep it that way
 
-**65 files. 55 are byte-identical mirrors** of `jovi-mall/api-doc/` (50) and `geo-tracker/api-doc/` (5).
+**67 files** — 65 `.md` plus `error-codes.ts` and `ticket_types.txt`. **Measured 2026-09-08**, by
+diffing every `.md` against `jovi-mall/api-doc/` at the same path with line endings normalised:
 
-| Class | Count | Files |
+| Class | Count (2026-09-08) | Was |
 |---|---:|---|
-| **Mirror** | 55 | byte-identical to its backend counterpart. **Do not edit** — fix the backend and re-copy |
-| **Authored** | 6 | no backend counterpart: `MIGRATION-2026-08.md` · `ROUTE-MAP.md` · `tracking/README.md` · `customer/reviews.md` · `files/private-files.md` · `error-codes.ts` |
-| **Deliberately diverged** | 4 | `README.md` (this page) · `customer/saved-and-viewed.md` · `me/contact-change.md` · `me/account-closure.md` — a backend page exists at the same path; these carry app-specific content it does not |
+| **Byte-identical to its backend counterpart** | **24** | 55 |
+| **Has a counterpart, and differs** | **31** | 4 |
+| **No backend counterpart at all** | **10** `.md` | 6 (+`error-codes.ts`) |
 
-**Those four are the only expected drift.** Each of the three content pages carries a banner saying
-so at the top. This `README.md` diverges because the backend's copy is an index of the *whole*
-backend contract — it links to `vendor/`, `agency/`, `agent/` and `admin/` pages that do not exist
-here, and it is not organised by this app's three audiences.
+The 10 with no counterpart: `MIGRATION-2026-08.md` · `ROUTE-MAP.md` · `tracking/README.md` ·
+`customer/reviews.md` · `files/private-files.md` and the five under `tracking/geo-tracker/`, which
+mirror `geo-tracker/api-doc/` rather than jovi-mall's and so are invisible to a jovi-mall diff.
+
+> ⛔ **This table used to say "those four are the only expected drift — any fifth is real
+> staleness." That rule no longer holds, and following it would send you chasing 27 false
+> alarms.** The 2026-09 documentation programme adds *Verified against source* banners and
+> corrections to the frontend copies, deliberately, so a frontend page is now routinely **ahead
+> of** its backend twin rather than behind it. **Read the banner at the top of a page before
+> concluding it is stale**; a page dated later than the backend's copy is the newer one.
+>
+> The four originally-named divergences are still divergent and still deliberate:
+> `README.md` (this page), `customer/saved-and-viewed.md`, `me/contact-change.md`,
+> `me/account-closure.md`. Each of the three content pages carries a banner saying so. This
+> `README.md` diverges because the backend's copy indexes the *whole* backend contract — it links
+> to `vendor/`, `agency/`, `agent/` and `admin/` pages that do not exist here, and it is not
+> organised by this app's three audiences.
 
 ### 9.1 Why the mirrors were left untouched
 
@@ -246,12 +260,16 @@ node backend/FRONTEND-SYNC/tools/call-audit.js | sed -n '/landing/,/^$/p'
 
 **Expected, and true on 2026-08-24:**
 
-| Check | Expected |
-|---|---|
-| drift | `IDENTICAL (48) · DRIFTED (4)`. **The four are named in § 9 and are deliberate.** Any fifth is real staleness |
-| dead calls | **0.** 42 path literals, 36 matched, 6 unmatched and all benign |
-| `error-codes.ts` | **603** codes |
-| route total | **677** overall, **141** customer-reachable |
+| Check | Measured 2026-09-08 | Was expected (2026-08-24) |
+|---|---|---|
+| drift | **24 identical · 31 drifted** — see the ⛔ box in § 9; drift is no longer a staleness signal on its own | `IDENTICAL (48) · DRIFTED (4)` |
+| dead calls | **0** | **0.** 42 path literals, 36 matched, 6 unmatched and all benign |
+| `error-codes.ts` | **640** codes | 603 |
+| route total | **764** overall | 677 overall, 141 customer-reachable |
+
+⚠ **Re-measure; never quote a number from this table.** The registry figure has read
+541 → 621 → 623 → 625 → **640** across editions of this program, and each stale value was carried
+onward into other repositories before anyone checked it.
 
 ⚠ `doc-drift.js` compares against `jovi-mall/api-doc/` only, so the 5 files under
 `tracking/geo-tracker/` appear in neither column. They mirror `geo-tracker/api-doc/` and are

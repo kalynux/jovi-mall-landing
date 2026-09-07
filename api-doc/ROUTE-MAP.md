@@ -1,8 +1,25 @@
 # Route map — every customer-reachable route, and the one document that covers it
 
-**141 routes.** Generated from the live Express router on **2026-08-24**
-(`FRONTEND-SYNC/tools/dump-routes.js` against `jovi-mall/src/app.ts` — 677 routes total), plus the
-one tracking route the role filter misses.
+**Verified against source on 2026-09-08** — the route census, the per-tree counts and the five routes added since 2026-08-24, against the live route table.
+
+**146 routes** — **re-measured against source on 2026-09-08**, was 141 on 2026-08-24.
+Generated from the live Express router (`FRONTEND-SYNC/tools/dump-routes.js` against
+`jovi-mall/src/app.ts` — **764** routes total, was 677), plus the one tracking route the role
+filter misses.
+
+> **The five that arrived since 2026-08-24**, and where each is already documented — the counts
+> in § 2 were the only stale part:
+>
+> | Route | Documented in |
+> |---|---|
+> | `GET /api/public/products/by-ids` | [`public/catalog.md`](./public/catalog.md) |
+> | `GET /api/public/variants/by-sku/:sku` | [`public/catalog.md`](./public/catalog.md) |
+> | `POST /api/payments/:transactionId/pay-link` | [`customer/FRONTEND-CHANGELOG-order-detail.md`](./customer/FRONTEND-CHANGELOG-order-detail.md) |
+> | `GET /api/payments/session/:token` | [`payments/README.md`](./payments/README.md) |
+> | `POST /api/auth/mobile/register` (the tree went 23 → 24) | [`auth/README.md`](./auth/README.md) · [`auth/FRONTEND-CHANGELOG-mobile-auth.md`](./auth/FRONTEND-CHANGELOG-mobile-auth.md) |
+>
+> So the "every route appears in exactly one document" property still holds; only the arithmetic
+> was behind.
 
 This table exists so "is this documented?" is a lookup rather than a search. **Every route appears in
 exactly one document.**
@@ -16,7 +33,10 @@ cd backend/jovi-mall && node -r ts-node/register/transpile-only -r dotenv/config
     ../FRONTEND-SYNC/tools/dump-routes.js "$(pwd)/src/app.ts"
 ```
 
-If the total is no longer **677**, the backend moved and this map is stale.
+If the whole-service total is no longer **764** (2026-09-08; it was 677 on 2026-08-24), the
+backend moved — re-measure the per-tree counts below rather than trusting them. ⚠ Use
+`grep -cE '^(GET|POST|PUT|PATCH|DELETE) '` on the dump, not `wc -l`: the dumper prints ten
+boot-log lines, a blank line and a `TOTAL` footer, so `wc -l` over-counts by 12.
 
 ⚠ **`FRONTEND-SYNC/evidence/routes-role-customer.txt` lists 140, not 141.** Its filter is
 path-prefix based (`/api/customer`, `/api/public`, `/api/me`, …) and
@@ -29,19 +49,19 @@ reachable by any authenticated customer — see [`tracking/README.md`](./trackin
 
 | Tree | Routes | Document |
 |---|---:|---|
-| `/api/auth/*` | 23 | [`auth/README.md`](./auth/README.md) · [`auth/customer-auth.md`](./auth/customer-auth.md) · [`auth/magic-login.md`](./auth/magic-login.md) · [`auth/onboarding.md`](./auth/onboarding.md) |
+| `/api/auth/*` | 24 | [`auth/README.md`](./auth/README.md) · [`auth/customer-auth.md`](./auth/customer-auth.md) · [`auth/magic-login.md`](./auth/magic-login.md) · [`auth/onboarding.md`](./auth/onboarding.md) |
 | `/api/me/*` | 16 | see § 2.1 |
 | `/api/customer/*` | 62 | see § 2.2 |
-| `/api/public/*` | 14 | see § 2.3 |
+| `/api/public/*` | 16 | see § 2.3 |
 | `/api/files/*` | 7 | [`uploads/README.md`](./uploads/README.md) · [`files/private-files.md`](./files/private-files.md) |
-| `/api/payments/*` | 4 | [`payments/README.md`](./payments/README.md) |
+| `/api/payments/*` | 6 | [`payments/README.md`](./payments/README.md) · [`customer/FRONTEND-CHANGELOG-order-detail.md`](./customer/FRONTEND-CHANGELOG-order-detail.md) |
 | `/api/products/*` | 4 | [`customer/bookings.md`](./customer/bookings.md) |
 | `/api/digital/*` | 3 | [`customer/digital-products.md`](./customer/digital-products.md) |
 | `/api/health/*` | 3 | [`health.md`](./health.md) |
 | `/api/geo/*` | 2 | [`geo/README.md`](./geo/README.md) |
 | `/api/bookings/*` | 2 | [`customer/bookings.md`](./customer/bookings.md) |
 | `/api/tracking/*` | 1 | [`tracking/README.md`](./tracking/README.md) |
-| **Total** | **141** | |
+| **Total** | **146** | |
 
 ### 2.1 `/api/me/*` — 16 routes, shared across every role
 

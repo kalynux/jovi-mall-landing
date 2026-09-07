@@ -1,5 +1,7 @@
 # What changed since these docs were last refreshed
 
+**Verified against source on 2026-09-08** — the third `FileDetail.access` value and the 2026-09-07 storefront price flip added; the route counts in § 9 re-measured.
+
 **Written 2026-08-24, from source.** Short, because this repository is in good shape — but two of
 these are breaking and one is a behaviour the app is currently reimplementing client-side.
 
@@ -66,7 +68,7 @@ Every referenced file comes back as an object, never a URL string:
   "id": "66b1...",
   "key": "digital/2026/08/9f2c..._manual.pdf",
   "url": null,                  // string | null   <- was ALWAYS a string
-  "access": "authorized",       // "public" | "authorized"   <- NEW, always present
+  "access": "authorized",       // "public" | "authorized" | "quota_blocked"  <- NEW, always present
   "mimeType": "application/pdf",
   "size": 284119,
   "originalName": "manual.pdf"
@@ -76,6 +78,18 @@ Every referenced file comes back as an object, never a URL string:
 **Branch on `access`.** This is deliberately a *type* change rather than a silently different
 string, because an authorized path looks exactly like a public URL — a client keeping
 `<img src={url}>` renders nothing for anyone not signed in.
+
+⚠ **`access` has THREE values, not the two this page originally named.** `quota_blocked` was
+added with plan-quota enforcement: the file's **owner** (a vendor or an agency) is over their
+plan's storage cap, so the file is held back — kept, not deleted, and restored on upgrade. `url`
+is `null` as for `authorized`, but no authorized route will serve it either, and it is
+**tested first**, so a blocked file in a private tree reports `quota_blocked` rather than
+`authorized` (`read-models/file-detail.resolver.ts:67-77`).
+
+On the storefront this shows up as **a product image that is simply absent**:
+`resolveProductImages` filters blocked files out (`product-image.resolver.ts:42`), so browse rows
+and product pages lose the picture rather than rendering a hole. A `switch` over two values will
+still compile and will still be wrong wherever a raw `FileDetail` reaches you.
 
 **Customer-facing impact is narrow but real:** the private trees are `digital/` (digital product
 assets) and `shipments/` (delivery-proof photos). **Everything else keeps its exact URL** — product
@@ -214,6 +228,36 @@ geo-tracker is separate: 600/min per IP, burst 60.
 
 ---
 
+## 8.5 · ⛔ The most recent breaking change is NOT above, and it is silent
+
+**Shipped 2026-09-07 — after this page was written.** For a variant carrying a bargain window on
+a vectorised product, the shop now quotes **`bargain.maxPrice` — the vendor's ask** — where it
+used to quote `variant.price`. `variant.price` became the vendor's **floor** and is **never
+published on any public route, under any key**.
+
+**No field was added, removed or retyped.** `price` is still an integer called `price` in the
+same position, so nothing in your build fails and no type error appears. **It is the number that
+changed**, for one class of variant. The only symptom is a price that disagrees with what the
+customer is charged, or a filter returning products it should have excluded.
+
+Five values moved as one unit, deliberately — `price`, `priceMin`/`priceMax`, the
+`price_asc`/`price_desc` sort, the `?minPrice=&maxPrice=` filter band, and the by-SKU
+resolution's price. **So a filtered page still only contains products whose displayed price is
+inside the band you asked for**; you do not have to compensate. `compareAtPrice` is now published
+only while it is strictly above the ask, and comes back `null` otherwise.
+
+**Nothing to do, provided you render `price` and pass the filter values through.** If you cache
+prices, or derive a range client-side from anything other than these fields, re-check it.
+
+⚠ If your copy of [`public/catalog.md`](./public/catalog.md) still says `bargain` is *"not
+published, pending a decision about whether the range is buyer-facing or a vendor-side floor"*,
+that bullet is stale — the decision was taken and went the other way.
+
+Full detail:
+[`FRONTEND-CHANGELOG-storefront-price-semantics.md`](./FRONTEND-CHANGELOG-storefront-price-semantics.md).
+
+---
+
 ## 9 · New since the last refresh, and previously undocumented here
 
 | Surface | Document |
@@ -226,6 +270,8 @@ geo-tracker is separate: 600/min per IP, burst 60.
 | Address search for checkout | [`geo/README.md`](./geo/README.md) |
 | Uploads | [`uploads/README.md`](./uploads/README.md) |
 | **Fourteen changelogs that had never reached any frontend** | see § 10 |
+| Batch product hydration and the printed-code lookup — `GET /api/public/products/by-ids`, `GET /api/public/variants/by-sku/:sku` (new since 2026-08-24) | [`public/catalog.md`](./public/catalog.md) |
+| A shareable payment link and its session read — `POST /api/payments/:transactionId/pay-link`, `GET /api/payments/session/:token` (new since 2026-08-24) | [`payments/README.md`](./payments/README.md) · [`customer/FRONTEND-CHANGELOG-order-detail.md`](./customer/FRONTEND-CHANGELOG-order-detail.md) |
 
 ---
 

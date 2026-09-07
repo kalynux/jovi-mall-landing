@@ -87,7 +87,7 @@ deletions in § 6. The response envelope, the nine-value error taxonomy and ever
 | Field | Type | Meaning |
 |---|---|---|
 | `url` | `string \| null` | Fetchable directly when a string. **`null` means there is no public URL.** |
-| `access` | `"public" \| "authorized"` | Which of the two this is. **Always present**, on every file. |
+| `access` | `"public" \| "authorized" \| "quota_blocked"` | Which of the **three** this is. **Always present**, on every file. ⚠ `quota_blocked` was added after this changelog was written — see the note below. |
 
 **Which trees went private:** `digital/` (a vendor's digital product) and `shipments/`
 (delivery-proof photos), plus the legacy `ticket-attachments/` directory that holds exactly one
@@ -98,6 +98,18 @@ policy-document trees.
 The mount is now an **allowlist derived from one classification table**, so a storage tree added
 next year is private until somebody says otherwise. That is the opposite of the old default and
 it is why this is worth knowing rather than just absorbing.
+
+> ⚠ **`access` gained a third value after this changelog was written: `quota_blocked`.**
+> It has nothing to do with storage trees. It means the file's **owner** — a vendor or an
+> agency — is over their plan's `max_storage_bytes`, so this file is one of the ones being held
+> back: kept, never deleted, and restored on upgrade. `url` is `null` exactly as for
+> `authorized`, but no authorized route will serve it either, because nothing is wrong with the
+> caller's permissions.
+>
+> It is checked **before** the private-tree classification
+> (`read-models/file-detail.resolver.ts:67-77`), so a blocked file inside a private tree reports
+> `quota_blocked`. A `switch` written against the two values this page originally named falls
+> through to `authorized` and tells the user the wrong thing.
 
 ⚠ **A ticket attachment uploaded today is still public.** It is an ordinary
 `POST /api/files/upload` that lands in `documents/` or `images/` and is attached to the ticket
