@@ -1,5 +1,10 @@
 # Changing the email or phone you sign in with — `/api/me/{contact,email,phone}`
 
+**Verified against source on 2026-09-08** — all six routes, all six `CONTACT_CHANGE_*` codes with
+their statuses and derived categories, the 1-hour email token TTL and 24-hour phone TTL, and the
+optional `app=` role key, against `jovi-mall/src/modules/users/services/contact-change.service.ts`
+and `src/modules/users/config/contact-change.config.ts`.
+
 **Six routes, and one rule above all others: the identifier does not move until it is proved.**
 
 `login_email` and `login_phone` are what `POST /api/auth/login` resolves an account by. A flow that

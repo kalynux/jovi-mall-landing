@@ -1,5 +1,10 @@
 # Live Tracking
 
+**Verified against source on 2026-09-08** — the five per-role visibility rules, the five
+`TRACKABLE_SHIPMENT_STATUSES` and the three `permission_revoked` reasons, against
+`jovi-mall/src/modules/tracking-integration/services/visible-agents.service.ts:25-31,100-111` and
+`geo-tracker/internal/modules/tracking/domain/entity.go:149-164`. No corrections were needed.
+
 Live agent tracking is served by a **separate service** — `geo-tracker`
 ("Project B", Go) — not by this backend. This backend remains the source of
 truth: it owns the authorization policy and tells geo-tracker when a shipment

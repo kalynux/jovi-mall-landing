@@ -1,5 +1,11 @@
 # Auth API
 
+**Verified against source on 2026-09-08** — the 24-row route table, both refresh error tables,
+the two `/auth` rate-limit buckets, the token TTLs, the 90-day cap and the `AUTH_ROLE_NOT_FOUND`
+`details` claim, against `jovi-mall/src/modules/auth/`,
+`src/api/middlewares/auth.middleware.ts`, `src/core/auth/`, `src/core/error-detail-policy.ts`
+and `src/api/rate-limit/`. Corrections are marked inline with ⚠ and a source citation.
+
 ## Base URL
 
 ```
@@ -136,7 +142,8 @@ A user can hold **multiple roles** and log in under any of them independently.
 | `GET` | `/auth/auth-me/:role` | Required | Restore session **and switch role** + re-issue cookies |
 | `POST` | `/auth/add-role` | Required | Add a second role to an existing account |
 | `POST` | `/auth/send-email-verification` | Required | Send email verification link |
-| `GET` | `/auth/verify-email` | Public | Confirm email via token link |
+| `POST` | `/auth/verify-email` | Public | Confirm email — **what the emailed page calls** |
+| `GET` | `/auth/verify-email` | Public | Legacy link. Still answered; no longer emailed |
 | `POST` | `/auth/forgot-password` | Public | Start a password reset. **Always answers 200** |
 | `POST` | `/auth/reset-password` | Public | Redeem a reset token and set a new password |
 | `POST` | `/auth/browser/login` | Public | Browser-namespace login (JSON only) — see below |
@@ -149,11 +156,24 @@ A user can hold **multiple roles** and log in under any of them independently.
 | `POST` | `/auth/mobile/add-role` | Required | Add a role + a pair scoped to it |
 | `POST` | `/auth/magic/link` | Public | Redeem a magic link — **passwordless customer sign-in** |
 | `POST` | `/auth/magic/code` | Public | Redeem an 8-character sign-in code with a phone or email |
+| `POST` | `/auth/mobile/magic/link` | Public | The **bearer twin** of `/auth/magic/link` — tokens in the body, no cookie. See [magic-login.md](./magic-login.md#bearer-clients--apiauthmobilemagic) |
+| `POST` | `/auth/mobile/magic/code` | Public | The bearer twin of `/auth/magic/code` |
+| `POST` | `/auth/email-change/confirm` | Public | Redeem an email-change token. **Public on purpose** — the link is tapped from a mail client. Requested by `PATCH /api/me/email`; see [../me/contact-change.md](../me/contact-change.md#post-apiauthemail-changeconfirm) |
 
 There is **no** `POST /auth/refresh` or `/auth/verify-code` on this service, and no
-`/auth/mobile/logout`; the table above is the complete auth surface
-(`src/modules/auth/auth.routes.ts` + `routes/browser-auth.routes.ts` +
-`routes/mobile-auth.routes.ts` + `modules/messaging-login/messaging-login.routes.ts`).
+`/auth/mobile/logout`; the table above is the complete auth surface — **24 routes**, from
+`src/modules/auth/auth.routes.ts` + `routes/browser-auth.routes.ts` +
+`routes/mobile-auth.routes.ts` + `modules/messaging-login/messaging-login.routes.ts`
++ `modules/messaging-login/mobile-messaging-login.routes.ts`.
+
+> ⚠ **Corrected 2026-09-06, re-measured 2026-09-08** (DOC-PROGRAM F-17 class 6). This table
+> listed **21** rows and claimed to be complete, from a list of **four** source files. The fifth,
+> `mobile-messaging-login.routes.ts`, is mounted at `/auth/mobile/magic` in `src/api/index.ts`
+> and holds the two bearer magic routes — so the provenance list being short by one file is
+> exactly why the table was short by two rows. `email-change/confirm` was the third omission,
+> and it lives in `auth.routes.ts`, which the list *did* name.
+> **A completeness claim is only as good as the file list under it, and a reader cannot check a
+> list they are not given.**
 
 > ### ⚠ Customers register in the bot and sign in without a password
 >
@@ -230,8 +250,8 @@ here: `phone` is the required registration field and `email` is optional, so an 
 reset would be undeliverable for a large share of this audience.
 
 The link points at `STOREFRONT_URL/reset-password?token=…` — the **storefront**, not this API,
-because a reset needs a form for the new password and only the frontend has one. (Contrast
-email verification, whose link is a `GET` this service answers directly.)
+because a reset needs a form for the new password and only the frontend has one. Email
+verification now works the same way — see `POST /auth/verify-email`.
 
 The token lives **30 minutes** and is single-use.
 
@@ -279,13 +299,24 @@ Both endpoints inherit the credential bucket below (20/min/IP).
 
 ### Rate limiting
 
-The `/auth` prefix — all three routers — sits behind **two** IP-scoped buckets, chosen per path
+The `/auth` prefix — **all five routers** — sits behind **two** IP-scoped buckets, chosen per path
 and applied before authentication:
 
 | Bucket | Limit | Paths |
 |---|---|---|
-| **credential** | **20/min/IP** | everything that presents a credential: `login`, `register`, `forgot-password`, `reset-password`, `add-role`, the verification routes, and the `browser`/`mobile` login + register twins. **The default** — a route added here later inherits it |
-| **session** | **300/min/IP** | everything that merely extends a session you already hold: `/auth/me`, `/auth/auth-me/:role`, `/auth/mobile/auth-me/:role`, `/auth/browser/refresh`, `/auth/mobile/refresh` |
+| **credential** | **20/min/IP** | everything that presents a credential: `login`, `register`, `forgot-password`, `reset-password`, `add-role`, the verification routes, the `browser`/`mobile` login + register twins, **`/auth/email-change/confirm`, and all four magic routes** — `/auth/magic/link`, `/auth/magic/code`, `/auth/mobile/magic/link`, `/auth/mobile/magic/code`. **The default** — anything not in the session row is here, and a route added later inherits it |
+| **session** | **300/min/IP** | everything that merely extends a session you already hold. A closed, five-entry **allowlist** (`auth-paths.ts:38-77`): `/auth/me`, `/auth/auth-me` (prefix, covers `/:role`), `/auth/mobile/auth-me`, `/auth/browser/refresh`, `/auth/mobile/refresh` |
+
+> ⚠ **Two corrections here, 2026-09-06.** This said "all **three** routers" — there are **five**
+> mounted under `/auth` (`api/index.ts:96, 97, 98, 107, 122`), the two extra being the magic-login
+> pair. ✅ **The source comment that said the same thing has since been fixed** — `api/index.ts:73`
+> now reads "ALL FIVE" and names all five routers (corrected 2026-09-07).
+>
+> And the credential list omitted `email-change/confirm` and all four magic routes. The
+> **direction** of the split is what makes that safe rather than dangerous: the session list is
+> an allowlist, so anything unnamed stays **strict**. But it left the magic routes — which *are*
+> passwordless sign-in, exactly the surface the 20 exists to bound — looking undocumented rather
+> than deliberately strict. **A magic-link client gets 20/min/IP**; budget for it.
 
 Exactly one of the two applies per request. The credential number is the strictest in the
 service and is a security control, not a backstop; the session number is a backstop, and
@@ -468,10 +499,27 @@ Sets cookies `access_token` and `refresh_token`.
 |---|---|---|
 | `AUTH_INVALID_CREDENTIALS` | `401` | Unknown identifier, or the wrong password |
 | `AUTH_ROLE_REQUIRED` | `400` | The account holds several roles and `role` was not specified |
-| `AUTH_ROLE_NOT_FOUND` | `403` | The requested `role` is not on the account. `details.role` echoes it |
+| `AUTH_ROLE_NOT_FOUND` | `403` | The requested `role` is not on the account. ⚠ **No `details`** — see the note under this table |
 | `AUTH_ACCOUNT_SUSPENDED` | `403` | `User.status` is not `active`. Raised **after** the password is verified, so it is never an oracle for which accounts exist |
 | `AUTH_VENDOR_SUSPENDED` | `403` | The vendor **profile** is `inactive` — a different axis from the account above, and its own code because the remedy differs |
 | `VALIDATION_ERROR` | `400` | `identifier` is not a well-formed E.164 phone or email address, or `password` is empty |
+
+> ### ⚠ `AUTH_ROLE_NOT_FOUND` carries no `details` — corrected 2026-09-08
+>
+> Both this table and [`GET /auth/auth-me/:role`](#get-authauth-merole) said *"`details.role`
+> echoes it"*, and **it never arrives.** The service does raise the code with `{ role }`
+> (`auth.service.ts:364` and `:431`), but a 403 puts it in the **`authorization`** category, and
+> that category's `details` is cut down at the response boundary to a four-key allowlist —
+> `required`, `requiredAny`, `resource`, `hint` and nothing else
+> (`core/error-detail-policy.ts:29-33`). `role` is not on the list, so the projected object is
+> empty and, per ADR-005 D-9, **`details` is omitted from the response entirely.**
+>
+> Echo back the `role` you sent; do not try to read it off the error. This is a property of the
+> **category**, not of this code: the same filter applies to every `authorization` error on the
+> platform. See [../errors/README.md](../errors/README.md#two-more-categories-are-allowlisted).
+>
+> The `409 AUTH_ROLE_ALREADY_EXISTS` and `404 AUTH_PROFILE_NOT_FOUND` rows further down **are**
+> unaffected and do carry `details.role` — `conflict` and `not_found` are not allowlisted.
 
 > **A customer who has never run a password reset always gets `AUTH_INVALID_CREDENTIALS`
 > here**, correctly — they hold a system-generated password nobody knows. Send them to
@@ -556,7 +604,19 @@ valid session.
 | `AUTH_PASSWORD_CHANGED` | `401` | The password changed after this token was minted. **Terminal — do not retry** |
 | `AUTH_SESSION_CAP_REACHED` | `401` | The sign-in is older than 90 days. **Terminal — do not retry** |
 | `AUTH_ACCOUNT_SUSPENDED` | `403` | `User.status` is no longer `active` |
+| `AUTH_ACCOUNT_CLOSED` | `403` | The account was **closed by its owner**. Checked *before* suspension and with its own code, because the 30-day refresh cookie otherwise outlives a closure by a month (`auth.service.ts:134-136`). **Terminal — sign out; there is no path back** |
+| `AUTH_ROLE_NOT_FOUND` | `403` | The refresh token names a role that cannot be signed in as (`isAuthenticatableRole`, `auth.service.ts:204-206`). **Terminal — it is deliberately NOT `AUTH_SESSION_EXPIRED`**, because a client that cannot tell the two apart retries forever |
 | `AUTH_USER_NOT_FOUND` | `401` | The account no longer exists |
+
+> ⚠ **This table omitted BOTH 403s until 2026-09-06, and `AUTH_ACCOUNT_CLOSED` appeared nowhere
+> in this entire `auth/` directory** despite being raised at four sites — the rotation above
+> (`auth.service.ts:134-136`), `login` (`:337`), `requireAuth` (`auth.middleware.ts:205`) and
+> the password reset (`password-reset.service.ts:245`). A client branching this table's seven
+> codes fell through to a generic handler on the two that are **terminal**, and retried a
+> session that can never come back.
+>
+> ⚠ **Both 403s are terminal; four of the five 401s are not.** Status alone does not separate
+> them here — branch on the code.
 
 ---
 
@@ -684,8 +744,17 @@ the old one, so there is no rotation window to get wrong. Every refresh therefor
 | `AUTH_REFRESH_TOKEN_INVALID` | 401 | Malformed, wrong signature, **or an *access* token posted here** (the `type: "refresh"` claim is checked) | Sign out. If you see this in development, check you are not sending the wrong half of the pair |
 | `AUTH_SESSION_EXPIRED` | 401 | The refresh token's own 30 days elapsed | Sign out, prompt login |
 | `AUTH_PASSWORD_CHANGED` | 401 | The account's password changed after this token was minted | Sign out **immediately, and do not retry** — every token you hold is refused by the same rule. Worth surfacing verbatim: for someone who did not change their password, it is the first sign that somebody else did |
+| `AUTH_SESSION_CAP_REACHED` | 401 | The sign-in itself is older than 90 days | Sign out, prompt login. **Terminal — do not retry** |
 | `AUTH_ACCOUNT_SUSPENDED` | 403 | The account was suspended | Sign out, show the reason |
+| `AUTH_ACCOUNT_CLOSED` | 403 | The account was **closed by its owner**. Checked before suspension and with its own code, because a 30-day refresh token otherwise outlives a closure by a month (`auth.service.ts:134-136`) | Sign out. **Terminal — there is no path back**, so do not offer a retry |
+| `AUTH_ROLE_NOT_FOUND` | 403 | The refresh token names a role that cannot be signed in as (`auth.service.ts:204-206`) | Sign out. **Terminal**, and deliberately not `AUTH_SESSION_EXPIRED` — a client that cannot tell the two apart retries forever |
 | `AUTH_USER_NOT_FOUND` | 401 | The account no longer exists | Sign out |
+
+> ⚠ **This table was missing three codes until 2026-09-06** — both 403s above and
+> `AUTH_SESSION_CAP_REACHED`. All three come out of the same `rotateRefreshToken` the section
+> above says the two routes share, so the cookie table and this one were short by the same rows.
+> **Status does not separate terminal from retryable here**: both 403s are terminal, and so are
+> two of the six 401s. Branch on the code.
 
 #### Maintenance windows
 
@@ -767,7 +836,7 @@ Sets fresh `access_token` and `refresh_token` cookies.
 |---|---|---|
 | `AUTH_MISSING_TOKEN` | `401` | No valid token reached the handler |
 | `AUTH_ACCOUNT_NOT_FOUND` | `401` | The `userId` in the token no longer exists |
-| `AUTH_ROLE_NOT_FOUND` | `403` | The account does not hold `:role`. `details.role` echoes it |
+| `AUTH_ROLE_NOT_FOUND` | `403` | The account does not hold `:role`. ⚠ **No `details`** — see [the note on `/auth/login`](#post-authlogin) |
 | `VALIDATION_ERROR` | `400` | `:role` is not one of the four authenticatable roles |
 | `AUTH_SESSION_CAP_REACHED` | `401` | The sign-in is older than 90 days. **Terminal** |
 
@@ -832,6 +901,26 @@ Sends a verification link to the email on the user's **current role entity**. Va
 
 **Auth**: Required
 
+### Where the link points
+
+```
+{STOREFRONT_URL}/verify-email?token=<64 hex>&app=<customer|vendor|agency|agent>
+```
+
+A **page**, not this API. It used to be `{API_PUBLIC_URL}/api/auth/verify-email?token=…`, so a
+person who clicked it got a raw JSON envelope with no branding and no way onward, and — worse —
+a `GET` that mutates is spent by whatever prefetches the mail (link scanners, corporate relays,
+the mail client's own preview) before the person ever taps it. The page holds the token and
+POSTs it when a human acts.
+
+`app` is the role that requested verification, taken from the JWT. **One page serves all four
+apps**, because confirming an email is role-free; the only thing it cannot work out for itself
+is where to send the person afterwards, so the origin travels in the link. It is a **role key,
+never a URL** — the page maps it through a compile-time table and ignores anything else.
+
+`STOREFRONT_URL` falls back to `API_PUBLIC_URL` when unset, which keeps a local box working —
+the same precedence the password-reset and email-change links use.
+
 ### Request Body
 
 None. The `userId` and `role` are read from the JWT.
@@ -852,9 +941,51 @@ None. The `userId` and `role` are read from the JWT.
 
 ---
 
-## GET `/auth/verify-email`
+## POST `/auth/verify-email`
 
-Confirms the email address. Called automatically when the user clicks the verification link.
+> Frontend hand-off for this change:
+> [FRONTEND-CHANGELOG-email-verification.md](../FRONTEND-CHANGELOG-email-verification.md).
+
+Confirms the email address. **This is what the emailed page calls.**
+
+**Auth**: Public — the token arrives in a mail client, routinely a different browser and often a
+different device, so requiring a session would fail the flow for exactly the people it is for.
+The token is the credential and it names the account.
+
+### Request Body
+
+```json
+{ "token": "abc123def456..." }
+```
+
+`.strict()` — an unknown key is a `400` on the whole request. Bounded at 512 characters, which
+is generous on purpose: the token is 64 hex characters, and a mail client that wraps a URL is a
+real thing, so a near-miss should be told the token is *invalid*, not that it is *malformed*.
+
+### Response `200`
+
+```json
+{ "success": true, "data": { "message": "Email verified successfully" } }
+```
+
+The token is valid for **24 hours** and is single-use. It marks `email_verified` on the role
+entity the verification was requested for, and **signs nobody in**.
+
+### Errors
+
+| `error.code` | Status | Cause |
+|---|---|---|
+| `AUTH_VERIFY_TOKEN_INVALID` | `400` | Unknown, expired **or already spent** — one code for all three |
+
+---
+
+## GET `/auth/verify-email` — legacy
+
+Identical behaviour, different verb. **No new mail points here.**
+
+It survives only because tokens live 24 hours, so links minted before the cutover stay valid for
+a day after it. Prefer the `POST` in every new client: this is a `GET` that mutates, so the token
+is spent by whatever prefetches the URL.
 
 **Auth**: Public
 
@@ -865,15 +996,6 @@ Confirms the email address. Called automatically when the user clicks the verifi
 | `token` | string | ✅ |
 
 **Example**: `GET /api/auth/verify-email?token=abc123def456...`
-
-### Response `200`
-
-```json
-{ "success": true, "data": { "message": "Email verified successfully" } }
-```
-
-The link is valid for **24 hours** and is single-use. It marks `email_verified` on the role
-entity the verification was requested for, and signs nobody in.
 
 ### Errors
 
@@ -1006,7 +1128,7 @@ Below are the key fields returned in `role_entity` for each role. Some fields ar
 > document — **not** the shape `GET /api/{role}/profile` returns. Two differences bite:
 >
 > - **Avatars come back as `avatar_file_id` (an id or `null`)**, not as the
->   `{ id, key, url, mimeType, size, originalName }` object the profile endpoints resolve.
+>   `{ id, key, url, access, mimeType, size, originalName }` object the profile endpoints resolve.
 >   To render an avatar, read the profile endpoint; do not try to build a URL from this id.
 > - **The business name is absent**, for vendor and agency alike — see below.
 >
@@ -1183,11 +1305,13 @@ AUTH_ACCESS_TOKEN_TTL=900                # 15 minutes in seconds
 AUTH_REFRESH_TOKEN_TTL=2592000           # 30 days in seconds
 AUTH_ABSOLUTE_SESSION_CAP=7776000        # 90 days in seconds — the sign-in ceiling
 
-API_PUBLIC_URL=https://api.example.com   # Builds the email-verification link (a GET this
-                                         #   service answers directly)
-STOREFRONT_URL=https://shop.example.com  # Builds the password-reset link AND the magic
-                                         #   sign-in link. Both point at a PAGE, never here.
-                                         #   Unset ⇒ the bot reply falls back to the code alone
+API_PUBLIC_URL=https://api.example.com   # FALLBACK ONLY for the three links below, so a local
+                                         #   box works with no STOREFRONT_URL set
+STOREFRONT_URL=https://shop.example.com  # Builds the password-reset link, the magic sign-in
+                                         #   link, the email-CHANGE confirmation link AND the
+                                         #   registration-verification link. All four point at
+                                         #   a PAGE, never here. Unset ⇒ the bot reply falls
+                                         #   back to the code alone
 
 WA_BOT_NUMBER=237600000000               # Bot deep links. Unset ⇒ the deep link is null;
 TELEGRAM_BOT_NAME=JoviMallBot            #   the flow still works for anyone who knows the bot

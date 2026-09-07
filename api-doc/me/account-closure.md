@@ -1,5 +1,10 @@
 # Closing an account — `POST /api/me/close`
 
+**Verified against source on 2026-09-08** — the route and verb, the exact `confirm` literal, both
+422 refusals with their `details`, the 409 compare-and-set, the cookie clear and the
+`password_changed_at` stamp, against `jovi-mall/src/modules/users/user.controller.ts:89-130`,
+`account-closure.service.ts:70-152` and `user.validator.ts:77-104`.
+
 ## 🔴 This is **anonymise-and-retain**. It is not a deletion.
 
 The word matters, and it is a product promise. Everything this endpoint surfaces says **close** and
@@ -98,7 +103,7 @@ All three are `422` and all three are refusals rather than cascades.
 |---|---|---|---|
 | `ACCOUNT_CLOSURE_ROLE_NOT_ELIGIBLE` | 422 | the account holds **any** role beyond `customer` | `blockingRoles: string[]` |
 | `ACCOUNT_CLOSURE_ORDERS_IN_FLIGHT` | 422 | an order is still moving, or under a dispute hold | `activeOrderCount: number` |
-| — | 409 | the account is not `active` (a second closure request) | — |
+| `USER_STATUS_CONFLICT` | 409 | the account is not `active` (a second closure request) | `{ expected: "active" }` |
 
 ### 3.1 Dual-role accounts
 

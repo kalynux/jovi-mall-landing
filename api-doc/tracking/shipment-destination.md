@@ -1,5 +1,10 @@
 # Tracking — the shipment destination (geo-tracker → jovi-mall)
 
+**Verified against source on 2026-09-08** — the route, its service-token guard, the response shape
+field-for-field, both `source` values and the `404`, against
+`jovi-mall/src/modules/shipments/internal-shipment.routes.ts:30`, `internal-shipment.controller.ts`
+and `shipment.service.ts:633-672`. No corrections were needed.
+
 The second internal door in this family, beside
 [agent-tracking-policy](./agent-tracking-policy.md#internal-api-geo-tracker--jovi-mall). Same
 caller, same token, same fail-closed rule — a different question.

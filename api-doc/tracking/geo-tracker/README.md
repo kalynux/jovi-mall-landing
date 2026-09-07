@@ -1,5 +1,9 @@
 # geo-tracker API Documentation
 
+**Verified against source on 2026-09-08** — the five per-role visibility rules and the five
+`TRACKABLE_SHIPMENT_STATUSES` against `jovi-mall/src/.../visible-agents.service.ts:25-31,101-109`.
+**One defect fixed**: the agency row listed four statuses and omitted `handing_over`.
+
 This is the contract for **geo-tracker** ("Project B") — the live GPS tracking
 / WebSocket service for jovi-mall delivery agents. It is the only source of
 truth for this service's external interface; if you're integrating a client
@@ -55,13 +59,24 @@ Who may see an agent's live location, on the **viewer** path:
 |---|---|
 | **admin** | every agent, always |
 | **agent** | only himself |
-| **agency** | agents on its currently approved + active shipments (`assigned`, `picked_up`, `in_transit`, `agent_delivered`) |
+| **agency** | agents on its currently approved + active shipments (`assigned`, **`handing_over`**, `picked_up`, `in_transit`, `agent_delivered`) **and** whose `agent_id` is not null |
 | **customer** | agents on their active orders |
 | **vendor** | nothing — rejected at connect with `403` |
 
 This is computed by jovi-mall (`GET /api/tracking/visible-agents`), which
 geo-tracker calls **as the caller**, forwarding their access token. Clients
 never call that endpoint directly for tracking purposes.
+
+> ⚠ **This list was FOUR statuses until 2026-09-08 and is FIVE.**
+> `TRACKABLE_SHIPMENT_STATUSES`
+> (`jovi-mall/src/modules/tracking-integration/services/visible-agents.service.ts:25-31`)
+> has always included **`handing_over`** — a picked-up parcel being reassigned is tracked again
+> the moment its replacement agent accepts. A board filtered by the old four-status list drops
+> every reassigned-post-pickup delivery from the live map: precisely the deliveries most in need
+> of watching.
+>
+> The `agent_id: { $ne: null }` clause is **part of the rule, not an optimisation** — a shipment
+> offered but not yet accepted is trackable in status only; there is nobody bound to it to track.
 
 ### Access ends the moment a shipment finishes
 

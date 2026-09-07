@@ -1,13 +1,19 @@
 # Watching a delivery — the customer's live map
 
+**Verified against source on 2026-09-08** — the customer visibility branch
+(`visible-agents.service.ts:107-108`), the route and its guard (`tracking.routes.ts:35,43`), and
+the socket contract against `geo-tracker/internal/modules/tracking/`. One correction: the source
+citation pointed at line 105, which is the `agency` branch, not the customer one.
+
 **A customer can watch their own delivery move, and this is the only page that says how.**
 
 It takes **two services**. jovi-mall answers *who you may watch*; geo-tracker answers *where they
 are*. The same access token signs both.
 
 > **Verified against source 2026-08-24.** Policy:
-> `jovi-mall/src/modules/tracking-integration/services/visible-agents.service.ts:105`.
-> Route + guard: `routes/tracking.routes.ts:36-45`. Socket contract:
+> `jovi-mall/src/modules/tracking-integration/services/visible-agents.service.ts:107-108`
+> (the `customer` branch — line 105 is `agency`; re-checked 2026-09-08).
+> Route + guard: `routes/tracking.routes.ts:35,43`. Socket contract:
 > [`geo-tracker/tracking-websocket.md`](./geo-tracker/tracking-websocket.md).
 
 ⚠ **This chapter is not in `PLAN-2`'s original scope and was added deliberately.** The plan's target
