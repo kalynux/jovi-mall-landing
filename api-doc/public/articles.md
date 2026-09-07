@@ -184,8 +184,10 @@ Returns every summary field above **plus `body`** (see [The block vocabulary](#t
 ```json
 {
   "success": false,
+  "requestId": "req_9f3c1a",
   "error": {
     "code": "BLOG_ARTICLE_MOVED",
+    "category": "not_found",
     "statusCode": 404,
     "details": {
       "locale": "en",

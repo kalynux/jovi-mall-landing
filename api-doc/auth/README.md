@@ -1378,6 +1378,7 @@ Once `now − auth_time` exceeds **90 days**, every credential path refuses:
 
 ```
 401  { "success": false,
+       "requestId": "req_9f3c1a",
        "error": { "code": "AUTH_SESSION_CAP_REACHED",
                   "statusCode": 401,
                   "category": "authentication",

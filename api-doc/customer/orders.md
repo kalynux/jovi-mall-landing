@@ -104,6 +104,7 @@ transaction. A **cash_on_delivery** checkout requires no payment call — see
 | 422 | `COD_ORDER_AMOUNT_EXCEEDS_LIMIT` | One vendor-order's total exceeds an agency's COD cap. `details: { agencyName, maxOrderAmount, orderTotal }`. |
 | 422 | `ORDER_DELIVERY_ADDRESS_REQUIRED` | **New.** A physical checkout resolved no geocoded drop-off. `details.reason` is `no_delivery_address` or `selected_address_not_geocoded`. |
 | 422 | `CATALOG_INSUFFICIENT_STOCK` | **New.** A line cannot be satisfied. `details: { variantId, sku, requested, available }`. |
+| 404/409/422 | `NEGOTIATION_LOCK_*` | **New.** A line carrying a price agreed in chat could not spend its lock. Five codes — see [Negotiated lines at checkout](#negotiated-lines-at-checkout). |
 
 > **⚠️ Two new ways a physical checkout can fail, and both were previously silent successes.**
 >
@@ -118,6 +119,29 @@ transaction. A **cash_on_delivery** checkout requires no payment call — see
 >
 > **Not enough stock.** Checkout now holds every line for 30 minutes. Nothing in the order
 > path used to touch `variant.stock` at all, so overselling was unconstrained.
+
+### Negotiated lines at checkout
+
+A cart line may carry a price the customer agreed **in chat**
+([Cart → Negotiated prices](./cart.md#negotiated-prices)). Checkout is where that agreement is
+**spent**: the lock is consumed inside the order-creation transaction, so a checkout that rolls
+back leaves it spendable and the customer may simply try again.
+
+Three consequences for a client:
+
+- **A lock that passed at add-to-cart can still be refused here.** Adding only *peeked* at it;
+  this consumes it, and the vendor's window is re-read as it stands now. Handle all five
+  `NEGOTIATION_LOCK_*` codes on **both** calls.
+- ⚠ **A refusal fails the WHOLE checkout, not the line.** The alternative — dropping the
+  negotiated price and charging list — would charge the customer more than they agreed to, so
+  the order is refused instead. Send them back to chat to re-negotiate, or remove the line.
+- **The charged price comes from the consume verdict, not from the cart's snapshot.** They are
+  normally the same number; `price_breakdown` always describes what was actually charged.
+
+⚠ **No negotiated field appears anywhere in an order response.** `negotiated_unit_price` and
+`floor_price_snapshot` are persisted on the order item and are excluded from the customer DTO by
+explicit field mapping (`orders/dto/customer-order.dto.ts`) — the floor is the vendor's secret.
+Do not expect the cart's `negotiatedUnitPrice` to survive into the order; read `price`.
 
 ---
 
@@ -459,9 +483,34 @@ earnings against its own vendor's commission, and proceeds with fulfilment.
 
 **Group-payment errors:** `404 PAYMENT_CART_NOT_FOUND` (no orders for the cartId), `409
 PAYMENT_ORDER_ALREADY_PAID` (all orders already paid), `409 PAYMENT_CART_NO_PAYABLE_ORDERS` (nothing
-left to pay), `400 PAYMENT_CART_MIXED_CURRENCY`, `400 PAYMENT_REFERENCE_REQUIRED` (neither cartId nor
-orderId supplied), `422 PAYMENT_ORDER_IS_COD` (the checkout is cash-on-delivery — no online payment
-exists for it).
+left to pay), `400 PAYMENT_CART_MIXED_CURRENCY`, `422 PAYMENT_ORDER_IS_COD` (the checkout is
+cash-on-delivery — no online payment exists for it).
+
+**Sending neither `cartId` nor `orderId` is `400 VALIDATION_ERROR`**, not a payment code — it is a
+schema failure, caught by a Zod `.refine` before the handler runs, so it arrives in the ordinary
+field shape:
+
+```json
+{
+  "success": false,
+  "requestId": "req_9f3c1a",
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "statusCode": 400,
+    "category": "validation",
+    "details": { "fields": [ { "path": "cartId", "message": "Either cartId or orderId is required" } ] }
+  }
+}
+```
+
+> 🔴 **Corrected 2026-09-06** (DOC-PROGRAM F-17 class 7). This list said
+> ~~`400 PAYMENT_REFERENCE_REQUIRED`~~. That code is in the registry and is raised **nowhere in
+> `src/`** — the condition is caught by `InitiatePaymentSchema`'s refine
+> (`payments/validators/payment.validators.ts:58`), which reports `path: ['cartId']`. A client
+> branching on the payment code never matched, and — the part that actually cost something —
+> would not have known to surface the message against the **`cartId` field** the way it does for
+> every other validation failure.
 
 ### Watching the payment land
 

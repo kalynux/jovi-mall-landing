@@ -147,7 +147,7 @@ parameter — a customer can only read/write **their own** record.
 ### Example error `400` (validation)
 
 ```json
-{ "success": false, "requestId": "req_abc", "error": { "code": "VALIDATION_ERROR", "message": "Validation failed", "statusCode": 400, "details": { "fields": [{ "path": "avatarFileId", "message": "avatarFileId must be a valid file id", "code": "invalid_string" }] } } }
+{ "success": false, "requestId": "req_abc", "error": { "code": "VALIDATION_ERROR", "message": "Validation failed", "statusCode": 400, "category": "validation", "details": { "fields": [{ "path": "avatarFileId", "message": "avatarFileId must be a valid file id", "code": "invalid_string" }] } } }
 ```
 
 ---

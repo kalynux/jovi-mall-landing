@@ -474,8 +474,11 @@ Point 1 is decided from the platform's own booking records, so availability stay
 ```json
 {
   "success": false,
+  "requestId": "req_9f3c1a",
   "error": {
     "code": "BOOKING_SLOT_NOT_LOCKED",
+    "statusCode": 422,
+    "category": "business_rule",
     "message": "Human-readable description"
   }
 }

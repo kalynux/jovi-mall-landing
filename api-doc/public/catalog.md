@@ -142,6 +142,7 @@ you like) — the backend does not block the cart on it.
         "id": "507f1f77bcf86cd799439030",
         "key": "images/abc123.jpg",
         "url": "https://…/products/abc123.jpg",
+        "access": "public",
         "mimeType": "image/jpeg",
         "size": 84213,
         "originalName": "cover.jpg"
@@ -502,9 +503,22 @@ See [rate-limits.md](../rate-limits.md).
   serves the published product reviews and the rating breakdown; every product row and
   detail carries `rating`. Contract: [reviews.md](../reviews.md).
 - **A stock count** — see decision 3. `inStock` is the honest answer.
-- **`bargain`** — `ProductVariant` gained a negotiable price range while this surface was
-  being built. It is **not published**, pending a decision about whether the range is
-  buyer-facing or a vendor-side floor. Adding it is an edit to `public-product.dto.ts`.
+- ⚠ **`bargain`** — **this entry was WRONG until 2026-09-08 and said the opposite of what the
+  API does.** It read *"not published, pending a decision about whether the range is
+  buyer-facing or a vendor-side floor."* **That decision was taken on 2026-09-07 and went both
+  ways, one half each.** The *window* is still not published — no `bargain` object, no
+  `minPrice`, no `maxPrice` key — but its **top** (`maxPrice`) is now **what `price` quotes**
+  for a bargainable variant, and `variant.price` became the vendor's floor, which stays
+  server-side forever.
+
+  **`price`, `priceMin`/`priceMax`, the `price_asc`/`price_desc` sorts, the `minPrice`/`maxPrice`
+  filter band and the by-SKU price all moved together**, so a filtered page still only contains
+  products whose displayed price is inside the band you asked for. `compareAtPrice` is now
+  suppressed on a bargainable variant unless strictly above the ask.
+
+  **Nothing to change if you render these fields as given.** Re-check any price you cache or
+  derive client-side. Full contract, including the one precondition and the checklist:
+  [Storefront price semantics](../FRONTEND-CHANGELOG-storefront-price-semantics.md).
 - **Product-text translation** — `title`/`description`/`category`/`tags`/`seo.*` are plain
   strings with no `Accept-Language` handling. The platform's position is that product text is
   **vendor-authored in one language**, and `contentLanguage` says which so you can label it
