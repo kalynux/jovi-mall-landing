@@ -332,7 +332,17 @@ function GroupSummary({
   );
 }
 
-function VendorOrderCard({
+/**
+ * One seller's order: what is in it, what it cost, its parcels, and the actions
+ * still open on it.
+ *
+ * Exported because two screens draw it. The group screen renders one per order
+ * in a checkout group; `OrderDetail` renders exactly one, for the order a
+ * notification named. Same card, so a shopper arriving from a push sees the
+ * thing they already know from their order history rather than a second
+ * rendering of it that drifts.
+ */
+export function VendorOrderCard({
   order,
   onChanged,
 }: {
@@ -680,16 +690,26 @@ const SHIPMENT_LABEL: Record<
  * the courier the delivery code records the payment and marks it delivered in
  * one step, and calling confirm returns `422 SHIPMENT_CONFIRMATION_NOT_ALLOWED`.
  */
-function Shipments({
+export function Shipments({
   orderId,
   isCod: cod,
   deliveryAddress,
   onChanged,
+  whenEmpty = null,
 }: {
   orderId: string;
   isCod: boolean;
   deliveryAddress?: unknown;
   onChanged: () => void;
+  /**
+   * What to draw when the order has no parcels yet.
+   *
+   * `null` inside an order card, which is the right answer there: the card has
+   * plenty else on it and a "no parcels" line under a receipt is noise. The
+   * tracking page is nothing but this component, so a `null` there is a blank
+   * screen — it passes an explanation instead.
+   */
+  whenEmpty?: React.ReactNode;
 }) {
   const [shipments, setShipments] = useState<CustomerShipment[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -724,7 +744,10 @@ function Shipments({
     [orderId, flash, flashError, load, onChanged, t]
   );
 
-  if (!shipments || shipments.length === 0) return null;
+  // `null` while the read is still in flight either way: a flash of "no parcels"
+  // before the list lands reads as an answer, and it is not one yet.
+  if (!shipments) return null;
+  if (shipments.length === 0) return <>{whenEmpty}</>;
 
   return (
     <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--border-subtle)" }}>

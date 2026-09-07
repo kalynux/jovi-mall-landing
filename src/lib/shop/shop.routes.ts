@@ -123,6 +123,65 @@ export function orderGroupPath(cartId: string): string {
 }
 
 /**
+ * ── One order, and its parcels ───────────────────────────────────────────────
+ *
+ * `orderGroupPath` above takes a **`cartId`** and shows a whole checkout group.
+ * These two take an **`orderId`** and show one seller's slice of it. Different
+ * ids for different things, and handing one to the other's page looks up
+ * something that does not exist — which is the most expensive confusion in this
+ * file, so the two sit next to each other.
+ *
+ * The pair exists because of the notification catalogue: a message is about
+ * **one** parcel — *"your order from Shop B has shipped"* — and carries that
+ * order's id. Landing it on the group page would open a list containing the
+ * thing the message was about, and the owner chose the parcel.
+ *
+ * ⚠ **The `detail` segment is load-bearing.** Without it the path would be
+ * `/shop/account/orders/:orderId`, and `orders/[cartId]` is a dynamic segment
+ * sitting exactly there — a static sibling wins over it in the App Router, which
+ * is the collision this avoids. Drop `detail` and every single-order link
+ * silently renders the group screen against an id it cannot resolve.
+ *
+ * ⚠ **The web spelling is baked into messages already sent.**
+ * `shop/account/orders/detail/{{orderId}}` is a literal in the backend's
+ * `customer-notification-catalog.ts`, and a link sitting in somebody's inbox
+ * cannot be changed. Renaming either of these is a two-repository change in one
+ * go — see `api-doc/notifications/storefront-routes.md`.
+ */
+export function orderPath(orderId: string): string {
+  const id = encodeURIComponent(orderId);
+  if (IS_NATIVE_BUILD) return `${SHOP_ROOT}/account/order/detail?id=${id}`;
+  return `${SHOP_ROOT}/account/orders/detail/${id}`;
+}
+
+/** Where one order's parcels are watched moving. Nested under the order above. */
+export function orderTrackingPath(orderId: string): string {
+  const id = encodeURIComponent(orderId);
+  if (IS_NATIVE_BUILD) return `${SHOP_ROOT}/account/order/tracking?id=${id}`;
+  return `${SHOP_ROOT}/account/orders/detail/${id}/tracking`;
+}
+
+/**
+ * The hosted payment page.
+ *
+ * ⚠ **Top level, deliberately outside `/shop`.** Everything under
+ * `/shop/account` is gated on a session by the middleware, and the entire point
+ * of a pay link is that somebody with no account opens it — a mother orders, her
+ * son pays. Building it inside the signed-in tree would lock out the one person
+ * it is for.
+ *
+ * ⚠ **The token is opaque and expiring, never the transaction id**, and only the
+ * backend mints one. Nothing here should ever compose one.
+ *
+ * No native form: a pay link arrives as a URL in a chat and opens in a browser,
+ * so `pay/[token]` is left out of the app build rather than given a query twin.
+ * See `scripts/build-native.mjs`.
+ */
+export function payPath(token: string): string {
+  return `/pay/${encodeURIComponent(token)}`;
+}
+
+/**
  * The deep-link form, by ObjectId.
  *
  * A redirect stub, not an address to publish: it resolves the product and sends

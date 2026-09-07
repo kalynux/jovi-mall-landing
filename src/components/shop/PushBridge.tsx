@@ -43,14 +43,15 @@ export function PushBridge() {
         void refresh();
       },
 
+      // Resolution is pure string work — `shop.routes.ts` re-shapes the
+      // backend's path for this target and nothing is fetched — so the tap
+      // navigates in the same tick it arrives, with no window in which the app
+      // sits on the shop root before moving.
       onOpen: (data) => {
-        void (async () => {
-          const target = await resolvePushDestination(data);
-          router.push(target);
-          // The tapped message is now read, or about to be: refresh so the
-          // badge does not keep counting something the shopper just opened.
-          void refresh();
-        })();
+        router.push(resolvePushDestination(data));
+        // The tapped message is now read, or about to be: refresh so the badge
+        // does not keep counting something the shopper just opened.
+        void refresh();
       },
     });
   }, [router, refresh]);

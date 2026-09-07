@@ -28,8 +28,17 @@ Whenever an API request fails (e.g., due to validation, business logic violation
 (jovi-mall, wi-admin and geo-tracker emit the same nine strings).
 
 It exists so a client can behave sensibly about an error it has **no specific handling
-for** — which is most of them, since the registry has 547 codes. Branch on `code` when you
+for** — which is most of them, since the registry has 623 codes. Branch on `code` when you
 have something particular to do; fall back to `category` for everything else.
+
+> ⚠ **`../error-codes.ts` is a COPY of the backend registry, and it has silently drifted
+> before.** It sat **20 codes behind** until 2026-09-06 — 603 against the backend's 623,
+> missing the 16 `BOT_*` plus `PAYMENT_LINK_NOT_APPLICABLE`, `PAYMENT_LINK_NOT_FOUND`,
+> `PAYMENT_LINK_NOT_PAYABLE` and `STORAGE_DOWNLOAD_NOT_SUPPORTED`. It has been re-synced and
+> verified **key-for-key** against `jovi-mall/src/core/error-codes.ts`. **Nothing re-checks
+> it automatically**, and the backend registry grows — so measure both sides rather than
+> trusting this note:
+> `grep -cE "^\s+[A-Z0-9_]+:\s*'" ../error-codes.ts`   → **623** on 2026-09-06
 
 | `category` | Means | What a client should generally do |
 |---|---|---|
@@ -454,7 +463,7 @@ The first three are reachable by a **logged-out visitor**, so their `message` is
 1. **Always default to parsing `error.code`.** Do not write business logic dependent on `statusCode` limits (e.g., `if (statusCode === 400)`) unless parsing a generic networking failure. Use `if (error.code === 'AUTH_TOKEN_EXPIRED') { triggerLogout(); }`.
 2. **Use `error.message` as a fallback.** If your application supports full i18n, map the backend `error.code` directly to a translation key. If the key is missing in your dictionary, display the backend's `error.message` directly to the user.
 3. **Use `error.category` as your default branch.** You will never have specific handling for
-   all 547 codes. The category tells you the four things that actually change client
+   all 623 codes. The category tells you the four things that actually change client
    behaviour: is it worth retrying, should the user re-authenticate, is it their input, or is
    it ours.
 4. **Log the `requestId`.** If the error is an unexpected `INTERNAL_SERVER_ERROR`, present the `requestId` in the UI to help the user report it: *"An unexpected error occurred. If you contact support, please provide this ID: req-1234abc"*.

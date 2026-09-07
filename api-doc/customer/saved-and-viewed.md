@@ -208,9 +208,3 @@ only copy an anonymous shopper has.
 | `AUTH_ROLE_NOT_FOUND` | 403 | authenticated, but not as a customer |
 
 ---
-
-## 7 · Where the backend's own doc is wrong
-
-- `services/recently-viewed.service.ts` points readers at **`api-doc/customer/recently-viewed.md`**,
-  which does not exist. The backend document is `api-doc/customer/saved-and-viewed.md` — one page
-  covering both lists. Filed as **F-33**.

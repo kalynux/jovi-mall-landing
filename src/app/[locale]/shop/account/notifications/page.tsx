@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import {
   AccountCard,
   AccountShell,
@@ -224,58 +224,39 @@ function NotificationRow({
 }
 
 /**
- * The row's action — "View order", "View booking", "Track delivery".
+ * The row's action — "View order", "Track delivery", "Pay balance".
  *
- * ── Why a button and not a link ──────────────────────────────────────────────
+ * ── It is a link again ───────────────────────────────────────────────────────
  *
- * The destination is not knowable at render time. An order notification names
- * the `orderId` and the group screen is keyed by `cartId`, so an `href` written
- * straight from `action.path` is either wrong — which is what it was, and how
- * every one of these taps ended on "Webpage not available" in the app and a 404
- * on the web — or the result of one API call per row before the list can paint.
+ * This was a button with a busy state, because the destination was not knowable
+ * at render time: an order notification names the `orderId`, the only order
+ * screen was the group screen keyed by `cartId`, and bridging the two cost an
+ * API call per row. So the lookup was deferred to the tap.
  *
- * Resolving on the tap costs that lookup once, for the one notification the
- * shopper actually opened. Nothing is lost by dropping the anchor: this screen
- * is owner-scoped and `noindex`, so there is no URL here worth copying,
- * crawling or opening in a second tab.
+ * The single-order page removed the lookup — `resolveNotificationDestination` is
+ * now pure string work — and with it the reason not to render an anchor. What
+ * comes back is middle-click, long-press and "copy link", none of which a button
+ * can offer, and the spinner that could never be seen anyway is gone.
  *
- * `resolveNotificationDestination` never throws and always answers, so a failed
- * lookup lands on the order list rather than leaving the button spinning.
+ * It never throws and always answers: an unrecognised `path` lands on the inbox,
+ * which is where the message itself is waiting.
  */
 function NotificationAction({ notification: n }: { notification: CustomerNotification }) {
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
-
-  const open = useCallback(async () => {
-    setBusy(true);
-    const target = await resolveNotificationDestination(n.action?.path, {
-      type: n.aggregateType,
-      id: n.aggregateId,
-    });
-    router.push(target);
-    setBusy(false);
-  }, [router, n.action?.path, n.aggregateType, n.aggregateId]);
+  const href = resolveNotificationDestination(n.action?.path, {
+    type: n.aggregateType,
+    id: n.aggregateId,
+  });
 
   return (
-    <button
-      type="button"
-      disabled={busy}
-      aria-busy={busy}
-      onClick={() => void open()}
+    <Link
+      href={href}
       style={{
-        appearance: "none",
-        border: "none",
-        background: "none",
-        padding: 0,
-        font: "inherit",
         fontSize: 12.5,
         fontWeight: 700,
         color: "var(--brand-hover)",
-        cursor: busy ? "progress" : "pointer",
-        opacity: busy ? 0.6 : 1,
       }}
     >
       {n.action?.label} →
-    </button>
+    </Link>
   );
 }

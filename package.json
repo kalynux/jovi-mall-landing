@@ -33,6 +33,8 @@
     "@capacitor/splash-screen": "^8.0.2",
     "@capacitor/status-bar": "^8.0.3",
     "@hookform/resolvers": "^5.2.2",
+    "@stripe/react-stripe-js": "^6.9.0",
+    "@stripe/stripe-js": "^9.15.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.34.3",
     "leaflet": "^1.9.4",

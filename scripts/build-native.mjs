@@ -77,12 +77,31 @@ const APP = join(APP_ROOT, "[locale]");
  * own — `/shop/account/booking?id=…` and `/shop/account/ticket?id=…`, wired up
  * in `components/shop/account/QueryScreens.tsx` — and it is only the nested
  * spellings that are left out here.
+ *
+ * ── The single order and its tracking ────────────────────────────────────────
+ * `orders/detail/[orderId]` and `.../tracking` are the pages every "View order"
+ * and "Track delivery" notification button points at. Note they are **siblings**
+ * of `orders/[cartId]` rather than children of it, so excluding that one says
+ * nothing about these — they need their own line, and the app build fails
+ * outright without it. Twins:
+ * `/shop/account/order/detail?id=…` and `/shop/account/order/tracking?id=…`.
+ *
+ * ── The pay page has no twin, on purpose ─────────────────────────────────────
+ * `pay/[token]` is the hosted card page. Unlike the five above it is NOT
+ * something the app has to be able to open: a pay link is a URL the backend
+ * mints and sends into a chat, and it is opened in whatever browser the
+ * recipient tapped it from — who is very often not the account holder and has no
+ * app installed at all. That is the entire feature. So this one is dropped the
+ * way `(marketing)` is dropped rather than given a query-string form. How a deep
+ * link would open the installed app is a Capacitor question and a separate one.
  */
 const EXCLUDED_TREES = [
   join(APP, "(marketing)"),
+  join(APP, "pay"),
   join(APP, "shop", "stores"),
   join(APP, "shop", "p", "[productId]"),
   join(APP, "shop", "account", "orders", "[cartId]"),
+  join(APP, "shop", "account", "orders", "detail"),
   join(APP, "shop", "account", "bookings", "[bookingId]"),
   join(APP, "shop", "account", "support", "[ticketId]"),
 ];

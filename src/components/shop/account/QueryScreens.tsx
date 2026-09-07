@@ -8,6 +8,7 @@ import { BookingBalance } from "./BookingBalance";
 import { BookingDetail } from "./BookingDetail";
 import { BookingPay } from "./BookingPay";
 import { BookingReschedule } from "./BookingReschedule";
+import { OrderDetail, OrderTracking } from "./OrderDetail";
 import { OrderGroupDetail } from "./OrderGroupDetail";
 import { TicketDetail } from "./TicketDetail";
 
@@ -81,6 +82,39 @@ export function OrderGroupClient() {
       description="Open an order from your order history to see its details."
     >
       {(id) => <OrderGroupDetail cartId={id} />}
+    </QueryScreen>
+  );
+}
+
+/**
+ * `/shop/account/order/detail?id=<orderId>`
+ *
+ * ⚠ **An `orderId`, not the `cartId` `OrderGroupClient` above takes.** A basket
+ * splits into one order per seller; the group screen shows all of them and this
+ * shows one. The two ids look identical and resolve to nothing in each other's
+ * screen, which is why they are adjacent here rather than filed apart.
+ */
+export function OrderDetailClient() {
+  return (
+    <QueryScreen
+      icon="receipt-text"
+      title="No order to show"
+      description="Open an order from your order history to see its details."
+    >
+      {(id) => <OrderDetail orderId={id} />}
+    </QueryScreen>
+  );
+}
+
+/** `/shop/account/order/tracking?id=<orderId>` — the same `orderId` as above. */
+export function OrderTrackingClient() {
+  return (
+    <QueryScreen
+      icon="map-pin"
+      title="No delivery to follow"
+      description="Open an order from your order history to see where its parcels are."
+    >
+      {(id) => <OrderTracking orderId={id} />}
     </QueryScreen>
   );
 }
