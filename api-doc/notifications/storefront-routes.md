@@ -1,5 +1,12 @@
 # Where notification buttons point — and the pages behind them
 
+**Verified against source on 2026-09-08** — the backend half only: the pay-link session
+projection and its `paidFor` object, the four `state` values and their status-before-expiry
+ordering, the `PAYMENT_LINK_NOT_FOUND` conflation, and the `sk_`/`rk_` publishable-key refusal,
+against `jovi-mall/src/modules/payments/domain/pay-link.ts` and
+`src/modules/payments/services/pay-link.service.ts`. The **route addresses** on this page are
+facts about `frontend/landing`, which this backend cannot check — that is the point of the page.
+
 **Audience: whoever builds `frontend/landing`.** Backend readers want
 `src/modules/notifications/catalog/customer-notification-catalog.ts`, whose header
 carries the rules; this page is the cross-repository half.
@@ -288,6 +295,48 @@ the link. An order number and a seller name are safe; a delivery address, a cust
 or a line-item list is not, and the projection should stay explicit rather than becoming a
 spread — that discipline is already written down where it is defined.
 
+#### ✅ Answered 2026-09-07 — `paidFor`, and one change from the sketch above
+
+`GET /api/payments/session/:token` now carries a `paidFor` object. Contract and reasoning:
+`api-doc/payments/README.md` § *"`paidFor` — and why it is fields rather than a sentence"*.
+
+```jsonc
+"paidFor": {
+  "kind": "order",                  // order | booking
+  "reference": "ORD-2026-000046",   // the handle the payer can match; null on a legacy row
+  "orderCount": 1,                  // >1 when one payment settles a multi-vendor basket
+  "itemCount": 3,                   // null for a booking
+  "sellers": ["Boutique Ndogbong"]  // ⚠ always [] for a booking
+}
+```
+
+**The one change: no rendered `description`.** Structured fields instead, and the page
+composes the sentence. The reason is specific to this screen rather than a general
+preference — **it is the one reader this backend cannot localise for.** Every other page is
+served to somebody with an account and a `preferred_language`; the holder of a pay link has
+neither and may not exist in the database at all. A sentence composed server-side would
+arrive in English on a page otherwise translated into five languages, and it would be
+English *in the line that says what the money is for*. You know the reader's locale — it is
+in the URL they opened. So: facts from here, sentence from there.
+
+`orderNumbers` as an array became `reference` + `orderCount` for the same reason. A
+multi-vendor basket is one payment settling several orders, and the page can say
+*"order ORD-… and 2 others"* in the reader's language from those two fields, where an array
+would have forced a join somewhere.
+
+⚠ **`sellers` is empty for a booking, deliberately, and it is not an oversight to fix.** A
+shop's name is already a public storefront page, so naming it tells a stranger only that
+somebody bought something. A *service provider's* name is frequently the sensitive fact
+itself — a clinic, a lawyer — and this backend cannot tell which vendors are which. A
+booking travels as its reference and its amount; the payer confirms with whoever sent them
+the link. Please do not fill the gap client-side from another endpoint.
+
+Your privacy constraint was taken as written and is now enforced rather than documented:
+the buyer (name, email, phone, delivery address), the line items (titles, SKUs, per-item
+prices) and the service on a booking are each asserted absent by source scan in
+`test:payments`, because the failure mode is a field *appearing* and no behavioural test
+can be written against a field that does not exist yet.
+
 ### 3 · Two backend docs still say the pay page is missing
 
 Now stale, and both in the direction that costs someone an afternoon:
@@ -295,3 +344,8 @@ Now stale, and both in the direction that costs someone an afternoon:
 - `api-doc/n8n/bot-surface.md` — *"`/pay/:token` is not built — so that tool hands a live
   customer a dead link today."*
 - `api-doc/n8n/BACKEND-GAPS.md` — *"Option 1 was taken, minus the page."*
+
+**✅ Both corrected 2026-09-07.** Thank you for catching them — the first one was written
+here the day before, which is roughly how long that class of claim takes to go stale.
+`BACKEND-GAPS.md` now says why it changed rather than quietly reading as though it was
+always true, since the point of that entry is the decision trail.

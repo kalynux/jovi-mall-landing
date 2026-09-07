@@ -1,5 +1,13 @@
 # Reviews & ratings
 
+**Verified against source on 2026-09-08** — the route census across the four surfaces, and the
+two corrections now carried in § 2 (the eligibility endpoint's `404 REVIEW_SUBJECT_NOT_FOUND`
+branch, and the six `.strict()` query schemas), against
+`jovi-mall/src/modules/reviews/routes/*.ts`,
+`src/modules/reviews/domain/services/review-eligibility.service.ts` and
+`src/modules/reviews/validators/review.validator.ts`. **Both corrections were missing from this
+copy** and are the kind a client hits on its first request.
+
 > **Cross-role.** One module, two subjects, three author roles, four HTTP surfaces.
 > Built 2026-08-21 (Phase 6 · 6.E.4). Moderation lives in wi-admin —
 > [admin/reviews.md](./admin/reviews.md).
@@ -93,6 +101,22 @@ GET /api/customer/reviews/eligibility?subjectType=product&subjectId=<id>
 **200 with `eligible: false`** — this is a question, and "no, and here is why" is a
 successful answer to it. `reason` is the same error code the write path would have raised,
 so one copy table serves both. Present on `/customer`, `/vendor` and `/agency`.
+
+> ⚠ **It does NOT always answer `200` — and the exception is the case a client hits most.**
+> `REVIEW_SUBJECT_NOT_FOUND` **throws a `404`** rather than answering `eligible: false`, at four
+> sites: an unknown product (`review-eligibility.service.ts:93`), an unknown shipment (`:145`),
+> its missing order (`:148`), and a subject the caller does not own (`:158`). The service's own
+> header states the split — a subject that does not exist **and** one you may not see are the
+> same answer, deliberately, so the endpoint cannot be used to probe which ids are real.
+>
+> So a client must handle **both** shapes: `200 { eligible: false, reason }` for every
+> *business* refusal, and `404 REVIEW_SUBJECT_NOT_FOUND` for "no such subject, or not yours".
+> This page implied the first was the only outcome until 2026-09-08.
+>
+> ⚠ **Both query schemas are `.strict()`** (`reviews/validators`, six schemas, all strict), so an
+> **unknown query parameter is a `400 VALIDATION_ERROR`** — not ignored. A client appending its
+> own cache-buster or analytics parameter to these URLs breaks them. `VALIDATION_ERROR` was
+> absent from this page's error list.
 
 ---
 

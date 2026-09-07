@@ -1,5 +1,11 @@
 # WhatsApp
 
+**Verified against source on 2026-09-08** — the single route and its `X-Webhook-Secret` guard,
+the request body, and the verbatim-relay response, against
+`jovi-mall/src/modules/whatsapp/whatsapp.routes.ts`,
+`src/api/middlewares/bot-webhook.middleware.ts` and `src/modules/whatsapp/whatsapp.controller.ts`.
+**Corrected:** this page said the webhook takes no authentication, in two places. It does.
+
 Account linking is **not on this page any more.** It moved to
 [`../connections/README.md`](../connections/README.md) — one mechanism for WhatsApp and
 Telegram alike, mounted at `/api/me/connections`. `GET /api/webhooks/whatsapp/link/status` and
@@ -9,7 +15,7 @@ What remains here is the bot bridge. It is not a frontend endpoint.
 
 | Endpoint | Auth |
 |---|---|
-| `POST /api/webhooks/whatsapp/` | none (public webhook) |
+| `POST /api/webhooks/whatsapp/` | **`X-Webhook-Secret`** — see below. Not a session; not open |
 
 ## ⚠ Authentication — `X-Webhook-Secret`
 
@@ -37,7 +43,9 @@ service window, then dispatches any `/`-command through the internal CommandBus 
 being the one that matters (see [../connections/README.md](../connections/README.md)).
 
 - **Endpoint:** `POST /api/webhooks/whatsapp/`
-- **Authentication:** none
+- **Authentication:** the `X-Webhook-Secret` header (`requireBotWebhookSecret`) — see the section
+  above. **Not "none":** this page said so until 2026-09-08 and it was wrong. No cookie and no
+  Bearer token is involved, which is what that claim was reaching for, but the route is guarded.
 - **Content-Type:** `application/json`
 
 ```json
@@ -134,7 +142,7 @@ A refusal is also a `200` with a `message` to relay, and `success: false`:
 
 `login` resolves the sender by matching `reply_to` against the account's phone number, so
 WhatsApp needs no extra step — the sender id **is** the number. (Telegram does; see
-[../telegram/README.md](../telegram/README.md).) On success the WhatsApp account is also
+../telegram/README.md (`backend/jovi-mall/api-doc/telegram/README.md` — not mirrored in this repository).) On success the WhatsApp account is also
 **connected**, so notifications start working with no separate `/connect`.
 
 ### The `reset_password` command
@@ -171,4 +179,4 @@ the same 30 minutes and the same single use.
 - [../connections/README.md](../connections/README.md) — connecting an account (the replacement for the old linking flow)
 - [../auth/magic-login.md](../auth/magic-login.md) — passwordless `/login`, both channels
 - [../notifications/whatsapp-templates.md](../notifications/whatsapp-templates.md) — approved templates
-- [../telegram/README.md](../telegram/README.md) — the Telegram bot bridge
+- ../telegram/README.md (`backend/jovi-mall/api-doc/telegram/README.md` — not mirrored in this repository) — the Telegram bot bridge

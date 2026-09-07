@@ -3,10 +3,15 @@
 **Every referenced file on this platform is a `FileDetail` object, never a URL string** — and since
 Phase 4 some of them have **no URL at all**.
 
-> **Verified against source 2026-08-24.** Resolver:
-> `src/modules/catalog/read-models/file-detail.resolver.ts:45-54`. Classification:
-> `src/core/storage/storage-trees.ts`. Break notes:
+> **Verified against source on 2026-09-08** — the `FileDetail` shape, all **three** `access`
+> values and their precedence. Resolver:
+> `src/modules/catalog/read-models/file-detail.resolver.ts`. Type:
+> `.../product-detail.read-model.ts`. Classification: `src/core/storage/storage-trees.ts`.
+> Break notes:
 > [`../FRONTEND-CHANGELOG-private-files.md`](../FRONTEND-CHANGELOG-private-files.md).
+>
+> 🆕 **`access` gained a third value, `"quota_blocked"`, on 2026-09-07.** It is **not** about
+> privacy and it reaches **public** trees — product photos included. See [§ 1.2](#12--the-third-value-quota_blocked).
 
 ---
 
@@ -17,7 +22,7 @@ Phase 4 some of them have **no URL at all**.
   "id": "66b1...",
   "key": "digital/2026/08/9f2c..._manual.pdf",
   "url": null,                    // string | null
-  "access": "authorized",         // "public" | "authorized"  - ALWAYS present
+  "access": "authorized",         // "public" | "authorized" | "quota_blocked"  - ALWAYS present
   "mimeType": "application/pdf",
   "size": 284119,
   "originalName": "manual.pdf"
@@ -25,18 +30,47 @@ Phase 4 some of them have **no URL at all**.
 ```
 
 ```ts
-url  = isPrivate ? null : storage.getPublicUrl(file.key)
+// The resolver, in order. The quota check runs FIRST and that ordering is load-bearing.
+if (file.quotaBlockedAt) return { url: null, access: 'quota_blocked', ... }
+url    = isPrivate ? null : storage.getPublicUrl(file.key)
 access = isPrivate ? 'authorized' : 'public'
 ```
 
-**`url` and `access` are derived from the same predicate**, so they can never disagree. Branch on
-`access`; treat `url === null` as the same signal.
+**`url` and `access` are derived together**, so they can never disagree: `url` is a string when
+and only when `access === "public"`. Branch on `access`; treat `url === null` as the same signal
+but **not** as a single meaning — there are now two reasons for it and they need different screens.
 
 ### 1.1 Why a type change and not a different string
 
 An authorized path looks **exactly** like a public URL. Had the backend simply returned a different
 string, a client keeping `<img src={url}>` would have shipped a broken image to every signed-out
 visitor and nobody would have noticed until support did. `null` breaks loudly, at the point of use.
+
+### 1.2 · The third value: `quota_blocked`
+
+| `access` | `url` | What it means |
+|---|---|---|
+| `"public"` | a real URL | ordinary media — render it |
+| `"authorized"` | **`null`** | the file is in a private tree (§ 2); reachable only through a route that checks who is asking (§ 3) |
+| `"quota_blocked"` | **`null`** | **the file's owner is over their storage plan** |
+
+`quota_blocked` is a **billing** state, not a privacy one and not a missing file. The row, the
+bytes and the file's contribution to the owner's used storage all survive — blocking is what a
+vendor gets *instead* of losing data when a downgrade puts them over the cap, and the file comes
+back unchanged the moment they upgrade or free room.
+
+⚠ **This one reaches public trees.** The quota check and the tree classification are independent,
+so a product photo in `images/` — the most ordinary file on the storefront — can come back
+`quota_blocked`. **A storefront that only handles `null` on the digital surface will show broken
+images on product cards.**
+
+⚠ **`quota_blocked` outranks `authorized`.** A blocked file that also sits in a private tree
+reports `quota_blocked`. Check it first, or you will send the client to an authorized route and
+get an answer about permissions when the real problem is billing.
+
+**For a public storefront**, render the ordinary image placeholder — the same one you use for a
+product with no photo. Do **not** show a customer anything about the vendor's plan, and do not
+say "image deleted": nothing was deleted.
 
 ---
 
@@ -106,7 +140,9 @@ re-fetch it later; it will not work, and it is not meant to.
 ## 4 · Client checklist
 
 - [ ] Never render `url` without checking `access` first.
+- [ ] Handle **all three** `access` values, and check `quota_blocked` **before** `authorized`.
 - [ ] Never treat `url === null` as "no file" — the file exists; `id`, `key`, `mimeType`, `size` and
       `originalName` are all still there. Render a name and a download action, not an empty slot.
+- [ ] Never say "deleted" or "missing" for a `quota_blocked` file. Nothing was deleted.
 - [ ] Never store a resolved public URL as if it were stable across trees.
 - [ ] Do not assume a new tree is public.
