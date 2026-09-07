@@ -1,5 +1,9 @@
 # Public catalog (no auth)
 
+**Verified against source on 2026-09-08** — every route, query parameter, response field, enum
+and error code on this page, against `jovi-mall/src/modules/catalog/` (routes, controller,
+validators, service, `dto/public-product.dto.ts`, `read-models/public-display-price.ts`).
+
 **No authentication.** These endpoints are readable by a logged-out visitor, and they exist
 for the storefront: it browses, searches and opens products, so it needs to *read* the
 catalogue rather than render a mock.
@@ -21,6 +25,8 @@ one. Nothing owner-scoped is reachable; see [the rule for this prefix](./README.
 | GET | `/api/public/stores/:storeSlug/products/:productSlug` | **The canonical product page** |
 | GET | `/api/public/products/:productId` | The same product, by id — for deep links |
 | GET | `/api/public/products/:productId/related` | **"Customers also bought"** — the related strip |
+| GET | `/api/public/products/by-ids` | **Batch hydration** — many ids → the same browse rows, in your order |
+| GET | `/api/public/variants/by-sku/:sku` | A printed product code → the variant it names |
 | GET | `/api/public/categories` | Category chips, with counts |
 | GET | `/api/public/stores` | Store directory + the sitemap's store feed |
 | GET | `/api/public/stores/:slug` | One store |
@@ -132,7 +138,7 @@ you like) — the backend does not block the cart on it.
       "category": "Fashion",
       "tags": ["wax", "handmade"],
 
-      "price": 24000,               // resolved from the default variant
+      "price": 24000,               // resolved from the default variant — see "bargainable" below
       "compareAtPrice": 30000,      // null when not discounted
       "currency": "XAF",
       "priceRange": { "min": 24000, "max": 38000 },  // OMITTED when every variant costs the same
@@ -167,6 +173,113 @@ you like) — the backend does not block the cart on it.
   `aggregateRating` in your JSON-LD; see [SEO](#seo) and [reviews.md](../reviews.md).
 - An empty result is `data: []` with `meta.total: 0`. Never a 404.
 - Build the product URL as `/shop/stores/{store.slug}/products/{slug}` — see decision 1.
+
+### ⚠ A bargainable variant is quoted at its ASK
+
+Some variants carry a vendor-configured haggling window, and the price you are given for one
+is the **top** of that window — the vendor's ask — not the bottom. The bottom is the vendor's
+floor: the number they will not go below in a negotiation the shopper is the other side of.
+**It is never published on any public route**, under any key, and there is no field on this
+surface from which it can be derived.
+
+Nothing about the response *shape* changes, and that is deliberate: `price`, `compareAtPrice`,
+`priceRange`, the `price_asc`/`price_desc` sorts and the `minPrice`/`maxPrice` filters all move
+together, so a client cannot end up comparing one kind of price against another. In particular
+**a filtered page is still guaranteed to quote prices inside the band you asked for** — filter
+`maxPrice=40000` and nothing displaying 45 000 comes back.
+
+⚠ **A configured window is not always an effective one, so "has a window" is not the
+condition.** The rule is `isBargainEffective = vectorisationEnabled === true && bargain != null`
+(`src/modules/catalog/domain/services/bargain-price.rule.ts:162-167`): a window on a product
+whose **vectorisation opt-in is off** is kept, fully validated, and **inert** — and such a
+variant is shelved at its ordinary `price`, not at its ask. Nothing on this surface lets you
+tell the two apart, and nothing needs to; it matters only if you are reconciling a shop price
+against what a vendor configured, where the flag is the missing half of the explanation.
+(The vendor dashboard’s own docs publish a `bargainable` boolean; this surface deliberately
+does not.)
+
+Three consequences worth knowing:
+
+- **There is no `bargainable` flag on this surface, and no "make an offer" control.**
+  Negotiation happens in chat only. If you want one, ask — it is a deliberate omission rather
+  than an oversight, and publishing it is a decision about this file.
+- **`compareAtPrice` is suppressed on a bargainable variant unless it is strictly above the
+  ask.** A vendor may legitimately hold a "was" price that sits above their floor and below
+  their ask; publishing that pair would render a strikethrough *beneath* the live price.
+- **A cart line is not bound by any of this.** The price a variant is *shelved* at and the
+  price a line is *sold* at are resolved by different code, and a negotiated line carries a
+  number the shop never displayed. See [Customer → Cart](../customer/cart.md).
+
+---
+
+## GET /api/public/products/by-ids
+
+Batch hydration: the same rows as the browse grid, for a set of ids the caller already
+holds, in **one** request instead of N.
+
+```
+GET /api/public/products/by-ids?ids=507f1f77bcf86cd799439066,507f1f77bcf86cd799439067
+GET /api/public/products/by-ids?ids=507f…66&ids=507f…67          // repeated param, same thing
+```
+
+| Param | Type | Notes |
+|---|---|---|
+| `ids` | string | Repeated **or** comma-separated ObjectIds. 1–50 per request. Duplicates are collapsed. |
+
+### Success — `200 OK`
+
+```jsonc
+{
+  "success": true,
+  "data": {
+    "products": [ /* product list rows — the SAME shape GET /api/public/products returns */ ],
+    "missing": ["507f1f77bcf86cd799439067"]
+  }
+}
+```
+
+### Three properties that are the contract
+
+**1. Order is yours.** Rows come back in the order you sent the ids. A relevance ranking
+computed elsewhere therefore survives hydration with no re-sorting — which is what this
+route exists for.
+
+**2. `missing` is an answer, not an error.** An id that is no longer publishable — archived,
+suspended, deleted, or belonging to a suspended vendor — is named in `missing` rather than
+404ing the whole request. The same visibility predicate every route on this router uses
+decides it (`public-catalog.filter.ts`), so this doubles as a **freshness gate**: a caller
+holding a stale list learns which entries have gone off sale.
+
+**3. It is the same DTO as the browse grid**, built by the same decorator. `inStock` is a
+boolean and never a count, `priceRange` is omitted when there is one price, `rating` is
+`null` rather than `{average: 0, count: 0}` — all exactly as in
+[GET /api/public/products](#get-apipublicproducts).
+
+### Who this is for
+
+The **n8n product-search tool**. It retrieves ranked product ids out of the pgvector index
+(`api-doc/n8n/vectoriser/README.md` § 13) and comes here for what those products currently
+cost and whether they are actually in stock — because the vector index is a snapshot and
+stock in particular only refreshes when a product is re-vectorised. Retrieval happens in
+pgvector; **price and availability stay this service's answer.**
+
+It is not limited to that caller, and the storefront has its own uses: rehydrating the
+**recently-viewed** and **saved** strips (which store ids, not rows — see
+[customer/saved-and-viewed.md](../customer/saved-and-viewed.md)), a re-render of a cached
+grid, or a saved comparison. Anything holding a list of ids wants this rather than a loop.
+
+### Errors
+
+| Status | Code | When |
+|---|---|---|
+| `400` | `VALIDATION_ERROR` | `ids` absent, empty, over 50, or containing something that is not a 24-hex id |
+
+An id that is well-formed but matches nothing is **not** an error — it lands in `missing`.
+
+⚠ **This route is declared before `/products/:productId`, and that ordering is load-bearing.**
+Both are two segments, so Express resolves them by declaration order alone. Reversed,
+`by-ids` is read as a product id and every request here answers `400`. Pinned by
+`verify:storefront`.
 
 ---
 
@@ -388,6 +501,79 @@ Buying three of something in one order is one piece of evidence, not three.
 
 ---
 
+## GET /api/public/variants/by-sku/:sku
+
+A product code — off a package, a label, an advertisement, a WhatsApp message — resolved to
+the variant it names.
+
+**It exists because search cannot do this.** `?q=` is a MongoDB `$text` search over title,
+tags and description; it does **not** index SKU and will not match one. A customer typing a
+real code got an empty result indistinguishable from "we do not sell that".
+
+### ⚠ It answers a RESOLUTION, not a product card
+
+A SKU names one specific variant, and that is very often **not** the default variant a card
+quotes. Answering with a card would show the wrong price to precisely the customer who typed
+a precise code. So this returns the variant's own `price`, its own `inStock`, and the ids to
+fetch the full product with — nothing else.
+
+That `price` follows the same rule as everywhere else on this surface: on a **bargainable**
+variant it is the vendor's ask, never their floor. See
+[A bargainable variant is quoted at its ASK](#-a-bargainable-variant-is-quoted-at-its-ask).
+
+```jsonc
+// GET /api/public/variants/by-sku/CAPTURE-SKU-DOC-DRESS-WAX-M  →  200
+{
+  "success": true,
+  "data": {
+    "productId": "6a8f497787a554ec589db76c",
+    "variantId": "6a8f497787a554ec589db76d",
+    "sku": "CAPTURE-SKU-DOC-DRESS-WAX-M",
+    "title": "Ankara Wax Print Maxi Dress",
+    "variantName": "Size: M",
+    "price": 24000,
+    "currency": "XAF",
+    "inStock": true,
+    "store": { "slug": "capture-sku-doc-maison-bella", "name": "Maison Bella" }
+  }
+}
+```
+
+*(Captured from a running server, fixtures and all.)*
+
+`sku` is echoed **as stored**, which is not always what was sent — see the case rule below.
+`variantName` follows the same rule as the product page's variant list: the vendor's own name,
+else the option selection spelled out (`"Size: M, Colour: Red"`), else the SKU itself.
+
+### Case: three spellings are tried, and the one you sent wins
+
+`ProductVariant.sku` is a **case-sensitive** unique index and vendors type SKUs however they
+like, while a customer is reading a code into a phone keyboard that capitalises. So the value
+you send, its uppercase form and its lowercase form are all tried, in one indexed lookup, and
+if more than one exists **the spelling you sent is the one that answers**.
+
+⚠ **A mixed-case SKU only resolves when typed exactly.** `Dress-Wax-M` stored, `DRESS-WAX-M`
+typed, is a miss — the three candidates are as-typed, all-upper and all-lower, and none of
+them is the stored mixture. This is deliberate: a genuinely case-insensitive match cannot use
+the unique index, which would turn every mistyped code on an unauthenticated route into a
+collection scan. Vendors who want their codes to be typeable should keep them in one case.
+
+### Errors
+
+| Code | Status | When |
+|---|---|---|
+| `CATALOG_PRODUCT_NOT_FOUND` | 404 | Unknown code — **or** its product is draft, archived, suspended, deleted, or its vendor is suspended |
+| `VALIDATION_ERROR` | 400 | Empty, or longer than 64 characters |
+
+⚠ **The 404 is deliberately ambiguous**, exactly as it is on the product reads: a code that
+resolves to something withdrawn must be indistinguishable from a code that never existed, or
+the endpoint becomes an oracle for enumerating an unreleased catalogue.
+
+A SKU containing `/` cannot be addressed here — it would split the path. Percent-encode it
+(`%2F`); Express decodes the segment before the route sees it.
+
+---
+
 ## GET /api/public/categories
 
 `Product.category` is a plain indexed string; there is no Category collection, model or
@@ -517,8 +703,14 @@ See [rate-limits.md](../rate-limits.md).
   suppressed on a bargainable variant unless strictly above the ask.
 
   **Nothing to change if you render these fields as given.** Re-check any price you cache or
-  derive client-side. Full contract, including the one precondition and the checklist:
+  derive client-side. The full rule, with the one precondition that is easy to miss, is
+  [A bargainable variant is quoted at its ASK](#-a-bargainable-variant-is-quoted-at-its-ask)
+  above; the migration note written for this app is
   [Storefront price semantics](../FRONTEND-CHANGELOG-storefront-price-semantics.md).
+- **A `bargainable` flag** — not published, and unlike the entry above **this one is still
+  open**. Negotiation is chat-only, so the storefront has nothing to *do* with the flag today;
+  the accepted cost is that a shopper cannot tell a negotiable price from a fixed one. That is
+  a product decision rather than a technical gap — if you want the badge, ask.
 - **Product-text translation** — `title`/`description`/`category`/`tags`/`seo.*` are plain
   strings with no `Accept-Language` handling. The platform's position is that product text is
   **vendor-authored in one language**, and `contentLanguage` says which so you can label it

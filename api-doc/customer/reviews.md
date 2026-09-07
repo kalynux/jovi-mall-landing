@@ -1,9 +1,14 @@
 # Reviews — the customer's half
 
+**Verified against source on 2026-09-08** — all four routes, the submit and both list query
+schemas, the pending/published rule, the public row DTO and all four error codes, against
+`jovi-mall/src/modules/reviews/` (routes, controllers, validators, dto, services,
+`domain/review-targets.ts`, `domain/services/review-eligibility.service.ts`).
+
 **A customer reviews two different things, and they behave differently.** A **product** they bought,
 and a **delivery** they received. Only the first is ever published.
 
-> **Verified against source 2026-08-24.** Routes: `src/modules/reviews/routes/customer-review.routes.ts`
+> **Verified against source on 2026-09-08.** Routes: `src/modules/reviews/routes/customer-review.routes.ts`
 > and `public-review.routes.ts`. Rules: `domain/services/review-eligibility.service.ts`,
 > `domain/review-targets.ts`. Shape: `validators/review.validator.ts`.
 > Cross-role model: [`../reviews.md`](../reviews.md).
@@ -122,15 +127,47 @@ and the one that matched is snapshotted as the evidence.
 
 ## 5 · Reading reviews
 
-### `GET /api/customer/reviews`
+### `GET /api/customer/reviews?page=&limit=&status=`
 
-This customer's own reviews, **every status** — including `pending` ones not yet visible to anyone
-else. That is what lets an account page show "awaiting moderation".
+This customer's own reviews, **every status by default** — including `pending` ones not yet
+visible to anyone else. That is what lets an account page show "awaiting moderation"; pass
+`?status=pending` to build that tab directly. `status` is `pending` | `published` | `rejected`,
+`page` >= 1 (default 1), `limit` 1–100 (default 20). The query is `.strict()` — an unknown
+parameter is a `400`.
 
-### `GET /api/public/products/:productId/reviews`
+Rows are `AuthorReviewDto`: the public row plus `subjectType`, `subjectId`, `status` and
+`createdAt`.
 
-Unauthenticated. Published product reviews, newest first, with the rating breakdown in
-`meta.rating` — **or `null` when there are none**.
+### `GET /api/public/products/:productId/reviews?page=&limit=`
+
+Unauthenticated, and cached `public, max-age=300` like the rest of `/api/public`. Published
+product reviews, newest first, with the rating breakdown in `meta.rating` — **or `null` when
+there are none**.
+
+⚠ **`limit` is capped at 50 here and defaults to 10** — not the 100/20 used everywhere else on
+the platform. Hard-coding the platform default gets you 10 rows and a silent "missing reviews"
+bug report.
+
+⚠ **An unknown, draft or unpublished product answers an EMPTY PAGE, not a `404`.** The question
+this route asks is "what has been said about this id", and *nothing* is a truthful answer to it —
+and a 404 would turn the route into an existence oracle for unreleased products. Do not use this
+endpoint to decide whether a product exists; use the catalogue.
+
+A published row carries **no author identity of any kind** — no name, no initial, no id:
+
+```jsonc
+{
+  "id": "507f1f77bcf86cd799439aa1",
+  "rating": 5,
+  "title": "Beautiful fabric",     // string | null
+  "body": "Arrived in three days.", // string | null
+  "publishedAt": "2026-08-20T10:04:00.000Z"  // string | null
+}
+```
+
+so there is nothing to render as a byline. `meta` is
+`{ total, page, limit, totalPages, rating }` — note **`totalPages`**, not `pages`, on both of
+these lists. Full shapes: [`../reviews.md`](../reviews.md).
 
 ⚠ **`meta.rating: null` is what keeps `aggregateRating` out of the storefront's JSON-LD until a real
 aggregate exists.** Emitting a structured-data rating with no reviews behind it is exactly what

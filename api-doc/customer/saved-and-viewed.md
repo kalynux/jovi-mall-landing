@@ -1,11 +1,15 @@
 # Saved products & recently viewed — `/api/customer/{wishlist,recently-viewed}`
 
+**Verified against source on 2026-09-08** — all seven routes, both request schemas, the entry
+DTO’s nullable `product`, the recently-viewed cap and all four error codes, against
+`jovi-mall/src/modules/customers/` (routes, controller, validators, services, dto, config).
+
 **Seven routes. Both lists are server-side.** The storefront's `/shop/saved` page works from
 `localStorage` today (`src/components/shop/providers/FavoritesProvider.tsx`, key
 `wi-mall-shop-favorites`) and does not survive a device change, a browser reset or a sign-in on a
 phone. This is the same list, kept on the server.
 
-> **Verified against source 2026-08-24.** Routes: `src/modules/customers/routes.ts:84-91`.
+> **Verified against source on 2026-09-08.** Routes: `src/modules/customers/routes.ts:84-91`.
 > Handlers: `controllers/customer-catalog.controller.ts`. Shapes:
 > `validators/customer-catalog.validator.ts`, `dto/customer-catalog.dto.ts`.
 >

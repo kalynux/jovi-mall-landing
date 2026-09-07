@@ -1,5 +1,7 @@
 # Customer Tickets
 
+**Verified against source on 2026-09-08** — the twelve customer routes and the `id`-vs-`_id` identifier rule, against `jovi-mall/src/modules/tickets/routes/customer-ticket.routes.ts` and `jovi-mall/src/core/base.schema.ts`. `ticket_number` was RULED OUT — no such path exists in `jovi-mall/src/`.
+
 Support ticketing for **customers**. Same ticketing engine as the other roles — the same
 `TicketController` / `TicketNoteController` / `TicketAttachmentController`, scoped to the caller.
 
@@ -17,6 +19,18 @@ Support ticketing for **customers**. Same ticketing engine as the other roles �
 > administrator takes the ticket**, which is the state almost every ticket is in.
 > `avatar_url` is **reserved and always `null`** — draw the initials from `name`. Full shape
 > and the reasoning: [vendor/tickets.md](../vendor/tickets.md#populated--enriched-references).
+
+> [!IMPORTANT]
+> **A ticket and a ticket note are identified by `id`, not `_id`** — on every endpoint on this
+> page. `Ticket` is built on `BaseSchemaOptions` (`src/core/base.schema.ts`), whose `toJSON`
+> deletes `_id` and exposes the `id` virtual, so the write endpoints a customer has —
+> `PATCH /:id`, `PATCH /:id/status` and `POST /:id/close` — return the document with
+> **`id` alone**.
+>
+> The three enriched reads — create, list and detail — additionally carry a duplicate **`_id`**,
+> because `TicketEnrichmentService` builds its payload with `toObject({ virtuals: true })`, which
+> applies no transform. **Key on `id`**: it is the only identifier present on all of them. A
+> client that keys on `_id` reads `undefined` the first time it patches a ticket.
 
 ## Endpoints
 
@@ -56,7 +70,7 @@ POST /api/customer/tickets
 ```
 
 ```json
-{ "success": true, "data": { "_id": "664tkt...", "ticket_number": "TKT-1043", "status": "open", "...": "..." } }
+{ "success": true, "data": { "id": "664tkt...", "subject": "Order arrived damaged", "status": "open", "...": "..." } }
 ```
 
 ## Possible error codes

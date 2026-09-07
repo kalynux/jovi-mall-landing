@@ -1,5 +1,7 @@
 # Customer — Profile, Addresses & Saved Payment Methods
 
+**Verified against source on 2026-09-08** — the ten route rows and the `FileDetail` avatar shape, against `jovi-mall/src/modules/customers/routes.ts` and `jovi-mall/src/modules/catalog/read-models/product-detail.read-model.ts`.
+
 Self-service management of the authenticated customer's profile, saved delivery addresses, and saved
 payment-method metadata.
 
@@ -127,7 +129,7 @@ parameter — a customer can only read/write **their own** record.
 
 > **Profile avatar is a file reference.** Upload the image via `POST /api/files/upload`, then send the
 > returned file `id` as `avatarFileId`. Reads return `avatar` as a **resolved file object** — the same
-> `{ id, key, url, mimeType, size, originalName }` shape product images use — or `null` when unset;
+> `{ id, key, url, access, mimeType, size, originalName }` shape product images use — or `null` when unset;
 > never a bare URL string. While set, that file counts as *in use* — it appears under `usage.references`
 > on `GET /api/files/:id` with `entityType: "customer", field: "avatar"`, and cannot be deleted until you
 > detach it (`avatarFileId: null`). See [File Management — the `usage` object](../vendor/file-management.md#get-apifilesid).
