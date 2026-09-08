@@ -7,18 +7,18 @@ Support ticketing for **customers**. Same ticketing engine as the other roles �
 
 - **Base path**: `/api/customer/tickets`
 - **Auth**: Required · **Permissions**: `customer` only (`requireRole(['customer'])`)
-- **Response envelope**: standard `{ success, data, meta?, message? }` — see [../README.md](../README.md#the-response-envelope-read-this-first).
+- **Response envelope**: standard `{ success, data, meta?, message? }` — see [../README.md](../README.md#4--the-response-envelope).
 
 > **Shared reference.** Payloads, enums, follower system and visibility rules are documented in
-> [vendor/tickets.md](../vendor/tickets.md); the **authoritative enum values** are in
-> [agency/tickets.md](../agency/tickets.md). This page lists the exact **customer** route set and the
+> vendor/tickets.md (`backend/jovi-mall/api-doc/vendor/tickets.md` — not mirrored in this repository); the **authoritative enum values** are in
+> agency/tickets.md (`backend/jovi-mall/api-doc/agency/tickets.md` — not mirrored in this repository). This page lists the exact **customer** route set and the
 > customer-specific restrictions.
 
 > **The administrator on a ticket.** `assigned_admin` is **not** an actor summary — it is
 > `{ name, job_title, department, avatar_url }`, and it is **`null` until a wi-admin
 > administrator takes the ticket**, which is the state almost every ticket is in.
 > `avatar_url` is **reserved and always `null`** — draw the initials from `name`. Full shape
-> and the reasoning: [vendor/tickets.md](../vendor/tickets.md#populated--enriched-references).
+> and the reasoning: vendor/tickets.md (`backend/jovi-mall/api-doc/vendor/tickets.md #populated--enriched-references` — not mirrored in this repository).
 
 > [!IMPORTANT]
 > **A ticket and a ticket note are identified by `id`, not `_id`** — on every endpoint on this
@@ -83,5 +83,5 @@ POST /api/customer/tickets
 | `NOT_FOUND` | 404 | Ticket id not found / not the customer's |
 
 ## Related
-- [vendor/tickets.md](../vendor/tickets.md) — full payload & enum reference
+- vendor/tickets.md (`backend/jovi-mall/api-doc/vendor/tickets.md` — not mirrored in this repository) — full payload & enum reference
 - [./orders.md](./orders.md) · [./profile.md](./profile.md)

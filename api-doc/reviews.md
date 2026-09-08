@@ -10,11 +10,11 @@ copy** and are the kind a client hits on its first request.
 
 > **Cross-role.** One module, two subjects, three author roles, four HTTP surfaces.
 > Built 2026-08-21 (Phase 6 · 6.E.4). Moderation lives in wi-admin —
-> [admin/reviews.md](./admin/reviews.md).
+> admin/reviews.md (`backend/jovi-mall/api-doc/admin/reviews.md` — not mirrored in this repository).
 
 This document is at the `api-doc/` root rather than in a role folder because a review is
 the same object whoever writes it, and splitting it four ways would be four copies of one
-eligibility table. Each role's endpoints are listed under [Endpoints](#endpoints).
+eligibility table. Each role's endpoints are listed under [Endpoints](#4--endpoints).
 
 ---
 
@@ -58,7 +58,7 @@ That is the part that matters for reviews, and it is unchanged. What *did* chang
 /api/customer/orders/:orderId/shipments` no longer withholds the agent outright. It publishes
 a **partial name and photo, never a phone number**, and only while that agent is physically
 carrying the parcel — see
-[ADR-A06](../docs/ADR-A06-AGENT-IDENTITY-DISCLOSURE.md) and
+ADR-A06 (`backend/jovi-mall/docs/ADR-A06-AGENT-IDENTITY-DISCLOSURE.md` — not mirrored in this repository) and
 [customer/orders.md](./customer/orders.md#who-is-carrying-it--agent). A reviewer may now
 recognise who delivered to them; they still cannot aim a review at anybody.
 
@@ -227,7 +227,7 @@ max-age=300` like the rest of `/api/public`.
 
 ### Moderation — `/api/internal/admin/reviews`
 
-wi-admin only, behind the service token. See [admin/reviews.md](./admin/reviews.md).
+wi-admin only, behind the service token. See admin/reviews.md (`backend/jovi-mall/api-doc/admin/reviews.md` — not mirrored in this repository).
 
 ---
 

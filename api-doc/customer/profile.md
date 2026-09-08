@@ -9,7 +9,7 @@ payment-method metadata.
 - **Auth**: Required (cookie or `Bearer`) — see [../auth/README.md](../auth/README.md)
 - **Permissions**: `customer` only (every route is guarded by `requireRole(['customer'])`)
 - **Headers**: `Content-Type: application/json` on `POST`/`PATCH`. Browser clients send `credentials: 'include'`.
-- **Response envelope**: standard `{ success, data, message? }` — see [../README.md](../README.md#the-response-envelope-read-this-first).
+- **Response envelope**: standard `{ success, data, message? }` — see [../README.md](../README.md#4--the-response-envelope).
 
 All operations resolve the customer from the JWT (`req.auth.role_entity`); there is no customer-id path
 parameter — a customer can only read/write **their own** record.
@@ -125,14 +125,14 @@ parameter — a customer can only read/write **their own** record.
 
 > **Clearable fields**: send `null` **or `""`** to clear (stored and returned as `null`); omit the
 > key to leave the value unchanged. Applies to `avatarFileId`, `bio`, `recentProductCode`,
-> and to `address_line2`/`state` in saved addresses. See [Conventions](../README.md#conventions).
+> and to `address_line2`/`state` in saved addresses. See [Conventions](../README.md#11--conventions).
 
 > **Profile avatar is a file reference.** Upload the image via `POST /api/files/upload`, then send the
 > returned file `id` as `avatarFileId`. Reads return `avatar` as a **resolved file object** — the same
 > `{ id, key, url, access, mimeType, size, originalName }` shape product images use — or `null` when unset;
 > never a bare URL string. While set, that file counts as *in use* — it appears under `usage.references`
 > on `GET /api/files/:id` with `entityType: "customer", field: "avatar"`, and cannot be deleted until you
-> detach it (`avatarFileId: null`). See [File Management — the `usage` object](../vendor/file-management.md#get-apifilesid).
+> detach it (`avatarFileId: null`). See File Management — the `usage` object (`backend/jovi-mall/api-doc/vendor/file-management.md #get-apifilesid` — not mirrored in this repository).
 
 ### Example request
 
@@ -304,7 +304,7 @@ notifications. Returns `{ success, data }` / `{ success, message }`.
 **Auth**: Required · **Permissions**: `customer`
 
 Identical contract to the vendor, agency and agent mounts — see
-[agent/push-notifications.md](../agent/push-notifications.md). The controller is
+agent/push-notifications.md (`backend/jovi-mall/api-doc/agent/push-notifications.md` — not mirrored in this repository). The controller is
 role-agnostic and keys on the **user**, not the customer record.
 
 ```json

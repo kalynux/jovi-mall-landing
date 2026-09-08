@@ -1,7 +1,14 @@
 # Frontend changelog — private files leave the public URL
 
+**Verified against source on 2026-09-08** — the three delivery-proof routes, on the mounts this
+page names them under: `GET /shipments/:id/delivery-proof/file` on **both**
+(`src/modules/delivery/agency.routes.ts:128`, `agent.routes.ts:139`) and the metadata read
+`GET /api/agent/shipments/:id/delivery-proof` on the **agent's mount only**
+(`agent.routes.ts:138-139`) — which is what this page says, and is the claim a sibling page got
+wrong. `GET /api/digital/download/:token` is unchanged. No corrections were needed.
+
 **Date:** 2026-08-19 · **Breaking** · jovi-mall
-**Design record:** [`docs/ADR-A01-UPLOAD-DOWNLOAD-MAP.md`](../docs/ADR-A01-UPLOAD-DOWNLOAD-MAP.md) D-2
+**Design record:** `docs/ADR-A01-UPLOAD-DOWNLOAD-MAP.md` (`backend/jovi-mall/docs/ADR-A01-UPLOAD-DOWNLOAD-MAP.md` — not mirrored in this repository) D-2
 
 > ⚠ **Read this before your next release if you render a delivery-proof photo.** One field on
 > one shared shape changes, and the change is deliberately a *type* change so your compiler

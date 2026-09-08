@@ -1,13 +1,19 @@
 # Frontend changelog — Phase 4 (Per-service hardening) and Phase 5 (Legacy close-out)
 
-What [`PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md`](../../PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md)
+**Verified against source on 2026-09-08** — the 90-day absolute session cap, the
+policy-document upload rules (2 files × 5 MB, PDF-only, `src/core/uploads/upload-config.ts:457-470`),
+the 300-character ticket-note cap (`.../validators/ticket-note.validator.ts:12`), and the Phase 5
+admin cutover: `requireRole(['admin'])` has **25** textual occurrences in `src/` and **zero** live
+guard sites, re-counted today. **One count had drifted** — see § 6.
+
+What `PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md` (`backend/PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md` — not mirrored in this repository)
 Phases **4** and **5** changed, written for the people who build against the API.
 
 - **Written:** 2026-08-21
 - **Phase 4 landed:** 2026-08-19 → 2026-08-20 · design record
-  [`PHASE-4-HARDENING-PLAN.md`](../../PRODUCTION-READINESS/PHASE-4-HARDENING-PLAN.md)
+  `PHASE-4-HARDENING-PLAN.md` (`backend/PRODUCTION-READINESS/PHASE-4-HARDENING-PLAN.md` — not mirrored in this repository)
 - **Phase 5 landed:** 2026-08-20 · design record
-  [`PHASE-5-LEGACY-CLOSEOUT-PLAN.md`](../../PRODUCTION-READINESS/PHASE-5-LEGACY-CLOSEOUT-PLAN.md)
+  `PHASE-5-LEGACY-CLOSEOUT-PLAN.md` (`backend/PRODUCTION-READINESS/PHASE-5-LEGACY-CLOSEOUT-PLAN.md` — not mirrored in this repository)
 - **Previous instalment:** [FRONTEND-CHANGELOG-phase-2-3.md](./FRONTEND-CHANGELOG-phase-2-3.md)
 
 > **This page is the cross-role half.** Everything here applies to every client of this
@@ -39,13 +45,13 @@ but a link update — and one thing worth knowing about support-ticket notes (§
 
 | You build | Read | Then also |
 |---|---|---|
-| **Vendor dashboard** | [vendor/FRONTEND-CHANGELOG-phase-4-5.md](./vendor/FRONTEND-CHANGELOG-phase-4-5.md) | this page |
-| **Agency dashboard** | [agency/FRONTEND-CHANGELOG-phase-4-5.md](./agency/FRONTEND-CHANGELOG-phase-4-5.md) | 🔴 [FRONTEND-CHANGELOG-private-files.md](./FRONTEND-CHANGELOG-private-files.md) — proof photos |
-| **Agency / agent mobile app** | [agent/FRONTEND-CHANGELOG-phase-4-5.md](./agent/FRONTEND-CHANGELOG-phase-4-5.md) | 🔴 [private-files](./FRONTEND-CHANGELOG-private-files.md) · [geo-tracker](../../geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-4-5.md) |
+| **Vendor dashboard** | vendor/FRONTEND-CHANGELOG-phase-4-5.md (`backend/jovi-mall/api-doc/vendor/FRONTEND-CHANGELOG-phase-4-5.md` — not mirrored in this repository) | this page |
+| **Agency dashboard** | agency/FRONTEND-CHANGELOG-phase-4-5.md (`backend/jovi-mall/api-doc/agency/FRONTEND-CHANGELOG-phase-4-5.md` — not mirrored in this repository) | 🔴 [FRONTEND-CHANGELOG-private-files.md](./FRONTEND-CHANGELOG-private-files.md) — proof photos |
+| **Agency / agent mobile app** | agent/FRONTEND-CHANGELOG-phase-4-5.md (`backend/jovi-mall/api-doc/agent/FRONTEND-CHANGELOG-phase-4-5.md` — not mirrored in this repository) | 🔴 [private-files](./FRONTEND-CHANGELOG-private-files.md) · [geo-tracker](./tracking/geo-tracker/FRONTEND-CHANGELOG-phase-4-5.md) |
 | **Customer app** | [customer/FRONTEND-CHANGELOG-phase-4-5.md](./customer/FRONTEND-CHANGELOG-phase-4-5.md) | this page |
 | **Marketing landing + shop** | [public/FRONTEND-CHANGELOG-phase-4-5.md](./public/FRONTEND-CHANGELOG-phase-4-5.md) | this page |
-| **Admin dashboard** (wi-admin, `/api/v1/*`) | [`admin/docs/FRONTEND-CHANGELOG-phase-4-5.md`](../../admin/docs/FRONTEND-CHANGELOG-phase-4-5.md) | this page — **§ 6 deletes your old endpoints** |
-| **Any live-tracking client** | [`geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-4-5.md`](../../geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-4-5.md) | — |
+| **Admin dashboard** (wi-admin, `/api/v1/*`) | `admin/docs/FRONTEND-CHANGELOG-phase-4-5.md` (`backend/admin/docs/FRONTEND-CHANGELOG-phase-4-5.md` — not mirrored in this repository) | this page — **§ 6 deletes your old endpoints** |
+| **Any live-tracking client** | [`geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-4-5.md`](./tracking/geo-tracker/FRONTEND-CHANGELOG-phase-4-5.md) | — |
 
 ---
 
@@ -126,7 +132,7 @@ signed in. Branch on `access`.
 
 ## 2 · 🔴 A sign-in is now bounded at 90 days, whatever it does in between
 
-**Design record:** [`jovi-mall/docs/ADR-A03-SESSION-CAP.md`](../docs/ADR-A03-SESSION-CAP.md) ·
+**Design record:** `jovi-mall/docs/ADR-A03-SESSION-CAP.md` (`backend/jovi-mall/docs/ADR-A03-SESSION-CAP.md` — not mirrored in this repository) ·
 **Contract:** [auth/README.md](./auth/README.md)
 
 Before Phase 4, the 30-day refresh window slid forever. Every client calls `auth-me` on launch
@@ -188,7 +194,7 @@ that path pleasant rather than treating it as an error state.
 
 ## 3 · Uploads are actually scanned now — on every surface
 
-**Design record:** [`jovi-mall/docs/ADR-A01-UPLOAD-DOWNLOAD-MAP.md`](../docs/ADR-A01-UPLOAD-DOWNLOAD-MAP.md)
+**Design record:** `jovi-mall/docs/ADR-A01-UPLOAD-DOWNLOAD-MAP.md` (`backend/jovi-mall/docs/ADR-A01-UPLOAD-DOWNLOAD-MAP.md` — not mirrored in this repository)
 
 Before Phase 4 the virus scanner was a no-op at **three** injection sites (general uploads,
 delivery proof, and — the one that matters most — digital products), and **two** more surfaces
@@ -294,9 +300,11 @@ deleted public paths answers 404**, and `requireRole(['admin'])` has **zero live
 
 **The internal door survives and is unchanged.** `/api/internal/admin/*` still serves its fifteen
 route groups — it is service-token-only, wi-admin is its only caller, and it is not a frontend
-surface. `api-doc/admin/*` therefore still exists (15 files, down from 17) and now documents
-**that** prefix; two genuinely dead pages were deleted and eight were repointed with a banner
-naming what moved and where a dashboard should go instead.
+surface. `api-doc/admin/*` therefore still exists and now documents **that** prefix; two genuinely
+dead pages were deleted and eight were repointed with a banner naming what moved and where a
+dashboard should go instead. Phase 5 left it at **15** files, down from 17; it holds **16** today
+(re-counted 2026-09-08 — `reviews.md` was added afterwards by Phase 6 · 6.E.4, and this line was
+the count at the time of writing rather than a standing figure).
 
 **One security consequence for any client holding an old token.** `rotateRefreshToken` used to
 copy the role straight out of the presented token with no filter, so a refresh token minted
@@ -311,7 +319,7 @@ is **0**.
 ## 7 · The blog editor moved; the public blog read did not
 
 Ownership of `articles` and `article_authors` **writes** moved to wi-admin
-([`admin/docs/api/content.md`](../../admin/docs/api/content.md), 14 routes at `/api/v1/content`).
+(`admin/docs/api/content.md` (`backend/admin/docs/api/content.md` — not mirrored in this repository), 14 routes at `/api/v1/content`).
 jovi-mall keeps the Mongoose schema, the indexes — including the unique multikey index on
 `slug_keys` that exists only because Mongo refuses a compound index on two parallel array paths
 — and the whole public read half.
@@ -323,14 +331,14 @@ thing that *does* move for the marketing site: **the authority for the nine-type
 now wi-admin's validator**, not this service's.
 
 `jovi-mall/api-doc/admin/articles.md` was deleted. The editor contract is
-[`admin/docs/api/content.md`](../../admin/docs/api/content.md).
+`admin/docs/api/content.md` (`backend/admin/docs/api/content.md` — not mirrored in this repository).
 
 ---
 
 ## 8 · Live tracking — the short version
 
 Full detail in
-[`geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-4-5.md`](../../geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-4-5.md).
+[`geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-4-5.md`](./tracking/geo-tracker/FRONTEND-CHANGELOG-phase-4-5.md).
 **No frame, no field and no error code changed.** Three behavioural facts:
 
 1. **`TRACKING_SESSION_TTL` is 72 h**, up from 48 h. It bounds how long a session survives a lost
@@ -387,12 +395,12 @@ standing between a regression and you**. Test your own integration.
 | Topic | Document |
 |---|---|
 | Private files, `access`, the proof-photo route | [FRONTEND-CHANGELOG-private-files.md](./FRONTEND-CHANGELOG-private-files.md) |
-| The upload/download map | [`docs/ADR-A01-UPLOAD-DOWNLOAD-MAP.md`](../docs/ADR-A01-UPLOAD-DOWNLOAD-MAP.md) |
-| The session cap and its reasoning | [`docs/ADR-A03-SESSION-CAP.md`](../docs/ADR-A03-SESSION-CAP.md) · [auth/README.md](./auth/README.md) |
+| The upload/download map | `docs/ADR-A01-UPLOAD-DOWNLOAD-MAP.md` (`backend/jovi-mall/docs/ADR-A01-UPLOAD-DOWNLOAD-MAP.md` — not mirrored in this repository) |
+| The session cap and its reasoning | `docs/ADR-A03-SESSION-CAP.md` (`backend/jovi-mall/docs/ADR-A03-SESSION-CAP.md` — not mirrored in this repository) · [auth/README.md](./auth/README.md) |
 | Mobile / bearer auth | [auth/FRONTEND-CHANGELOG-mobile-auth.md](./auth/FRONTEND-CHANGELOG-mobile-auth.md) · [mobile-auth-backend-spec.md](./mobile-auth-backend-spec.md) |
 | Uploads (role-neutral) | [uploads/README.md](./uploads/README.md) |
 | Error catalog | [errors/README.md](./errors/README.md) |
-| The surviving internal admin door | [admin/internal-service-api.md](./admin/internal-service-api.md) |
-| The blog editor's new home | [`admin/docs/api/content.md`](../../admin/docs/api/content.md) |
-| The tracking session TTL | [`geo-tracker/docs/ADR-B01-SESSION-TTL.md`](../../geo-tracker/docs/ADR-B01-SESSION-TTL.md) |
-| Phase 5 decisions | [`admin/docs/ADR-017-PHASE-17-CLOSEOUT.md`](../../admin/docs/ADR-017-PHASE-17-CLOSEOUT.md) |
+| The surviving internal admin door | admin/internal-service-api.md (`backend/jovi-mall/api-doc/admin/internal-service-api.md` — not mirrored in this repository) |
+| The blog editor's new home | `admin/docs/api/content.md` (`backend/admin/docs/api/content.md` — not mirrored in this repository) |
+| The tracking session TTL | `geo-tracker/docs/ADR-B01-SESSION-TTL.md` (`backend/geo-tracker/docs/ADR-B01-SESSION-TTL.md` — not mirrored in this repository) |
+| Phase 5 decisions | `admin/docs/ADR-017-PHASE-17-CLOSEOUT.md` (`backend/admin/docs/ADR-017-PHASE-17-CLOSEOUT.md` — not mirrored in this repository) |

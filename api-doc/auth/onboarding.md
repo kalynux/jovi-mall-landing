@@ -34,7 +34,7 @@ Four steps, each its own `PUT`. Step 1 is mandatory; steps 2–4 are skippable. 
 be re-submitted to update its data without resetting progress.
 
 > [!IMPORTANT]
-> **[`vendor/onboarding.md`](../vendor/onboarding.md) is authoritative** for the vendor flow —
+> **`vendor/onboarding.md` (`backend/jovi-mall/api-doc/vendor/onboarding.md` — not mirrored in this repository) is authoritative** for the vendor flow —
 > full field references, validation rules and error codes. The payloads below are a summary.
 
 ### Endpoints
@@ -62,7 +62,7 @@ instead.
 
 **This step no longer selects an agency.** It is a plain step-advance. Choosing a delivery agency
 requires that agency's **consent**, so it happens through
-[Agency Connections](../vendor/agency-connections.md) instead — and
+Agency Connections (`backend/jovi-mall/api-doc/vendor/agency-connections.md` — not mirrored in this repository) instead — and
 `default_delivery_agency_id` is set **automatically** the first time any connection is approved.
 
 **Payload**: `{}` (or `{ "skip": true }`)
@@ -134,7 +134,7 @@ Delivery Agents (Drivers) must provide vehicle information. Identity setup can b
 ```
 
 > Full contract (colour palette, photo rules, merge semantics):
-> [agent/onboarding.md](../agent/onboarding.md) and [agent/profile.md](../agent/profile.md).
+> agent/onboarding.md (`backend/jovi-mall/api-doc/agent/onboarding.md` — not mirrored in this repository) and agent/profile.md (`backend/jovi-mall/api-doc/agent/profile.md` — not mirrored in this repository).
 
 #### **Step 2: Identity Setup (Skippable)**
 **Payload**:
@@ -158,14 +158,14 @@ Agencies must define their coverage areas and headquarters, followed by payout s
 *   **Submit Step**: `PUT /api/agency/onboarding/{logistics|payout|branding|policies}` (steps 1–4)
 
 > [!IMPORTANT]
-> **[`agency/onboarding.md`](../agency/onboarding.md) is authoritative** for the agency flow — full
+> **`agency/onboarding.md` (`backend/jovi-mall/api-doc/agency/onboarding.md` — not mirrored in this repository) is authoritative** for the agency flow — full
 > field references, validation rules and error codes. The payloads below are a summary.
 
 ### Steps & Payloads
 
 #### **Step 1: Logistics Setup (Mandatory)**
 
-`coverage_areas` and `headquarters_addresses` are stored on the [Magazin](../agency/magazin.md) and
+`coverage_areas` and `headquarters_addresses` are stored on the Magazin (`backend/jovi-mall/api-doc/agency/magazin.md` — not mirrored in this repository) and
 validated against `country`. Coverage areas are **region keys** of that country (from
 `locations.json`), not polygons. Each HQ entry carries a `geo` — a result selected from
 `GET /api/geo/search` — and `location`, `region` and `city` are **derived from it** server-side.
@@ -199,8 +199,8 @@ validated against `country`. Coverage areas are **region keys** of that country 
 
 `payout_details` is an **ordered array** of methods (max 3); the first entry is the preferred one.
 Each is `mobile_money`, `bank` or `card` — though 🚧 **only `mobile_money` can be configured right
-now**. Full field reference: [Agency payout methods](../agency/payout-methods.md) (vendors: [the
-same schema, vendor side](../vendor/payout-methods.md)).
+now**. Full field reference: Agency payout methods (`backend/jovi-mall/api-doc/agency/payout-methods.md` — not mirrored in this repository) (vendors: the
+same schema, vendor side (`backend/jovi-mall/api-doc/vendor/payout-methods.md` — not mirrored in this repository)).
 
 **Payload**:
 ```jsonc
@@ -233,7 +233,7 @@ same schema, vendor side](../vendor/payout-methods.md)).
 
 The largest payload of the flow — pricing (at least one of `storage_based` / `pickup_based` enabled),
 returns, damage, and optional `cod` participation. See
-[`agency/onboarding.md`](../agency/onboarding.md) for the full field reference.
+`agency/onboarding.md` (`backend/jovi-mall/api-doc/agency/onboarding.md` — not mirrored in this repository) for the full field reference.
 
 **Payload**:
 ```jsonc

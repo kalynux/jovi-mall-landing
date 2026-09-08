@@ -87,7 +87,7 @@ watch an unaffiliated person move around.
 > from contracts in status **`active`** (`listActiveAgencyIds`) — a `pending`, `paused` or
 > `suspended` contract does not count. The "approved" wording predates the `approved` → `active`
 > status rename; the names are kept because clients consume them. See
-> [agency/agent-roster.md](../agency/agent-roster.md#status-lifecycle) for the status set.
+> agency/agent-roster.md (`backend/jovi-mall/api-doc/agency/agent-roster.md #status-lifecycle` — not mirrored in this repository) for the status set.
 
 ---
 
@@ -300,7 +300,7 @@ Device fields are optional: a liveness ping need not re-report capabilities it h
 **Description**: Diagnostics. "Why isn't this agent being dispatched?" is a question support asks
 from either side of the boundary. Read-only — it decides nothing.
 
-Response shape: see [../agency/agent-roster.md](../agency/agent-roster.md#get-apiagencyagentsagentideligibility).
+Response shape: see ../agency/agent-roster.md (`backend/jovi-mall/api-doc/agency/agent-roster.md #get-apiagencyagentsagentideligibility` — not mirrored in this repository).
 
 ---
 

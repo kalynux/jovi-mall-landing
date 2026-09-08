@@ -210,7 +210,7 @@ Selected once at boot from env (see `.env.example`). Mirrors the storage-provide
 ### Results are cached, and a client cannot tell
 
 Both endpoints are served through a Redis result cache
-([ADR-A04](../../docs/ADR-A04-GEOCODING.md) D-1). **Nothing about the contract changes** — the
+(ADR-A04 (`backend/jovi-mall/docs/ADR-A04-GEOCODING.md` — not mirrored in this repository) D-1). **Nothing about the contract changes** — the
 response shape, the `provider` field on every candidate, and the error codes are identical on a
 hit and on a miss, and there is no cache header, no `cached: true` flag and no way to bypass it
 from a request. Two things follow that are worth knowing anyway:

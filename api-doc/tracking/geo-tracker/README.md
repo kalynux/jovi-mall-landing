@@ -22,16 +22,16 @@ the root (`/ws/track`, `/healthz`, not `/api/...`).
 ## Documents
 
 - [tracking-websocket.md](./tracking-websocket.md) — the live tracking WebSocket: auth, message protocol, ETA, revocation
-- [tracking-sessions.md](./tracking-sessions.md) — the tracking lifecycle: read an agent's live tracking state, device state, eligibility, and state history over HTTP
-- [routing.md](./routing.md) — route, distance-matrix, geocode, reverse-geocode, ETA (provider-agnostic)
-- [locations.md](./locations.md) — read an agent's last-known position over HTTP
-- [gps-persistence.md](./gps-persistence.md) — how GPS is stored: live position (Redis) vs. the temporary, downsampled checkpoint trail (Postgres), retention, partitioning, and cleanup
-- [service-data-door.md](./service-data-door.md) — **`/internal/*`, the SECOND authorization path.** Four reads for a **service caller** (wi-admin) rather than a viewer, gated by a configured scope set. Not a general integration surface, and inert unless `GEO_TRACKER_ADMIN_TOKEN` is set
-- [webhooks.md](./webhooks.md) — inbound lifecycle events from jovi-mall (HMAC-authenticated)
-- [agent-action-audit.md](./agent-action-audit.md) — inbound agent shipment-action events, recorded as an immutable spatial audit with captured GPS
-- [tracking-notifications.md](./tracking-notifications.md) — outbound tracking-state notifications to jovi-mall (geo-tracker → Project A)
-- [health.md](./health.md) — liveness/readiness probes and `/metrics`
-- [errors/README.md](./errors/README.md) — error response shape
+- tracking-sessions.md (`backend/geo-tracker/api-doc/tracking-sessions.md` — not mirrored in this repository) — the tracking lifecycle: read an agent's live tracking state, device state, eligibility, and state history over HTTP
+- routing.md (`backend/geo-tracker/api-doc/routing.md` — not mirrored in this repository) — route, distance-matrix, geocode, reverse-geocode, ETA (provider-agnostic)
+- locations.md (`backend/geo-tracker/api-doc/locations.md` — not mirrored in this repository) — read an agent's last-known position over HTTP
+- gps-persistence.md (`backend/geo-tracker/api-doc/gps-persistence.md` — not mirrored in this repository) — how GPS is stored: live position (Redis) vs. the temporary, downsampled checkpoint trail (Postgres), retention, partitioning, and cleanup
+- service-data-door.md (`backend/geo-tracker/api-doc/service-data-door.md` — not mirrored in this repository) — **`/internal/*`, the SECOND authorization path.** Four reads for a **service caller** (wi-admin) rather than a viewer, gated by a configured scope set. Not a general integration surface, and inert unless `GEO_TRACKER_ADMIN_TOKEN` is set
+- webhooks.md (`backend/geo-tracker/api-doc/webhooks.md` — not mirrored in this repository) — inbound lifecycle events from jovi-mall (HMAC-authenticated)
+- agent-action-audit.md (`backend/geo-tracker/api-doc/agent-action-audit.md` — not mirrored in this repository) — inbound agent shipment-action events, recorded as an immutable spatial audit with captured GPS
+- tracking-notifications.md (`backend/geo-tracker/api-doc/tracking-notifications.md` — not mirrored in this repository) — outbound tracking-state notifications to jovi-mall (geo-tracker → Project A)
+- health.md (`backend/geo-tracker/api-doc/health.md` — not mirrored in this repository) — liveness/readiness probes and `/metrics`
+- errors/README.md (`backend/geo-tracker/api-doc/errors/README.md` — not mirrored in this repository) — error response shape
 - [**FRONTEND-CHANGELOG-phase-2-3.md**](./FRONTEND-CHANGELOG-phase-2-3.md) — what the readiness Phases 2 and 3 changed for a client of this service. 🔴 **`permission_revoked.reason` is now a closed set of three** (it used to be the single literal `shipment_completed`, for every outcome), `subscribe` gained an optional `shipmentId`, and the ETA now resolves without you supplying a destination
 - [**FRONTEND-CHANGELOG-phase-4-5.md**](./FRONTEND-CHANGELOG-phase-4-5.md) — what the readiness Phases 4 and 5 changed. **Nothing on this service's wire moved**: the session TTL is now **72 h**, the durable trail is **plausibility-gated** (the heartbeat is not), and grant latency is unchanged on purpose. 🔴 The one required change comes from jovi-mall — its new **90-day absolute session cap** can refuse the token you handed the handshake, surfacing here as `permission_revoked` / `authorization_expired`
 
@@ -48,8 +48,8 @@ below is the viewer path, and it governs everything except `/internal/*`:
 The second exists because a wi-admin administrator holds no jovi-mall `users`
 row, so the first cannot resolve them at all. It is a separate module, separate
 middleware and a separate path namespace on purpose — see
-[service-data-door.md](./service-data-door.md), and
-[`admin/docs/ADR-020`](../../admin/docs/ADR-020-ADMIN-DATA-DOOR.md) for the
+service-data-door.md (`backend/geo-tracker/api-doc/service-data-door.md` — not mirrored in this repository), and
+`admin/docs/ADR-020` (`backend/admin/docs/ADR-020-ADMIN-DATA-DOOR.md` — not mirrored in this repository) for the
 decision. Nothing below applies to it: it has no viewer, no role, and no
 per-agent visibility resolution.
 

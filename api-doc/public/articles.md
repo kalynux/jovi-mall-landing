@@ -23,7 +23,7 @@ directly — and the schema and indexes below are still declared in this reposit
 | GET | `/api/public/articles/index` | Every `(locale, slug)` pair plus dates — `generateStaticParams` + `sitemap.ts` |
 | GET | `/api/public/articles/{slug}?locale=…` | One article **with its body** |
 
-All three use the standard [response envelope](../README.md#the-response-envelope-read-this-first) and
+All three use the standard [response envelope](../README.md#4--the-response-envelope) and
 send `Cache-Control: public, max-age=300`.
 
 > **The five-minute window is real.** A newly published article is invisible to the site for up to

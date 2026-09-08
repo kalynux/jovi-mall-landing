@@ -447,4 +447,4 @@ works, but the one-tap path is gone.
   happens, what to deep-link, the page you owe, and what not to build
 - [README.md](./README.md) — the rest of the auth surface
 - [../connections/README.md](../connections/README.md) — `/connect`, the other bot-minted code
-- [../whatsapp/README.md](../whatsapp/README.md), [../telegram/README.md](../telegram/README.md) — the bot bridges
+- [../whatsapp/README.md](../whatsapp/README.md), ../telegram/README.md (`backend/jovi-mall/api-doc/telegram/README.md` — not mirrored in this repository) — the bot bridges

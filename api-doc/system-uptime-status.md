@@ -13,7 +13,7 @@ the only health surfaces are the three in `health.md` and the operator ones behi
 >
 > The operator-facing equivalent exists and is where this information actually lives:
 >
-> - [`admin/system.md`](./admin/system.md) — dependency health, integration status, queue depth,
+> - `admin/system.md` (`backend/jovi-mall/api-doc/admin/system.md` — not mirrored in this repository) — dependency health, integration status, queue depth,
 >   cache status, worker state, operational metrics. Service-token only, rendered by wi-admin.
 > - [`health.md`](./health.md) — `/api/health` (frozen), `/api/health/live`, `/api/health/ready`,
 >   and `/metrics`.

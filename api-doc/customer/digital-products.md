@@ -9,7 +9,7 @@ no manual "grant" step for the customer.
 - **Base URL**: `http://localhost:8022/api`
 - **Mount**: `/api/digital` (the execute route lives here because generated download URLs are
   `/api/digital/download/<token>`).
-- **Response envelope**: standard `{ success, data }` — see [../README.md](../README.md#the-response-envelope-read-this-first).
+- **Response envelope**: standard `{ success, data }` — see [../README.md](../README.md#4--the-response-envelope).
   (The download-execute route is the exception: it returns a **binary file stream**, not JSON.)
 
 ## Endpoints
@@ -156,10 +156,10 @@ works from an email or a plain browser navigation). Streams the file with
 - Links are single-use with a **15-minute** TTL; the counter moves on **execute**, not on link creation,
   so an unused link costs nothing.
 - Vendors manage the underlying digital **assets** per variant under
-  `/api/vendor/products/:productId/variants/:variantId/digital/*` — see [../vendor/digital-products.md](../vendor/digital-products.md).
+  `/api/vendor/products/:productId/variants/:variantId/digital/*` — see ../vendor/digital-products.md (`backend/jovi-mall/api-doc/vendor/digital-products.md` — not mirrored in this repository).
 
 ## Related
 
-- [../vendor/digital-products.md](../vendor/digital-products.md) — vendor-side asset & variant config
+- ../vendor/digital-products.md (`backend/jovi-mall/api-doc/vendor/digital-products.md` — not mirrored in this repository) — vendor-side asset & variant config
 - [./orders.md](./orders.md) — where the purchase happens
 - [../auth/README.md](../auth/README.md)

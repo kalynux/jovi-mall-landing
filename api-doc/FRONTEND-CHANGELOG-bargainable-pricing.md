@@ -28,9 +28,9 @@ This is the reply to your bargainable-pricing requirements. §1 answers each req
 point-by-point, §2–§5 are what you need to build against. **If you read only one thing,
 read §1.3 — the min input on your editor must write `price`, not `bargain.minPrice`.**
 
-> Reference docs: [Vendor → Variants § Bargainable pricing](./vendor/variants.md#bargainable-pricing) ·
-> [Vendor → Simple products](./vendor/simple-products.md) ·
-> [Vendor → Products § vectorisation](./vendor/products.md) ·
+> Reference docs: Vendor → Variants § Bargainable pricing (`backend/jovi-mall/api-doc/vendor/variants.md #bargainable-pricing` — not mirrored in this repository) ·
+> Vendor → Simple products (`backend/jovi-mall/api-doc/vendor/simple-products.md` — not mirrored in this repository) ·
+> Vendor → Products § vectorisation (`backend/jovi-mall/api-doc/vendor/products.md` — not mirrored in this repository) ·
 > [Errors](./errors/README.md)
 
 ---

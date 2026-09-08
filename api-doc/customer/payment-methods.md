@@ -7,7 +7,7 @@ Reference for managing a user's **saved payment methods** — the tokenized card
 > [!IMPORTANT]
 > This is a **shared, role-agnostic** API mounted at `/api/me/payment-methods`. The **same endpoints, request bodies, and responses** work for **every** authenticated role (customer, vendor, admin, agent, agency). The owner is resolved from the auth token — a user only ever sees and manages **their own** methods.
 >
-> This file documents it from the **customer** perspective (the primary checkout consumer). The identical reference also lives in [vendor](../vendor/payment-methods.md), [admin](../admin/payment-methods.md), [agency](../agency/payment-methods.md), and [agent](../agent/payment-methods.md) folders.
+> This file documents it from the **customer** perspective (the primary checkout consumer). The identical reference also lives in vendor (`backend/jovi-mall/api-doc/vendor/payment-methods.md` — not mirrored in this repository), admin (`backend/jovi-mall/api-doc/admin/payment-methods.md` — not mirrored in this repository), agency (`backend/jovi-mall/api-doc/agency/payment-methods.md` — not mirrored in this repository), and agent (`backend/jovi-mall/api-doc/agent/payment-methods.md` — not mirrored in this repository) folders.
 
 ---
 
@@ -206,7 +206,7 @@ Content-Type: application/json
 
 > The nullable display fields (`brand`, `last4`, `holder_name`) treat `""` as `null` — an empty form
 > input is stored as `null`, never rejected. A non-empty invalid value (e.g. a 3-digit `last4`) is
-> still rejected. See [Conventions](../README.md#conventions).
+> still rejected. See [Conventions](../README.md#11--conventions).
 
 **Example — card:**
 

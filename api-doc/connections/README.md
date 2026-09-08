@@ -233,8 +233,8 @@ Four other things changed with them:
 
 ## Related
 
-- Per-role notification preferences: [`../vendor/notifications.md`](../vendor/notifications.md),
+- Per-role notification preferences: `../vendor/notifications.md` (`backend/jovi-mall/api-doc/vendor/notifications.md` — not mirrored in this repository),
   `../agency/notifications.md`, `../agent/notifications.md`, `../customer/notifications.md`
-- Channel setup walkthrough: [`../vendor/notification-channels.md`](../vendor/notification-channels.md)
+- Channel setup walkthrough: `../vendor/notification-channels.md` (`backend/jovi-mall/api-doc/vendor/notification-channels.md` — not mirrored in this repository)
 - The bot webhooks themselves (not frontend endpoints):
-  [`../whatsapp/README.md`](../whatsapp/README.md), [`../telegram/README.md`](../telegram/README.md)
+  [`../whatsapp/README.md`](../whatsapp/README.md), `../telegram/README.md` (`backend/jovi-mall/api-doc/telegram/README.md` — not mirrored in this repository)

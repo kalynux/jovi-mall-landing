@@ -1,11 +1,19 @@
 # Customer app — what Phase 2 and Phase 3 changed
 
+**Verified against source on 2026-09-08** — the routes named here all exist (whole-tree phantom
+scan, 0 suspect), the drain / keep-alive figures (`src/lifecycle.ts:243-244`,
+`src/modules/system/config/system.config.ts:108`), `ETA_MIN_INTERVAL` on geo-tracker's side
+(`internal/platform/config/config.go:333`, default 30 s), and the four auth codes plus
+`UPLOAD_POLICY_VIOLATION` / `UPLOAD_VIRUS_SCAN_UNAVAILABLE` in `src/core/error-codes.ts`
+(`VIRUS_DETECTED` is a **violation** inside `details.violations[]`, not a registry code — as
+stated). No corrections were needed.
+
 Your slice of Phases **2** (Deployability) and **3** (Cross-service correctness) of
-[`PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md`](../../../PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md).
+`PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md` (`backend/PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md` — not mirrored in this repository).
 
 - **Written:** 2026-08-21 · **Phase 2:** 2026-08-18 → 08-19 · **Phase 3:** 2026-08-19
 - **Read first, then this:** [../FRONTEND-CHANGELOG-phase-2-3.md](../FRONTEND-CHANGELOG-phase-2-3.md)
-- **Also read:** [`geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-2-3.md`](../../../geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-2-3.md)
+- **Also read:** [`geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-2-3.md`](../tracking/geo-tracker/FRONTEND-CHANGELOG-phase-2-3.md)
   — the order-tracking screen is where these phases land hardest
 - **Building the storefront/shop too?** [../public/FRONTEND-CHANGELOG-phase-2-3.md](../public/FRONTEND-CHANGELOG-phase-2-3.md)
 

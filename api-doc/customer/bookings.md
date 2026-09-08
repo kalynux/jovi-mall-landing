@@ -5,9 +5,9 @@
 Complete API reference for the **customer-facing** booking flow on service products: discover slots → lock a slot → create a booking → pay.
 
 > [!NOTE]
-> New to this feature? Read the [step-by-step implementation guide](../booking-implementation-guide.md) first for the full build order.
+> New to this feature? Read the step-by-step implementation guide (`backend/jovi-mall/api-doc/booking-implementation-guide.md` — not mirrored in this repository) first for the full build order.
 >
-> This document covers the **customer** side. Vendors manage incoming bookings via [vendor/bookings.md](../vendor/bookings.md), and configure their schedule via [vendor/availability-rules.md](../vendor/availability-rules.md). For how a vendor creates the bookable service product itself, see [vendor/products.md](../vendor/products.md#service-products).
+> This document covers the **customer** side. Vendors manage incoming bookings via vendor/bookings.md (`backend/jovi-mall/api-doc/vendor/bookings.md` — not mirrored in this repository), and configure their schedule via vendor/availability-rules.md (`backend/jovi-mall/api-doc/vendor/availability-rules.md` — not mirrored in this repository). For how a vendor creates the bookable service product itself, see vendor/products.md (`backend/jovi-mall/api-doc/vendor/products.md #service-products` — not mirrored in this repository).
 
 ---
 
@@ -141,10 +141,10 @@ All responses use the standard envelope: `{ "success": true, "data": ... }` on s
 GET /api/products/:productId/availability
 ```
 
-Returns the bookable slots for a service product within a date range. Slots are derived from the product's active [availability rules](../vendor/availability-rules.md), the product's `serviceConfig.durationMinutes`, and the vendor's external (Google Calendar) busy times.
+Returns the bookable slots for a service product within a date range. Slots are derived from the product's active availability rules (`backend/jovi-mall/api-doc/vendor/availability-rules.md` — not mirrored in this repository), the product's `serviceConfig.durationMinutes`, and the vendor's external (Google Calendar) busy times.
 
 > [!NOTE]
-> This endpoint works whether or not the vendor has connected a Google Calendar. If no calendar is connected, slots reflect the availability rules only (the vendor's external busy times are not subtracted). Note that **creating** a booking still requires the vendor to have a connected calendar — see [Google Calendar connection](../vendor/calendar.md).
+> This endpoint works whether or not the vendor has connected a Google Calendar. If no calendar is connected, slots reflect the availability rules only (the vendor's external busy times are not subtracted). Note that **creating** a booking still requires the vendor to have a connected calendar — see Google Calendar connection (`backend/jovi-mall/api-doc/vendor/calendar.md` — not mirrored in this repository).
 
 **Path Parameters:**
 
@@ -404,7 +404,7 @@ Initiate online payment for a booking the customer owns. Delegates to the paymen
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `gateway` | string | **Yes** | One of `NOTCHPAY`, `MYCOOLPAY`, `STRIPE` |
-| `channel` | object | **Yes** | Gateway-specific payer details. For mobile-money gateways supply `phoneNumber` (**E.164**, e.g. `+237650000000`) / `phoneOperator`; fields vary per gateway. An optional `customerEmail` must be a valid address. See [Contact formats](../README.md#contact-formats-phone--email). |
+| `channel` | object | **Yes** | Gateway-specific payer details. For mobile-money gateways supply `phoneNumber` (**E.164**, e.g. `+237650000000`) / `phoneOperator`; fields vary per gateway. An optional `customerEmail` must be a valid address. See [Contact formats](../README.md#12--contact-formats-phone--email). |
 
 **Response:** `200 OK`
 
@@ -481,7 +481,7 @@ Bookings created through this flow start `unpaid`, and `confirmed` (calendar and
 
 `refund_pending` means money is owed back but the gateway could not return it automatically — a human completes the payout from a support ticket. It is **not** `refunded`: the customer does not have their money yet.
 
-See [vendor/bookings.md](../vendor/bookings.md#booking-status-state-machine) for the status state machine and the vendor-side transitions (confirm, complete, no-show, cancel, reschedule).
+See vendor/bookings.md (`backend/jovi-mall/api-doc/vendor/bookings.md #booking-status-state-machine` — not mirrored in this repository) for the status state machine and the vendor-side transitions (confirm, complete, no-show, cancel, reschedule).
 
 > **Cancellation policy.** A customer-initiated booking cancellation is gated by the
 > vendor's `cancellation_policy` (the `cancellable` flag and `cancellation_deadline`,

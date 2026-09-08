@@ -1,10 +1,16 @@
 # Payments — gateway checkout (role-neutral)
 
+**Verified against source on 2026-09-08** — the six-route census re-run against
+`jovi-mall/src/modules/payments/routes/payment.routes.ts` (`POST /initiate`, `POST /verify`,
+`POST /:transactionId/authorize`, `GET /session/:token`, `POST /:transactionId/pay-link`,
+`GET /:transactionId` — the last two behind `requireAuth`, the first four open). Every other
+factual claim on this page is identical to the backend page verified the same day.
+
 One payment surface, shared by every flow that takes money from a **customer**: a single-order
 payment, a whole multi-vendor cart in one charge, or a service booking.
 
 - **Base URL**: `http://localhost:8022/api`
-- **Response envelope**: standard `{ success, ... }` — see [../README.md](../README.md#the-response-envelope-read-this-first).
+- **Response envelope**: standard `{ success, ... }` — see [../README.md](../README.md#4--the-response-envelope).
 - **Gateways**: `NOTCHPAY` and `MYCOOLPAY` (mobile money), `STRIPE` (cards).
 
 > ### All three gateways are live
@@ -46,7 +52,7 @@ Related surfaces that do **not** live here:
 |---|---|
 | Booking payment + its own status poll | `POST /api/bookings/:id/pay`, `GET /api/bookings/:id/payment-status` — [../customer/bookings.md](../customer/bookings.md) |
 | Gateway webhooks (server-to-server) | `POST /api/webhooks/*` — not client-callable |
-| **Plan purchases & credit top-ups** | `/{vendor,agency,agent}/plans/...`, `.../credits/topups` — a **separate** path that creates **no** `PaymentTransaction`. See [../billing-plans-across-roles.md](../billing-plans-across-roles.md) |
+| **Plan purchases & credit top-ups** | `/{vendor,agency,agent}/plans/...`, `.../credits/topups` — a **separate** path that creates **no** `PaymentTransaction`. See ../billing-plans-across-roles.md (`backend/jovi-mall/api-doc/billing-plans-across-roles.md` — not mirrored in this repository) |
 | Saved cards / mobile-money instruments | `/api/me/payment-methods` — [../customer/payment-methods.md](../customer/payment-methods.md) |
 
 ## Who can read a payment
@@ -83,7 +89,7 @@ transaction rather than charging twice.
 `channel.customerEmail` must be a valid email — both are forwarded to the gateway, so a malformed
 value would otherwise surface as an opaque gateway failure or a receipt nobody receives. Both stay
 **optional**; the rule applies only when the field is sent. See
-[Contact formats](../README.md#contact-formats-phone--email).
+[Contact formats](../README.md#12--contact-formats-phone--email).
 
 **At least one** of `cartId` / `orderId` is required — sending neither is a `400` naming
 `cartId`. Sending *both* is not rejected: `cartId` wins and `orderId` is ignored, so send the
@@ -480,7 +486,7 @@ the page open for the payment to settle.
   gateway rather than returning stored records, so they leak far less than the read did — but treat
   `initiate` as capable of starting a payment for any order id supplied to it.
 - **COD orders never touch this surface.** Cash on delivery is settled by the agent submitting the
-  customer's delivery code; there is no gateway call. See [../agent/cod-cash.md](../agent/cod-cash.md)
+  customer's delivery code; there is no gateway call. See ../agent/cod-cash.md (`backend/jovi-mall/api-doc/agent/cod-cash.md` — not mirrored in this repository)
   and [../customer/orders.md](../customer/orders.md).
 - **Polling cadence**: after `initiate` returns `PENDING`, poll `GET /payments/:transactionId` (or
   `POST /payments/verify` to force a gateway re-check). Webhooks settle it regardless, and a
@@ -495,5 +501,5 @@ the page open for the payment to settle.
 - [../customer/orders.md](../customer/orders.md) — checkout, cart groups, and where `initiate` fits
 - [../customer/bookings.md](../customer/bookings.md) — booking payment and its own status endpoint
 - [../customer/payment-methods.md](../customer/payment-methods.md) — saved instruments
-- [../billing-plans-across-roles.md](../billing-plans-across-roles.md) — plans/credit, a separate payment path
+- ../billing-plans-across-roles.md (`backend/jovi-mall/api-doc/billing-plans-across-roles.md` — not mirrored in this repository) — plans/credit, a separate payment path
 - [../errors/README.md](../errors/README.md) — error catalog

@@ -125,7 +125,7 @@ A user can hold **multiple roles** and log in under any of them independently.
 > through a session. A legacy `roles: ["admin"]` row may still exist; it cannot be
 > authenticated as, and auto-role-resolution filters it out rather than picking it.
 >
-> The platform-wide permission matrix in [../README.md](../README.md#permission-matrix) still
+> The platform-wide permission matrix in [../README.md](../README.md#6--the-customers-permission-row-verified) still
 > lists an Admin column — that is the wi-admin operator, reaching these routes over the
 > internal service surface. It is not a session you can mint here.
 
@@ -357,11 +357,11 @@ Creates a new user and a role profile in one step. Sets both auth cookies on suc
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
-| `phone` | string | ✅ | **E.164, with the `+` and country code** (`+2348012345678`). Used as login identifier. Must be unique. Stored canonicalised — formatting you send (spaces, dashes, parentheses) is stripped. See [Contact formats](../README.md#contact-formats-phone--email). |
+| `phone` | string | ✅ | **E.164, with the `+` and country code** (`+2348012345678`). Used as login identifier. Must be unique. Stored canonicalised — formatting you send (spaces, dashes, parentheses) is stripped. See [Contact formats](../README.md#12--contact-formats-phone--email). |
 | `password` | string | **conditionally** | Min 6 characters. **Required for every role EXCEPT `customer`** — see the note below. |
 | `name` | string | ✅ | Min 2 characters. Used for all roles. |
 | `role` | string | ❌ | One of: `customer`, `vendor`, `agency`, `agent`. **Defaults to `vendor`** — a body that omits it registers a vendor, so send it explicitly. `admin` is refused. |
-| `email` | string | ❌ | Optional for **every** role, including vendor. Must be unique. Validated and **lowercased** — see [Contact formats](../README.md#contact-formats-phone--email). |
+| `email` | string | ❌ | Optional for **every** role, including vendor. Must be unique. Validated and **lowercased** — see [Contact formats](../README.md#12--contact-formats-phone--email). |
 | `business_name` | string | ❌ | For `vendor`. Falls back to `name`. Stored on the vendor's **Store**, not on the vendor profile — see [`role_entity` Shapes](#role_entity-shapes). |
 | `agency_name` | string | ❌ | For `agency`. Falls back to `name`. Stored on the agency's **Magazin**, not on the agency profile. |
 
@@ -456,7 +456,7 @@ Authenticates and sets role-scoped JWT cookies.
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
-| `identifier` | string | ✅ | Phone number **in E.164** (`+2348012345678`) or email address. Whichever it is, it must be valid — see [Contact formats](../README.md#contact-formats-phone--email). |
+| `identifier` | string | ✅ | Phone number **in E.164** (`+2348012345678`) or email address. Whichever it is, it must be valid — see [Contact formats](../README.md#12--contact-formats-phone--email). |
 | `password` | string | ✅ | Account password |
 | `role` | string | ❌ | Required if the user has multiple roles. |
 
@@ -1039,12 +1039,12 @@ Onboarding is **field-presence driven**: every profile write recalculates `onboa
 > the agent has a single `PATCH …/onboarding/step` endpoint. The old
 > `PATCH /api/vendor/onboarding/step` and `PATCH /api/agency/onboarding/step` were removed and
 > no longer exist. This page is a summary — the field-by-field contracts are in
-> [vendor/onboarding.md](../vendor/onboarding.md), [agency/onboarding.md](../agency/onboarding.md)
-> and [agent/onboarding.md](../agent/onboarding.md).
+> vendor/onboarding.md (`backend/jovi-mall/api-doc/vendor/onboarding.md` — not mirrored in this repository), agency/onboarding.md (`backend/jovi-mall/api-doc/agency/onboarding.md` — not mirrored in this repository)
+> and agent/onboarding.md (`backend/jovi-mall/api-doc/agent/onboarding.md` — not mirrored in this repository).
 
 ### Vendor Onboarding — four `PUT` steps
 
-**Auth**: Required (`vendor` role). Full contract: [vendor/onboarding.md](../vendor/onboarding.md).
+**Auth**: Required (`vendor` role). Full contract: vendor/onboarding.md (`backend/jovi-mall/api-doc/vendor/onboarding.md` — not mirrored in this repository).
 
 | Step | Value | Label | Endpoint | Required? |
 |------|-------|-------|----------|-----------|
@@ -1059,7 +1059,7 @@ Reads: `GET /api/vendor/onboarding/status` (rich: `steps[]`, `progressPercent`, 
 
 > **Step 2 no longer selects an agency.** It is a plain step-advance. A default delivery agency
 > requires the agency's consent and is set automatically when the first connection request is
-> approved — see [vendor/agency-connections.md](../vendor/agency-connections.md). To browse
+> approved — see vendor/agency-connections.md (`backend/jovi-mall/api-doc/vendor/agency-connections.md` — not mirrored in this repository). To browse
 > agencies, use `GET /api/vendor/delivery-agencies` or
 > `GET /api/vendor/agency-connections/browse`; there is no `GET /api/agency` listing endpoint.
 
@@ -1087,7 +1087,7 @@ PATCH /api/customer/profile
 
 ### Agency Onboarding — an init call, then four `PUT` steps
 
-**Auth**: Required (`agency` role). Full contract: [agency/onboarding.md](../agency/onboarding.md).
+**Auth**: Required (`agency` role). Full contract: agency/onboarding.md (`backend/jovi-mall/api-doc/agency/onboarding.md` — not mirrored in this repository).
 
 | Step | Value | Label | Endpoint | Required? |
 |------|-------|-------|----------|-----------|
@@ -1106,7 +1106,7 @@ Read: `GET /api/agency/onboarding/status`. Same `version` concurrency field, rai
 ### Agent Onboarding — one `PATCH`, two steps
 
 **Base**: `PATCH /api/agent/onboarding/step` — the one role that still uses the single-endpoint
-shape. **Auth**: Required (`agent` role). Full contract: [agent/onboarding.md](../agent/onboarding.md).
+shape. **Auth**: Required (`agent` role). Full contract: agent/onboarding.md (`backend/jovi-mall/api-doc/agent/onboarding.md` — not mirrored in this repository).
 
 | Step | Value | Label | Body |
 |------|-------|-------|------|

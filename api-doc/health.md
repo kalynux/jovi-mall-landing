@@ -103,7 +103,7 @@ does not silently create a connection.
 
 Its readiness already depends on this service. Making the reverse true creates a mutual-readiness
 deadlock in which a cold start of both never converges. It appears on
-[`/system/integrations`](./admin/system.md#get-integrations) as reachability, and nowhere on a probe.
+`/system/integrations` (`backend/jovi-mall/api-doc/admin/system.md #get-integrations` — not mirrored in this repository) as reachability, and nowhere on a probe.
 
 ### 200 during maintenance, always
 
@@ -153,5 +153,5 @@ geo-tracker's `internal/platform/metrics/metrics.go`. Includes Node default metr
 lag** is the single most useful Node-specific signal and nothing else here reports it.
 
 The JSON projection of the same registry is at
-[`GET /system/metrics`](./admin/system.md#get-metrics), where the label-cardinality rules and the
+`GET /system/metrics` (`backend/jovi-mall/api-doc/admin/system.md #get-metrics` — not mirrored in this repository), where the label-cardinality rules and the
 error-counter coverage caveats are documented.

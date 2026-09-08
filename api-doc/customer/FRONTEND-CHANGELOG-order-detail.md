@@ -1,11 +1,17 @@
 # Customer app — the order-detail asks, answered
 
+**Verified against source on 2026-09-08** — the agent-identity block and its window
+(`AGENT_IDENTITY_VISIBLE_FROM = 'shipped'`, `src/modules/orders/dto/customer-shipment.dto.ts:131`;
+`displayName` partial, `photo: FileDetail | null`, **no phone number**), and the agency block as
+`AgencyIdentity` — whose logo field really is `logo`, not `logoUrl`
+(`src/modules/magazin/read-models/agency-identity.resolver.ts:23-30`). No corrections were needed.
+
 Answers [`BACKEND-REQUIREMENTS-order-detail.md`](./BACKEND-REQUIREMENTS-order-detail.md),
 raised 2026-08-23 from device testing.
 
 - **Written:** 2026-08-23 · **Shipped:** same day
 - **Contracts changed:** [orders.md](./orders.md) · [payments/README.md](../payments/README.md)
-- **New design record:** [`docs/ADR-A06-AGENT-IDENTITY-DISCLOSURE.md`](../../docs/ADR-A06-AGENT-IDENTITY-DISCLOSURE.md)
+- **New design record:** `docs/ADR-A06-AGENT-IDENTITY-DISCLOSURE.md` (`backend/jovi-mall/docs/ADR-A06-AGENT-IDENTITY-DISCLOSURE.md` — not mirrored in this repository)
 
 ---
 
@@ -126,7 +132,7 @@ The two never disagree, because `agencyName` is now read off the same block.
 
 **The decision was taken rather than assumed.** You were right to refuse to build on the
 strength of the request, and right about what it costs. It is now
-[ADR-A06](../../docs/ADR-A06-AGENT-IDENTITY-DISCLOSURE.md), and it is close to the shape you
+ADR-A06 (`backend/jovi-mall/docs/ADR-A06-AGENT-IDENTITY-DISCLOSURE.md` — not mirrored in this repository), and it is close to the shape you
 sketched:
 
 ```jsonc

@@ -16,7 +16,7 @@ geo-tracker's own `api-doc/` for the socket protocol.
 
 > **Agencies:** the map's *data* load — which agents you may watch, and each of
 > their active shipments with pickup and drop-off pins — is
-> [`GET /api/agency/tracking/board`](../agency/live-tracking.md). That is the
+> `GET /api/agency/tracking/board` (`backend/jovi-mall/api-doc/agency/live-tracking.md` — not mirrored in this repository). That is the
 > frontend-facing endpoint; everything on this page is the service-to-service
 > seam geo-tracker calls.
 

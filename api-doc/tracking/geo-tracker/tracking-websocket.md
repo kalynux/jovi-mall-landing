@@ -13,14 +13,14 @@ over the tracking health of each shipment they are delivering (ONLINE, DEGRADED,
 NETWORK_LOST, DISCONNECTED, LOCATION_DISABLED, TRACKING_DISABLED, APP_BACKGROUND,
 APP_FOREGROUND). Each `location_update` is a heartbeat, and the `device_state`
 and `app_state` frames drive the corresponding transitions. Its read side is
-HTTP; see [tracking-sessions.md](./tracking-sessions.md). Viewer connections have
+HTTP; see tracking-sessions.md (`backend/geo-tracker/api-doc/tracking-sessions.md` — not mirrored in this repository). Viewer connections have
 no sessions — they watch, they are not tracked.
 
 > ### What this socket cannot do: start or end a tracking session
 >
 > A **tracking session is one shipment's** tracking lifecycle. It is opened by
 > jovi-mall reporting the shipment active, and closed only by jovi-mall reporting
-> it terminal (see [webhooks.md](./webhooks.md)). This socket only *binds* to
+> it terminal (see webhooks.md (`backend/geo-tracker/api-doc/webhooks.md` — not mirrored in this repository)). This socket only *binds* to
 > sessions that already exist.
 >
 > - **Connecting** resumes whatever deliveries are already in flight
@@ -281,7 +281,7 @@ is normal and must still be rendered.
 They are also **throttled**: an estimate is recomputed at most once per
 `ETA_MIN_INTERVAL` (default 30 s) per agent and destination, so the value may
 lag the position by up to that much. Two viewers of the same delivery see the
-same number, from one routing call. See [routing.md](./routing.md#eta-on-the-broadcast-path-and-its-throttle).
+same number, from one routing call. See routing.md (`backend/geo-tracker/api-doc/routing.md #eta-on-the-broadcast-path-and-its-throttle` — not mirrored in this repository).
 
 #### `permission_revoked`
 ```json

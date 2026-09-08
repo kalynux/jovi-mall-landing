@@ -16,8 +16,8 @@ C0–C7 and your §15 questions; §2–§4 are what you build against.
 > namespace is the switch* — and §1.5 — *your §7 request would have broken the browser and the
 > agent app, so we did half of it.*
 
-> Reference: [Auth → Mobile namespace](./auth/README.md#mobile-namespace--bearer-clients) ·
-> [Rate limits](./rate-limits.md) · [Errors](./errors/README.md)
+> Reference: [Auth → Mobile namespace](./README.md#mobile-namespace--bearer-clients) ·
+> [Rate limits](../rate-limits.md) · [Errors](../errors/README.md)
 
 ---
 

@@ -1,7 +1,15 @@
 # Marketing landing + shop — what Phase 2 and Phase 3 changed
 
+**Verified against source on 2026-09-08** — the routes named here all exist (whole-tree phantom
+scan, 0 suspect), the drain / keep-alive figures (`src/lifecycle.ts:243-244`,
+`src/modules/system/config/system.config.ts:108`), `ETA_MIN_INTERVAL` on geo-tracker's side
+(`internal/platform/config/config.go:333`, default 30 s), and the four auth codes plus
+`UPLOAD_POLICY_VIOLATION` / `UPLOAD_VIRUS_SCAN_UNAVAILABLE` in `src/core/error-codes.ts`
+(`VIRUS_DETECTED` is a **violation** inside `details.violations[]`, not a registry code — as
+stated). No corrections were needed.
+
 Your slice of Phases **2** (Deployability) and **3** (Cross-service correctness) of
-[`PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md`](../../../PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md).
+`PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md` (`backend/PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md` — not mirrored in this repository).
 
 - **Written:** 2026-08-21 · **Phase 2:** 2026-08-18 → 08-19 · **Phase 3:** 2026-08-19
 - **Read first, then this:** [../FRONTEND-CHANGELOG-phase-2-3.md](../FRONTEND-CHANGELOG-phase-2-3.md)
@@ -46,7 +54,7 @@ shared package, no test, no CI job. This paragraph and the release checklist are
 | **Adding** a block type to the schema **before** the site has a case for it | An editor can publish a block the site cannot render. |
 | **Removing** a block type from the schema | **Breaks a published article** that already uses it. |
 
-**The rule, from [`docs/RUNBOOK.md`](../../../docs/RUNBOOK.md#two-repo-release-checklist)
+**The rule, from `docs/RUNBOOK.md` (`backend/docs/RUNBOOK.md #two-repo-release-checklist` — not mirrored in this repository)
 (row 6) § 4 rule 2 — the reader ships first:**
 
 > Ship the `ArticleBody.tsx` case **first**, then the schema change. Never in one window.

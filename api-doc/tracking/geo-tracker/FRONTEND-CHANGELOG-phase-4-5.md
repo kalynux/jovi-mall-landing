@@ -5,10 +5,10 @@
 No corrections were needed.
 
 Your slice of Phases **4** (Per-service hardening) and **5** (Legacy close-out) of
-[`PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md`](../../PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md).
+`PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md` (`backend/PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md` — not mirrored in this repository).
 
 - **Written:** 2026-08-21 · **Phase 4:** 2026-08-19 → 08-20 · **Phase 5:** 2026-08-20
-- **Also read:** [`jovi-mall/api-doc/FRONTEND-CHANGELOG-phase-4-5.md`](../../jovi-mall/api-doc/FRONTEND-CHANGELOG-phase-4-5.md)
+- **Also read:** [`jovi-mall/api-doc/FRONTEND-CHANGELOG-phase-4-5.md`](../../FRONTEND-CHANGELOG-phase-4-5.md)
   — **§ 2 there has a required change for you**, see § 5 below
 - **Previous instalment:** [FRONTEND-CHANGELOG-phase-2-3.md](./FRONTEND-CHANGELOG-phase-2-3.md)
 
@@ -44,7 +44,7 @@ dropped subscription (§ 5).
 
 ## 1 · `TRACKING_SESSION_TTL` is 72 hours
 
-**Design record:** [`docs/ADR-B01-SESSION-TTL.md`](../docs/ADR-B01-SESSION-TTL.md)
+**Design record:** `docs/ADR-B01-SESSION-TTL.md` (`backend/geo-tracker/docs/ADR-B01-SESSION-TTL.md` — not mirrored in this repository)
 
 `config.go` and `.env.example` both moved, in the same change, and a test now asserts they agree —
 CI does `cp .env.example .env`, so the two files are one setting written twice and a disagreement
@@ -120,7 +120,7 @@ when the verdict is false.
   **Read it against the written counter, never alone** — without that pairing, "we started
   rejecting checkpoints" and "agents stopped moving" look identical from outside.
 
-Detail: [gps-persistence.md](./gps-persistence.md).
+Detail: gps-persistence.md (`backend/geo-tracker/api-doc/gps-persistence.md` — not mirrored in this repository).
 
 ---
 
@@ -164,7 +164,7 @@ forever.** A `JOIN` that assumes it is present silently drops the historical row
 
 jovi-mall now bounds a sign-in absolutely at **90 days** regardless of refreshes, refusing with
 `401 AUTH_SESSION_CAP_REACHED`. Full detail:
-[`jovi-mall/api-doc/FRONTEND-CHANGELOG-phase-4-5.md` § 2](../../jovi-mall/api-doc/FRONTEND-CHANGELOG-phase-4-5.md).
+[`jovi-mall/api-doc/FRONTEND-CHANGELOG-phase-4-5.md` § 2](../../FRONTEND-CHANGELOG-phase-4-5.md).
 
 ### Why it lands here
 
@@ -253,11 +253,11 @@ Two things that found real behaviour, worth knowing as a client:
 
 | Topic | Document |
 |---|---|
-| The session TTL and its reasoning | [`docs/ADR-B01-SESSION-TTL.md`](../docs/ADR-B01-SESSION-TTL.md) |
-| The trail, its downsampling and the gate | [gps-persistence.md](./gps-persistence.md) |
-| Sessions and their health states | [tracking-sessions.md](./tracking-sessions.md) |
+| The session TTL and its reasoning | `docs/ADR-B01-SESSION-TTL.md` (`backend/geo-tracker/docs/ADR-B01-SESSION-TTL.md` — not mirrored in this repository) |
+| The trail, its downsampling and the gate | gps-persistence.md (`backend/geo-tracker/api-doc/gps-persistence.md` — not mirrored in this repository) |
+| Sessions and their health states | tracking-sessions.md (`backend/geo-tracker/api-doc/tracking-sessions.md` — not mirrored in this repository) |
 | The socket | [tracking-websocket.md](./tracking-websocket.md) |
-| ETA and routing | [routing.md](./routing.md) |
-| Errors | [errors/](./errors/) |
-| Health and metrics | [health.md](./health.md) |
-| The jovi-mall side | [`jovi-mall/api-doc/FRONTEND-CHANGELOG-phase-4-5.md`](../../jovi-mall/api-doc/FRONTEND-CHANGELOG-phase-4-5.md) |
+| ETA and routing | routing.md (`backend/geo-tracker/api-doc/routing.md` — not mirrored in this repository) |
+| Errors | errors/ (`backend/geo-tracker/api-doc/errors/` — not mirrored in this repository) |
+| Health and metrics | health.md (`backend/geo-tracker/api-doc/health.md` — not mirrored in this repository) |
+| The jovi-mall side | [`jovi-mall/api-doc/FRONTEND-CHANGELOG-phase-4-5.md`](../../FRONTEND-CHANGELOG-phase-4-5.md) |

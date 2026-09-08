@@ -1,14 +1,21 @@
 # Frontend changelog — Phase 2 (Deployability) and Phase 3 (Cross-service correctness)
 
-What [`PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md`](../../PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md)
+**Verified against source on 2026-09-08** — the drain and keep-alive numbers
+(`src/lifecycle.ts:243-244`, `src/modules/system/config/system.config.ts:108`), the three probe
+paths (`src/api/routes/health.routes.ts`) and the frozen `GET /api/health` contract (re-run
+`npm run test:system`, 231/0), and the three dependency versions in `package.json`. The
+migration counts in § 7 are a **historical record of one run against the dev database** and are
+not re-derivable today; the page says so. No corrections were needed.
+
+What `PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md` (`backend/PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md` — not mirrored in this repository)
 Phases **2** and **3** changed, written for the people who build against the API.
 
 - **Written:** 2026-08-21
 - **Phase 2 landed:** 2026-08-18 → 2026-08-19 · design record
-  [`PHASE-2-DEPLOYABILITY-PLAN.md`](../../PRODUCTION-READINESS/PHASE-2-DEPLOYABILITY-PLAN.md)
+  `PHASE-2-DEPLOYABILITY-PLAN.md` (`backend/PRODUCTION-READINESS/PHASE-2-DEPLOYABILITY-PLAN.md` — not mirrored in this repository)
 - **Phase 3 landed:** 2026-08-19 · design record
-  [`PHASE-3-CROSS-SERVICE-PLAN.md`](../../PRODUCTION-READINESS/PHASE-3-CROSS-SERVICE-PLAN.md)
-- **Previous instalment:** [phase-d-0-1/](./phase-d-0-1/README.md) — Phases D · 0 · 1
+  `PHASE-3-CROSS-SERVICE-PLAN.md` (`backend/PRODUCTION-READINESS/PHASE-3-CROSS-SERVICE-PLAN.md` — not mirrored in this repository)
+- **Previous instalment:** phase-d-0-1/ (`backend/jovi-mall/api-doc/phase-d-0-1/README.md` — not mirrored in this repository) — Phases D · 0 · 1
 
 > **This page is the cross-role half.** Everything here applies to every client of this
 > backend. The parts that land on one screen live in that role's folder — see the index below.
@@ -37,13 +44,13 @@ geo-tracker about it.
 
 | You build | Read | Then also |
 |---|---|---|
-| **Vendor dashboard** | [vendor/FRONTEND-CHANGELOG-phase-2-3.md](./vendor/FRONTEND-CHANGELOG-phase-2-3.md) | this page |
-| **Agency dashboard** | [agency/FRONTEND-CHANGELOG-phase-2-3.md](./agency/FRONTEND-CHANGELOG-phase-2-3.md) | [geo-tracker](../../geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-2-3.md) — the live map changed |
-| **Agency / agent mobile app** | [agent/FRONTEND-CHANGELOG-phase-2-3.md](./agent/FRONTEND-CHANGELOG-phase-2-3.md) | [geo-tracker](../../geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-2-3.md) |
-| **Customer app** | [customer/FRONTEND-CHANGELOG-phase-2-3.md](./customer/FRONTEND-CHANGELOG-phase-2-3.md) | [geo-tracker](../../geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-2-3.md) — order tracking changed |
+| **Vendor dashboard** | vendor/FRONTEND-CHANGELOG-phase-2-3.md (`backend/jovi-mall/api-doc/vendor/FRONTEND-CHANGELOG-phase-2-3.md` — not mirrored in this repository) | this page |
+| **Agency dashboard** | agency/FRONTEND-CHANGELOG-phase-2-3.md (`backend/jovi-mall/api-doc/agency/FRONTEND-CHANGELOG-phase-2-3.md` — not mirrored in this repository) | [geo-tracker](./tracking/geo-tracker/FRONTEND-CHANGELOG-phase-2-3.md) — the live map changed |
+| **Agency / agent mobile app** | agent/FRONTEND-CHANGELOG-phase-2-3.md (`backend/jovi-mall/api-doc/agent/FRONTEND-CHANGELOG-phase-2-3.md` — not mirrored in this repository) | [geo-tracker](./tracking/geo-tracker/FRONTEND-CHANGELOG-phase-2-3.md) |
+| **Customer app** | [customer/FRONTEND-CHANGELOG-phase-2-3.md](./customer/FRONTEND-CHANGELOG-phase-2-3.md) | [geo-tracker](./tracking/geo-tracker/FRONTEND-CHANGELOG-phase-2-3.md) — order tracking changed |
 | **Marketing landing + shop** | [public/FRONTEND-CHANGELOG-phase-2-3.md](./public/FRONTEND-CHANGELOG-phase-2-3.md) | this page |
-| **Admin dashboard** (wi-admin, `/api/v1/*`) | [`admin/docs/FRONTEND-CHANGELOG-phase-2-3.md`](../../admin/docs/FRONTEND-CHANGELOG-phase-2-3.md) | this page, for context only |
-| **Any live-tracking client** | [`geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-2-3.md`](../../geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-2-3.md) | — |
+| **Admin dashboard** (wi-admin, `/api/v1/*`) | `admin/docs/FRONTEND-CHANGELOG-phase-2-3.md` (`backend/admin/docs/FRONTEND-CHANGELOG-phase-2-3.md` — not mirrored in this repository) | this page, for context only |
+| **Any live-tracking client** | [`geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-2-3.md`](./tracking/geo-tracker/FRONTEND-CHANGELOG-phase-2-3.md) | — |
 
 ---
 
@@ -146,7 +153,7 @@ rather than come up insecure.
 
 ## 6 · Live tracking changed — the short version
 
-Full detail in [`geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-2-3.md`](../../geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-2-3.md)
+Full detail in [`geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-2-3.md`](./tracking/geo-tracker/FRONTEND-CHANGELOG-phase-2-3.md)
 and, on this side, [tracking/live-tracking.md](./tracking/live-tracking.md).
 
 1. **🔴 `permission_revoked.reason` is now a closed set of three.** It used to be the single
@@ -309,7 +316,7 @@ union, the **ordering rule** (the reader ships first).
 | Live tracking — jovi-mall side | [tracking/live-tracking.md](./tracking/live-tracking.md) |
 | Tracking authorization policy | [tracking/agent-tracking-policy.md](./tracking/agent-tracking-policy.md) |
 | The drop-off pull (service-to-service) | [tracking/shipment-destination.md](./tracking/shipment-destination.md) |
-| The tracking WebSocket | [`geo-tracker/api-doc/tracking-websocket.md`](../../geo-tracker/api-doc/tracking-websocket.md) |
-| ETA and its throttle | [`geo-tracker/api-doc/routing.md`](../../geo-tracker/api-doc/routing.md) |
-| Deploy, rollback, secret rotation | [`docs/RUNBOOK.md`](../../docs/RUNBOOK.md) |
-| Release shape (containers, Node 22, one host) | [`docs/ADR-019-RELEASE-SHAPE.md`](../../docs/ADR-019-RELEASE-SHAPE.md) |
+| The tracking WebSocket | [`geo-tracker/api-doc/tracking-websocket.md`](./tracking/geo-tracker/tracking-websocket.md) |
+| ETA and its throttle | `geo-tracker/api-doc/routing.md` (`backend/geo-tracker/api-doc/routing.md` — not mirrored in this repository) |
+| Deploy, rollback, secret rotation | `docs/RUNBOOK.md` (`backend/docs/RUNBOOK.md` — not mirrored in this repository) |
+| Release shape (containers, Node 22, one host) | `docs/ADR-019-RELEASE-SHAPE.md` (`backend/docs/ADR-019-RELEASE-SHAPE.md` — not mirrored in this repository) |

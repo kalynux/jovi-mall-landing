@@ -290,7 +290,7 @@ pipeline codes — `FILE_TOO_LARGE`, `MIME_NOT_ALLOWED`, `TOO_MANY_FILES`, `QUOT
 `VIRUS_DETECTED`, `PERMISSION_DENIED`, `TOTAL_SIZE_EXCEEDED`, `DUPLICATE_FILE`,
 `MIME_TYPE_MISMATCH`, `POLYGLOT_DETECTED`, `UNDETECTABLE_TYPE` — **or `NO_FILES_UPLOADED`**,
 which the controller's cheap pre-pipeline gate raises through the same shape. See the
-[File Management API](../vendor/file-management.md#post-apifilesupload) for the full
+File Management API (`backend/jovi-mall/api-doc/vendor/file-management.md #post-apifilesupload` — not mirrored in this repository) for the full
 per-code reference.
 
 Always read `details.violations[]`, never the top-level `message` — it is the fixed string
@@ -309,7 +309,7 @@ The backend frequently includes context variables inside the `details` object fo
 
 ### 9. Vendor <-> Agency Connection Errors
 **Code:** `CONNECTION_INVALID_STATUS_TRANSITION` (Status `400`)
-Returned by the [Agency Connections](../vendor/agency-connections.md) API when an action (e.g.
+Returned by the Agency Connections (`backend/jovi-mall/api-doc/vendor/agency-connections.md` — not mirrored in this repository) API when an action (e.g.
 `approve`, `terminate`) doesn't apply to the connection's current status.
 
 ```json
@@ -321,8 +321,8 @@ Returned by the [Agency Connections](../vendor/agency-connections.md) API when a
 }
 ```
 
-Other codes in this family — see [Agency Connections](../vendor/agency-connections.md) and
-[Vendor Connections](../agency/vendor-connections.md) for full context, no `details` payload:
+Other codes in this family — see Agency Connections (`backend/jovi-mall/api-doc/vendor/agency-connections.md` — not mirrored in this repository) and
+Vendor Connections (`backend/jovi-mall/api-doc/agency/vendor-connections.md` — not mirrored in this repository) for full context, no `details` payload:
 `CONNECTION_NOT_FOUND` (404), `CONNECTION_VENDOR_NOT_FOUND` (404), `CONNECTION_ALREADY_EXISTS`
 (409), `CONNECTION_NOT_PENDING` / `CONNECTION_NOT_PAUSED` / `CONNECTION_NOT_ACTIVE` (422),
 `CONNECTION_NOT_REQUESTER` / `CONNECTION_NOT_APPROVER` / `CONNECTION_WRONG_REAPPROVAL_PARTY` (403).
@@ -331,8 +331,8 @@ Other codes in this family — see [Agency Connections](../vendor/agency-connect
 
 The `COD_` family covers checkout eligibility, delivery-code verification, agent cash exposure,
 deposits, remittances and discrepancies. Role-specific context:
-[customer/orders.md](../customer/orders.md#cod), [agent/cod-cash.md](../agent/cod-cash.md),
-[agency/cod-cash-management.md](../agency/cod-cash-management.md), [admin/cod.md](../admin/cod.md).
+[customer/orders.md](../customer/orders.md#cod), agent/cod-cash.md (`backend/jovi-mall/api-doc/agent/cod-cash.md` — not mirrored in this repository),
+agency/cod-cash-management.md (`backend/jovi-mall/api-doc/agency/cod-cash-management.md` — not mirrored in this repository), admin/cod.md (`backend/jovi-mall/api-doc/admin/cod.md` — not mirrored in this repository).
 
 | Code | Status | When | `details` |
 |---|---|---|---|
@@ -369,8 +369,8 @@ deposits, remittances and discrepancies. Role-specific context:
 
 ### Agent ↔ agency contracts
 
-Full documentation: [agency/agent-roster.md](../agency/agent-roster.md) (canonical) and
-[agent/agency-membership.md](../agent/agency-membership.md).
+Full documentation: agency/agent-roster.md (`backend/jovi-mall/api-doc/agency/agent-roster.md` — not mirrored in this repository) (canonical) and
+agent/agency-membership.md (`backend/jovi-mall/api-doc/agent/agency-membership.md` — not mirrored in this repository).
 
 **The handshake** — request, approve, reject, withdraw:
 
@@ -442,8 +442,8 @@ means "not **active**"; the code predates the status rename), `AGENT_MEMBERSHIP_
 ## Agency storage: warehoused products and their stock
 
 The agency-facing product actions
-([Agency → Inventory](../agency/inventory.md)) and the two-sided stock flow
-([Agency](../agency/stock-requests.md) · [Vendor](../vendor/stock-requests.md)).
+(Agency → Inventory (`backend/jovi-mall/api-doc/agency/inventory.md` — not mirrored in this repository)) and the two-sided stock flow
+(Agency (`backend/jovi-mall/api-doc/agency/stock-requests.md` — not mirrored in this repository) · Vendor (`backend/jovi-mall/api-doc/vendor/stock-requests.md` — not mirrored in this repository)).
 
 | Code | HTTP | Meaning | `details` |
 |---|---|---|---|

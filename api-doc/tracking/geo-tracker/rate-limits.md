@@ -12,7 +12,7 @@ inbound WebSocket frames.
 **600 requests per minute per IP address**, with a burst allowance of 60.
 
 Refusals are the standard envelope with `code: "RATE_LIMIT_EXCEEDED"` and
-`category: "rate_limit"` — see [errors/README.md](./errors/README.md).
+`category: "rate_limit"` — see errors/README.md (`backend/geo-tracker/api-doc/errors/README.md` — not mirrored in this repository).
 
 **Never limited:** `/healthz`, `/readyz`, `/metrics`, `POST /webhooks/node`,
 `POST /webhooks/agent-actions`. The two webhooks are HMAC-authenticated peer traffic from

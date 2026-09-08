@@ -1,7 +1,12 @@
 # Marketing landing + shop — what Phase 4 and Phase 5 changed
 
+**Verified against source on 2026-09-08** — the four routes in the "what a public client sees"
+table, `BLOG_ARTICLE_MOVED` in `src/core/error-codes.ts`, and the frozen `GET /api/health`
+contract (`npm run test:system`, 231/0). **One row was misleading** — there is no
+`/api/public/catalog` path segment — and is corrected below.
+
 Your slice of Phases **4** (Per-service hardening) and **5** (Legacy close-out) of
-[`PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md`](../../../PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md).
+`PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md` (`backend/PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md` — not mirrored in this repository).
 
 - **Written:** 2026-08-21 · **Phase 4:** 2026-08-19 → 08-20 · **Phase 5:** 2026-08-20
 - **Read first, then this:** [../FRONTEND-CHANGELOG-phase-4-5.md](../FRONTEND-CHANGELOG-phase-4-5.md)
@@ -31,7 +36,7 @@ Your slice of Phases **4** (Per-service hardening) and **5** (Legacy close-out) 
 
 `/api/admin/articles` and `/api/admin/article-authors` **no longer exist in jovi-mall.** Writes to
 `articles` and `article_authors` are wi-admin's now
-([`admin/docs/api/content.md`](../../../admin/docs/api/content.md), 14 routes at `/api/v1/content`).
+(`admin/docs/api/content.md` (`backend/admin/docs/api/content.md` — not mirrored in this repository), 14 routes at `/api/v1/content`).
 
 ### What did not move
 
@@ -82,7 +87,7 @@ a block type is added, ask wi-admin to hold the editor grant until your release 
 ### Doc pointers to fix
 
 `jovi-mall/api-doc/admin/articles.md` was **deleted**. If you have it bookmarked, the editor
-contract is now [`admin/docs/api/content.md`](../../../admin/docs/api/content.md). Everything you
+contract is now `admin/docs/api/content.md` (`backend/admin/docs/api/content.md` — not mirrored in this repository). Everything you
 read is still [articles.md](./articles.md).
 
 ---
@@ -127,7 +132,7 @@ Verified against a running server after the Phase 5 cutover:
 | `GET /api/public/plans` | **200** — plan catalog and credit packs, unchanged |
 | `GET /api/public/articles` | **400** without `locale` — unchanged; `locale` has always been required |
 | `GET /api/health` | **200** — still the frozen contract: exact path, exact body, unconditional 200, no `{success,data}` envelope, exempt from rate limiting and maintenance mode |
-| `GET /api/public/catalog/*` | unchanged — products, categories, stores; product URLs still nested under their store |
+| the catalog reads — `GET /api/public/{products,categories,stores,variants}/…` | unchanged; product URLs still nested under their store. ⚠ **There is no `/api/public/catalog` path segment** — the ten catalog routes sit directly on `/api/public` |
 
 **Rate limits are unchanged.** The IP-scoped layer in front of the public routes is the same one
 Phase 16 introduced; ceilings are backstops, not budgets, and the store still fails **open** when
@@ -175,9 +180,9 @@ Detail: [../customer/FRONTEND-CHANGELOG-phase-4-5.md § 1](../customer/FRONTEND-
 |---|---|
 | The cross-role summary | [../FRONTEND-CHANGELOG-phase-4-5.md](../FRONTEND-CHANGELOG-phase-4-5.md) |
 | The public blog contract | [articles.md](./articles.md) |
-| The blog **editor** (wi-admin) | [`admin/docs/api/content.md`](../../../admin/docs/api/content.md) |
+| The blog **editor** (wi-admin) | `admin/docs/api/content.md` (`backend/admin/docs/api/content.md` — not mirrored in this repository) |
 | The public catalog | [catalog.md](./catalog.md) · [FRONTEND-CHANGELOG-shop.md](./FRONTEND-CHANGELOG-shop.md) |
-| Plans and credit packs | [README.md](./README.md) · [../billing-plans-across-roles.md](../billing-plans-across-roles.md) |
+| Plans and credit packs | [README.md](./README.md) · ../billing-plans-across-roles.md (`backend/jovi-mall/api-doc/billing-plans-across-roles.md` — not mirrored in this repository) |
 | Private files and `access` | [../FRONTEND-CHANGELOG-private-files.md](../FRONTEND-CHANGELOG-private-files.md) |
 | Rate limits | [../rate-limits.md](../rate-limits.md) |
 | Health probes | [../health.md](../health.md) |

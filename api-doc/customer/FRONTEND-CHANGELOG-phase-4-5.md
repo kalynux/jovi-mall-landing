@@ -1,7 +1,15 @@
 # Customer app — what Phase 4 and Phase 5 changed
 
+**Verified against source on 2026-09-08** — the routes named here all exist (whole-tree phantom
+scan, 0 suspect), the drain / keep-alive figures (`src/lifecycle.ts:243-244`,
+`src/modules/system/config/system.config.ts:108`), `ETA_MIN_INTERVAL` on geo-tracker's side
+(`internal/platform/config/config.go:333`, default 30 s), and the four auth codes plus
+`UPLOAD_POLICY_VIOLATION` / `UPLOAD_VIRUS_SCAN_UNAVAILABLE` in `src/core/error-codes.ts`
+(`VIRUS_DETECTED` is a **violation** inside `details.violations[]`, not a registry code — as
+stated). No corrections were needed.
+
 Your slice of Phases **4** (Per-service hardening) and **5** (Legacy close-out) of
-[`PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md`](../../../PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md).
+`PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md` (`backend/PRODUCTION-READINESS/10-IMPLEMENTATION-PLAN.md` — not mirrored in this repository).
 
 - **Written:** 2026-08-21 · **Phase 4:** 2026-08-19 → 08-20 · **Phase 5:** 2026-08-20
 - **Read first, then this:** [../FRONTEND-CHANGELOG-phase-4-5.md](../FRONTEND-CHANGELOG-phase-4-5.md)
@@ -147,7 +155,7 @@ used to be `{ user_id, role, name, avatar }`; it is now:
 ```
 
 [customer/tickets.md](./tickets.md) defers payload shapes to
-[vendor/tickets.md](../vendor/tickets.md) by design and now carries a callout pointing at the new
+vendor/tickets.md (`backend/jovi-mall/api-doc/vendor/tickets.md` — not mirrored in this repository) by design and now carries a callout pointing at the new
 **Administrator snapshot** section there. The short version:
 
 - **`assigned_admin` is `null` until a support administrator takes the ticket**, and most tickets
@@ -165,7 +173,7 @@ used to be `{ user_id, role, name, avatar }`; it is now:
 
 ## 6 · Order tracking — behaviour, not contract
 
-Detail in [`geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-4-5.md`](../../../geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-4-5.md).
+Detail in [`geo-tracker/api-doc/FRONTEND-CHANGELOG-phase-4-5.md`](../tracking/geo-tracker/FRONTEND-CHANGELOG-phase-4-5.md).
 **No frame, no field and no error code changed.**
 
 - **The tracking session TTL is 72 h**, up from 48 h — the ceiling on how long a session survives
@@ -217,6 +225,6 @@ in seeded data.
 | Sessions and tokens | [../auth/README.md](../auth/README.md) |
 | Digital products | [digital-products.md](./digital-products.md) |
 | Orders · cart · bookings | [orders.md](./orders.md) · [cart.md](./cart.md) · [bookings.md](./bookings.md) |
-| Tickets (shared payload reference) | [../vendor/tickets.md](../vendor/tickets.md) |
-| The tracking socket | [`geo-tracker/api-doc/tracking-websocket.md`](../../../geo-tracker/api-doc/tracking-websocket.md) |
+| Tickets (shared payload reference) | ../vendor/tickets.md (`backend/jovi-mall/api-doc/vendor/tickets.md` — not mirrored in this repository) |
+| The tracking socket | [`geo-tracker/api-doc/tracking-websocket.md`](../tracking/geo-tracker/tracking-websocket.md) |
 | Error catalog | [../errors/README.md](../errors/README.md) |

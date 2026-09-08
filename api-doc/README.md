@@ -1,6 +1,13 @@
 # `landing` API contract — marketing site · storefront · customer account
 
-**Last verified against backend source: 2026-08-24.**
+**Verified against source on 2026-09-08** — the two counts in § 5 and § 9.2 re-derived from
+backend source today: the error registry is **640** codes on both sides
+(`jovi-mall/src/core/error-codes.ts`, and this folder's own `error-codes.ts`), and jovi-mall serves
+**764** routes overall. **Sections 11 and 12 are new** — the conventions and the phone/email rules,
+which eleven links on other pages in this folder were already pointing at and which this README did
+not carry (verified against `src/core/validation/{phone,email,zod.helpers}.ts`).
+
+*(Previously: last verified against backend source 2026-08-24.)*
 
 This folder is the specification this application is built from. It is not decoration — where it is
 wrong, the app is wrong.
@@ -328,3 +335,82 @@ it is not the answer.
 
 Where a document and source disagreed, the disagreement is filed in
 `backend/FRONTEND-SYNC/03-FINDINGS-REGISTER.md`.
+
+---
+
+## 11 · Conventions
+
+**Verified against `jovi-mall/src/` on 2026-09-08** — the clearing rule against
+`src/core/validation/zod.helpers.ts`, the contact rules against `src/core/validation/{phone,email}.ts`.
+
+- **IDs** are MongoDB ObjectIds — 24-character hex strings. Treat them as opaque.
+- **Timestamps** are ISO-8601 UTC strings (`2026-07-17T10:20:30.000Z`).
+- **Phone numbers** are **E.164, everywhere** — see § 12.
+- **Email addresses** are trimmed and lowercased before storage and comparison — see § 12.
+- **Clearing an optional field.** Optional *string* fields in `PATCH`/`POST` bodies are **clearable**
+  unless a page says otherwise, and there are three states, not two:
+
+  | You send | Result |
+  |---|---|
+  | the key **absent** | stored value unchanged |
+  | `null`, `""`, or whitespace-only | field **cleared** — stored and returned as `null` |
+  | a value | must satisfy the field's own constraint (URL, email, length…); an invalid non-empty value is rejected with `VALIDATION_ERROR` |
+
+  An emptied form input naturally submits `""`, and the server normalises that to `null` for you —
+  you do not have to special-case it. **Required fields are not clearable**, and neither are verified
+  identity fields. Numeric, boolean and date fields accept `null` where a page says so, but never `""`.
+- **`Content-Type: application/json`** on every non-multipart `POST`/`PATCH`/`PUT`.
+- **Soft delete**: most resources are soft-deleted, and list endpoints never return deleted records.
+
+---
+
+## 12 · Contact formats (phone & email)
+
+**One rule, every endpoint.** Registration, sign-in, the profile, payment channels, payout
+destinations — wherever this API accepts a phone number or an email address, the same validation
+applies. There is no endpoint with a looser rule, and no field where "it's optional" means
+"it's unchecked". Optionality itself is unaffected: the rule is only applied to a value you actually
+send.
+
+### Phone numbers — E.164 only
+
+```
++237670000000        ✅
++237 670 00 00 00    ✅  formatting is stripped for you; stored as +237670000000
++1 (555) 010-9999    ✅
+670000000            ❌  no country code — VALIDATION_ERROR
+00237670000000       ❌  00-prefixed dialling is not E.164 — send the +
++0237670000          ❌  a country code cannot start with 0
++237                 ❌  incomplete
+```
+
+- A leading **`+` and country calling code are required.** The server will not guess a country —
+  the platform serves several, so a national number has no single correct expansion.
+- **7 to 15 digits** after the `+` (15 is the E.164 ceiling; 7 is the shortest real international
+  number).
+- **Spaces, dashes, dots and parentheses are accepted and stripped.** What is stored and echoed back
+  is the canonical form, so send the number however your input mask produces it. Typographic dashes
+  (–, —) are **not** stripped and will be rejected.
+- This validates *format*, not reachability — a well-formed number may still be unassigned.
+
+### Email addresses
+
+```
+name@example.com          ✅
+  Name@Example.COM        ✅  trimmed and lowercased; stored as name@example.com
+o'brien+tag@my-shop.io    ✅
+name@example              ❌  no TLD
+root@localhost            ❌  bare host
+"john doe"@example.com    ❌  legal in the RFC, undeliverable in practice
+na..me@example.com        ❌
+```
+
+- An RFC 5322 dot-atom local part, a real dotted domain with an alphabetic TLD, and the RFC 5321
+  length limits — 64 characters for the local part, 254 for the whole address.
+- **Addresses are trimmed and lowercased** before storage and comparison, so `Ada@Example.com` and
+  `ada@example.com` are the same account. Sign in with either.
+
+### When it fails
+
+The standard envelope, `error.code = "VALIDATION_ERROR"`, HTTP `400`, with the offending field named
+in `error.details.fields[]`. Show the message against that field rather than as a page-level error.

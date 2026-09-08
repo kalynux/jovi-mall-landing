@@ -32,7 +32,7 @@ one. Nothing owner-scoped is reachable; see [the rule for this prefix](./README.
 | GET | `/api/public/stores/:slug` | One store |
 | GET | `/api/public/stores/:slug/products` | One store's grid |
 
-All use the standard [response envelope](../README.md#the-response-envelope-read-this-first)
+All use the standard [response envelope](../README.md#4--the-response-envelope)
 and send `Cache-Control: public, max-age=300`.
 
 > **Why the 5-minute cache.** It is the window in which a newly published product, a price
