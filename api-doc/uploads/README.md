@@ -75,6 +75,8 @@ An unrecognised role falls back to the **customer** limit (100 MB).
     {
       "id": "664file0000000000000001",
       "key": "images/2026/07/9f2c1a30-4d21-4a3e-bb70-1d5f0c2b7a44_product-front.jpg",
+      "url": "http://localhost:8022/api/files/images/2026/07/9f2c1a30-4d21-4a3e-bb70-1d5f0c2b7a44_product-front.jpg",
+      "access": "public",
       "provider": "local",
       "mimeType": "image/jpeg",
       "size": 254013,
@@ -95,13 +97,30 @@ An unrecognised role falls back to the **customer** limit (100 MB).
 }
 ```
 
-⚠ **`data` is an array of file *records*, not `FileDetail` objects — they carry no `url` and no
-`access` field.** The upload response goes out straight from the intake service and never passes
-through the resolver, which is the only place on the platform where a URL is ever computed.
+⚠ **`data` is an array of file *records* — the full record, PLUS the two computed fields `url`
+and `access`.** It is not a `FileDetail`: it is a strict superset of one, keeping `provider`,
+`checksum`, the owner fields and the timestamps that a `FileDetail` does not carry.
 
-**So: upload, keep the `id`, attach the `id`, and render from whatever the owning entity gives you
-back.** Do not build a display URL out of the upload response, and do not expect one there. See
-[`FileDetail` vs the file record](#filedetail-vs-the-file-record) below.
+> ### ✅ Changed 2026-09-08: `url` and `access` are now on every `/api/files/*` response
+>
+> **This reverses advice that stood here.** This section used to read *"they carry no `url` and no
+> `access` field … do not build a display URL out of the upload response, and do not expect one
+> there."* That was true, and it is not any more. The two fields are computed by the same
+> `toFileDetail` resolver every other file on the platform passes through, so they carry the same
+> privacy and quota rules — see [`FileDetail` vs the file record](#filedetail-vs-the-file-record).
+>
+> **Attaching by `id` is still the right thing to do with the file.** `url` is for *showing* it —
+> a media library, or a "you just uploaded this, here it is" confirmation. It is not a reference:
+> never store a URL where an `id` belongs, and never derive an id from a URL.
+>
+> ⚠ **Do not hand-build a URL from `key` — that is what this change exists to stop.** A client
+> that did was wrong three ways: it could not express `quota_blocked` at all, it treated an
+> unclassified storage tree as **public** where the server treats it as private, and it did not
+> normalise the backslashes a key written on Windows carries. Read `url` and `access`; derive
+> neither.
+
+**So: upload, keep the `id`, attach the `id` — and render from `url` if you need to show the file
+before it is attached to anything.**
 
 ⚠ `meta.roleLimit` is a **display string** (`"500 MB"`), not a byte count.
 
@@ -160,7 +179,7 @@ map `fileIndex` back to the file in your upload list so the reason shows inline.
 - **Per-file size limit**: 70 MB — **not** the role ceiling from the route above. A vendor's 500 MB
   allowance does not apply here.
 - **Per-actor count limit**: customers max **1**, all other roles max **3**.
-- `201` mirrors the shape above (file records, no `url`), with
+- `201` mirrors the shape above (file records, `url` and `access` included), with
   `meta: { count, perFileLimit: "70 MB" }`.
 
 ### Errors
@@ -188,7 +207,9 @@ through to an unscoped listing.
     "files": [
       {
         "id": "664file0000000000000001",
-        "key": "images/2026/07/9f2c1a30-4d21-4a3e-bb70-1d5f0c2b7a44_logo.png",        "provider": "local",        "ownerType": "vendor",
+        "key": "images/2026/07/9f2c1a30-4d21-4a3e-bb70-1d5f0c2b7a44_logo.png",
+        "url": "http://localhost:8022/api/files/images/2026/07/9f2c1a30-4d21-4a3e-bb70-1d5f0c2b7a44_logo.png",
+        "access": "public",
         "provider": "local",
         "mimeType": "image/png",
         "size": 12044,
@@ -289,7 +310,11 @@ would break before offering a delete:
   "success": true,
   "data": {
     "id": "664file0000000000000001",
-    "key": "images/2026/07/9f2c1a30-4d21-4a3e-bb70-1d5f0c2b7a44_logo.png",    "provider": "local",    "ownerType": "vendor",
+    "key": "images/2026/07/9f2c1a30-4d21-4a3e-bb70-1d5f0c2b7a44_logo.png",
+    "url": "http://localhost:8022/api/files/images/2026/07/9f2c1a30-4d21-4a3e-bb70-1d5f0c2b7a44_logo.png",
+    "access": "public",
+    "provider": "local",
+    "ownerType": "vendor",
     "mimeType": "image/png",
     "size": 12044,
     "usage": {
@@ -336,9 +361,12 @@ existing file you do not own tells you so.
 
 These are two different shapes, and mixing them up is the most common mistake on this surface.
 
-- **The file record** is what `/api/files/*` returns: `{ id, key, provider, mimeType, size,
-  checksum?, originalName?, ownerType?, ownerId?, orphanedAt, quotaBlockedAt, createdAt, updatedAt,
-  deletedAt, purgeAt }`. **No `url`, no `access`.**
+- **The file record** is what `/api/files/*` returns: `{ id, key, url, access, provider, mimeType,
+  size, checksum?, originalName?, ownerType?, ownerId?, orphanedAt, quotaBlockedAt, createdAt,
+  updatedAt, deletedAt, purgeAt }`. Since 2026-09-08 **`url` and `access` are computed onto it**
+  by the same resolver as below; everything else is stored. It is a strict SUPERSET of a
+  `FileDetail`, not equal to one — it keeps ten more fields, including the `createdAt` /
+  `updatedAt` that `GET /files` sorts on.
 - **`FileDetail`** is what every *other* entity returns when it references a file — a vendor avatar, a
   store logo or banner, product images, a delivery proof:
   `{ id, key, url, access, mimeType, size, originalName? }`. It is built in exactly one place on the
