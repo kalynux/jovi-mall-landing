@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 import { useCallback, useEffect, useState } from "react";
 import { isNetworkError } from "@/lib/errors/is-network-error";
@@ -40,16 +40,21 @@ interface Props {
   activeType?: ProductType;
 }
 
-const TYPE_TABS: { value: string; label: string; type?: ProductType }[] = [
-  { value: "all", label: "All" },
-  { value: "physical", label: "Products", type: "physical" },
-  { value: "digital", label: "Digital", type: "digital" },
-  { value: "service", label: "Services", type: "service" },
+/** Keys into `shop.store`, not sentences — this is a module-level constant. */
+const TYPE_TABS: { value: string; labelKey: string; type?: ProductType }[] = [
+  { value: "all", labelKey: "tabs.all" },
+  { value: "physical", labelKey: "tabs.physical", type: "physical" },
+  { value: "digital", labelKey: "tabs.digital", type: "digital" },
+  { value: "service", labelKey: "tabs.service", type: "service" },
 ];
 
 export function VendorStore({ store, products, meta, activeType }: Props) {
+  const t = useTranslations("shop.store");
+  const tCommon = useTranslations("shop.common");
   // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
   const tKey = useTranslations();
+  // The shopper's locale, not the browser's — see LOCALISATION.md §6.
+  const format = useFormatter();
   const router = useRouter();
   const { addItem } = useCart();
   const { isFavorite, toggle, syncGrid } = useFavorites();
@@ -87,7 +92,7 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
       try {
         const resolved = await resolveQuickAdd(item.id);
         if (resolved.kind === "unavailable") {
-          flash("That product is no longer available.");
+          flash(t("noLongerAvailable"));
           return;
         }
         if (resolved.kind === "choose") {
@@ -98,7 +103,7 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
         if (outcome.kind === "added") {
           // Digital skips the cart — see `ProductDetail`. The card's ⚡ says so.
           if (resolved.product.type === "digital") router.push("/shop/checkout");
-          else flash(`Added to cart · ${resolved.product.title}`);
+          else flash(t("addedToCart", { product: resolved.product.title }));
         } else if (outcome.kind === "offline") flash(tKey(CART_OFFLINE_MESSAGE_KEY));
         else if (outcome.kind === "error") flash(outcome.message ?? tKey(outcome.messageKey));
         else router.push(productPathFor(item));
@@ -114,14 +119,10 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
          * while the add behind it does. That is why an offline add went on
          * reporting a raw engine string long after this looked fixed.
          */
-        flash(
-          isNetworkError(err)
-            ? tKey(CART_OFFLINE_MESSAGE_KEY)
-            : "Could not add that to your cart. Please try again."
-        );
+        flash(isNetworkError(err) ? tKey(CART_OFFLINE_MESSAGE_KEY) : t("addFailed"));
       }
     },
-    [addItem, flash, router, tKey]
+    [addItem, flash, router, tKey, t]
   );
 
   const card = (item: ProductListItem) => (
@@ -193,7 +194,7 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
             {store.verified && <Icon name="badge-check" size={18} style={{ color: "var(--brand)" }} />}
             {!store.isOpen && (
               <Badge tone="warning" size="sm">
-                On vacation
+                {t("onVacation")}
               </Badge>
             )}
           </div>
@@ -203,16 +204,16 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
               on a phone: the row wraps, and every separator that lands at a
               wrap point dangles at the start of the next line. */}
           <div style={{ display: "flex", alignItems: "center", columnGap: 12, rowGap: 4, marginTop: 8, flexWrap: "wrap" }}>
-            <span className="muted">
-              {store.productCount} product{store.productCount === 1 ? "" : "s"}
-            </span>
+            <span className="muted">{t("productCount", { n: store.productCount })}</span>
             {where && (
               <span className="muted" style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
                 <Icon name="map-pin" size={13} />
                 {where}
               </span>
             )}
-            <span className="muted">Selling since {new Date(store.memberSince).getFullYear()}</span>
+            <span className="muted">
+              {t("sellingSince", { year: new Date(store.memberSince).getFullYear() })}
+            </span>
           </div>
 
           {store.description && (
@@ -223,8 +224,7 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
 
           {!store.isOpen && (
             <p className="muted" style={{ fontSize: 13, marginTop: 10, maxWidth: 640 }}>
-              This seller is on holiday. Orders are still accepted and will be dispatched when they
-              reopen.
+              {t("holidayNote")}
             </p>
           )}
 
@@ -242,7 +242,7 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
                   )
                 }
               >
-                Contact seller
+                {t("contactSeller")}
               </Button>
             )}
             <Button
@@ -262,14 +262,14 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
                 void shareLink({
                   title: store.name,
                   url: window.location.href,
-                  dialogTitle: `Share ${store.name}`,
+                  dialogTitle: t("shareDialogTitle", { store: store.name }),
                 }).then((outcome) => {
-                  if (outcome === "copied") flash("Store link copied");
-                  else if (outcome === "failed") flash("Could not share the link");
+                  if (outcome === "copied") flash(t("linkCopied"));
+                  else if (outcome === "failed") flash(t("shareFailed"));
                 });
               }}
             >
-              Share
+              {tCommon("share")}
             </Button>
           </div>
         </div>
@@ -283,7 +283,10 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
               setTab(value);
               if (value !== "about") goType(value);
             }}
-            tabs={[...TYPE_TABS, { value: "about", label: "About" }]}
+            tabs={[
+              ...TYPE_TABS.map((item) => ({ value: item.value, label: t(item.labelKey) })),
+              { value: "about", label: t("tabs.about") },
+            ]}
           />
         </div>
 
@@ -295,37 +298,45 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
               <div style={{ gridColumn: "1/-1" }}>
                 <EmptyState
                   icon="package-open"
-                  title="Nothing for sale right now"
-                  description={`${store.name} has no listings matching this filter.`}
+                  title={t("emptyTitle")}
+                  description={t("emptyDescription", { store: store.name })}
                 />
               </div>
             )}
           </div>
         ) : (
           <div style={{ padding: "18px 0", maxWidth: 560 }}>
-            {where && <AboutRow icon="map-pin" label="Location" value={where} />}
+            {where && <AboutRow icon="map-pin" label={t("aboutLocation")} value={where} />}
             <AboutRow
               icon="badge-check"
-              label="Verification"
-              value={store.verified ? "Verified seller" : "Not yet verified"}
+              label={t("aboutVerification")}
+              value={store.verified ? t("verified") : t("notVerified")}
             />
-            {store.supportWhatsapp && <AboutRow icon="phone" label="WhatsApp" value={store.supportWhatsapp} />}
-            {store.supportEmail && <AboutRow icon="mail" label="Email" value={store.supportEmail} />}
+            {store.supportWhatsapp && (
+              <AboutRow icon="phone" label={t("aboutWhatsapp")} value={store.supportWhatsapp} />
+            )}
+            {store.supportEmail && (
+              <AboutRow icon="mail" label={t("aboutEmail")} value={store.supportEmail} />
+            )}
             <AboutRow
               icon="calendar"
-              label="Selling since"
-              value={new Date(store.memberSince).toLocaleDateString(undefined, {
+              label={t("aboutSellingSince")}
+              value={format.dateTime(new Date(store.memberSince), {
                 year: "numeric",
                 month: "long",
               })}
             />
-            <AboutRow icon="clock" label="Status" value={store.isOpen ? "Open now" : "On vacation"} />
+            <AboutRow
+              icon="clock"
+              label={t("aboutStatus")}
+              value={store.isOpen ? t("openNow") : t("onVacation")}
+            />
           </div>
         )}
 
         {meta.pages > 1 && tab !== "about" && (
           <p className="muted" style={{ textAlign: "center", padding: "18px 0 24px", fontSize: 13 }}>
-            Showing {products.length} of {meta.total}
+            {t("showingOf", { shown: products.length, total: meta.total })}
           </p>
         )}
 

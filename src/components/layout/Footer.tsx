@@ -85,8 +85,14 @@ export default function Footer() {
               <WiMallMark className="w-8 h-8 group-hover:scale-110 transition-transform duration-200" />
               <span className="font-display font-bold text-lg text-[var(--text-primary)]">{BRAND.name}</span>
             </Link>
+            {/*
+              The catalogue, not BRAND.description — this paragraph is read by a
+              visitor, and it was the last English on an otherwise French page.
+              BRAND.description stays where it is: it also feeds the PWA manifest
+              and the JSON-LD, neither of which is per-locale here.
+            */}
             <p className="text-[var(--text-muted)] text-sm leading-relaxed max-w-xs">
-              {BRAND.description}
+              {t("description")}
             </p>
             <div className="flex gap-3 mt-6">
               {[Twitter, Linkedin, Instagram].map((Icon, i) => (

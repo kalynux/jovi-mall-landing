@@ -54,7 +54,9 @@ type Tab = "saved" | "viewed";
  * product that was merely suspended and is coming back.
  */
 export default function SavedPage() {
-  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
+  const t = useTranslations("shop.saved");
+  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`), and the
+  // two tab labels are the frozen `shop.nav` ones the header bar already uses.
   const tKey = useTranslations();
   const router = useRouter();
   const { status } = useAuth();
@@ -200,7 +202,7 @@ export default function SavedPage() {
         const outcome = await resolveQuickAdd(productId);
 
         if (outcome.kind === "unavailable") {
-          flash("That product is no longer available.");
+          flash(t("unavailable"));
           return;
         }
         if (outcome.kind === "choose") {
@@ -209,7 +211,7 @@ export default function SavedPage() {
         }
 
         const added = await addItem(outcome.product, outcome.variant);
-        if (added.kind === "added") flash("Added to cart");
+        if (added.kind === "added") flash(t("addedToCart"));
         // Before the `else`, which sends the shopper to the product page to make
         // a choice. A dead connection is not a choice to make, and routing them
         // there would answer a connectivity failure with a page that cannot load
@@ -219,10 +221,10 @@ export default function SavedPage() {
         else if (added.kind === "error") flash(added.message ?? tKey(added.messageKey));
         else router.push(productPathFor(outcome.product));
       } catch {
-        flash("Could not add that to your cart. Please try again.");
+        flash(t("addFailed"));
       }
     },
-    [addItem, flash, router, tKey],
+    [addItem, flash, router, t, tKey],
   );
 
   const removeSaved = useCallback(
@@ -241,9 +243,9 @@ export default function SavedPage() {
       await clearRecentlyViewed();
     } catch {
       setViewed(previous);
-      flash("Could not clear your history. Please try again.");
+      flash(t("clearFailed"));
     }
-  }, [viewed, flash]);
+  }, [viewed, flash, t]);
 
   const entries = tab === "saved" ? saved : viewed;
   const loading = tab === "saved" ? savedLoading : viewedLoading;
@@ -251,15 +253,19 @@ export default function SavedPage() {
   return (
     <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-6">
       {/* The visible title is the header bar's, on every shop screen. */}
-      <h1 className="sr-only">Saved</h1>
+      <h1 className="sr-only">{tKey("shop.nav.tabs.saved")}</h1>
 
       <div style={{ marginBottom: 14 }}>
         <Tabs
           value={tab}
           onChange={(v) => setTab(v as Tab)}
           tabs={[
-            { value: "saved", label: "Saved", count: saved.length || undefined },
-            { value: "viewed", label: "Recently viewed" },
+            {
+              value: "saved",
+              label: tKey("shop.nav.tabs.saved"),
+              count: saved.length || undefined,
+            },
+            { value: "viewed", label: t("recentlyViewed") },
           ]}
         />
       </div>
@@ -275,12 +281,12 @@ export default function SavedPage() {
       >
         {!loading && (
           <p className="muted" style={{ margin: 0 }}>
-            {entries.length} item{entries.length === 1 ? "" : "s"}
+            {t("itemCount", { n: entries.length })}
           </p>
         )}
         {tab === "viewed" && signedIn && entries.length > 0 && !loading && (
           <Button variant="ghost" size="sm" onClick={() => setConfirmClear(true)}>
-            Clear history
+            {t("clearHistory")}
           </Button>
         )}
       </div>
@@ -290,9 +296,9 @@ export default function SavedPage() {
       {tab === "viewed" && !signedIn && status !== "loading" ? (
         <EmptyState
           icon="clock"
-          title="Sign in to see what you've viewed"
-          description="Your browsing history follows your account, not this device."
-          actionLabel="Sign in"
+          title={t("signInTitle")}
+          description={t("signInDescription")}
+          actionLabel={tKey("shop.common.signIn")}
           onAction={() => router.push("/login")}
         />
       ) : loading ? (
@@ -305,17 +311,17 @@ export default function SavedPage() {
         tab === "saved" ? (
           <EmptyState
             icon="heart"
-            title="No favorites yet"
-            description="Tap the heart on any product to save it here."
-            actionLabel="Browse products"
+            title={t("emptyTitle")}
+            description={t("emptyDescription")}
+            actionLabel={t("browseProducts")}
             onAction={() => router.push("/shop")}
           />
         ) : (
           <EmptyState
             icon="clock"
-            title="Nothing viewed yet"
-            description="Products you open will show up here."
-            actionLabel="Browse products"
+            title={t("viewedEmptyTitle")}
+            description={t("viewedEmptyDescription")}
+            actionLabel={t("browseProducts")}
             onAction={() => router.push("/shop")}
           />
         )
@@ -358,14 +364,14 @@ export default function SavedPage() {
 
       <ConfirmDialog
         open={confirmClear}
-        title="Clear your history?"
+        title={t("clearTitle")}
         tone="danger"
         icon="clock"
-        confirmLabel="Clear history"
+        confirmLabel={t("clearHistory")}
         onConfirm={() => void clearHistory()}
         onCancel={() => setConfirmClear(false)}
       >
-        This forgets every product you have viewed. It cannot be undone.
+        {t("clearBody")}
       </ConfirmDialog>
     </div>
   );
@@ -381,6 +387,9 @@ export default function SavedPage() {
  * than 403.
  */
 function UnavailableEntry({ onRemove }: { onRemove?: () => void }) {
+  const t = useTranslations("shop.saved");
+  const tKey = useTranslations();
+
   return (
     <div
       style={{
@@ -398,11 +407,11 @@ function UnavailableEntry({ onRemove }: { onRemove?: () => void }) {
       }}
     >
       <p className="muted" style={{ margin: 0 }}>
-        This item is no longer available.
+        {t("itemUnavailable")}
       </p>
       {onRemove && (
         <Button variant="secondary" size="sm" onClick={onRemove}>
-          Remove
+          {tKey("shop.common.remove")}
         </Button>
       )}
     </div>

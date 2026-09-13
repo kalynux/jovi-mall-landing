@@ -47,16 +47,19 @@ import type { CustomerOrder } from "@/lib/shop/customer.types";
  * `null` deliberately — so this reads fresh and keeps nothing.
  */
 export function OrderDetail({ orderId }: { orderId: string }) {
+  const t = useTranslations("shop.orders");
+  // Root-scoped: the screen title is `shop.nav`'s, shared with the header bar.
+  const tKey = useTranslations();
   const order = useApiResource<CustomerOrder>(() => getOrder(orderId), [orderId]);
 
   return (
-    <AccountShell title="Order details">
+    <AccountShell title={tKey("shop.nav.titles.orderDetails")}>
       <ResourceView
         status={order.status}
         error={order.error}
         data={order.data}
         onRetry={order.reload}
-        errorFallback="We couldn't load this order."
+        errorFallback={t("loadOneFailed")}
       >
         {(o) => (
           <>
@@ -79,6 +82,8 @@ export function OrderDetail({ orderId }: { orderId: string }) {
 function OrderHeader({ order }: { order: CustomerOrder }) {
   const format = useFormatter();
   const router = useRouter();
+  const t = useTranslations("shop.orders");
+  const tTracking = useTranslations("shop.tracking");
   // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
   const tKey = useTranslations();
   const payment = paymentChip(order.paymentStatus);
@@ -111,13 +116,14 @@ function OrderHeader({ order }: { order: CustomerOrder }) {
           <div className="ds-overline">{order.orderNumber}</div>
           {order.createdAt && (
             <div className="muted" style={{ fontSize: 12.5, marginTop: 3 }}>
-              Placed{" "}
-              {format.dateTime(new Date(order.createdAt), {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
+              {t("placedOn", {
+                date: format.dateTime(new Date(order.createdAt), {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
               })}
             </div>
           )}
@@ -131,11 +137,14 @@ function OrderHeader({ order }: { order: CustomerOrder }) {
           one is not an error — it simply has no group to return to. */}
       {groupHref && (
         <p className="muted" style={{ fontSize: 12.5, marginTop: 10, lineHeight: 1.5 }}>
-          <Icon name="info" size={13} style={{ verticalAlign: "-2px" }} /> This is one
-          seller&apos;s part of a larger order.{" "}
-          <Link href={groupHref} style={{ fontWeight: 700 }}>
-            See everything you bought
-          </Link>
+          <Icon name="info" size={13} style={{ verticalAlign: "-2px" }} />{" "}
+          {t.rich("partOfGroup", {
+            link: (chunks) => (
+              <Link href={groupHref} style={{ fontWeight: 700 }}>
+                {chunks}
+              </Link>
+            ),
+          })}
         </p>
       )}
 
@@ -149,11 +158,10 @@ function OrderHeader({ order }: { order: CustomerOrder }) {
               margin: "0 0 10px",
             }}
           >
-            This order is waiting to be paid and your items are held. One payment covers the whole
-            basket, so it happens on the order this one belongs to.
+            {t("unpaidOnGroup")}
           </p>
           <Button block leadingIcon="wallet" onClick={() => router.push(groupHref)}>
-            Go to payment
+            {t("goToPayment")}
           </Button>
         </div>
       )}
@@ -166,7 +174,7 @@ function OrderHeader({ order }: { order: CustomerOrder }) {
             leadingIcon="map-pin"
             onClick={() => router.push(orderTrackingPath(order.id))}
           >
-            Track delivery
+            {tTracking("title")}
           </Button>
         </div>
       )}
@@ -206,23 +214,24 @@ function OrderHeader({ order }: { order: CustomerOrder }) {
  */
 export function OrderTracking({ orderId }: { orderId: string }) {
   const router = useRouter();
+  const t = useTranslations("shop.tracking");
   const order = useApiResource<CustomerOrder>(() => getOrder(orderId), [orderId]);
 
   return (
-    <AccountShell title="Track delivery">
+    <AccountShell title={t("title")}>
       <ResourceView
         status={order.status}
         error={order.error}
         data={order.data}
         onRetry={order.reload}
-        errorFallback="We couldn't load this delivery."
+        errorFallback={t("loadFailed")}
       >
         {(o) => (
           <>
             <AccountCard style={{ marginBottom: 16 }}>
               <div className="ds-overline">{o.orderNumber}</div>
               <p className="muted" style={{ fontSize: 12.5, marginTop: 3 }}>
-                {o.store?.name ? `From ${o.store.name}` : "Your parcel"}
+                {o.store?.name ? t("fromStore", { store: o.store.name }) : t("yourParcel")}
               </p>
               <div style={{ marginTop: 12 }}>
                 <Button
@@ -231,7 +240,7 @@ export function OrderTracking({ orderId }: { orderId: string }) {
                   leadingIcon="receipt-text"
                   onClick={() => router.push(orderPath(o.id))}
                 >
-                  See the order
+                  {t("seeOrder")}
                 </Button>
               </div>
             </AccountCard>
@@ -249,8 +258,8 @@ export function OrderTracking({ orderId }: { orderId: string }) {
                   whenEmpty={
                     <EmptyState
                       icon="package"
-                      title="Nothing on the road yet"
-                      description="The seller is still preparing this order. As soon as it is handed to a courier you'll be able to follow it here."
+                      title={t("nothingShippedTitle")}
+                      description={t("nothingShippedBody")}
                     />
                   }
                 />
@@ -258,8 +267,8 @@ export function OrderTracking({ orderId }: { orderId: string }) {
             ) : (
               <EmptyState
                 icon="cloud-download"
-                title="Nothing to deliver"
-                description="This is a digital order — there is no parcel on the way. Your files are in your downloads."
+                title={t("digitalTitle")}
+                description={t("digitalBody")}
               />
             )}
           </>

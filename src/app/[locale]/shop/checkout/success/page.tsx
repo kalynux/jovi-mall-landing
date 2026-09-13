@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Button, Icon, type IconName } from "@/components/shop/ds";
 import { useShopPageTitle } from "@/components/shop/ShopChrome";
@@ -37,6 +38,7 @@ const POLL_ATTEMPTS = 15;
 type Phase = "pending" | "paid" | "failed" | "cod";
 
 export default function SuccessPage() {
+  const t = useTranslations("shop.checkout");
   const router = useRouter();
   const [group, setGroup] = useState<string | null>(null);
   const [ussd, setUssd] = useState<string | null>(null);
@@ -153,10 +155,11 @@ export default function SuccessPage() {
   }, [phase]);
 
   const view = VIEWS[phase];
+  const title = t(view.titleKey);
 
   // A payment that failed is not an "order confirmed", which is what the route
   // alone would put in the header bar. The body headline is the honest one.
-  useShopPageTitle(view.title);
+  useShopPageTitle(title);
 
   return (
     <div className="mx-auto flex max-w-[520px] flex-col items-center px-4 py-16 text-center sm:px-6">
@@ -185,10 +188,10 @@ export default function SuccessPage() {
           color: "var(--text-strong)",
         }}
       >
-        {view.title}
+        {title}
       </h1>
       <p className="muted" style={{ maxWidth: 380, lineHeight: 1.55, margin: 0 }}>
-        {view.body}
+        {t(view.bodyKey)}
       </p>
 
       {/* What the gateway said to do, which is not always the same thing.
@@ -214,7 +217,7 @@ export default function SuccessPage() {
           }}
         >
           <p className="ds-overline" style={{ marginBottom: 6 }}>
-            What your provider said
+            {t("success.providerSaid")}
           </p>
           <p style={{ fontSize: 13, lineHeight: 1.55, color: "var(--text-body)", margin: 0 }}>
             {reason}
@@ -235,7 +238,7 @@ export default function SuccessPage() {
           }}
         >
           <p className="ds-overline" style={{ marginBottom: 6 }}>
-            {ussd ? "Dial to approve" : "What to do now"}
+            {ussd ? t("success.dialToApprove") : t("success.whatToDo")}
           </p>
           {ussd ? (
             <p style={{ fontSize: 20, fontWeight: 800, letterSpacing: "0.02em", margin: 0 }}>
@@ -272,17 +275,9 @@ export default function SuccessPage() {
       >
         <Icon name="info" size={17} style={{ color: "var(--text-muted)", flexShrink: 0, marginTop: 1 }} />
         <p style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--text-body)", margin: 0 }}>
-          {phase === "cod" ? (
-            <>
-              Your delivery code is on your order. Give it to the courier{" "}
-              <strong>only once you have your parcel</strong> — it is what records your payment.
-            </>
-          ) : (
-            <>
-              Your orders are under <strong>My orders</strong>, with their delivery progress and
-              tracking.
-            </>
-          )}
+          {phase === "cod"
+            ? t.rich("success.codInfo", { b: (chunks) => <strong>{chunks}</strong> })
+            : t.rich("success.ordersInfo", { b: (chunks) => <strong>{chunks}</strong> })}
         </p>
       </div>
 
@@ -302,39 +297,48 @@ export default function SuccessPage() {
           leadingIcon="receipt-text"
           onClick={() => router.push(group ? orderGroupPath(group) : "/shop/account/orders")}
         >
-          {phase === "failed" ? "Pay for this order" : "View my order"}
+          {phase === "failed" ? t("success.payForOrder") : t("success.viewOrder")}
         </Button>
         <Button block variant="ghost" onClick={() => router.push("/shop")}>
-          Continue shopping
+          {t("success.continueShopping")}
         </Button>
       </div>
     </div>
   );
 }
 
-const VIEWS: Record<Phase, { icon: IconName; tone: string; title: string; body: string }> = {
+/**
+ * The four answers this page can give.
+ *
+ * A module-level constant, so it names its copy rather than holding it — there
+ * is no render here and no locale to read. The keys are relative to
+ * `shop.checkout`, which is what the component below binds. Renamed from
+ * `title`/`body` so a call site still expecting finished sentences cannot
+ * compile.
+ */
+const VIEWS: Record<Phase, { icon: IconName; tone: string; titleKey: string; bodyKey: string }> = {
   pending: {
     icon: "hourglass",
     tone: "warning",
-    title: "Waiting for your payment",
-    body: "Approve the prompt on your phone. Your order is placed and held — this page updates by itself once the payment clears.",
+    titleKey: "success.pendingTitle",
+    bodyKey: "success.pendingBody",
   },
   paid: {
     icon: "check",
     tone: "success",
-    title: "Payment received",
-    body: "Your order is confirmed and the seller has been notified. You can follow its delivery from your orders.",
+    titleKey: "success.paidTitle",
+    bodyKey: "success.paidBody",
   },
   failed: {
     icon: "triangle-alert",
     tone: "danger",
-    title: "Payment did not go through",
-    body: "Your order is still there, unpaid — nothing was lost. Open it from your orders to try paying again.",
+    titleKey: "success.failedTitle",
+    bodyKey: "success.failedBody",
   },
   cod: {
     icon: "banknote",
     tone: "success",
-    title: "Order placed",
-    body: "You pay the courier on delivery. The seller has been notified and will start preparing your parcel.",
+    titleKey: "success.codTitle",
+    bodyKey: "success.codBody",
   },
 };

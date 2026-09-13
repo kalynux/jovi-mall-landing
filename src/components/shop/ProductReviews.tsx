@@ -1,5 +1,6 @@
 "use client";
 
+import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { Button, Rating, Skeleton } from "@/components/shop/ds";
 import { listProductReviews, type PublicReview } from "@/lib/shop/reviews.api";
@@ -34,6 +35,8 @@ export function ProductReviews({
   /** The aggregate from the product detail body. `null` when unreviewed. */
   rating: ProductRating | null;
 }) {
+  const t = useTranslations("shop.product.reviews");
+  const tCommon = useTranslations("shop.common");
   const [reviews, setReviews] = useState<PublicReview[]>([]);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
@@ -70,7 +73,7 @@ export function ProductReviews({
   if (!rating || rating.count === 0) {
     return (
       <p className="muted" style={{ margin: 0 }}>
-        No reviews yet.
+        {t("none")}
       </p>
     );
   }
@@ -95,7 +98,7 @@ export function ProductReviews({
       {page < pages && (
         <div>
           <Button variant="secondary" size="sm" disabled={loading} onClick={() => void load(page + 1)}>
-            {loading ? "Loading…" : "Show more reviews"}
+            {loading ? tCommon("loading") : t("showMore")}
           </Button>
         </div>
       )}
@@ -105,6 +108,7 @@ export function ProductReviews({
 
 /** The average, the count, and the 1–5 histogram when the detail body carried one. */
 function Summary({ rating }: { rating: ProductRating }) {
+  const t = useTranslations("shop.product.reviews");
   const distribution = rating.distribution;
 
   return (
@@ -117,7 +121,7 @@ function Summary({ rating }: { rating: ProductRating }) {
         </div>
         <Rating value={rating.average} showValue={false} size={16} />
         <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>
-          {rating.count} review{rating.count === 1 ? "" : "s"}
+          {t("count", { n: rating.count })}
         </div>
       </div>
 
@@ -154,6 +158,9 @@ function Summary({ rating }: { rating: ProductRating }) {
 }
 
 function ReviewRow({ review }: { review: PublicReview }) {
+  // The shopper's locale, not the browser's — see LOCALISATION.md §6.
+  const format = useFormatter();
+
   return (
     <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -166,7 +173,7 @@ function ReviewRow({ review }: { review: PublicReview }) {
         <p style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.5 }}>{review.body}</p>
       )}
       <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
-        {new Date(review.publishedAt).toLocaleDateString()}
+        {format.dateTime(new Date(review.publishedAt), { dateStyle: "medium" })}
       </div>
     </div>
   );

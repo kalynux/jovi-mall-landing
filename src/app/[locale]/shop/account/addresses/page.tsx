@@ -34,7 +34,10 @@ export default function AddressesPage() {
   /** The address the shopper has asked to remove, held until they confirm. */
   const [pendingRemoval, setPendingRemoval] = useState<SavedAddress | null>(null);
   const { flash, flashError } = useToast();
-  const t = useTranslations("errors");
+  const t = useTranslations("shop.addresses");
+  const tCommon = useTranslations("shop.common");
+  const tKey = useTranslations();
+  const tError = useTranslations("errors");
 
   /**
    * Every address mutation answers with the whole updated profile, so the cache
@@ -48,21 +51,21 @@ export default function AddressesPage() {
         profile.set(await op());
         flash(done);
       } catch (err) {
-        flashError(translateError(t, err, "We couldn't update your addresses."));
+        flashError(translateError(tError, err, t("updateError")));
       } finally {
         setBusyId(null);
       }
     },
-    [profile, flash, flashError, t],
+    [profile, flash, flashError, t, tError],
   );
 
   return (
     <AccountShell
-      title="Addresses"
-      description="Where your orders are delivered."
+      title={tKey("shop.nav.titles.addresses")}
+      description={t("description")}
       action={
         <Button size="sm" leadingIcon="plus" onClick={() => setSheetOpen(true)}>
-          Add
+          {tCommon("add")}
         </Button>
       }
     >
@@ -71,15 +74,15 @@ export default function AddressesPage() {
         error={profile.error}
         data={profile.data}
         onRetry={profile.reload}
-        errorFallback="We couldn't load your addresses."
+        errorFallback={t("loadError")}
       >
         {(p) =>
           p.savedAddresses.length === 0 ? (
             <EmptyState
               icon="map-pin"
-              title="No saved addresses"
-              description="Add one now and it will be offered at checkout."
-              actionLabel="Add an address"
+              title={t("emptyTitle")}
+              description={t("emptyDescription")}
+              actionLabel={t("emptyAction")}
               actionIcon="plus"
               onAction={() => setSheetOpen(true)}
             />
@@ -91,7 +94,7 @@ export default function AddressesPage() {
                   address={a}
                   busy={busyId === a._id}
                   onMakeDefault={() =>
-                    run(a._id, () => setDefaultAddress(a._id), "Default address updated")
+                    run(a._id, () => setDefaultAddress(a._id), t("defaultUpdated"))
                   }
                   onRemove={() => setPendingRemoval(a)}
                 />
@@ -107,7 +110,7 @@ export default function AddressesPage() {
         onAdded={(next) => {
           profile.set(next);
           setSheetOpen(false);
-          flash("Address added");
+          flash(t("added"));
         }}
       />
 
@@ -116,22 +119,24 @@ export default function AddressesPage() {
           retype. So it asks. */}
       <ConfirmDialog
         open={pendingRemoval !== null}
-        title="Remove this address?"
+        title={t("removeTitle")}
         tone="danger"
         icon="trash-2"
-        confirmLabel="Remove"
-        cancelLabel="Keep it"
+        confirmLabel={tCommon("remove")}
+        cancelLabel={t("removeCancel")}
         busy={pendingRemoval !== null && busyId === pendingRemoval._id}
         onConfirm={async () => {
           const address = pendingRemoval;
           if (!address) return;
-          await run(address._id, () => removeAddress(address._id), "Address removed");
+          await run(address._id, () => removeAddress(address._id), t("removed"));
           setPendingRemoval(null);
         }}
         onCancel={() => setPendingRemoval(null)}
       >
-        <strong>{pendingRemoval?.label}</strong> will no longer be offered at checkout. Orders
-        already on their way to it are unaffected.
+        {t.rich("removeBody", {
+          label: pendingRemoval?.label ?? "",
+          name: (chunks) => <strong>{chunks}</strong>,
+        })}
       </ConfirmDialog>
     </AccountShell>
   );
@@ -148,6 +153,8 @@ function AddressRow({
   onMakeDefault: () => void;
   onRemove: () => void;
 }) {
+  const t = useTranslations("shop.addresses");
+  const tCommon = useTranslations("shop.common");
   const lines = [
     address.address_line1,
     address.address_line2,
@@ -166,7 +173,7 @@ function AddressRow({
             </span>
             {address.is_default && (
               <Badge size="sm" tone="brand">
-                Default
+                {t("defaultBadge")}
               </Badge>
             )}
             {/* A geocoded address is what makes delivery routing work; a
@@ -176,7 +183,7 @@ function AddressRow({
                 className="muted"
                 style={{ fontSize: 11.5, display: "inline-flex", alignItems: "center", gap: 3 }}
               >
-                <Icon name="navigation" size={12} /> Located
+                <Icon name="navigation" size={12} /> {t("located")}
               </span>
             )}
           </div>
@@ -196,10 +203,21 @@ function AddressRow({
         }}
       >
         {!address.is_default && (
-          <CardAction label="Make default" icon="check" disabled={busy} onClick={onMakeDefault} />
+          <CardAction
+            label={t("makeDefault")}
+            icon="check"
+            disabled={busy}
+            onClick={onMakeDefault}
+          />
         )}
         <div style={{ flex: 1 }} />
-        <CardAction label="Remove" icon="trash-2" danger disabled={busy} onClick={onRemove} />
+        <CardAction
+          label={tCommon("remove")}
+          icon="trash-2"
+          danger
+          disabled={busy}
+          onClick={onRemove}
+        />
       </div>
     </AccountCard>
   );
@@ -222,7 +240,9 @@ function AddAddressSheet({
   onClose: () => void;
   onAdded: (profile: CustomerProfile) => void;
 }) {
-  const [label, setLabel] = useState("Home");
+  const t = useTranslations("shop.addresses");
+  const tCommon = useTranslations("shop.common");
+  const [label, setLabel] = useState(() => t("labelDefault"));
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GeoCandidate[]>([]);
   const [searching, setSearching] = useState(false);
@@ -235,7 +255,7 @@ function AddAddressSheet({
   const [saving, setSaving] = useState(false);
 
   const { flashError } = useToast();
-  const t = useTranslations("errors");
+  const tError = useTranslations("errors");
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const onQueryChange = (value: string) => {
@@ -272,7 +292,7 @@ function AddAddressSheet({
   };
 
   const reset = () => {
-    setLabel("Home");
+    setLabel(t("labelDefault"));
     setQuery("");
     setResults([]);
     setPicked(null);
@@ -306,7 +326,7 @@ function AddAddressSheet({
       reset();
       onAdded(next);
     } catch (err) {
-      flashError(translateError(t, err, "We couldn't save that address."));
+      flashError(translateError(tError, err, t("saveError")));
     } finally {
       setSaving(false);
     }
@@ -316,34 +336,34 @@ function AddAddressSheet({
     <BottomSheet
       open={open}
       onClose={onClose}
-      title="Add an address"
+      title={t("sheetTitle")}
       footer={
         <div style={{ display: "flex", gap: 10 }}>
           <Button variant="ghost" onClick={onClose} disabled={saving}>
-            Cancel
+            {tCommon("cancel")}
           </Button>
           <Button block onClick={save} disabled={!canSave || saving}>
-            {saving ? "Saving…" : "Save address"}
+            {saving ? tCommon("saving") : t("saveCta")}
           </Button>
         </div>
       }
     >
-      <Field label="Label">
+      <Field label={t("labelField")}>
         <input
           className="field"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
-          placeholder="Home, Work…"
+          placeholder={t("labelPlaceholder")}
           maxLength={50}
         />
       </Field>
 
-      <Field label="Search for your address" hint="Pick a result to attach map coordinates.">
+      <Field label={t("searchField")} hint={t("searchHint")}>
         <input
           className="field"
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
-          placeholder="Start typing a street, area or landmark…"
+          placeholder={t("searchPlaceholder")}
           autoComplete="off"
         />
 
@@ -364,7 +384,7 @@ function AddAddressSheet({
         {IS_NATIVE_BUILD && <UseMyLocation onResolved={pick} />}
         {searching && (
           <p className="muted" style={{ fontSize: 12, marginTop: 6 }}>
-            Searching…
+            {t("searching")}
           </p>
         )}
         {results.length > 0 && (
@@ -407,12 +427,12 @@ function AddAddressSheet({
             style={{ fontSize: 12, marginTop: 6, display: "flex", alignItems: "center", gap: 4 }}
           >
             <Icon name="check" size={13} style={{ color: "var(--brand)" }} />
-            Coordinates attached
+            {t("coordinatesAttached")}
           </p>
         )}
       </Field>
 
-      <Field label="Address line 1">
+      <Field label={t("line1")}>
         <input
           className="field"
           value={line1}
@@ -420,7 +440,7 @@ function AddAddressSheet({
           maxLength={200}
         />
       </Field>
-      <Field label="Address line 2 (optional)">
+      <Field label={t("line2")}>
         <input
           className="field"
           value={line2}
@@ -430,7 +450,7 @@ function AddAddressSheet({
       </Field>
       <div style={{ display: "flex", gap: 8 }}>
         <div style={{ flex: 1 }}>
-          <Field label="City">
+          <Field label={t("city")}>
             <input
               className="field"
               value={city}
@@ -440,7 +460,7 @@ function AddAddressSheet({
           </Field>
         </div>
         <div style={{ flex: 1 }}>
-          <Field label="Region (optional)">
+          <Field label={t("region")}>
             <input
               className="field"
               value={state}
@@ -469,7 +489,7 @@ function AddAddressSheet({
           onChange={(e) => setIsDefault(e.target.checked)}
           style={{ width: 17, height: 17, accentColor: "var(--brand)" }}
         />
-        Use as my default delivery address
+        {t("useAsDefault")}
       </label>
     </BottomSheet>
   );

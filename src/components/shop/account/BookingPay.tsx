@@ -1,5 +1,7 @@
 "use client";
 
+import { useFormatter, useTranslations } from "next-intl";
+
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Button, Skeleton } from "@/components/shop/ds";
@@ -50,6 +52,10 @@ const SETTLED: BookingPaymentStatus[] = ["paid", "failed", "refunded", "disputed
  * this market.
  */
 export function BookingPay({ bookingId }: { bookingId: string }) {
+  // Bound above the guards below — this screen has four render branches, so a
+  // hook after an early return would change the hook order between renders.
+  const t = useTranslations("shop.bookings");
+  const format = useFormatter();
   const router = useRouter();
   const { flash } = useToast();
   const { status } = useAuthGuard();
@@ -68,15 +74,11 @@ export function BookingPay({ bookingId }: { bookingId: string }) {
       setWaiting(true);
     } catch (err) {
       const code = err instanceof ApiError ? err.code : undefined;
-      flash(
-        code === "BOOKING_UNAUTHORIZED"
-          ? "You can only pay for your own bookings."
-          : "Could not start that payment. Please try again.",
-      );
+      flash(code === "BOOKING_UNAUTHORIZED" ? t("ownBookingsOnly") : t("payStartFailed"));
     } finally {
       setBusy(false);
     }
-  }, [bookingId, option, phone, flash]);
+  }, [bookingId, option, phone, flash, t]);
 
   // Watch for the gateway to settle. The prompt is answered on the shopper's
   // handset, so nothing here can hurry it — this only decides when to stop
@@ -95,11 +97,7 @@ export function BookingPay({ bookingId }: { bookingId: string }) {
 
         if (SETTLED.includes(state.paymentStatus)) {
           clearInterval(id);
-          flash(
-            state.paymentStatus === "paid"
-              ? "Payment received."
-              : "That payment did not go through.",
-          );
+          flash(state.paymentStatus === "paid" ? t("paymentReceived") : t("paymentFailed"));
           router.push(bookingPath(bookingId));
           return;
         }
@@ -117,7 +115,7 @@ export function BookingPay({ bookingId }: { bookingId: string }) {
       cancelled = true;
       clearInterval(id);
     };
-  }, [waiting, bookingId, router, flash]);
+  }, [waiting, bookingId, router, flash, t]);
 
   // `payForm.ready` joins the gate: a saved wallet number that lands after the
   // picker mounts arrives as an edit, and the operator detection overrides the
@@ -134,13 +132,13 @@ export function BookingPay({ bookingId }: { bookingId: string }) {
   if (!b || !b.requiresPayment || b.paymentStatus === "paid") {
     return (
       <div className="mx-auto max-w-[560px] px-4 py-6 sm:px-6">
-        <p style={{ fontSize: 14.5 }}>There is nothing to pay on this booking.</p>
+        <p style={{ fontSize: 14.5 }}>{t("nothingToPay")}</p>
         <Button
           variant="secondary"
           size="sm"
           onClick={() => router.push(bookingPath(bookingId))}
         >
-          Back to the booking
+          {t("backToBooking")}
         </Button>
       </div>
     );
@@ -149,12 +147,10 @@ export function BookingPay({ bookingId }: { bookingId: string }) {
   if (waiting) {
     return (
       <div className="mx-auto max-w-[560px] px-4 py-6 sm:px-6">
-        <h1 className="sr-only">Waiting for payment</h1>
-        <p style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>
-          Check your phone
-        </p>
+        <h1 className="sr-only">{t("waitingTitle")}</h1>
+        <p style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>{t("checkPhoneTitle")}</p>
         <p className="muted" style={{ fontSize: 13.5 }}>
-          Approve the payment prompt on {phone || "your handset"}. This page updates on its own.
+          {t("approvePrompt", { phone: phone || t("yourHandset") })}
         </p>
       </div>
     );
@@ -162,15 +158,15 @@ export function BookingPay({ bookingId }: { bookingId: string }) {
 
   return (
     <div className="mx-auto max-w-[560px] px-4 py-6 sm:px-6">
-      <h1 className="sr-only">Pay for your booking</h1>
+      <h1 className="sr-only">{t("payTitle")}</h1>
 
       <div style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 26, fontWeight: 800 }}>
           {formatMoney(b.priceSnapshot, b.currency)}
         </div>
         <p className="muted" style={{ fontSize: 13, margin: "4px 0 0" }}>
-          {b.product?.title ?? "Service"} ·{" "}
-          {new Date(b.startAt).toLocaleString(undefined, {
+          {b.product?.title ?? t("serviceFallback")} ·{" "}
+          {format.dateTime(new Date(b.startAt), {
             day: "numeric",
             month: "short",
             hour: "2-digit",
@@ -198,7 +194,9 @@ export function BookingPay({ bookingId }: { bookingId: string }) {
           disabled={busy || !paymentReady(option, phone)}
           onClick={() => void start()}
         >
-          {busy ? "Starting…" : `Pay ${formatMoney(b.priceSnapshot, b.currency)}`}
+          {busy
+            ? t("starting")
+            : t("payAmount", { amount: formatMoney(b.priceSnapshot, b.currency) })}
         </Button>
       </div>
     </div>

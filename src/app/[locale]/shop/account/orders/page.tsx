@@ -20,6 +20,10 @@ import type { OrderGroup } from "@/lib/shop/customer.types";
 const PAGE_SIZE = 20;
 
 export default function OrdersPage() {
+  const t = useTranslations("shop.orders");
+  const tCommon = useTranslations("shop.common");
+  // Root-scoped: the screen title is `shop.nav`'s, shared with the header bar.
+  const tKey = useTranslations();
   const [page, setPage] = useState(1);
   const orders = useApiResource<{ data: OrderGroup[]; meta: ListMeta }>(
     () => listOrderGroups({ page, limit: PAGE_SIZE }),
@@ -28,22 +32,22 @@ export default function OrdersPage() {
 
   return (
     <AccountShell
-      title="My orders"
-      description="One entry per checkout, split by vendor."
+      title={tKey("shop.nav.titles.orders")}
+      description={t("listDescription")}
     >
       <ResourceView
         status={orders.status}
         error={orders.error}
         data={orders.data}
         onRetry={orders.reload}
-        errorFallback="We couldn't load your orders."
+        errorFallback={t("loadFailed")}
       >
         {({ data, meta }) =>
           data.length === 0 ? (
             <EmptyState
               icon="package"
-              title="No orders yet"
-              description="When you buy something it will show up here, with its delivery progress."
+              title={t("emptyTitle")}
+              description={t("emptyBody")}
             />
           ) : (
             <>
@@ -70,10 +74,10 @@ export default function OrdersPage() {
                     disabled={page <= 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                   >
-                    Previous
+                    {tCommon("previous")}
                   </Button>
                   <span className="muted" style={{ fontSize: 12.5 }}>
-                    Page {meta.page} of {meta.pages}
+                    {t("pageOf", { page: meta.page, pages: meta.pages })}
                   </span>
                   <Button
                     variant="secondary"
@@ -82,7 +86,7 @@ export default function OrdersPage() {
                     disabled={page >= meta.pages}
                     onClick={() => setPage((p) => p + 1)}
                   >
-                    Next
+                    {tCommon("next")}
                   </Button>
                 </div>
               )}
@@ -96,6 +100,7 @@ export default function OrdersPage() {
 
 function OrderGroupRow({ group }: { group: OrderGroup }) {
   const format = useFormatter();
+  const t = useTranslations("shop.orders");
   // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
   const tKey = useTranslations();
   const payment = groupPaymentChip(group.paymentStatus);
@@ -110,12 +115,14 @@ function OrderGroupRow({ group }: { group: OrderGroup }) {
               {formatMoney(group.totalAmount, group.currency)}
             </div>
             <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
-              {format.dateTime(new Date(group.createdAt), {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })}{" "}
-              · {group.orderCount} {group.orderCount === 1 ? "vendor" : "vendors"}
+              {t("placedAndVendors", {
+                date: format.dateTime(new Date(group.createdAt), {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                }),
+                n: group.orderCount,
+              })}
             </div>
           </div>
           <Icon name="chevron-right" size={18} style={{ color: "var(--text-subtle)" }} />
@@ -127,7 +134,7 @@ function OrderGroupRow({ group }: { group: OrderGroup }) {
           </Badge>
           {hasCod && (
             <Badge size="sm" tone="neutral" icon="banknote">
-              Cash on delivery
+              {t("cashOnDelivery")}
             </Badge>
           )}
           {/* One chip per distinct fulfilment state across the group's orders —

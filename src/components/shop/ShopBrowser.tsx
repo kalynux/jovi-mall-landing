@@ -103,6 +103,8 @@ interface Props {
 }
 
 export function ShopBrowser({ products, meta, categories, query, skuMatch }: Props) {
+  const t = useTranslations("shop.browse");
+  const tCommon = useTranslations("shop.common");
   // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
   const tKey = useTranslations();
   // Sort labels are keys in `shop.query.sort`; <Select> wants finished text.
@@ -201,7 +203,7 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
         const resolved = await resolveQuickAdd(product.id);
 
         if (resolved.kind === "unavailable") {
-          flash("That product is no longer available.");
+          flash(t("noLongerAvailable"));
           return;
         }
         if (resolved.kind === "choose") {
@@ -219,7 +221,7 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
               router.push("/shop/checkout");
               break;
             }
-            flash(`Added to cart · ${resolved.product.title}`);
+            flash(t("addedToCart", { product: resolved.product.title }));
             break;
           case "type_conflict":
             // The replace prompt belongs on the product page, where the shopper
@@ -227,7 +229,7 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
             router.push(productPathFor(product));
             break;
           case "digital_limit":
-            flash("Your cart already holds a digital product. Pay for that one first.");
+            flash(t("digitalLimit"));
             break;
           case "service_not_allowed":
             router.push(productPathFor(product));
@@ -251,14 +253,10 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
          * while the add behind it does. That is why an offline add went on
          * reporting a raw engine string long after this looked fixed.
          */
-        flash(
-          isNetworkError(err)
-            ? tKey(CART_OFFLINE_MESSAGE_KEY)
-            : "Could not add that to your cart. Please try again."
-        );
+        flash(isNetworkError(err) ? tKey(CART_OFFLINE_MESSAGE_KEY) : t("addFailed"));
       }
     },
-    [addItem, flash, router, tKey]
+    [addItem, flash, router, tKey, t]
   );
 
   const card = (product: ProductListItem, showVendor: boolean) => (
@@ -302,7 +300,7 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
   const categoryChips = (
     <>
       <Chip selected={!query.category} onClick={() => go({ category: undefined })}>
-        All
+        {tCommon("all")}
       </Chip>
       {categories.map((c) => (
         <Chip
@@ -310,7 +308,9 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
           selected={query.category === c.name}
           onClick={() => go({ category: c.name })}
         >
-          {c.name} · {c.productCount}
+          {/* The name is the vendor's; only the join between it and the count
+              is ours, and it is a message so RTL can reorder it. */}
+          {t("categoryWithCount", { name: c.name, count: c.productCount })}
         </Chip>
       ))}
     </>
@@ -332,12 +332,12 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
           color: "var(--text-body)",
         }}
       >
-        Verified African vendors · pay with mobile money
+        {t("tagline")}
       </p>
 
       <div className="mb-5 hidden sm:block">
         <p className="ds-overline" style={{ marginBottom: 6 }}>
-          Marketplace
+          {t("overline")}
         </p>
         <h1
           style={{
@@ -348,11 +348,10 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
             margin: 0,
           }}
         >
-          Shop from verified African vendors
+          {t("heading")}
         </h1>
         <p className="muted" style={{ fontSize: 14.5, marginTop: 6 }}>
-          Fashion, home, digital courses, e-books &amp; services — pay with mobile money, delivered
-          nationwide.
+          {t("subheading")}
         </p>
       </div>
 
@@ -369,7 +368,7 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
           onOpenFilters={() => setFiltersOpen(true)}
           list={list}
           onToggleLayout={() => setList(!list)}
-          placeholder="Search products, stores, SKU…"
+          placeholder={t("searchPlaceholder")}
         />
       </div>
 
@@ -385,7 +384,7 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
           onChange={(e) => setSearch(e.target.value)}
           onClear={clearSearch}
           filled
-          placeholder="Search products, stores, SKU…"
+          placeholder={t("searchPlaceholder")}
         />
       </form>
 
@@ -409,7 +408,7 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
         <GroupedToggle grouped={grouped} onChange={setGrouped} />
         <div className="ms-auto flex min-w-0 items-center gap-2">
           <span className="muted hidden sm:inline" style={{ fontSize: 12.5 }}>
-            {meta.total} result{meta.total === 1 ? "" : "s"}
+            {t("resultCount", { n: meta.total })}
           </span>
           <Select
             size="sm"
@@ -419,19 +418,19 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
             // Offered only with a query behind it: without one there is no
             // relevance score, and the API would be ranking on nothing.
             options={sortOptions}
-            aria-label="Sort products"
+            aria-label={t("sortAriaLabel")}
           />
           <IconButton
             icon="sliders-horizontal"
             variant="surface"
-            label={filterCount ? `Filters (${filterCount})` : "Filters"}
+            label={filterCount ? t("filtersWithCount", { n: filterCount }) : tCommon("filters")}
             onClick={() => setFiltersOpen(true)}
             style={filterCount ? { borderColor: "var(--brand)", color: "var(--brand-hover)" } : undefined}
           />
           <IconButton
             icon={list ? "layout-grid" : "list"}
             variant="surface"
-            label="Toggle layout"
+            label={t("toggleLayout")}
             onClick={() => setList(!list)}
           />
         </div>
@@ -440,21 +439,22 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
       {/* Active filters */}
       {filterCount > 0 && (
         <div className="row-chips mb-4">
-          {query.type?.map((t) => (
+          {/* Not `t` — that is the translator in this scope. */}
+          {query.type?.map((productType) => (
             <Chip
-              key={t}
+              key={productType}
               selected
               solid
               size="sm"
               removable
-              onRemove={() => go({ type: query.type?.filter((x) => x !== t) })}
+              onRemove={() => go({ type: query.type?.filter((x) => x !== productType) })}
             >
-              {t[0].toUpperCase() + t.slice(1)}
+              {tKey(`shop.ds.productType.${productType}`)}
             </Chip>
           ))}
           {query.inStock && (
             <Chip selected solid size="sm" removable onRemove={() => go({ inStock: undefined })}>
-              In stock
+              {t("inStock")}
             </Chip>
           )}
           {typeof query.minPrice === "number" && (
@@ -478,13 +478,11 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
           ) : (
             <EmptyState
               icon="search-x"
-              title="No products found"
+              title={t("emptyTitle")}
               description={
-                query.q
-                  ? `Nothing matches “${query.q}”. Search matches whole words, so try a complete one — or clear a filter.`
-                  : "Try clearing a filter or searching something else."
+                query.q ? t("emptyWithQuery", { query: query.q }) : t("emptyNoQuery")
               }
-              actionLabel="Clear all"
+              actionLabel={tCommon("clearAll")}
               onAction={() => {
                 setSearch("");
                 startTransition(() => router.push("/shop"));
@@ -520,7 +518,7 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
           setFiltersOpen(false);
           setCategorySheetOpen(false);
         }}
-        title="Filters"
+        title={tCommon("filters")}
         footer={
           <div style={{ display: "flex", gap: 10 }}>
             <Button
@@ -539,7 +537,7 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
                 });
               }}
             >
-              Reset
+              {t("reset")}
             </Button>
             <Button
               block
@@ -556,7 +554,7 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
                 });
               }}
             >
-              Apply
+              {tCommon("apply")}
             </Button>
           </div>
         }
@@ -600,12 +598,15 @@ function GroupedToggle({
   grouped: boolean;
   onChange: (next: boolean) => void;
 }) {
+  const t = useTranslations("shop.browse");
+  const tCommon = useTranslations("shop.common");
+
   return (
     <button
       type="button"
       role="switch"
       aria-checked={grouped}
-      aria-label="Group results by store"
+      aria-label={t("groupByStore")}
       onClick={() => onChange(!grouped)}
       style={{
         display: "inline-flex",
@@ -619,8 +620,8 @@ function GroupedToggle({
     >
       {(
         [
-          ["Grouped", true],
-          ["All", false],
+          [t("grouped"), true],
+          [tCommon("all"), false],
         ] as const
       ).map(([label, g]) => (
         <span
@@ -655,11 +656,14 @@ function Pagination({
   onGo: (page: number) => void;
   busy: boolean;
 }) {
+  const t = useTranslations("shop.browse");
+  const tCommon = useTranslations("shop.common");
+
   if (meta.pages <= 1) return null;
 
   return (
     <nav
-      aria-label="Pagination"
+      aria-label={t("pagination")}
       style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 24 }}
     >
       <Button
@@ -667,17 +671,17 @@ function Pagination({
         disabled={busy || meta.page <= 1}
         onClick={() => onGo(meta.page - 1)}
       >
-        Previous
+        {tCommon("previous")}
       </Button>
       <span className="muted" style={{ fontSize: 13, fontWeight: 600 }}>
-        Page {meta.page} of {meta.pages}
+        {t("pageOf", { page: meta.page, pages: meta.pages })}
       </span>
       <Button
         variant="ghost"
         disabled={busy || meta.page >= meta.pages}
         onClick={() => onGo(meta.page + 1)}
       >
-        Next
+        {tCommon("next")}
       </Button>
     </nav>
   );
@@ -718,6 +722,7 @@ function FilterBody({
   categorySheetOpen: boolean;
   setCategorySheetOpen: (open: boolean) => void;
 }) {
+  const t = useTranslations("shop.browse");
   const tKey = useTranslations();
   // Sort labels are keys in `shop.query.sort`; <Select> wants finished text.
   // Relevance is offered only with a query behind it: without one there is no
@@ -726,16 +731,19 @@ function FilterBody({
     value: o.value,
     label: tKey(o.labelKey),
   }));
-  const toggleType = (t: ProductType) =>
+  // Not `t` — that is the translator in this scope.
+  const toggleType = (productType: ProductType) =>
     setDraft((f) => {
       const current = f.type ?? [];
-      const next = current.includes(t) ? current.filter((x) => x !== t) : [...current, t];
+      const next = current.includes(productType)
+        ? current.filter((x) => x !== productType)
+        : [...current, productType];
       return { ...f, type: next.length ? next : undefined };
     });
 
   return (
     <div>
-      <Section title="Category">
+      <Section title={t("sectionCategory")}>
         <CategoryField
           categories={categories}
           value={draft.category}
@@ -746,34 +754,43 @@ function FilterBody({
       </Section>
 
       <div className="sm:hidden">
-        <Section title="Sort by">
+        <Section title={t("sectionSortBy")}>
           <Select
             value={draft.sort ?? "newest"}
             onChange={(e) => setDraft((f) => ({ ...f, sort: e.target.value as SortKey }))}
             leadingIcon="arrow-up-down"
             options={sortOptions}
-            aria-label="Sort products"
+            aria-label={t("sortAriaLabel")}
           />
         </Section>
       </div>
 
-      <Section title="Product type">
+      <Section title={t("sectionProductType")}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {(
             [
-              ["physical", "package", "Physical"],
-              ["digital", "download", "Digital"],
-              ["service", "calendar-clock", "Service"],
+              ["physical", "package"],
+              ["digital", "download"],
+              ["service", "calendar-clock"],
             ] as const
-          ).map(([t, icon, label]) => (
-            <Chip key={t} icon={icon} selected={draft.type?.includes(t) ?? false} onClick={() => toggleType(t)}>
-              {label}
+          ).map(([productType, icon]) => (
+            <Chip
+              key={productType}
+              icon={icon}
+              selected={draft.type?.includes(productType) ?? false}
+              onClick={() => toggleType(productType)}
+            >
+              {tKey(`shop.ds.productType.${productType}`)}
             </Chip>
           ))}
         </div>
       </Section>
 
-      <Section title={`Max price · ${draft.maxPrice ? formatXAF(draft.maxPrice) : "Any"}`}>
+      <Section
+        title={t("sectionMaxPrice", {
+          value: draft.maxPrice ? formatXAF(draft.maxPrice) : t("anyPrice"),
+        })}
+      >
         <input
           type="range"
           min={0}
@@ -790,9 +807,9 @@ function FilterBody({
         />
       </Section>
 
-      <Section title="Availability">
+      <Section title={t("sectionAvailability")}>
         <ToggleRow
-          label="In stock only"
+          label={t("inStockOnly")}
           icon="package-check"
           on={Boolean(draft.inStock)}
           onChange={(v) => setDraft((f) => ({ ...f, inStock: v ? true : undefined }))}
@@ -831,8 +848,11 @@ function CategoryField({
   sheetOpen: boolean;
   setSheetOpen: (open: boolean) => void;
 }) {
+  const t = useTranslations("shop.browse");
   const current = categories.find((c) => c.name === value);
-  const label = current ? `${current.name} · ${current.productCount}` : "All categories";
+  const label = current
+    ? t("categoryWithCount", { name: current.name, count: current.productCount })
+    : t("allCategories");
 
   return (
     <>
@@ -842,12 +862,12 @@ function CategoryField({
           value={value ?? ANY_CATEGORY}
           onChange={(e) => onChange(e.target.value || undefined)}
           leadingIcon="layers"
-          aria-label="Category"
+          aria-label={t("sectionCategory")}
           options={[
-            { value: ANY_CATEGORY, label: "All categories" },
+            { value: ANY_CATEGORY, label: t("allCategories") },
             ...categories.map((c) => ({
               value: c.name,
-              label: `${c.name} · ${c.productCount}`,
+              label: t("categoryWithCount", { name: c.name, count: c.productCount }),
             })),
           ]}
         />
@@ -897,12 +917,12 @@ function CategoryField({
       <BottomSheet
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
-        title="Category"
+        title={t("sectionCategory")}
         layer="top"
       >
         <div style={{ display: "flex", flexDirection: "column" }}>
           <CategoryRow
-            label="All categories"
+            label={t("allCategories")}
             selected={!value}
             onClick={() => {
               onChange(undefined);
@@ -1054,10 +1074,12 @@ function ToggleRow({
  * appeared where their search found none.
  */
 function SkuMatchResult({ match }: { match: VariantBySku }) {
+  const t = useTranslations("shop.browse");
+
   return (
     <div style={{ maxWidth: 520 }}>
       <div className="ds-overline" style={{ marginBottom: 8 }}>
-        Product code
+        {t("productCode")}
       </div>
       <Link
         href={productIdPath(match.productId)}
@@ -1091,12 +1113,12 @@ function SkuMatchResult({ match }: { match: VariantBySku }) {
               that was wrong on service products everywhere else. */}
           {!match.inStock && (
             <span className="muted" style={{ fontSize: 12.5 }}>
-              Unavailable
+              {t("unavailable")}
             </span>
           )}
         </div>
         <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
-          Matched the code {match.sku}
+          {t("matchedCode", { sku: match.sku })}
         </div>
       </Link>
     </div>

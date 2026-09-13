@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useLocalizedResolver } from "@/lib/auth/useLocalizedResolver";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CheckCircle2, Loader2 } from "lucide-react";
@@ -39,7 +40,7 @@ export default function ForgotPasswordPage() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<ForgotPasswordFormValues>({
-    resolver: zodResolver(ForgotPasswordSchema),
+    resolver: useLocalizedResolver(zodResolver(ForgotPasswordSchema)),
     defaultValues: { identifier: "" },
   });
 

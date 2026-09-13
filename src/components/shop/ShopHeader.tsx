@@ -124,12 +124,21 @@ export function ShopHeader() {
           aria-label={t("brandHome")}
         >
           <WiMallMark style={{ width: 22, height: 22 }} />
+          {/*
+            The wordmark. Not copy and never translated: it is the same five
+            letters in every language we ship, and the hyphen is load-bearing —
+            the product is Wi-Mall on wi-mall.com, and wimall.com is somebody
+            else's. Split in two only so the second half can take the brand
+            colour. Also named in the ALLOWLIST in scripts/check-i18n.mjs.
+          */}
+          {/* eslint-disable react/jsx-no-literals */}
           <span
             className="font-display"
             style={{ fontWeight: 800, fontSize: 19, letterSpacing: "-0.03em", color: "var(--text-strong)" }}
           >
             Wi-<span style={{ color: "var(--brand)" }}>Mall</span>
           </span>
+          {/* eslint-enable react/jsx-no-literals */}
         </Link>
 
         {/*

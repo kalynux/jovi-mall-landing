@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, Icon } from "@/components/shop/ds";
 import { openApp } from "@/lib/native/links";
@@ -106,6 +107,8 @@ function LiveTracking({
   deliveryAddress?: unknown;
   agentName?: string | null;
 }) {
+  const t = useTranslations("shop.tracking");
+  const format = useFormatter();
   const [agentId, setAgentId] = useState<string | null>(null);
   const [watchable, setWatchable] = useState<boolean | null>(null);
   const [position, setPosition] = useState<AgentPosition | null>(null);
@@ -200,7 +203,7 @@ function LiveTracking({
   if (revoked === "shipment_completed") {
     return (
       <Panel>
-        <p style={{ margin: 0, fontSize: 13.5 }}>This delivery is complete.</p>
+        <p style={{ margin: 0, fontSize: 13.5 }}>{t("complete")}</p>
       </Panel>
     );
   }
@@ -208,9 +211,9 @@ function LiveTracking({
   return (
     <Panel>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-        <span className="ds-overline">Live</span>
+        <span className="ds-overline">{t("live")}</span>
         <Badge size="sm" tone={live && position ? "success" : "neutral"}>
-          {live && position ? "Moving" : "Connecting…"}
+          {live && position ? t("moving") : t("connecting")}
         </Badge>
       </div>
 
@@ -235,14 +238,14 @@ function LiveTracking({
                 it is throttled to once per 30s, and plenty of deliveries never
                 resolve a destination at all. The position stands without it. */}
             {position.etaSeconds !== undefined && (
-              <Stat label="Arriving in" value={formatEta(position.etaSeconds)} />
+              <Stat label={t("arrivingIn")} value={formatEta(position.etaSeconds)} />
             )}
             {position.distanceMeters !== undefined && (
-              <Stat label="Distance" value={formatDistance(position.distanceMeters)} />
+              <Stat label={t("distance")} value={formatDistance(position.distanceMeters)} />
             )}
             <Stat
-              label="Updated"
-              value={new Date(position.recordedAt).toLocaleTimeString(undefined, {
+              label={t("updated")}
+              value={format.dateTime(new Date(position.recordedAt), {
                 hour: "2-digit",
                 minute: "2-digit",
               })}
@@ -251,7 +254,7 @@ function LiveTracking({
 
           {position.etaSeconds === undefined && (
             <p className="muted" style={{ fontSize: 12.5, margin: "0 0 8px" }}>
-              No arrival estimate for this delivery yet.
+              {t("noEta")}
             </p>
           )}
 
@@ -265,13 +268,13 @@ function LiveTracking({
               // and can give them directions. This panel does none of that.
               onClick={() => void openApp(mapHref)}
             >
-              Open in maps
+              {t("openInMaps")}
             </Button>
           )}
         </>
       ) : (
         <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-          <Icon name="loader" size={13} /> Waiting for the courier&apos;s position…
+          <Icon name="loader" size={13} /> {t("waitingForPosition")}
         </p>
       )}
     </Panel>

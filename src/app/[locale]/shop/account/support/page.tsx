@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 import { useState } from "react";
 import { useRouter } from "@/i18n/navigation";
@@ -10,7 +10,7 @@ import { useApiResource } from "@/lib/shop/useApiResource";
 import {
   listTickets,
   TICKET_STATUS_LABEL,
-  ticketTypeLabel,
+  ticketTypeLabelKey,
   type Ticket,
   type TicketStatus,
 } from "@/lib/shop/tickets.api";
@@ -41,6 +41,9 @@ const OPEN_STATUSES: TicketStatus[] = [
  * otherwise be seven requests.
  */
 export default function SupportPage() {
+  const t = useTranslations("shop.support");
+  // Root-scoped: the screen title already exists in `shop.nav`, which Phase 1 froze.
+  const tKey = useTranslations();
   const router = useRouter();
   const { status: authStatus } = useAuthGuard();
   const [tab, setTab] = useState<"open" | "closed">("open");
@@ -63,7 +66,7 @@ export default function SupportPage() {
 
   return (
     <div className="mx-auto max-w-[760px] px-4 py-6 sm:px-6">
-      <h1 className="sr-only">Support</h1>
+      <h1 className="sr-only">{tKey("shop.nav.titles.support")}</h1>
 
       <div
         style={{
@@ -78,25 +81,23 @@ export default function SupportPage() {
           value={tab}
           onChange={(v) => setTab(v as "open" | "closed")}
           tabs={[
-            { value: "open", label: "Open", count: open.length || undefined },
-            { value: "closed", label: "Closed", count: done.length || undefined },
+            { value: "open", label: t("tabOpen"), count: open.length || undefined },
+            { value: "closed", label: t("tabClosed"), count: done.length || undefined },
           ]}
         />
         <Button size="sm" leadingIcon="plus" onClick={() => router.push("/shop/account/support/new")}>
-          New
+          {t("newTicket")}
         </Button>
       </div>
 
       {shown.length === 0 ? (
         <EmptyState
           icon="life-buoy"
-          title={tab === "open" ? "No open tickets" : "Nothing closed yet"}
+          title={tab === "open" ? t("emptyOpenTitle") : t("emptyClosedTitle")}
           description={
-            tab === "open"
-              ? "If something goes wrong with an order, open a ticket and we will look into it."
-              : "Tickets you close will be kept here."
+            tab === "open" ? t("emptyOpenDescription") : t("emptyClosedDescription")
           }
-          actionLabel={tab === "open" ? "New ticket" : undefined}
+          actionLabel={tab === "open" ? tKey("shop.nav.titles.supportNew") : undefined}
           onAction={tab === "open" ? () => router.push("/shop/account/support/new") : undefined}
         />
       ) : (
@@ -117,6 +118,7 @@ export default function SupportPage() {
 function TicketRow({ ticket, onOpen }: { ticket: Ticket; onOpen: () => void }) {
   // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
   const tKey = useTranslations();
+  const format = useFormatter();
   // A status the map does not know is a backend addition. "Unknown" is a worse
   // answer than the real one and a better one than a raw `waiting_on_x` enum —
   // and unlike the enum it is a string every language has.
@@ -153,13 +155,17 @@ function TicketRow({ ticket, onOpen }: { ticket: Ticket; onOpen: () => void }) {
           {tKey(view.labelKey)}
         </Badge>
         <span className="muted" style={{ marginLeft: "auto", fontSize: 12 }}>
-          {new Date(ticket.updatedAt).toLocaleDateString()}
+          {format.dateTime(new Date(ticket.updatedAt), {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })}
         </span>
       </div>
 
       <div style={{ fontWeight: 700, fontSize: 14.5 }}>{ticket.subject}</div>
       <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
-        {ticketTypeLabel(ticket.type)}
+        {tKey(ticketTypeLabelKey(ticket.type))}
         {ticket.entity?.label ? ` · ${ticket.entity.label}` : ""}
       </div>
     </button>

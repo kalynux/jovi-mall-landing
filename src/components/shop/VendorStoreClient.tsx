@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { VendorStore } from "./VendorStore";
@@ -30,6 +31,7 @@ export function VendorStoreClient() {
 }
 
 function StoreResolver() {
+  const t = useTranslations("shop.store");
   const searchParams = useSearchParams();
   const slug = searchParams.get("s");
   const rawType = searchParams.get("type");
@@ -105,7 +107,7 @@ function StoreResolver() {
       <ResourceError
         error={state.error}
         onRetry={() => setNonce((n) => n + 1)}
-        fallback="We couldn't load that store."
+        fallback={t("loadFailed")}
       />
     );
   }
@@ -114,8 +116,8 @@ function StoreResolver() {
     return (
       <EmptyState
         icon="store"
-        title="This store isn't available"
-        description="It may have closed or changed its address. Browse the shop to find other sellers."
+        title={t("unavailableTitle")}
+        description={t("unavailableDescription")}
       />
     );
   }

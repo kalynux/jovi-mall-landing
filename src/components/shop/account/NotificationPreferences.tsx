@@ -30,35 +30,93 @@ import type {
  * counterparty to someone else's action here, not the owner of a dashboard: a
  * silent refund is indistinguishable from a stolen payment, and a balance nobody
  * was told about cannot fairly be chased.
+ *
+ * That is a promise the copy has to keep in five languages: these rows carry no
+ * switch, wear the locked "always on" badge and sit under their own heading, and
+ * every catalogue says *permanently on* rather than *on by default*. Someone who
+ * believes they muted a payment alert and then misses one has been misled.
+ *
+ * All three tables below are module-level constants, so they name keys rather
+ * than sentences — there is no render here to resolve one in. LOCALISATION.md §3.
  */
-const ALWAYS_ON: { icon: IconName; label: string; desc: string }[] = [
-  { icon: "wallet", label: "Payments & refunds", desc: "Payment received, refunds, balance due." },
-  { icon: "circle-x", label: "Cancellations", desc: "An order or appointment called off." },
+const ALWAYS_ON: { icon: IconName; labelKey: string; descKey: string }[] = [
+  {
+    icon: "wallet",
+    labelKey: "shop.notifications.alwaysOn.payments",
+    descKey: "shop.notifications.alwaysOn.paymentsDesc",
+  },
+  {
+    icon: "circle-x",
+    labelKey: "shop.notifications.alwaysOn.cancellations",
+    descKey: "shop.notifications.alwaysOn.cancellationsDesc",
+  },
 ];
 
-const TOGGLES: { key: keyof NotificationTogglePreferences; label: string; desc: string }[] = [
-  { key: "orderUpdates", label: "Order updates", desc: "Created, shipped, out for delivery, delivered." },
-  { key: "bookingUpdates", label: "Booking updates", desc: "Created, confirmed, rescheduled, completed." },
-  { key: "bookingReminders", label: "Booking reminders", desc: "A nudge the day before an appointment." },
-  { key: "marketing", label: "Offers & news", desc: "Nothing is sent under this yet." },
+const TOGGLES: {
+  key: keyof NotificationTogglePreferences;
+  labelKey: string;
+  descKey: string;
+}[] = [
+  {
+    key: "orderUpdates",
+    labelKey: "shop.notifications.topics.orderUpdates",
+    descKey: "shop.notifications.topics.orderUpdatesDesc",
+  },
+  {
+    key: "bookingUpdates",
+    labelKey: "shop.notifications.topics.bookingUpdates",
+    descKey: "shop.notifications.topics.bookingUpdatesDesc",
+  },
+  {
+    key: "bookingReminders",
+    labelKey: "shop.notifications.topics.bookingReminders",
+    descKey: "shop.notifications.topics.bookingRemindersDesc",
+  },
+  {
+    key: "marketing",
+    labelKey: "shop.notifications.topics.marketing",
+    descKey: "shop.notifications.topics.marketingDesc",
+  },
 ];
 
+/**
+ * The channel names come from `shop.channels`, shared with the connect card
+ * above rather than duplicated: the row a shopper switches on and the row they
+ * connected it from must call the channel the same thing.
+ */
 const CHANNELS: {
   enabledKey: "emailEnabled" | "telegramEnabled" | "whatsappEnabled";
   verifiedKey: "emailVerified" | "telegramVerified" | "whatsappVerified";
-  label: string;
+  labelKey: string;
   icon: IconName;
 }[] = [
-  { enabledKey: "emailEnabled", verifiedKey: "emailVerified", label: "Email", icon: "mail" },
-  { enabledKey: "telegramEnabled", verifiedKey: "telegramVerified", label: "Telegram", icon: "send" },
-  { enabledKey: "whatsappEnabled", verifiedKey: "whatsappVerified", label: "WhatsApp", icon: "message-circle" },
+  {
+    enabledKey: "emailEnabled",
+    verifiedKey: "emailVerified",
+    labelKey: "shop.channels.names.email",
+    icon: "mail",
+  },
+  {
+    enabledKey: "telegramEnabled",
+    verifiedKey: "telegramVerified",
+    labelKey: "shop.channels.names.telegram",
+    icon: "send",
+  },
+  {
+    enabledKey: "whatsappEnabled",
+    verifiedKey: "whatsappVerified",
+    labelKey: "shop.channels.names.whatsapp",
+    icon: "message-circle",
+  },
 ];
 
 export function NotificationPreferences() {
   const prefs = useApiResource<Preferences>(() => getPreferences());
   const [saving, setSaving] = useState(false);
   const { flash, flashError } = useToast();
-  const t = useTranslations("errors");
+  const t = useTranslations("shop.notifications.prefs");
+  const tErrors = useTranslations("errors");
+  const tKey = useTranslations();
 
   const save = useCallback(
     async (payload: Parameters<typeof updatePreferences>[0]) => {
@@ -68,14 +126,14 @@ export function NotificationPreferences() {
         // disables the other two server-side, so optimistic local state would
         // show two channels on until the next reload.
         prefs.set(await updatePreferences(payload));
-        flash("Preferences saved");
+        flash(t("saved"));
       } catch (err) {
-        flashError(translateError(t, err, "We couldn't save that preference."));
+        flashError(translateError(tErrors, err, t("saveFailed")));
       } finally {
         setSaving(false);
       }
     },
-    [prefs, flash, flashError, t],
+    [prefs, flash, flashError, t, tErrors],
   );
 
   return (
@@ -84,7 +142,7 @@ export function NotificationPreferences() {
       error={prefs.error}
       data={prefs.data}
       onRetry={prefs.reload}
-      errorFallback="We couldn't load your notification settings."
+      errorFallback={t("loadFailed")}
     >
       {(p) => (
         <>
@@ -95,11 +153,15 @@ export function NotificationPreferences() {
           <ChatChannels />
 
           <p className="ds-overline" style={{ marginBottom: 8 }}>
-            Delivery channel
+            {t("deliveryHeading")}
           </p>
           <p className="muted" style={{ fontSize: 12.5, marginBottom: 10, lineHeight: 1.5 }}>
-            In-app and push always arrive. On top of those you can pick{" "}
-            <strong>one</strong> other channel — turning one on turns the others off.
+            {/* One message with the emphasis inside it: "one" lands on a
+                different word in every language, so it cannot be a JSX child
+                spliced between two halves of an English sentence. §4. */}
+            {t.rich("deliveryIntro", {
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
           </p>
           <AccountCard style={{ padding: 0, marginBottom: 20, overflow: "hidden" }}>
             {CHANNELS.map((c, i) => {
@@ -119,11 +181,11 @@ export function NotificationPreferences() {
                   <Icon name={c.icon} size={19} style={{ color: "var(--text-muted)" }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--text-strong)" }}>
-                      {c.label}
+                      {tKey(c.labelKey)}
                     </div>
                     {!verified && (
                       <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>
-                        Connect this channel above before you can use it
+                        {t("connectFirst")}
                       </div>
                     )}
                   </div>
@@ -132,7 +194,7 @@ export function NotificationPreferences() {
                       CUSTOMER_NOTIFICATION_CHANNEL_NOT_VERIFIED, and an enabled
                       channel that delivers nothing reads as us being broken. */}
                   <Toggle
-                    label={c.label}
+                    label={tKey(c.labelKey)}
                     on={enabled}
                     disabled={!verified || saving}
                     onChange={(next) => save({ [c.enabledKey]: next })}
@@ -143,7 +205,7 @@ export function NotificationPreferences() {
           </AccountCard>
 
           <p className="ds-overline" style={{ marginBottom: 8 }}>
-            What you hear about
+            {t("topicsHeading")}
           </p>
           <AccountCard style={{ padding: 0, marginBottom: 20, overflow: "hidden" }}>
             {TOGGLES.map((row, i) => (
@@ -159,14 +221,14 @@ export function NotificationPreferences() {
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--text-strong)" }}>
-                    {row.label}
+                    {tKey(row.labelKey)}
                   </div>
                   <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>
-                    {row.desc}
+                    {tKey(row.descKey)}
                   </div>
                 </div>
                 <Toggle
-                  label={row.label}
+                  label={tKey(row.labelKey)}
                   on={p.preferences[row.key]}
                   disabled={saving}
                   onChange={(next) => save({ preferences: { [row.key]: next } })}
@@ -176,12 +238,12 @@ export function NotificationPreferences() {
           </AccountCard>
 
           <p className="ds-overline" style={{ marginBottom: 8 }}>
-            Always sent
+            {t("alwaysHeading")}
           </p>
           <AccountCard style={{ padding: 0, overflow: "hidden" }}>
             {ALWAYS_ON.map((row, i) => (
               <div
-                key={row.label}
+                key={row.labelKey}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -193,14 +255,14 @@ export function NotificationPreferences() {
                 <Icon name={row.icon} size={19} style={{ color: "var(--text-muted)" }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--text-strong)" }}>
-                    {row.label}
+                    {tKey(row.labelKey)}
                   </div>
                   <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>
-                    {row.desc}
+                    {tKey(row.descKey)}
                   </div>
                 </div>
                 <Badge size="sm" tone="neutral" icon="lock">
-                  Always on
+                  {t("alwaysOnBadge")}
                 </Badge>
               </div>
             ))}

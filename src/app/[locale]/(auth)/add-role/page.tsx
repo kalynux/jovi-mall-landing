@@ -3,6 +3,7 @@ import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useLocalizedResolver } from "@/lib/auth/useLocalizedResolver";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
@@ -44,7 +45,7 @@ function AddRoleContent() {
     setError,
     formState: { errors, isSubmitting },
   } = useForm<AddRoleFormValues>({
-    resolver: zodResolver(AddRoleSchema),
+    resolver: useLocalizedResolver(zodResolver(AddRoleSchema)),
   });
 
   // ── ?role= preselect ───────────────────────────────────────────────────────

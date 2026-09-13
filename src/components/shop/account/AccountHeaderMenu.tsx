@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { ConfirmDialog, IconButton, MenuSheet } from "@/components/shop/ds";
 import { useAuth } from "@/lib/auth/useAuth";
 
@@ -22,6 +23,10 @@ export function AccountHeaderMenu() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const t = useTranslations("shop.account.menu");
+  const tCommon = useTranslations("shop.common");
+  // "Close account" is route vocabulary and already lives in `shop.nav`.
+  const tKey = useTranslations();
   const { logout } = useAuth();
 
   const signOut = async () => {
@@ -44,7 +49,7 @@ export function AccountHeaderMenu() {
       <IconButton
         icon="ellipsis-vertical"
         variant="plain"
-        label="Account options"
+        label={t("label")}
         aria-haspopup="menu"
         aria-expanded={menuOpen}
         onClick={() => setMenuOpen((v) => !v)}
@@ -53,17 +58,17 @@ export function AccountHeaderMenu() {
       <MenuSheet
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
-        title="Account options"
+        title={t("label")}
         items={[
           {
             icon: "log-out",
-            label: "Sign out",
-            description: "Ends this session on this device.",
+            label: tCommon("signOut"),
+            description: t("signOutDescription"),
             onClick: () => setConfirmSignOut(true),
           },
           {
             icon: "user-x",
-            label: "Close account",
+            label: tKey("shop.nav.titles.close"),
             href: "/shop/account/close",
             danger: true,
             // NOT "permanently delete": the backend anonymises and RETAINS (ADR-A02
@@ -71,24 +76,26 @@ export function AccountHeaderMenu() {
             // opens says "past orders are kept as business records" — a sheet promising
             // deletion one tap earlier contradicts it, and the promise it makes is the
             // one we cannot keep.
-            description: "Anonymises your details. Past orders are kept as business records.",
+            //
+            // `shop.account.menu.closeDescription` holds that same promise in all five
+            // languages, and none of them uses the local everyday verb for "delete".
+            description: t("closeDescription"),
           },
         ]}
       />
 
       <ConfirmDialog
         open={confirmSignOut}
-        title="Sign out?"
+        title={t("signOutConfirmTitle")}
         tone="warning"
         icon="log-out"
-        confirmLabel="Sign out"
-        cancelLabel="Stay signed in"
+        confirmLabel={tCommon("signOut")}
+        cancelLabel={t("staySignedIn")}
         busy={signingOut}
         onConfirm={() => void signOut()}
         onCancel={() => setConfirmSignOut(false)}
       >
-        You&apos;ll need the bot&apos;s sign-in link or code to get back in. Your cart, saved
-        addresses and orders stay on your account.
+        {t("signOutConfirmBody")}
       </ConfirmDialog>
     </div>
   );

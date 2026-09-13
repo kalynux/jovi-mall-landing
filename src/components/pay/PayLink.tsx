@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useFormatter } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -56,6 +56,8 @@ import { verifyPayment } from "@/lib/shop/payments.api";
  * round trip, and the route above is a thin `noindex` wrapper.
  */
 export function PayLink({ token }: { token: string }) {
+  const t = useTranslations("shop.pay.link");
+  const tCommon = useTranslations("shop.common");
   const [session, setSession] = useState<PayLinkSession | null>(null);
   const [error, setError] = useState<"not-found" | "failed" | null>(null);
 
@@ -105,23 +107,16 @@ export function PayLink({ token }: { token: string }) {
 
   if (malformed || error === "not-found") {
     return (
-      <Outcome
-        icon="link-2-off"
-        title="This payment link is no longer valid"
-        tone="neutral"
-      >
-        Links expire, and asking for a new one replaces the old one — so this may simply have been
-        superseded. Ask whoever sent it for a fresh link.
+      <Outcome icon="link-2-off" title={t("invalidTitle")} tone="neutral">
+        {t("invalidBody")}
       </Outcome>
     );
   }
 
   if (error === "failed") {
     return (
-      <Outcome icon="triangle-alert" title="We couldn't open this payment" tone="danger">
-        <p style={{ margin: "0 0 12px" }}>
-          Something went wrong reaching the payment service. Your link is fine — try again.
-        </p>
+      <Outcome icon="triangle-alert" title={t("failedTitle")} tone="danger">
+        <p style={{ margin: "0 0 12px" }}>{t("failedBody")}</p>
         <Button
           leadingIcon="refresh-cw"
           onClick={() => {
@@ -132,7 +127,7 @@ export function PayLink({ token }: { token: string }) {
             load();
           }}
         >
-          Try again
+          {tCommon("tryAgain")}
         </Button>
       </Outcome>
     );
@@ -151,38 +146,31 @@ function PaySession({
   session: PayLinkSession;
   onReload: () => void;
 }) {
+  const t = useTranslations("shop.pay.link");
+
   if (session.state === "settled") {
     return (
-      <Outcome icon="circle-check-big" title="This is already paid" tone="success">
+      <Outcome icon="circle-check-big" title={t("settledTitle")} tone="success">
         <Amount session={session} />
-        <p style={{ margin: "12px 0 0" }}>
-          Nothing more to do — this payment went through. If you were asked to pay again, check
-          with whoever sent the link before paying twice.
-        </p>
+        <p style={{ margin: "12px 0 0" }}>{t("settledBody")}</p>
       </Outcome>
     );
   }
 
   if (session.state === "closed") {
     return (
-      <Outcome icon="circle-slash" title="This payment is closed" tone="neutral">
+      <Outcome icon="circle-slash" title={t("closedTitle")} tone="neutral">
         <Amount session={session} />
-        <p style={{ margin: "12px 0 0" }}>
-          It was cancelled, refunded, or did not go through, so there is nothing to pay here. If the
-          order still needs paying, ask for a new link.
-        </p>
+        <p style={{ margin: "12px 0 0" }}>{t("closedBody")}</p>
       </Outcome>
     );
   }
 
   if (session.state === "expired") {
     return (
-      <Outcome icon="hourglass" title="This link has expired" tone="neutral">
+      <Outcome icon="hourglass" title={t("expiredTitle")} tone="neutral">
         <Amount session={session} />
-        <p style={{ margin: "12px 0 0" }}>
-          Payment links are short-lived on purpose. Nothing has been charged — ask whoever sent this
-          one for a fresh link and it will work straight away.
-        </p>
+        <p style={{ margin: "12px 0 0" }}>{t("expiredBody")}</p>
       </Outcome>
     );
   }
@@ -209,6 +197,8 @@ function PayableSession({
   session: PayLinkSession;
   onReload: () => void;
 }) {
+  const t = useTranslations("shop.pay.link");
+
   /*
    * The server's key wins.
    *
@@ -235,12 +225,9 @@ function PayableSession({
 
   if (!session.clientSecret || !stripe) {
     return (
-      <Outcome icon="credit-card" title="Cards aren't available right now" tone="neutral">
+      <Outcome icon="credit-card" title={t("noCardTitle")} tone="neutral">
         <Amount session={session} />
-        <p style={{ margin: "12px 0 0" }}>
-          This payment can&apos;t be completed by card at the moment. Ask whoever sent the link for
-          another way to pay.
-        </p>
+        <p style={{ margin: "12px 0 0" }}>{t("noCardBody")}</p>
       </Outcome>
     );
   }
@@ -286,6 +273,7 @@ function CardForm({
   session: PayLinkSession;
   onReload: () => void;
 }) {
+  const t = useTranslations("shop.pay.link");
   const stripe = useStripe();
   const elements = useElements();
   const [busy, setBusy] = useState(false);
@@ -332,7 +320,7 @@ function CardForm({
           result.error.type === "card_error" || result.error.type === "validation_error"
             ? result.error.message
             : null;
-        setMessage(shown ?? "That payment didn't go through. Please try again.");
+        setMessage(shown ?? t("declined"));
         setBusy(false);
         return;
       }
@@ -358,7 +346,7 @@ function CardForm({
       // the server's answer rather than from this component's own optimism.
       onReload();
     },
-    [stripe, elements, session.transactionId, onReload],
+    [stripe, elements, session.transactionId, onReload, t],
   );
 
   if (done) {
@@ -382,7 +370,7 @@ function CardForm({
           style={{ color: "var(--success)", flexShrink: 0, marginTop: 1 }}
         />
         <p style={{ fontSize: 13, lineHeight: 1.55, color: "var(--text-body)", margin: 0 }}>
-          Payment received — thank you. Whoever sent you this link has been told.
+          {t("received")}
         </p>
       </div>
     );
@@ -426,12 +414,15 @@ function CardForm({
         disabled={busy || !stripe || !elements}
         style={{ marginTop: 16 }}
       >
-        {busy ? "Paying…" : `Pay ${chargedLabel(session) ?? formatMoney(session.amount, session.currency)}`}
+        {busy
+          ? t("paying")
+          : t("payAmount", {
+              amount: chargedLabel(session) ?? formatMoney(session.amount, session.currency),
+            })}
       </Button>
 
       <p className="muted" style={{ fontSize: 11.5, textAlign: "center", marginTop: 10 }}>
-        <Icon name="lock" size={11} style={{ verticalAlign: "-1px" }} /> Card details go straight to
-        Stripe. This page never sees them.
+        <Icon name="lock" size={11} style={{ verticalAlign: "-1px" }} /> {t("secureNote")}
       </p>
     </form>
   );
@@ -448,19 +439,20 @@ function CardForm({
  * sends both for exactly this reason.
  */
 function Amount({ session }: { session: PayLinkSession }) {
+  const t = useTranslations("shop.pay.link");
   const charged = chargedLabel(session);
 
   return (
     <div style={{ textAlign: "center" }}>
       <p className="ds-overline" style={{ marginBottom: 6 }}>
-        Amount due
+        {t("amountDue")}
       </p>
       <div style={{ fontSize: 30, fontWeight: 800, color: "var(--text-strong)", lineHeight: 1.1 }}>
         {formatMoney(session.amount, session.currency)}
       </div>
       {charged && (
         <p className="muted" style={{ fontSize: 12.5, marginTop: 6 }}>
-          Your card will be charged {charged}
+          {t("cardCharged", { amount: charged })}
         </p>
       )}
       {session.paidFor && <PaidFor paidFor={session.paidFor} />}
@@ -491,19 +483,24 @@ function Amount({ session }: { session: PayLinkSession }) {
  *    here has to hold up without it.
  */
 function PaidFor({ paidFor }: { paidFor: PayLinkPaidFor }) {
+  const t = useTranslations("shop.pay.link");
   const { kind, reference, orderCount, itemCount, sellers } = paidFor;
 
-  const items =
-    typeof itemCount === "number" && itemCount > 0
-      ? `${itemCount} item${itemCount === 1 ? "" : "s"}`
-      : null;
+  const n = typeof itemCount === "number" && itemCount > 0 ? itemCount : null;
+  /* Seller names are vendor-written data — joined, never translated. */
   const from = sellers.length > 0 ? sellers.join(", ") : null;
 
-  // "3 items from Boutique Ndogbong", or whichever half survives.
+  /*
+   * "3 items from Boutique Ndogbong", or whichever half survives — composed by
+   * ICU rather than by concatenation, because the two halves do not join in the
+   * same order in every language.
+   */
   const what =
-    items && from ? `${items} from ${from}` : (items ?? from ?? (kind === "booking" ? "Booking" : "Order"));
-
-  const others = orderCount > 1 ? ` and ${orderCount - 1} other${orderCount === 2 ? "" : "s"}` : "";
+    n !== null && from
+      ? t("itemsFrom", { n, sellers: from })
+      : n !== null
+        ? t("items", { n })
+        : (from ?? (kind === "booking" ? t("booking") : t("order")));
 
   return (
     <div style={{ marginTop: 12 }}>
@@ -513,8 +510,9 @@ function PaidFor({ paidFor }: { paidFor: PayLinkPaidFor }) {
           className="muted"
           style={{ fontSize: 12, marginTop: 3, fontVariantNumeric: "tabular-nums" }}
         >
-          {reference}
-          {others}
+          {orderCount > 1
+            ? t("referenceAndOthers", { reference, n: orderCount - 1 })
+            : reference}
         </p>
       )}
     </div>
@@ -576,14 +574,17 @@ function chargedLabel(session: PayLinkSession): string | null {
  * from a clock comparison would undo that and invite a second payment.
  */
 function Expiry({ at }: { at: string }) {
+  const t = useTranslations("shop.pay.link");
   const format = useFormatter();
   const on = new Date(at);
   if (Number.isNaN(on.getTime())) return null;
 
   return (
     <p className="muted" style={{ fontSize: 12, textAlign: "center", marginTop: 8 }}>
-      <Icon name="hourglass" size={12} style={{ verticalAlign: "-1px" }} /> This link works until{" "}
-      {format.dateTime(on, { hour: "2-digit", minute: "2-digit" })}.
+      <Icon name="hourglass" size={12} style={{ verticalAlign: "-1px" }} />{" "}
+      {t("worksUntil", {
+        time: format.dateTime(on, { hour: "2-digit", minute: "2-digit" }),
+      })}
     </p>
   );
 }

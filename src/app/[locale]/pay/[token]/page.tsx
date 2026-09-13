@@ -33,13 +33,29 @@
  */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { PayLink } from "@/components/pay/PayLink";
 import { isLocale } from "@/i18n/routing";
 
-export const metadata: Metadata = {
-  title: "Complete your payment",
-  robots: { index: false, follow: false },
-};
+/**
+ * `generateMetadata` rather than a static `metadata` object, because the title
+ * is copy and the locale is a route param — a constant here would put an English
+ * tab title on `/fr/pay/…`. The `noindex` is unchanged and still the point of
+ * this export: see the header note on why it must not be a robots.txt Disallow.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; token: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "shop.meta" });
+
+  return {
+    title: t("payTitle"),
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function Page({
   params,

@@ -2,6 +2,7 @@
 import { useState, Suspense } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useLocalizedResolver } from "@/lib/auth/useLocalizedResolver";
 import { useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { AnimatePresence, motion } from "framer-motion";
@@ -78,7 +79,7 @@ function LoginFormContent() {
     watch,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
-    resolver: zodResolver(LoginSchema),
+    resolver: useLocalizedResolver(zodResolver(LoginSchema)),
     defaultValues: { identifier_type: "phone", identifier: "", password: "" },
   });
 
@@ -268,7 +269,7 @@ function LoginFormContent() {
             {...stepMotion}
             onSubmit={handleSubmit(onSubmit)}
             noValidate
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-5"
           >
             {/* Role pill */}
             {selectedRole && (
@@ -378,8 +379,14 @@ function LoginFormContent() {
             {/* One action, one aside. Registration used to sit beside sign-in
                 as a second solid button, which gave the page two things of
                 equal weight to choose between; it now reads as the quiet
-                alternative it is, in the same key as "Forgot password?". */}
-            <div className="mt-1 flex flex-col gap-3">
+                alternative it is, in the same key as "Forgot password?".
+
+                Quiet is not the same as cramped, though. At `text-xs` and 12px
+                under a full-width button it sat inside the button's glow, which
+                made the one escape route off this screen both hard to read and
+                hard to hit. It keeps the secondary weight and gets the size and
+                the clearance of something meant to be used. */}
+            <div className="mt-4 flex flex-col gap-6">
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -391,7 +398,7 @@ function LoginFormContent() {
               </button>
               <Link
                 href="/register"
-                className="self-center text-xs text-[var(--text-muted)] transition-colors hover:text-primary-600"
+                className="self-center px-2 py-1 text-sm font-medium text-[var(--text-secondary)] underline-offset-4 transition-colors hover:text-primary-600 hover:underline"
               >
                 {t("createAccount")}
               </Link>

@@ -30,6 +30,7 @@
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useLocalizedResolver } from "@/lib/auth/useLocalizedResolver";
 import { MessageCircle, Send, ExternalLink, Loader2, ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
@@ -85,7 +86,7 @@ export default function CustomerMagicSignIn({
     control,
     formState: { errors, isSubmitting },
   } = useForm<MagicCodeFormValues>({
-    resolver: zodResolver(MagicCodeSchema),
+    resolver: useLocalizedResolver(zodResolver(MagicCodeSchema)),
     defaultValues: { identifier_type: "phone", identifier: "", code: "" },
   });
 

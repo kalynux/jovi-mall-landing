@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 import { Chip, Icon, type IconName } from "@/components/shop/ds";
 import { PhoneField } from "@/components/ui/phone";
@@ -47,9 +48,15 @@ import type { SavedPayment } from "./useSavedPayment";
 
 export interface PaymentOption {
   id: string;
-  label: string;
+  /**
+   * A **full dotted key** (`shop.payMethods.*`), never a sentence — these are
+   * module-level constants, so there is no render and no locale to read when
+   * they are built. Resolved at the call site with a root-scoped `tKey`, which
+   * is what lets a screen outside this file render a rail it was handed.
+   */
+  labelKey: string;
   /** Small print under the label. Kept short — this is a row, not a page. */
-  hint?: string;
+  hintKey?: string;
   /** Brand artwork in `public/payment/`, generated from `payment-methods-images/`. */
   logos?: { src: string; alt: string }[];
   /**
@@ -70,7 +77,7 @@ export interface PaymentOption {
 
 export const MTN: PaymentOption = {
   id: "mtn",
-  label: "MTN Mobile Money",
+  labelKey: "shop.payMethods.mtn",
   logos: [{ src: "/payment/mtn-momo.png", alt: "" }],
   art: "tile",
   gateway: "NOTCHPAY",
@@ -80,7 +87,7 @@ export const MTN: PaymentOption = {
 
 export const ORANGE: PaymentOption = {
   id: "orange",
-  label: "Orange Money",
+  labelKey: "shop.payMethods.orange",
   logos: [{ src: "/payment/orange-money.png", alt: "" }],
   art: "tile",
   gateway: "NOTCHPAY",
@@ -90,8 +97,8 @@ export const ORANGE: PaymentOption = {
 
 export const CARD: PaymentOption = {
   id: "card",
-  label: "Card",
-  hint: "Visa or Mastercard",
+  labelKey: "shop.payMethods.card",
+  hintKey: "shop.payMethods.cardHint",
   logos: [
     { src: "/payment/visa.png", alt: "Visa" },
     { src: "/payment/mastercard.png", alt: "Mastercard" },
@@ -103,8 +110,8 @@ export const CARD: PaymentOption = {
 
 export const COD: PaymentOption = {
   id: "cod",
-  label: "Cash on delivery",
-  hint: "Pay the courier when your parcel arrives",
+  labelKey: "shop.payMethods.cod",
+  hintKey: "shop.payMethods.codHint",
   icon: "banknote",
   gateway: "NOTCHPAY",
   needsPhone: false,
@@ -251,6 +258,9 @@ export function PaymentMethodPicker({
    */
   saved?: SavedPayment;
 }) {
+  const t = useTranslations("shop.payMethods");
+  // Root-scoped: the option constants above emit absolute keys.
+  const tKey = useTranslations();
   const detection = value.needsPhone ? detectCameroonOperator(phone) : { status: "unknown" as const };
   const detected = detection.status === "detected" ? detection.operator : null;
 
@@ -332,7 +342,7 @@ export function PaymentMethodPicker({
                     color: "var(--text-strong)",
                   }}
                 >
-                  {o.label}
+                  {tKey(o.labelKey)}
                 </span>
                 {/* "Detected" earns its place: it explains why the selection
                     moved on its own, which is otherwise a control changing
@@ -347,11 +357,11 @@ export function PaymentMethodPicker({
                       marginTop: 1,
                     }}
                   >
-                    Detected from your number
+                    {t("detected")}
                   </span>
-                ) : o.hint ? (
+                ) : o.hintKey ? (
                   <span className="muted" style={{ display: "block", fontSize: 11.5, marginTop: 1 }}>
-                    {o.hint}
+                    {tKey(o.hintKey)}
                   </span>
                 ) : null}
               </span>
@@ -375,14 +385,14 @@ export function PaymentMethodPicker({
         <div style={{ marginBottom: 20 }}>
           <PhoneField
             variant="stacked"
-            label="Mobile money number"
+            label={t("phoneLabel")}
             required
             disabled={disabled}
             name="momo-phone"
             autoComplete="tel"
             value={phone}
             onChange={onPhoneChange}
-            hint="The number the payment prompt will be sent to."
+            hint={t("phoneHint")}
           />
 
           {/* A complete number on a network neither gateway can charge. Said
@@ -407,10 +417,7 @@ export function PaymentMethodPicker({
                 size={14}
                 style={{ color: "var(--warning)", flexShrink: 0, marginTop: 2 }}
               />
-              <span>
-                Mobile money works on MTN and Orange numbers in Cameroon. Check the number, or
-                choose your network above if it has been ported.
-              </span>
+              <span>{t("unsupportedOperator")}</span>
             </p>
           )}
         </div>
@@ -434,6 +441,7 @@ export function PaymentMethodPicker({
  * its number — and there the label is the instruction.
  */
 function SavedMethodBar({ saved, disabled }: { saved: SavedPayment; disabled?: boolean }) {
+  const t = useTranslations("shop.payMethods");
   const { usable, active, usingSaved, apply, option, phone } = saved;
   if (usable.length === 0 || !active) return null;
 
@@ -481,8 +489,8 @@ function SavedMethodBar({ saved, disabled }: { saved: SavedPayment; disabled?: b
           />
           <span>
             {needsNumber
-              ? `Enter the number for your saved ${active.display_label} below.`
-              : `Using your saved ${active.display_label}.`}
+              ? t("savedNeedsNumber", { method: active.display_label })
+              : t("savedUsing", { method: active.display_label })}
           </span>
         </p>
       )}

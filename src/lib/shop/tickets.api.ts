@@ -97,7 +97,22 @@ export type TicketType = (typeof TICKET_TYPE_GROUPS)[number]["types"][number];
  * `PAYOUT_REQUEST` and friends are accepted by the API — every role's endpoint
  * takes any value from the enum — but a customer has no payouts and no
  * commission, so offering them would only produce tickets nobody can action.
+ *
+ * They still need a NAME, though: staff file them, and a ticket that arrives
+ * with one has to render on the list and detail screens like any other.
  */
+const PAYOUT_TYPES = [
+  "PAYOUT_REQUEST",
+  "PAYOUT_DELAY",
+  "PAYOUT_DISPUTE",
+  "COMMISSION_QUESTION",
+] as const;
+
+/** Every value {@link ticketTypeLabelKey} has a name for: the picker's, plus the payout four. */
+const NAMED_TICKET_TYPES: ReadonlySet<string> = new Set<string>([
+  ...TICKET_TYPE_GROUPS.flatMap((group) => [...group.types]),
+  ...PAYOUT_TYPES,
+]);
 
 export type TicketStatus =
   | "open"
@@ -506,15 +521,23 @@ export const TICKET_STATUS_LABEL: Record<
 };
 
 /**
- * `ORDER_ISSUE` → `Order issue`. The enum is not written for a person to read.
+ * `ORDER_ISSUE` → `shop.support.types.ORDER_ISSUE`.
  *
- * 🔴 **Still English, deliberately.** Phase 1 converted the label MAPS in this
- * file; this is a derivation over the whole ~50-member `TicketType` enum, and
- * those names belong to `shop.support`, which the ownership table in
- * LOCALISATION.md gives to Phase 9. Phase 9 replaces this with a lookup into
- * `shop.support.types.<TICKET_TYPE>`.
+ * A **key**, never a sentence — see LOCALISATION.md §3. The caller resolves it
+ * with the root-scoped `tKey`.
+ *
+ * This replaced a mechanical prettifier (`ORDER_ISSUE` → `Order issue`) that
+ * could only ever speak English. Every name now comes from the catalogue, and
+ * they are better names for it: the enum is written for the database, so
+ * `INVENTORY_PROBLEM` reads as "Stock problem" and `OTHER` as "Something else".
+ *
+ * A value outside {@link NAMED_TICKET_TYPES} — a type the backend adds after
+ * this build — falls back to a generic noun rather than crashing on a missing
+ * message, which is the same bargain `TICKET_STATUS_LABEL` strikes with
+ * `shop.status.unknown`.
  */
-export function ticketTypeLabel(type: string): string {
-  const spaced = type.replace(/_/g, " ").toLowerCase();
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+export function ticketTypeLabelKey(type: string): string {
+  return NAMED_TICKET_TYPES.has(type)
+    ? `shop.support.types.${type}`
+    : "shop.support.typeFallback";
 }

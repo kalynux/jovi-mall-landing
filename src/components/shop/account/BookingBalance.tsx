@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useCallback, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Button, Skeleton } from "@/components/shop/ds";
@@ -38,6 +40,11 @@ import { bookingPath } from "@/lib/shop/shop.routes";
  * this market.
  */
 export function BookingBalance({ bookingId }: { bookingId: string }) {
+  // Bound above the guards below — this screen has three render branches, so a
+  // hook after an early return would change the hook order between renders.
+  const t = useTranslations("shop.bookings");
+  // Root-scoped, for the screen title Phase 1 put in `shop.nav`.
+  const tKey = useTranslations();
   const router = useRouter();
   const { flash } = useToast();
   const { status } = useAuthGuard();
@@ -52,23 +59,23 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
     setBusy(true);
     try {
       await payBookingBalance(bookingId, option.gateway, paymentChannel(option, phone));
-      flash("Check your phone to approve the payment.");
+      flash(t("checkYourPhone"));
       router.push(bookingPath(bookingId));
     } catch (err) {
       const code = err instanceof ApiError ? err.code : undefined;
       flash(
         code === "BOOKING_NO_BALANCE_DUE"
-          ? "There is nothing left to pay on this booking."
+          ? t("nothingLeftToPay")
           : code === "BOOKING_BALANCE_ALREADY_SETTLED"
-            ? "This balance has already been settled."
+            ? t("balanceSettled")
             : code === "BOOKING_NOT_COMPLETED"
-              ? "This appointment has not been settled by the seller yet."
-              : "Could not start that payment. Please try again.",
+              ? t("notCompleted")
+              : t("payStartFailed"),
       );
     } finally {
       setBusy(false);
     }
-  }, [bookingId, option, phone, flash, router]);
+  }, [bookingId, option, phone, flash, router, t]);
 
   if (status === "loading" || balance.status === "loading") {
     return (
@@ -84,13 +91,13 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
   if (!bal || bal.outstanding <= 0) {
     return (
       <div className="mx-auto max-w-[560px] px-4 py-6 sm:px-6">
-        <p style={{ fontSize: 14.5 }}>There is nothing left to pay on this booking.</p>
+        <p style={{ fontSize: 14.5 }}>{t("nothingLeftToPay")}</p>
         <Button
           variant="secondary"
           size="sm"
           onClick={() => router.push(bookingPath(bookingId))}
         >
-          Back to the booking
+          {t("backToBooking")}
         </Button>
       </div>
     );
@@ -98,16 +105,22 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
 
   return (
     <div className="mx-auto max-w-[560px] px-4 py-6 sm:px-6">
-      <h1 className="sr-only">Pay the balance</h1>
+      <h1 className="sr-only">{tKey("shop.nav.titles.bookingBalance")}</h1>
 
       <div style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 26, fontWeight: 800 }}>
           {formatMoney(bal.outstanding, bal.currency)}
         </div>
+        {/* Two whole phrases joined by a bullet, not one sentence split across
+            three fragments: the amounts go in as values, and the optional
+            "already paid" clause is a complete phrase of its own. */}
         <p className="muted" style={{ fontSize: 13, margin: "4px 0 0" }}>
-          Quoted {formatMoney(bal.quotedPrice, bal.currency)} · settled at{" "}
-          {formatMoney(bal.finalPrice, bal.currency)}
-          {bal.balancePaid > 0 && ` · ${formatMoney(bal.balancePaid, bal.currency)} already paid`}
+          {t("quotedSettled", {
+            quoted: formatMoney(bal.quotedPrice, bal.currency),
+            final: formatMoney(bal.finalPrice, bal.currency),
+          })}
+          {bal.balancePaid > 0 &&
+            ` · ${t("alreadyPaid", { amount: formatMoney(bal.balancePaid, bal.currency) })}`}
         </p>
       </div>
 
@@ -128,13 +141,15 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
           disabled={busy || !paymentReady(option, phone)}
           onClick={() => void pay()}
         >
-          {busy ? "Starting…" : `Pay ${formatMoney(bal.outstanding, bal.currency)}`}
+          {busy
+            ? t("starting")
+            : t("payAmount", { amount: formatMoney(bal.outstanding, bal.currency) })}
         </Button>
 
         {/* The other way to settle, said plainly — the provider records it and
             the balance closes, so nobody has to pay online who would rather not. */}
         <p className="muted" style={{ fontSize: 12.5, margin: 0 }}>
-          You can also pay the provider directly and they will record it.
+          {t("payProviderDirectly")}
         </p>
       </div>
     </div>

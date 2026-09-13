@@ -43,13 +43,13 @@ export default function AuthMePage() {
   const roles = user?.roles ?? [];
   const activeRole = role;
 
-  // Subtitle: "You are currently signed in as Vendor" — role name from i18n
+  // One message with the role interpolated into it, not a prefix glued to a
+  // name: "signed in as Vendor" puts the role last in English and Spanish and
+  // nowhere near last in every language (§4).
   const activeRoleName = activeRole
     ? (t.raw("roleNames") as Record<string, string>)[activeRole] ?? activeRole
     : "";
-  const subtitle = activeRole
-    ? `${t("subtitlePrefix")} ${activeRoleName}`
-    : "";
+  const subtitle = activeRole ? t("subtitle", { role: activeRoleName }) : "";
 
   const handleSwitchRole = async (role: Role) => {
     // Current role is disabled — guard against any programmatic call
@@ -106,7 +106,9 @@ export default function AuthMePage() {
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.07, duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                aria-label={`${roleLabel}${isActive ? ` (${t("currentBadge")})` : ""}`}
+                aria-label={
+                  isActive ? t("roleAriaCurrent", { role: roleLabel }) : roleLabel
+                }
                 className={cn(
                   "flex items-center gap-4 w-full p-4 rounded-2xl border text-left",
                   "transition-all duration-200",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 import { useRouter } from "@/i18n/navigation";
 import { Badge, EmptyState, Skeleton } from "@/components/shop/ds";
@@ -24,6 +24,9 @@ import {
  * shopper actually needed.
  */
 export default function BookingsPage() {
+  const t = useTranslations("shop.bookings");
+  // Root-scoped: the screen title already exists in `shop.nav`, which Phase 1 froze.
+  const tKey = useTranslations();
   const router = useRouter();
   const { status } = useAuthGuard();
   const resource = useApiResource(() => listBookings({ limit: 50 }), [status]);
@@ -41,14 +44,14 @@ export default function BookingsPage() {
 
   return (
     <div className="mx-auto max-w-[760px] px-4 py-6 sm:px-6">
-      <h1 className="sr-only">My bookings</h1>
+      <h1 className="sr-only">{tKey("shop.nav.titles.bookings")}</h1>
 
       {bookings.length === 0 ? (
         <EmptyState
           icon="calendar-clock"
-          title="No bookings yet"
-          description="Services you book will appear here."
-          actionLabel="Browse services"
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
+          actionLabel={t("emptyAction")}
           onAction={() => router.push("/shop?type=service")}
         />
       ) : (
@@ -67,8 +70,10 @@ export default function BookingsPage() {
 }
 
 function BookingRow({ booking, onOpen }: { booking: Booking; onOpen: () => void }) {
+  const t = useTranslations("shop.bookings");
   // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
   const tKey = useTranslations();
+  const format = useFormatter();
   const state = BOOKING_STATUS_LABEL[booking.status];
   const pay = BOOKING_PAYMENT_LABEL[booking.paymentStatus];
   const start = new Date(booking.startAt);
@@ -103,7 +108,7 @@ function BookingRow({ booking, onOpen }: { booking: Booking; onOpen: () => void 
       </div>
 
       <div style={{ fontWeight: 700, fontSize: 14.5 }}>
-        {booking.product?.title ?? "Service"}
+        {booking.product?.title ?? t("serviceFallback")}
       </div>
       {/*
           The handle a customer quotes to the vendor or to support. Null on
@@ -116,7 +121,7 @@ function BookingRow({ booking, onOpen }: { booking: Booking; onOpen: () => void 
         </div>
       )}
       <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>
-        {start.toLocaleString(undefined, {
+        {format.dateTime(start, {
           weekday: "short",
           day: "numeric",
           month: "short",

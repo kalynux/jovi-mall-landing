@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { Button, ConfirmDialog, Icon } from "@/components/shop/ds";
 import { useToast } from "@/components/shop/providers";
 import { ApiError } from "@/lib/auth/auth.types";
@@ -75,7 +75,11 @@ export function PayLinkShare({
   /** The order reference, so the shared message is recognisable. */
   reference?: string | null;
 }) {
-  const t = useTranslations("errors");
+  const t = useTranslations("shop.pay.share");
+  const tErrors = useTranslations("errors");
+  /* The expiry is a wall-clock time, formatted in the app's locale rather than
+     the browser's — `toLocaleTimeString(undefined, …)` reads the latter. */
+  const format = useFormatter();
   const { flash } = useToast();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -108,16 +112,16 @@ export function PayLinkShare({
       const url = payLinkUrl(minted);
 
       const outcome = await shareLink({
-        title: "Payment link",
+        title: t("shareTitle"),
         // Named and priced, because the recipient is frequently not the person
         // who ordered and a bare link asking for card details is exactly the
         // shape of a scam. The reference is what lets them match it to the
         // message that asked them to pay.
         text: reference
-          ? `Please pay ${formatMoney(amount, currency)} for order ${reference} on Wi-Mall:`
-          : `Please pay ${formatMoney(amount, currency)} for my Wi-Mall order:`,
+          ? t("shareTextWithReference", { amount: formatMoney(amount, currency), reference })
+          : t("shareText", { amount: formatMoney(amount, currency) }),
         url,
-        dialogTitle: "Send the payment link",
+        dialogTitle: t("shareDialogTitle"),
       });
 
       // `shareLink` reports which of four things happened rather than assuming;
@@ -125,25 +129,22 @@ export function PayLinkShare({
       // expiry is recorded on every outcome including a dismissal, because the
       // token is live the moment it is minted whether or not the sheet was
       // used — so the next tap must still warn that it is about to revoke one.
-      if (outcome === "copied") flash("Payment link copied — send it to whoever is paying");
-      else if (outcome === "shared") flash("Payment link sent");
-      else if (outcome === "failed") setError("The link was created but could not be shared.");
+      if (outcome === "copied") flash(t("copied"));
+      else if (outcome === "shared") flash(t("sent"));
+      else if (outcome === "failed") setError(t("shareFailed"));
       setExpiresAt(new Date(minted.expiresAt));
     } catch (err) {
       if (err instanceof ApiError && err.code === "PAYMENT_LINK_NOT_APPLICABLE") {
-        setError(
-          "A mobile money payment for this order is still waiting on your phone. " +
-            "Finish or cancel it first, then you can send a payment link.",
-        );
+        setError(t("notApplicable"));
       } else if (err instanceof ApiError && err.code === "PAYMENT_LINK_NOT_PAYABLE") {
-        setError("This order has already been paid or cancelled, so there is nothing to send.");
+        setError(t("notPayable"));
       } else {
-        setError(translateError(t, err, "We couldn't create a payment link. Please try again."));
+        setError(translateError(tErrors, err, t("createFailed")));
       }
     } finally {
       setBusy(false);
     }
-  }, [cartId, amount, currency, reference, flash, t]);
+  }, [cartId, amount, currency, reference, flash, t, tErrors]);
 
   return (
     <div
@@ -162,15 +163,14 @@ export function PayLinkShare({
           fontWeight: 600,
         }}
       >
-        Someone else paying?
+        {t("heading")}
       </p>
       <p className="muted" style={{ fontSize: 12.5, lineHeight: 1.55, margin: "0 0 12px" }}>
         {expiresAt
-          ? `Link sent. It works until ${expiresAt.toLocaleTimeString(undefined, {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}, then you can send a new one.`
-          : "Send them a link to pay by card. They do not need a Wi-Mall account, and the link is short-lived."}
+          ? t("sentUntil", {
+              time: format.dateTime(expiresAt, { hour: "2-digit", minute: "2-digit" }),
+            })
+          : t("intro")}
       </p>
 
       {error && (
@@ -205,16 +205,16 @@ export function PayLinkShare({
         disabled={busy}
         onClick={() => (expiresAt ? setConfirming(true) : void send())}
       >
-        {busy ? "Creating the link…" : expiresAt ? "Send a new link" : "Send a payment link"}
+        {busy ? t("creating") : expiresAt ? t("sendNew") : t("send")}
       </Button>
 
       <ConfirmDialog
         open={confirming}
         tone="warning"
         icon="link-2-off"
-        title="Replace the link you already sent?"
-        confirmLabel="Send a new link"
-        cancelLabel="Keep the old one"
+        title={t("replaceTitle")}
+        confirmLabel={t("sendNew")}
+        cancelLabel={t("keepOld")}
         onConfirm={() => {
           setConfirming(false);
           void send();
@@ -224,8 +224,7 @@ export function PayLinkShare({
         {/* The exact consequence, in the shopper's terms. "Are you sure?" would
             not tell them the thing that matters: the message already sitting in
             someone's chat stops working the moment this is confirmed. */}
-        The link you sent before will stop working straight away. Only send a new one if the first
-        did not arrive.
+        {t("replaceBody")}
       </ConfirmDialog>
     </div>
   );

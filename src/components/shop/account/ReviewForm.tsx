@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useCallback, useEffect, useState } from "react";
 import { Button, Icon } from "@/components/shop/ds";
 import {
@@ -48,6 +50,11 @@ export function ReviewForm({
   label: string;
   onDone?: () => void;
 }) {
+  // Bound before the branches below — this component returns early five
+  // different ways, so a hook further down would change the hook order.
+  const t = useTranslations("shop.reviews");
+  // Root-scoped, for the shared verbs in `shop.common`.
+  const tKey = useTranslations();
   const [eligibility, setEligibility] = useState<ReviewEligibility | null>(null);
   const [rating, setRating] = useState(0);
   const [title, setTitle] = useState("");
@@ -88,19 +95,17 @@ export function ReviewForm({
         // Terminal — there is no edit. Reflect it rather than inviting a retry.
         setEligibility({ kind: "already" });
       } else {
-        setError("Could not send your review. Please try again.");
+        setError(t("submitFailed"));
       }
     } finally {
       setBusy(false);
     }
-  }, [rating, title, body, subjectType, subjectId, onDone]);
+  }, [rating, title, body, subjectType, subjectId, onDone, t]);
 
   if (outcome) {
     return (
       <p className="muted" style={{ margin: 0, fontSize: 14 }}>
-        {outcome === "published"
-          ? "Thanks — your rating is live."
-          : "Thanks — your review will appear once it has been checked."}
+        {outcome === "published" ? t("thanksPublished") : t("thanksPending")}
       </p>
     );
   }
@@ -112,7 +117,7 @@ export function ReviewForm({
   if (eligibility.kind === "already") {
     return (
       <p className="muted" style={{ margin: 0, fontSize: 14 }}>
-        You have already reviewed this.
+        {t("alreadyReviewed")}
       </p>
     );
   }
@@ -120,9 +125,7 @@ export function ReviewForm({
   if (eligibility.kind === "notYet") {
     return (
       <p className="muted" style={{ margin: 0, fontSize: 14 }}>
-        {subjectType === "product"
-          ? "You can review this once your order is complete."
-          : "You can rate this delivery once it has arrived."}
+        {subjectType === "product" ? t("notYetProduct") : t("notYetDelivery")}
       </p>
     );
   }
@@ -130,19 +133,19 @@ export function ReviewForm({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ fontWeight: 600, fontSize: 14.5 }}>
-        {subjectType === "product" ? `Rate ${label}` : "Rate this delivery"}
+        {subjectType === "product" ? t("rateProduct", { label }) : t("rateDelivery")}
       </div>
 
       {/* Integer 1–5. There is no half-star: the trust composite reads this
           number and a half is not a value it accepts. */}
-      <div role="radiogroup" aria-label="Rating" style={{ display: "flex", gap: 4 }}>
+      <div role="radiogroup" aria-label={t("ratingLabel")} style={{ display: "flex", gap: 4 }}>
         {[1, 2, 3, 4, 5].map((n) => (
           <button
             key={n}
             type="button"
             role="radio"
             aria-checked={rating === n}
-            aria-label={`${n} star${n === 1 ? "" : "s"}`}
+            aria-label={t("starLabel", { n })}
             onClick={() => setRating(n)}
             style={{ background: "none", border: "none", padding: 2, cursor: "pointer" }}
           >
@@ -160,14 +163,14 @@ export function ReviewForm({
 
       <input
         className="field"
-        placeholder="Title (optional)"
+        placeholder={t("titlePlaceholder")}
         maxLength={MAX_TITLE}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
       <textarea
         className="field"
-        placeholder="Tell others about it (optional)"
+        placeholder={t("bodyPlaceholder")}
         maxLength={MAX_BODY}
         rows={3}
         value={body}
@@ -178,7 +181,7 @@ export function ReviewForm({
           decides between publishing now and waiting for moderation. */}
       {(title.trim() || body.trim()) && (
         <p className="muted" style={{ margin: 0, fontSize: 12.5 }}>
-          Reviews with text are checked before they appear.
+          {t("textChecked")}
         </p>
       )}
 
@@ -188,7 +191,7 @@ export function ReviewForm({
 
       <div>
         <Button size="sm" disabled={rating < 1 || busy} onClick={() => void submit()}>
-          {busy ? "Sending…" : "Submit"}
+          {busy ? tKey("shop.common.sending") : tKey("shop.common.submit")}
         </Button>
       </div>
     </div>
@@ -211,12 +214,13 @@ export function ReviewDisclosure({
   subjectId: string;
   label: string;
 }) {
+  const t = useTranslations("shop.reviews");
   const [open, setOpen] = useState(false);
 
   if (!open) {
     return (
       <Button variant="ghost" size="sm" leadingIcon="star" onClick={() => setOpen(true)}>
-        {subjectType === "product" ? "Rate this" : "Rate the delivery"}
+        {subjectType === "product" ? t("rateThis") : t("rateTheDelivery")}
       </Button>
     );
   }

@@ -2,6 +2,7 @@
 import { useState, Suspense } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useLocalizedResolver } from "@/lib/auth/useLocalizedResolver";
 import { useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { AnimatePresence, motion } from "framer-motion";
@@ -78,7 +79,7 @@ function RegisterFormContent() {
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
-    resolver: zodResolver(RegisterSchema),
+    resolver: useLocalizedResolver(zodResolver(RegisterSchema)),
     // `phone` must start as "" rather than undefined — PhoneField is a
     // controlled input and would otherwise flip from uncontrolled on first key.
     defaultValues: { role: initialRole, phone: "" },

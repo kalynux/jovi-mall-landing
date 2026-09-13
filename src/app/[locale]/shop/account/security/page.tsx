@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Badge, Button, Skeleton } from "@/components/shop/ds";
 import { useToast } from "@/components/shop/providers";
@@ -37,6 +38,7 @@ import { IS_NATIVE_BUILD } from "@/lib/platform";
  */
 export default function SecurityPage() {
   const { status } = useAuthGuard();
+  const tKey = useTranslations();
 
   // Keyed on `status` so the read runs once the guard has a session, and again
   // if that session is re-established.
@@ -58,7 +60,7 @@ export default function SecurityPage() {
 
   return (
     <div className="mx-auto max-w-[680px] px-4 py-6 sm:px-6">
-      <h1 className="sr-only">Sign-in details</h1>
+      <h1 className="sr-only">{tKey("shop.nav.titles.security")}</h1>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <EmailSection contact={contact} onChanged={reload} />
         <PhoneSection contact={contact} onChanged={reload} />
@@ -83,39 +85,57 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
   );
 }
 
+/**
+ * The pending-change disclosure: what is waiting, and until when.
+ *
+ * `note` arrives already translated AND already carrying its own expiry
+ * clause. That is deliberate — the note and the deadline are one continuous
+ * piece of prose, and rendering them as `{note} Expires {date}.` would build a
+ * sentence out of parts, which is the one thing no catalogue can fix from the
+ * outside (LOCALISATION.md § 4). So the caller owns the whole sentence and this
+ * component owns only the frame around it.
+ */
 function Pending({ change, note }: { change: PendingContactChange; note: string }) {
+  const t = useTranslations("shop.security");
+
   return (
     <div style={{ marginTop: 8 }}>
       <Badge size="sm" tone="warning" icon="clock">
-        Waiting on {change.target}
+        {t("waitingOn", { target: change.target })}
       </Badge>
       <p className="muted" style={{ fontSize: 12.5, margin: "6px 0 0" }}>
-        {note} Expires {new Date(change.expiresAt).toLocaleString()}.
+        {note}
       </p>
     </div>
   );
 }
 
-/** Maps the contract's error codes to instructions that differ from each other. */
-function contactMessage(err: unknown): string {
+/**
+ * Maps the contract's error codes to instructions that differ from each other.
+ *
+ * Returns a KEY, not a sentence — module level, no render, no hook
+ * (LOCALISATION.md § 3) — and is named `…Key` so that a call site which forgets
+ * to resolve it is a compile error rather than a dotted path rendered at a
+ * shopper. The codes double as the message names, but the list stays explicit:
+ * a code that is not handled here has no key, and falling through to the shared
+ * `somethingWentWrong` is much better than a `MISSING_MESSAGE` crash.
+ *
+ * The six sentences are deliberately distinct from one another — EXPIRED says
+ * "start again" where TOKEN_INVALID says "check the link", because those are
+ * different instructions to a person holding a stale email.
+ */
+function contactMessageKey(err: unknown): string {
   const code = err instanceof ApiError ? err.code : undefined;
   switch (code) {
     case "CONTACT_CHANGE_SAME_IDENTIFIER":
-      return "That is already the value on your account.";
     case "CONTACT_CHANGE_IDENTIFIER_TAKEN":
-      return "Another account already signs in with that.";
     case "CONTACT_CHANGE_NOT_PENDING":
-      return "There is nothing waiting to be confirmed.";
     case "CONTACT_CHANGE_EXPIRED":
-      // Deliberately not the same sentence as TOKEN_INVALID: "start again" and
-      // "check the link" are different instructions to a person.
-      return "That request expired. Start again.";
     case "CONTACT_CHANGE_TOKEN_INVALID":
-      return "That link is not valid. Check you opened the most recent email.";
     case "CONTACT_CHANGE_PHONE_UNPROVEN":
-      return "Connect that number on WhatsApp first, then come back and confirm.";
+      return `shop.security.errors.${code}`;
     default:
-      return "Something went wrong. Please try again.";
+      return "shop.common.somethingWentWrong";
   }
 }
 
@@ -127,6 +147,10 @@ function EmailSection({
   onChanged: () => Promise<void>;
 }) {
   const { flash } = useToast();
+  const t = useTranslations("shop.security");
+  const tCommon = useTranslations("shop.common");
+  const tKey = useTranslations();
+  const format = useFormatter();
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -136,9 +160,9 @@ function EmailSection({
       await requestEmailChange(value.trim());
       setValue("");
       await onChanged();
-      flash("Check your new address for a confirmation link.");
+      flash(t("email.sent"));
     } catch (err) {
-      flash(contactMessage(err));
+      flash(tKey(contactMessageKey(err)));
     } finally {
       setBusy(false);
     }
@@ -150,27 +174,32 @@ function EmailSection({
       await cancelEmailChange();
       await onChanged();
     } catch (err) {
-      flash(contactMessage(err));
+      flash(tKey(contactMessageKey(err)));
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <Card title="Email">
+    <Card title={t("email.title")}>
       <p style={{ margin: 0, fontSize: 14 }}>
-        {contact.email ?? <span className="muted">No email on this account</span>}
+        {contact.email ?? <span className="muted">{t("email.none")}</span>}
       </p>
 
       {contact.pendingEmail ? (
         <>
           <Pending
             change={contact.pendingEmail}
-            note="We sent a confirmation link there. Your current address still signs you in until it is used."
+            note={t("email.pendingNote", {
+              date: format.dateTime(new Date(contact.pendingEmail.expiresAt), {
+                dateStyle: "medium",
+                timeStyle: "short",
+              }),
+            })}
           />
           <div style={{ marginTop: 10 }}>
             <Button variant="ghost" size="sm" disabled={busy} onClick={() => void cancel()}>
-              Cancel this change
+              {t("cancelChange")}
             </Button>
           </div>
         </>
@@ -182,12 +211,12 @@ function EmailSection({
             type="email"
             inputMode="email"
             autoComplete="email"
-            placeholder="New email address"
+            placeholder={t("email.placeholder")}
             value={value}
             onChange={(e) => setValue(e.target.value)}
           />
           <Button size="sm" disabled={!value.trim() || busy} onClick={() => void submit()}>
-            {busy ? "Sending…" : "Change"}
+            {busy ? tCommon("sending") : tCommon("change")}
           </Button>
         </div>
       )}
@@ -204,6 +233,10 @@ function PhoneSection({
 }) {
   const router = useRouter();
   const { flash } = useToast();
+  const t = useTranslations("shop.security");
+  const tCommon = useTranslations("shop.common");
+  const tKey = useTranslations();
+  const format = useFormatter();
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [unproven, setUnproven] = useState(false);
@@ -215,7 +248,7 @@ function PhoneSection({
       setValue("");
       await onChanged();
     } catch (err) {
-      flash(contactMessage(err));
+      flash(tKey(contactMessageKey(err)));
     } finally {
       setBusy(false);
     }
@@ -227,13 +260,13 @@ function PhoneSection({
     try {
       await confirmPhoneChange();
       await onChanged();
-      flash("This is the number you sign in with now.");
+      flash(t("phone.confirmed"));
     } catch (err) {
       const code = err instanceof ApiError ? err.code : undefined;
       // The one refusal with somewhere to go: the fix is a WhatsApp connection,
       // so route there rather than repeating the error.
       if (code === "CONTACT_CHANGE_PHONE_UNPROVEN") setUnproven(true);
-      else flash(contactMessage(err));
+      else flash(tKey(contactMessageKey(err)));
     } finally {
       setBusy(false);
     }
@@ -246,35 +279,39 @@ function PhoneSection({
       setUnproven(false);
       await onChanged();
     } catch (err) {
-      flash(contactMessage(err));
+      flash(tKey(contactMessageKey(err)));
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <Card title="Phone">
+    <Card title={t("phone.title")}>
       <p style={{ margin: 0, fontSize: 14 }}>
-        {contact.phone ?? <span className="muted">No phone on this account</span>}
+        {contact.phone ?? <span className="muted">{t("phone.none")}</span>}
       </p>
 
       {contact.pendingPhone ? (
         <>
           <Pending
             change={contact.pendingPhone}
-            note="Message our WhatsApp bot from that number and connect it, then confirm below."
+            note={t("phone.pendingNote", {
+              date: format.dateTime(new Date(contact.pendingPhone.expiresAt), {
+                dateStyle: "medium",
+                timeStyle: "short",
+              }),
+            })}
           />
 
           {unproven && (
             <p style={{ fontSize: 13, margin: "8px 0 0", color: "var(--danger)" }}>
-              We could not find a WhatsApp connection for that number on your account. A Telegram
-              connection does not count — a chat id says nothing about a phone number.
+              {t("phone.unproven")}
             </p>
           )}
 
           <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
             <Button size="sm" disabled={busy} onClick={() => void confirm()}>
-              {busy ? "Checking…" : "Confirm"}
+              {busy ? t("phone.checking") : tCommon("confirm")}
             </Button>
             <Button
               variant="secondary"
@@ -283,10 +320,10 @@ function PhoneSection({
               // where ChatChannels is mounted.
               onClick={() => router.push("/shop/account/notifications/settings")}
             >
-              Connect WhatsApp
+              {t("phone.connectWhatsApp")}
             </Button>
             <Button variant="ghost" size="sm" disabled={busy} onClick={() => void cancel()}>
-              Cancel
+              {tCommon("cancel")}
             </Button>
           </div>
         </>
@@ -304,14 +341,13 @@ function PhoneSection({
               onChange={(e) => setValue(e.target.value)}
             />
             <Button size="sm" disabled={!value.trim() || busy} onClick={() => void submit()}>
-              {busy ? "Saving…" : "Change"}
+              {busy ? tCommon("saving") : tCommon("change")}
             </Button>
           </div>
           {/* Said up front, because it is the part people do not expect: the
               proof is an inbound WhatsApp message, not a code we send. */}
           <p className="muted" style={{ fontSize: 12.5, margin: "8px 0 0" }}>
-            We confirm a new number by matching it to a WhatsApp connection on your account — there
-            is no code to wait for.
+            {t("phone.howItWorks")}
           </p>
         </>
       )}
@@ -321,6 +357,8 @@ function PhoneSection({
 
 function PasswordSection() {
   const { flash } = useToast();
+  const t = useTranslations("shop.security");
+  const tCommon = useTranslations("shop.common");
   const [open, setOpen] = useState(false);
   const [oldPassword, setOld] = useState("");
   const [newPassword, setNew] = useState("");
@@ -337,15 +375,15 @@ function PasswordSection() {
       setOpen(false);
       flash(
         IS_NATIVE_BUILD
-          ? "Password changed. Please sign in again."
-          : "Password changed. Your other devices have been signed out.",
+          ? t("password.changedSignInAgain")
+          : t("password.changedOthersSignedOut"),
       );
     } catch (err) {
       const code = err instanceof ApiError ? err.code : undefined;
       flash(
         code === "AUTH_INVALID_CREDENTIALS"
-          ? "That current password is not right."
-          : "Could not change your password. Please try again.",
+          ? t("password.wrongCurrent")
+          : t("password.failed"),
       );
     } finally {
       setBusy(false);
@@ -353,18 +391,22 @@ function PasswordSection() {
   };
 
   return (
-    <Card title="Password">
+    <Card title={t("password.title")}>
       {/* Most customers have never set one: an account is created by the bot with
-          a system-generated password and signs in with a magic link or code. */}
+          a system-generated password and signs in with a magic link or code.
+
+          This card is therefore the SECONDARY thing on the screen, and the
+          screen is "Sign-in details" — `shop.nav.titles.security` — in every
+          locale. None of the five names this page after the password, because
+          for most of the people who open it there is no password to change. */}
       <p className="muted" style={{ margin: 0, fontSize: 13 }}>
-        You normally sign in with a link or code from the bot. A password is only needed if you have
-        set one.
+        {t("password.intro")}
       </p>
 
       {!open ? (
         <div style={{ marginTop: 10 }}>
           <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>
-            Change password
+            {t("password.change")}
           </Button>
         </div>
       ) : (
@@ -373,7 +415,7 @@ function PasswordSection() {
             className="field"
             type="password"
             autoComplete="current-password"
-            placeholder="Current password"
+            placeholder={t("password.current")}
             value={oldPassword}
             onChange={(e) => setOld(e.target.value)}
           />
@@ -381,7 +423,7 @@ function PasswordSection() {
             className="field"
             type="password"
             autoComplete="new-password"
-            placeholder="New password"
+            placeholder={t("password.new")}
             value={newPassword}
             onChange={(e) => setNew(e.target.value)}
           />
@@ -403,16 +445,16 @@ function PasswordSection() {
               undo and would otherwise discover on another device. */}
           <p className="muted" style={{ fontSize: 12.5, margin: 0 }}>
             {IS_NATIVE_BUILD
-              ? "Changing this signs out every device, including this one."
-              : "Changing this signs out every other device."}
+              ? t("password.signsOutAll")
+              : t("password.signsOutOthers")}
           </p>
 
           <div style={{ display: "flex", gap: 8 }}>
             <Button size="sm" disabled={!valid || busy} onClick={() => void submit()}>
-              {busy ? "Saving…" : "Save"}
+              {busy ? tCommon("saving") : tCommon("save")}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
-              Cancel
+              {tCommon("cancel")}
             </Button>
           </div>
         </div>

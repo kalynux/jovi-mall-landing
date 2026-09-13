@@ -9,7 +9,7 @@
  */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import {
   getProduct,
   isPreviewRequest,
@@ -37,12 +37,13 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale, storeSlug, productSlug } = await params;
   if (!isLocale(locale)) notFound();
+  const t = await getTranslations({ locale, namespace: "shop.meta" });
 
   const product = await getProduct(storeSlug, productSlug);
   // An unknown slug renders notFound() below; keep it out of the index rather
   // than letting it inherit anything.
   if (!product) {
-    return { title: "Product not found — Wi-Mall", robots: { index: false, follow: false } };
+    return { title: t("productNotFound"), robots: { index: false, follow: false } };
   }
 
   const path = productPath(product.store.slug, product.slug);
@@ -52,7 +53,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const description = product.seo?.description ?? product.description;
 
   return {
-    title: `${title} — Wi-Mall`,
+    title: t("productTitle", { product: title }),
     description,
     alternates: localeAlternates(locale, path),
     openGraph: {
@@ -74,6 +75,7 @@ export default async function ProductPage({ params, searchParams }: PageProps) {
   const { locale, storeSlug, productSlug } = await params;
   if (!isLocale(locale)) notFound();
   setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: "shop.meta" });
 
   // `?preview=1` — the vendor dashboard's preview iframe, asking to skip the
   // five-minute catalog cache. Read freshness only: a draft still 404s below,
@@ -103,7 +105,7 @@ export default async function ProductPage({ params, searchParams }: PageProps) {
         data={[
           productJsonLd(locale, product),
           breadcrumbJsonLd(locale, [
-            { name: "Shop", path: "/shop" },
+            { name: t("breadcrumbShop"), path: "/shop" },
             { name: product.store.name, path: storePath(product.store.slug) },
             { name: product.title, path: productPath(product.store.slug, product.slug) },
           ]),

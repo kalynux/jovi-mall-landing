@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import type * as Leaflet from "leaflet";
 
 import "leaflet/dist/leaflet.css";
@@ -73,6 +74,8 @@ export default function DeliveryMap({
   courierName,
   dropOff,
 }: DeliveryMapProps) {
+  const t = useTranslations("shop.tracking.map");
+  const format = useFormatter();
   const hostRef = useRef<HTMLDivElement | null>(null);
   const leafletRef = useRef<typeof Leaflet | null>(null);
   const mapRef = useRef<Leaflet.Map | null>(null);
@@ -92,9 +95,43 @@ export default function DeliveryMap({
   const latestRef = useRef({ courier, dropOff });
   latestRef.current = { courier, dropOff };
 
+  /**
+   * The map's own labels, in the shopper's language.
+   *
+   * Held in a ref for the same reason the props above are: the mount effect runs
+   * once and builds markers whose `title` and popup are plain strings, so it
+   * needs whatever the labels were *then* without `t` becoming a dependency
+   * that would tear the map down and rebuild it.
+   */
+  const labelsRef = useRef({ courier: "", destination: "" });
+  labelsRef.current = { courier: t("courier"), destination: t("destination") };
+
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [following, setFollowing] = useState(true);
+
+  /**
+   * The courier's popup, resolved during render rather than inside the update
+   * effect below.
+   *
+   * It is the one piece of map furniture that carries translated copy *and*
+   * changes with every position. Building it here keeps `t` and the formatter
+   * out of that effect's dependency list, and gives the effect a single string
+   * to depend on instead of the three values it is made of.
+   */
+  const popupHtml = useMemo(() => {
+    const at = new Date(recordedAt);
+    return courierPopup(
+      courierName?.trim() || t("yourCourier"),
+      // A fix with an unparseable timestamp still places the pin; it just does
+      // not claim a time for it.
+      Number.isNaN(at.getTime())
+        ? null
+        : t("updatedAt", {
+            time: format.dateTime(at, { hour: "2-digit", minute: "2-digit" }),
+          }),
+    );
+  }, [courierName, recordedAt, t, format]);
 
   /**
    * Run a viewport change that must not count as the shopper taking over.
@@ -220,7 +257,7 @@ export default function DeliveryMap({
         }),
         // Leaflet makes markers keyboard-reachable but a `divIcon` carries no
         // text, so without this they are announced as nothing at all.
-        title: "Courier",
+        title: labelsRef.current.courier,
         zIndexOffset: 500,
       })
         .addTo(map)
@@ -238,11 +275,11 @@ export default function DeliveryMap({
             // The tip of the teardrop, not its middle.
             iconAnchor: [14, 32],
           }),
-          title: "Delivery address",
+          title: labelsRef.current.destination,
         })
           .addTo(map)
           .bindPopup(
-            `<strong>Delivery address</strong>${
+            `<strong>${escapeHtml(labelsRef.current.destination)}</strong>${
               to.label ? `<br /><span class="wm-map-popup__meta">${escapeHtml(to.label)}</span>` : ""
             }`,
           );
@@ -306,7 +343,7 @@ export default function DeliveryMap({
 
     const here: Leaflet.LatLngTuple = [courier.latitude, courier.longitude];
     marker.setLatLng(here);
-    marker.setPopupContent(courierPopup(courierName, recordedAt));
+    marker.setPopupContent(popupHtml);
 
     // The heading lives on a child element rather than in the icon's HTML: a new
     // icon is a new DOM node, and replacing it every few seconds would restart
@@ -327,7 +364,7 @@ export default function DeliveryMap({
     }
 
     if (following) frame();
-  }, [ready, following, frame, courier.latitude, courier.longitude, headingDegrees, recordedAt, courierName]);
+  }, [ready, following, frame, courier.latitude, courier.longitude, headingDegrees, popupHtml]);
 
   if (failed) return null;
 
@@ -343,13 +380,13 @@ export default function DeliveryMap({
         ref={hostRef}
         className="wm-map__canvas"
         role="application"
-        aria-label="Live map of your delivery"
+        aria-label={t("ariaLabel")}
       />
 
       {ready && !following && (
         <div className="wm-map__recentre">
           <Button variant="secondary" size="sm" leadingIcon="navigation" onClick={() => setFollowing(true)}>
-            Recentre
+            {t("recentre")}
           </Button>
         </div>
       )}
@@ -363,14 +400,17 @@ function activeTileUrl(): string {
   return document.documentElement.classList.contains("dark") ? MAP_TILE_URL_DARK : MAP_TILE_URL;
 }
 
-function courierPopup(name: string | null | undefined, recordedAt: string): string {
-  const who = name?.trim() ? escapeHtml(name.trim()) : "Your courier";
-  const at = new Date(recordedAt);
-  const when = Number.isNaN(at.getTime())
-    ? null
-    : at.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
-  return `<strong>${who}</strong>${
-    when ? `<br /><span class="wm-map-popup__meta">Updated ${when}</span>` : ""
+/**
+ * Assembles the courier popup's markup, and nothing else.
+ *
+ * Both arguments arrive already resolved — the name (a backend string, or the
+ * caller's translated fallback) and the finished "Updated 14:32" line — because
+ * a module-level helper cannot read a translation, and Leaflet popups take an
+ * HTML string rather than a node.
+ */
+function courierPopup(who: string, when: string | null): string {
+  return `<strong>${escapeHtml(who)}</strong>${
+    when ? `<br /><span class="wm-map-popup__meta">${escapeHtml(when)}</span>` : ""
   }`;
 }
 

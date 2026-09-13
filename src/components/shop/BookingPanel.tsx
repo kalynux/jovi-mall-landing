@@ -1,5 +1,6 @@
 "use client";
 
+import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Button, Chip, Skeleton } from "@/components/shop/ds";
@@ -45,6 +46,11 @@ const WINDOW_DAYS = 21;
  * thing to show — "3pm your time" is what they need to turn up.
  */
 export function BookingPanel({ product }: { product: Product }) {
+  const t = useTranslations("shop.product.booking");
+  const tDs = useTranslations("shop.ds");
+  // Slot times are rendered in the *shopper's* locale, not the browser's —
+  // see LOCALISATION.md §6.
+  const format = useFormatter();
   const router = useRouter();
   const { flash } = useToast();
   const { status } = useAuth();
@@ -113,16 +119,12 @@ export function BookingPanel({ product }: { product: Product }) {
         setSelected(slot);
       } catch (err) {
         const code = (err as { code?: string })?.code;
-        flash(
-          code === "BOOKING_SLOT_LOCKED"
-            ? "Someone else is booking that time right now. Try another."
-            : "Could not hold that time. Please try again.",
-        );
+        flash(code === "BOOKING_SLOT_LOCKED" ? t("slotLocked") : t("holdFailed"));
       } finally {
         setBusy(false);
       }
     },
-    [signedIn, router, held, product.id, flash],
+    [signedIn, router, held, product.id, flash, t],
   );
 
   const book = useCallback(async () => {
@@ -141,12 +143,12 @@ export function BookingPanel({ product }: { product: Product }) {
       const code = (err as { code?: string })?.code;
       const message =
         code === "BOOKING_SLOT_FULL"
-          ? "That session just filled up. Please pick another time."
+          ? t("slotFull")
           : code === "BOOKING_SLOT_NOT_LOCKED"
-            ? "Your hold on that time expired. Please pick it again."
+            ? t("holdExpired")
             : code === "BOOKING_SLOT_UNAVAILABLE"
-              ? "Someone took that time first. Please pick another."
-              : "Could not book that time. Please try again.";
+              ? t("slotTaken")
+              : t("bookFailed");
       flash(message);
       // Any of these means the hold is gone; re-read so the grid is truthful.
       setHeld(null);
@@ -157,7 +159,7 @@ export function BookingPanel({ product }: { product: Product }) {
     } finally {
       setBusy(false);
     }
-  }, [selected, product.id, notes, router, flash, range]);
+  }, [selected, product.id, notes, router, flash, range, t]);
 
   if (slots === null) {
     return <Skeleton height={140} />;
@@ -176,30 +178,37 @@ export function BookingPanel({ product }: { product: Product }) {
         {byDay.map(([day, daySlots]) => (
           <div key={day}>
             <div className="ds-overline" style={{ marginBottom: 6 }}>
-              {new Date(daySlots[0].start).toLocaleDateString(undefined, {
+              {format.dateTime(new Date(daySlots[0].start), {
                 weekday: "short",
                 day: "numeric",
                 month: "short",
               })}
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {daySlots.map((slot) => (
-                <Chip
-                  key={slot.id}
-                  // A full capacity slot is still returned, so it renders as
-                  // "Full" rather than quietly disappearing from the day.
-                  selected={selected?.id === slot.id}
-                  disabled={!slot.available || busy}
-                  onClick={() => void choose(slot)}
-                >
-                  {new Date(slot.start).toLocaleTimeString(undefined, {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                  {slot.spotsRemaining !== undefined &&
-                    (slot.available ? ` · ${slot.spotsRemaining} left` : " · Full")}
-                </Chip>
-              ))}
+              {daySlots.map((slot) => {
+                // The time and its capacity are one message, not a time with a
+                // translated tail glued on — see LOCALISATION.md §4.
+                const time = format.dateTime(new Date(slot.start), {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+                return (
+                  <Chip
+                    key={slot.id}
+                    // A full capacity slot is still returned, so it renders as
+                    // "Full" rather than quietly disappearing from the day.
+                    selected={selected?.id === slot.id}
+                    disabled={!slot.available || busy}
+                    onClick={() => void choose(slot)}
+                  >
+                    {slot.spotsRemaining === undefined
+                      ? time
+                      : slot.available
+                        ? t("slotWithSpots", { time, n: slot.spotsRemaining })
+                        : t("slotSoldOut", { time })}
+                  </Chip>
+                );
+              })}
             </div>
           </div>
         ))}
@@ -212,25 +221,24 @@ export function BookingPanel({ product }: { product: Product }) {
           <textarea
             className="field"
             rows={2}
-            placeholder="Anything the seller should know? (optional)"
+            placeholder={t("notesPlaceholder")}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
 
           <Button block size="lg" elevated disabled={busy} onClick={() => void book()}>
             {busy
-              ? "Booking…"
+              ? t("booking")
               : variant
-                ? `Book · ${formatMoney(variant.price, variant.currency)}`
-                : "Book"}
+                ? t("bookPrice", { price: formatMoney(variant.price, variant.currency) })
+                : tDs("book")}
           </Button>
 
           {/* The price is a unit rate prorated by slot length, plus any peak
               surcharge — and the vendor may recompute it if the appointment
               runs long. Saying so beats a total that later changes. */}
           <p className="muted" style={{ fontSize: 12, margin: 0 }}>
-            You will be asked to pay after booking. The final amount can change if the
-            appointment runs longer than booked.
+            {t("payAfterNote")}
           </p>
         </>
       )}
@@ -240,6 +248,7 @@ export function BookingPanel({ product }: { product: Product }) {
 
 /** Counts down the 15-minute hold, so an expiry is not a surprise. */
 function HoldTimer({ expiresAt }: { expiresAt: string }) {
+  const t = useTranslations("shop.product.booking");
   const [left, setLeft] = useState(() => Math.max(0, new Date(expiresAt).getTime() - Date.now()));
 
   useEffect(() => {
@@ -251,17 +260,18 @@ function HoldTimer({ expiresAt }: { expiresAt: string }) {
 
   if (left <= 0) {
     return (
-      <p style={{ fontSize: 12.5, margin: 0, color: "var(--danger)" }}>
-        Your hold has expired. Pick a time again.
-      </p>
+      <p style={{ fontSize: 12.5, margin: 0, color: "var(--danger)" }}>{t("holdExpiredNote")}</p>
     );
   }
 
+  // The clock is assembled here and handed over whole: a countdown split across
+  // JSX children could only ever come out in English word order.
   const minutes = Math.floor(left / 60000);
   const seconds = Math.floor((left % 60000) / 1000);
+  const clock = `${minutes}:${String(seconds).padStart(2, "0")}`;
   return (
     <p className="muted" style={{ fontSize: 12.5, margin: 0 }}>
-      Held for you for {minutes}:{String(seconds).padStart(2, "0")}
+      {t("heldFor", { time: clock })}
     </p>
   );
 }
@@ -274,10 +284,12 @@ function HoldTimer({ expiresAt }: { expiresAt: string }) {
  * was wired.
  */
 function NoSlots({ store }: { store: Product["store"] }) {
+  const t = useTranslations("shop.product.booking");
+
   if (!store.supportWhatsapp) {
     return (
       <Button block size="lg" disabled leadingIcon="calendar-clock">
-        No times available
+        {t("noTimesButton")}
       </Button>
     );
   }
@@ -286,7 +298,7 @@ function NoSlots({ store }: { store: Product["store"] }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-        No times are open at the moment.
+        {t("noTimesNote")}
       </p>
       <Button
         block
@@ -298,7 +310,7 @@ function NoSlots({ store }: { store: Product["store"] }) {
         // our app instead of the WhatsApp on the shopper's phone.
         onClick={() => void openApp(href)}
       >
-        Ask {store.name}
+        {t("askStore", { store: store.name })}
       </Button>
     </div>
   );

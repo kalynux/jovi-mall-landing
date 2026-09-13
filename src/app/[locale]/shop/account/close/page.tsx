@@ -28,32 +28,34 @@ import {
  * goes, what stays, and why it stays. Saying "your data will be deleted" here
  * would be the one thing the design refuses to do, and would be a false promise
  * to a store reviewer as much as to a shopper.
+ *
+ * ⚠ That constraint is per-language, not just English. Every one of fr/es/pt/ar
+ * has a strong everyday verb for "delete" — supprimer, eliminar, apagar, حذف —
+ * and `shop.close.*` deliberately uses none of them: it says close (fermer /
+ * cerrar / fechar / إغلاق), removed-from-your-profile and kept-as-records. A
+ * translation that reaches for the obvious verb re-breaks D-2 silently, in a
+ * language the reviewer of this file may not read.
  */
 
-/** What closing does, in the order someone worries about it. */
-const CONSEQUENCES: { icon: IconName; text: string }[] = [
-  {
-    icon: "user-x",
-    text: "Your name, phone number, email address and saved addresses are removed from your profile.",
-  },
-  {
-    icon: "package",
-    text:
-      "Past orders are kept as business records, without your name or contact details — "
-      + "sellers and delivery agencies need them for their own accounts.",
-  },
-  {
-    icon: "log-out",
-    text: "You are signed out everywhere, and you will not be able to sign in to this account again.",
-  },
-  {
-    icon: "download",
-    text: "Anything in your downloads library stops being available. Save what you want to keep first.",
-  },
+/**
+ * What closing does, in the order someone worries about it.
+ *
+ * Keys, not sentences: this array is module-level, evaluated once at import
+ * time, where there is no render and so no `useTranslations`. The component
+ * resolves them (LOCALISATION.md § 3).
+ */
+const CONSEQUENCES: { icon: IconName; textKey: string }[] = [
+  { icon: "user-x", textKey: "consequences.profile" },
+  { icon: "package", textKey: "consequences.orders" },
+  { icon: "log-out", textKey: "consequences.sessions" },
+  { icon: "download", textKey: "consequences.downloads" },
 ];
 
 export default function CloseAccountPage() {
-  const t = useTranslations("errors");
+  const t = useTranslations("shop.close");
+  const tError = useTranslations("errors");
+  // The screen title is route vocabulary and already lives in `shop.nav`.
+  const tKey = useTranslations();
   const { logout } = useAuth();
 
   const [typed, setTyped] = useState("");
@@ -85,7 +87,7 @@ export default function CloseAccountPage() {
        */
       await logout();
     } catch (err) {
-      setError(translateError(t, err));
+      setError(translateError(tError, err));
       // Deliberately not cleared on success: the page is navigating away, and
       // re-enabling the button would offer a second attempt at a closed account.
       setBusy(false);
@@ -94,8 +96,8 @@ export default function CloseAccountPage() {
 
   return (
     <AccountShell
-      title="Close account"
-      description="This cannot be undone."
+      title={tKey("shop.nav.titles.close")}
+      description={t("description")}
     >
       <div
         style={{
@@ -116,8 +118,7 @@ export default function CloseAccountPage() {
         >
           <Icon name="triangle-alert" size={20} style={{ color: "var(--danger)", flexShrink: 0 }} />
           <p style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text-strong)", margin: 0 }}>
-            Closing your account cannot be undone. There is no way to reopen it, and you cannot
-            sign in again with the same phone number or email.
+            {t("warning")}
           </p>
         </div>
 
@@ -130,7 +131,7 @@ export default function CloseAccountPage() {
                 style={{ color: "var(--text-muted)", flexShrink: 0, marginTop: 1 }}
               />
               <span style={{ fontSize: 13.5, lineHeight: 1.5, color: "var(--text-body)" }}>
-                {c.text}
+                {t(c.textKey)}
               </span>
             </li>
           ))}
@@ -148,9 +149,22 @@ export default function CloseAccountPage() {
             marginBottom: 7,
           }}
         >
-          Type <span style={{ fontFamily: "var(--font-mono, monospace)" }}>
-            {ACCOUNT_CLOSURE_CONFIRMATION}
-          </span> to confirm
+          {/*
+            The phrase is a WIRE VALUE — the backend takes it as a `z.literal`,
+            so it is the same eleven English characters in all five locales. It
+            is injected as a value rather than written into the catalogues,
+            where a translator would quite reasonably have translated it and
+            made the request impossible to validate. `dir="ltr"` stops Arabic
+            from reordering it inside the surrounding RTL sentence.
+          */}
+          {t.rich("typeToConfirm", {
+            phrase: ACCOUNT_CLOSURE_CONFIRMATION,
+            code: (chunks) => (
+              <span dir="ltr" style={{ fontFamily: "var(--font-mono, monospace)" }}>
+                {chunks}
+              </span>
+            ),
+          })}
         </label>
 
         <input
@@ -158,6 +172,8 @@ export default function CloseAccountPage() {
           value={typed}
           onChange={(e) => setTyped(e.target.value)}
           disabled={busy}
+          // What is typed here is the English literal, in every locale.
+          dir="ltr"
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="characters"
@@ -195,11 +211,11 @@ export default function CloseAccountPage() {
           onClick={() => void submit()}
           style={{ marginTop: 14 }}
         >
-          {busy ? "Closing…" : "Close my account"}
+          {busy ? t("closing") : t("submit")}
         </Button>
 
         <p className="muted" style={{ fontSize: 12.5, textAlign: "center", marginTop: 12 }}>
-          Orders still in progress have to finish before an account can be closed.
+          {t("ordersInFlight")}
         </p>
       </div>
     </AccountShell>

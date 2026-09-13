@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getStore, isPreviewRequest, listStoreProducts } from "@/lib/shop/catalog.api";
 import { VendorStore } from "@/components/shop/VendorStore";
 import JsonLd from "@/components/seo/JsonLd";
@@ -19,21 +19,22 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale, storeSlug } = await params;
   if (!isLocale(locale)) notFound();
+  const t = await getTranslations({ locale, namespace: "shop.meta" });
 
   const store = await getStore(storeSlug);
   if (!store) {
-    return { title: "Store not found — Wi-Mall", robots: { index: false, follow: false } };
+    return { title: t("storeNotFound"), robots: { index: false, follow: false } };
   }
 
   const path = storePath(store.slug);
   const where = [store.city, store.country].filter(Boolean).join(", ");
 
   return {
-    title: `${store.name} — Wi-Mall`,
+    title: t("storeTitle", { store: store.name }),
     description: store.description,
     alternates: localeAlternates(locale, path),
     openGraph: {
-      title: where ? `${store.name} — ${where}` : store.name,
+      title: where ? t("storeOgTitle", { store: store.name, where }) : store.name,
       description: store.description,
       // `banner` and `logo` are both nullable; a store with neither gets no
       // image rather than a broken one. Resolved through `publicUrl` so a file
@@ -52,6 +53,7 @@ export default async function StorePage({ params, searchParams }: PageProps) {
   const { locale, storeSlug } = await params;
   if (!isLocale(locale)) notFound();
   setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: "shop.meta" });
 
   const resolvedSearchParams = await searchParams;
   const query = parseProductSearchParams(resolvedSearchParams);
@@ -78,7 +80,7 @@ export default async function StorePage({ params, searchParams }: PageProps) {
         data={[
           storeJsonLd(locale, store),
           breadcrumbJsonLd(locale, [
-            { name: "Shop", path: "/shop" },
+            { name: t("breadcrumbShop"), path: "/shop" },
             { name: store.name, path: storePath(store.slug) },
           ]),
         ]}

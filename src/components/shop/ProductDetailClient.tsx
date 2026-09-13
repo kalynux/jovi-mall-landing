@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ProductDetail } from "./ProductDetail";
@@ -41,6 +42,7 @@ export function ProductDetailClient({ locale }: { locale: string }) {
 }
 
 function ProductResolver({ locale }: { locale: string }) {
+  const t = useTranslations("shop.product");
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
   const storeSlug = searchParams.get("store");
@@ -119,7 +121,7 @@ function ProductResolver({ locale }: { locale: string }) {
       <ResourceError
         error={state.error}
         onRetry={() => setNonce((n) => n + 1)}
-        fallback="We couldn't load that product."
+        fallback={t("loadFailed")}
       />
     );
   }
@@ -134,8 +136,8 @@ function ProductResolver({ locale }: { locale: string }) {
     return (
       <EmptyState
         icon="package-x"
-        title="This product isn't available"
-        description="It may have sold out or been taken off sale. Browse the shop to find something similar."
+        title={t("unavailableTitle")}
+        description={t("unavailableDescription")}
       />
     );
   }

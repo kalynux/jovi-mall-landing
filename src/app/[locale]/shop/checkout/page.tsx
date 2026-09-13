@@ -73,6 +73,9 @@ export default function CheckoutPage() {
      what the hardcoded switch this replaced could never do. */
   const tCheckout = useTranslations("checkout.errors");
   const tErrors = useTranslations("errors");
+  /* This screen's own copy, and the frozen shared vocabulary. */
+  const t = useTranslations("shop.checkout");
+  const tKey = useTranslations();
 
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [addressId, setAddressId] = useState<string | null>(null);
@@ -275,7 +278,7 @@ export default function CheckoutPage() {
   ) {
     return (
       <div className="mx-auto max-w-[760px] px-4 py-8 sm:px-6">
-        <h1 className="sr-only">Checkout</h1>
+        <h1 className="sr-only">{tKey("shop.nav.titles.checkout")}</h1>
         <Skeleton height={28} width="40%" />
         <div style={{ height: 16 }} />
         <Skeleton height={120} />
@@ -301,7 +304,7 @@ export default function CheckoutPage() {
           real history first, so a digital buy-now — which never passed through
           the cart page — still returns to the product it came from rather than
           to a screen the shopper has not seen. */}
-      <h1 className="sr-only">Checkout</h1>
+      <h1 className="sr-only">{tKey("shop.nav.titles.checkout")}</h1>
 
       {error && (
         <div
@@ -326,7 +329,7 @@ export default function CheckoutPage() {
       {needsAddress && (
         <>
           <p className="ds-overline" style={{ marginBottom: 8 }}>
-            Delivery address
+            {t("deliveryAddress")}
           </p>
           {addresses.length === 0 ? (
             <div
@@ -339,11 +342,10 @@ export default function CheckoutPage() {
               }}
             >
               <p className="muted" style={{ fontSize: 13.5, margin: "0 0 12px" }}>
-                You have no saved address. Add one — search for it rather than typing it, or we
-                cannot route a delivery to it.
+                {t("noAddress")}
               </p>
               <Button variant="secondary" onClick={() => router.push("/shop/account/addresses")}>
-                Add an address
+                {t("addAddress")}
               </Button>
             </div>
           ) : (
@@ -368,11 +370,11 @@ export default function CheckoutPage() {
                   <Icon name="map-pin" size={20} style={{ color: "var(--brand)", marginTop: 2 }} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700, fontSize: 14 }}>
-                      {address.label ?? "Address"}
+                      {address.label ?? t("addressFallback")}
                       {address.is_default && (
                         <span style={{ marginLeft: 6 }}>
                           <Badge tone="neutral" size="sm">
-                            Default
+                            {t("defaultAddress")}
                           </Badge>
                         </span>
                       )}
@@ -396,7 +398,7 @@ export default function CheckoutPage() {
                   padding: "4px 0",
                 }}
               >
-                Manage addresses
+                {t("manageAddresses")}
               </button>
             </div>
           )}
@@ -405,7 +407,7 @@ export default function CheckoutPage() {
 
       {/* Payment */}
       <p className="ds-overline" style={{ marginBottom: 8 }}>
-        Payment method
+        {t("paymentMethod")}
       </p>
       <PaymentMethodPicker
         key={payForm.formKey}
@@ -420,21 +422,19 @@ export default function CheckoutPage() {
 
       {option.id === "card" && (
         <p className="muted" style={{ fontSize: 12.5, marginBottom: 20, lineHeight: 1.5 }}>
-          You will be asked for your card details on the next step, on the payment provider’s own
-          secure form.
+          {t("cardNote")}
         </p>
       )}
 
       {isCod && (
         <p className="muted" style={{ fontSize: 12.5, marginBottom: 20, lineHeight: 1.5 }}>
-          You pay the courier on delivery. We send you a delivery code — give it to the courier
-          only once you have your parcel.
+          {t("codNote")}
         </p>
       )}
 
       {/* Summary */}
       <p className="ds-overline" style={{ marginBottom: 8 }}>
-        Order summary
+        {t("orderSummary")}
       </p>
       <div style={{ border: "1px solid var(--border)", borderRadius: "var(--radius-md)", padding: 12, marginBottom: 8 }}>
         {lines.map((line) => (
@@ -450,8 +450,10 @@ export default function CheckoutPage() {
             }}
           >
             <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {line.qty}× {line.title}
-              {line.storeName && <span className="muted"> · {line.storeName}</span>}
+              {t("lineQty", { qty: line.qty, title: line.title })}
+              {line.storeName && (
+                <span className="muted">{t("lineStore", { store: line.storeName })}</span>
+              )}
             </span>
             <span style={{ fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>
               {formatMoney(line.price * line.qty, line.currency)}
@@ -460,21 +462,26 @@ export default function CheckoutPage() {
         ))}
 
         <div style={{ borderTop: "1px solid var(--border-subtle)", marginTop: 8, paddingTop: 8 }}>
-          <SummaryRow label="Subtotal" value={formatMoney(quote?.subtotal ?? total, currency)} />
+          <SummaryRow label={t("subtotal")} value={formatMoney(quote?.subtotal ?? total, currency)} />
           {!isDigital && (
             <SummaryRow
-              label="Delivery"
-              value={<span style={{ color: "var(--success)", fontWeight: 700 }}>Included</span>}
+              label={t("delivery")}
+              value={
+                <span style={{ color: "var(--success)", fontWeight: 700 }}>
+                  {t("deliveryIncluded")}
+                </span>
+              }
             />
           )}
-          <SummaryRow label="Total" value={formatMoney(total, currency)} strong />
+          <SummaryRow label={t("total")} value={formatMoney(total, currency)} strong />
         </div>
       </div>
 
       {quote?.absorbedByVendor ? (
         <p className="muted" style={{ fontSize: 12, marginBottom: 8 }}>
-          Your seller covers {formatMoney(quote.absorbedByVendor, currency)} of delivery on this
-          order.
+          {t("vendorCoversDelivery", {
+            amount: formatMoney(quote.absorbedByVendor, currency),
+          })}
         </p>
       ) : null}
 
@@ -482,8 +489,7 @@ export default function CheckoutPage() {
         <div style={{ display: "flex", gap: 7, marginTop: 8, marginBottom: 20 }}>
           <Icon name="shield-check" size={16} style={{ color: "var(--brand)", marginTop: 1 }} />
           <span className="muted" style={{ fontSize: 12.5 }}>
-            This becomes {quote.perVendor.length} orders — one per seller, each shipping
-            independently. You are charged once for the group.
+            {t("multiVendorNote", { n: quote.perVendor.length })}
           </span>
         </div>
       )}
@@ -493,7 +499,9 @@ export default function CheckoutPage() {
         className="stickybar rounded-t-2xl"
       >
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11.5, color: "var(--text-muted)", fontWeight: 600 }}>Total</div>
+          <div style={{ fontSize: 11.5, color: "var(--text-muted)", fontWeight: 600 }}>
+            {t("total")}
+          </div>
           <div style={{ fontSize: 20, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
             {formatMoney(total, currency)}
           </div>
@@ -505,14 +513,18 @@ export default function CheckoutPage() {
           disabled={!canPay}
           title={
             !addressOk
-              ? "Choose a delivery address"
+              ? t("chooseAddress")
               : !phoneOk
-                ? "Enter a valid mobile money number"
+                ? t("enterValidNumber")
                 : undefined
           }
           onClick={() => void placeOrder()}
         >
-          {placing ? "Placing…" : isCod ? "Place order" : `Pay ${formatMoney(total, currency)}`}
+          {placing
+            ? t("placing")
+            : isCod
+              ? t("placeOrder")
+              : t("payAmount", { amount: formatMoney(total, currency) })}
         </Button>
       </div>
     </div>
@@ -555,11 +567,11 @@ type Translator = (key: string, values?: Record<string, string>) => string;
  * hand-typed address looks complete and cannot be delivered to, so telling the
  * shopper to pick one is advice they have already followed.
  */
-function addressProblem(t: Translator, error: ApiError): string {
+function addressProblem(tCheckout: Translator, error: ApiError): string {
   const reason = (error.details as { reason?: string } | undefined)?.reason;
   return reason === "selected_address_not_geocoded"
-    ? t("ADDRESS_NOT_GEOCODED")
-    : t("ORDER_DELIVERY_ADDRESS_REQUIRED");
+    ? tCheckout("ADDRESS_NOT_GEOCODED")
+    : tCheckout("ORDER_DELIVERY_ADDRESS_REQUIRED");
 }
 
 /**

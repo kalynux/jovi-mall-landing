@@ -18,6 +18,7 @@
  */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { listCategories, listProducts, resolveVariantBySku } from "@/lib/shop/catalog.api";
 import { parseProductSearchParams } from "@/lib/shop/shop.query";
 import { ShopBrowser } from "@/components/shop/ShopBrowser";
@@ -50,11 +51,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
+  const t = await getTranslations({ locale, namespace: "shop.meta" });
 
   return {
-    title: "Shop — Wi-Mall",
-    description:
-      "Browse products from verified African vendors on Wi-Mall — fashion, home, digital courses, e-books and services. Shop from your WhatsApp.",
+    title: t("shopTitle"),
+    description: t("shopDescription"),
     alternates: localeAlternates(locale, "/shop"),
   };
 }

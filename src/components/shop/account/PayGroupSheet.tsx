@@ -75,7 +75,8 @@ export function PayGroupSheet({
   onClose: () => void;
 }) {
   const router = useRouter();
-  const t = useTranslations("errors");
+  const t = useTranslations("shop.pay.sheet");
+  const tErrors = useTranslations("errors");
   /**
    * Loaded only once the sheet opens.
    *
@@ -136,9 +137,9 @@ export function PayGroupSheet({
       router.push(`/shop/checkout/success?${params}`);
     } catch (err) {
       setBusy(false);
-      setError(translateError(t, err, "We couldn't start this payment. Please try again."));
+      setError(translateError(tErrors, err, t("startFailed")));
     }
-  }, [group.cartId, option, phone, router, t]);
+  }, [group.cartId, option, phone, router, t, tErrors]);
 
   const canPay = payForm.ready && paymentReady(option, phone) && !busy;
 
@@ -146,7 +147,7 @@ export function PayGroupSheet({
     <BottomSheet
       open={open}
       onClose={onClose}
-      title="Pay for this order"
+      title={t("title")}
       // The amount and the button live in the footer so they stay put: the
       // phone field carries a country list, and on a small handset an inline
       // button would sit below the fold exactly when it is needed.
@@ -162,7 +163,7 @@ export function PayGroupSheet({
               color: "var(--text-strong)",
             }}
           >
-            <span style={{ fontSize: 14 }}>To pay</span>
+            <span style={{ fontSize: 14 }}>{t("toPay")}</span>
             <span style={{ fontSize: 18, fontVariantNumeric: "tabular-nums" }}>
               {formatMoney(amount, currency)}
             </span>
@@ -173,18 +174,16 @@ export function PayGroupSheet({
             elevated
             leadingIcon="lock"
             disabled={!canPay}
-            title={paymentReady(option, phone) ? undefined : "Enter a valid mobile money number"}
+            title={paymentReady(option, phone) ? undefined : t("enterValidNumber")}
             onClick={() => void pay()}
           >
-            {busy ? "Starting…" : `Pay ${formatMoney(amount, currency)}`}
+            {busy ? t("starting") : t("payAmount", { amount: formatMoney(amount, currency) })}
           </Button>
         </>
       }
     >
       <p className="muted" style={{ fontSize: 13, lineHeight: 1.55, margin: "0 0 16px" }}>
-        {orders.length === group.orderCount
-          ? "Your order is placed and waiting — nothing was lost. Choose how to pay and approve the prompt on your phone."
-          : `Only the ${orders.length} unpaid ${orders.length === 1 ? "order" : "orders"} in this group will be charged.`}
+        {orders.length === group.orderCount ? t("intro") : t("partialIntro", { n: orders.length })}
       </p>
 
       {error && (

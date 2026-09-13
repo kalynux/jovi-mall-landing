@@ -20,10 +20,23 @@ import type { CustomerProfile } from "@/lib/shop/customer.types";
 
 interface MenuRow {
   icon: IconName;
-  label: string;
+  /**
+   * A FULL dotted key, resolved with `tKey` — this table is module-level and
+   * there is no render in which to call a hook (LOCALISATION.md § 3). Most of
+   * these rows are shop routes, so their names already exist under `shop.nav`
+   * rather than needing a second copy in `shop.account`.
+   */
+  labelKey: string;
   href: string;
-  /** Right-hand summary, derived from the real record — never invented. */
-  value?: (p: CustomerProfile) => string;
+  /**
+   * Right-hand summary, derived from the real record — never invented.
+   *
+   * The count and the message that renders it are separate because the message
+   * has to agree with its noun: French "Aucune enregistrée" for an address and
+   * "Aucun enregistré" for a payment method, and Arabic needs the dual. So the
+   * row names its own ICU message in `shop.account` and supplies only `n`.
+   */
+  count?: { key: string; of: (p: CustomerProfile) => number };
   /**
    * This route is NOT in the app bundle — it lives on the marketing site.
    * Rendered as an in-app browser link on the native target rather than a
@@ -54,35 +67,31 @@ const MENU_ROW_STYLE = {
  * a dot on the icon itself.
  */
 const MENU: MenuRow[] = [
-  { icon: "package", label: "My orders", href: "/shop/account/orders" },
+  { icon: "package", labelKey: "shop.nav.titles.orders", href: "/shop/account/orders" },
   {
     icon: "map-pin",
-    label: "Addresses",
+    labelKey: "shop.nav.titles.addresses",
     href: "/shop/account/addresses",
-    value: (p) => {
-      const n = p.savedAddresses.length;
-      return n === 0 ? "None saved" : `${n} saved`;
-    },
+    count: { key: "addressCount", of: (p) => p.savedAddresses.length },
   },
   {
     icon: "wallet",
-    label: "Payment methods",
+    labelKey: "shop.nav.titles.paymentMethods",
     href: "/shop/account/payment-methods",
-    value: (p) => {
-      const n = p.savedPaymentMethods.length;
-      return n === 0 ? "None saved" : `${n} saved`;
-    },
+    count: { key: "paymentMethodCount", of: (p) => p.savedPaymentMethods.length },
   },
-  { icon: "download", label: "My downloads", href: "/shop/account/downloads" },
-  { icon: "star", label: "My reviews", href: "/shop/account/reviews" },
-  { icon: "shield", label: "Sign-in details", href: "/shop/account/security" },
-  { icon: "calendar-clock", label: "My bookings", href: "/shop/account/bookings" },
-  { icon: "life-buoy", label: "Support", href: "/shop/account/support" },
+  { icon: "download", labelKey: "shop.nav.titles.downloads", href: "/shop/account/downloads" },
+  { icon: "star", labelKey: "shop.nav.titles.reviews", href: "/shop/account/reviews" },
+  { icon: "shield", labelKey: "shop.nav.titles.security", href: "/shop/account/security" },
+  { icon: "calendar-clock", labelKey: "shop.nav.titles.bookings", href: "/shop/account/bookings" },
+  { icon: "life-buoy", labelKey: "shop.nav.titles.support", href: "/shop/account/support" },
   // Where the shop's help shortcut lives now. It used to be a circle floating
   // over every shop page, which on a phone meant a third hovering control
   // competing with the tab bar and the cards' quick-add buttons — and a
   // settings row is where someone looks for it anyway.
-  { icon: "circle-help", label: "Help & FAQ", href: "/faq", offBundle: true },
+  // `/faq` is a marketing route, not a shop one, so its name is the one row
+  // here that `shop.nav` does not already carry.
+  { icon: "circle-help", labelKey: "shop.account.helpFaq", href: "/faq", offBundle: true },
 ];
 
 export default function AccountPage() {
@@ -90,7 +99,10 @@ export default function AccountPage() {
   const { locale, localeLabels } = useLocale();
   const [langOpen, setLangOpen] = useState(false);
   const { status: authStatus } = useAuthGuard();
-  const t = useTranslations("errors");
+  const t = useTranslations("shop.account");
+  const tError = useTranslations("errors");
+  // The menu rows name themselves with absolute keys, mostly into `shop.nav`.
+  const tKey = useTranslations();
 
   const profile = useApiResource<CustomerProfile>(() => getProfile());
 
@@ -105,7 +117,7 @@ export default function AccountPage() {
     <div className="mx-auto max-w-[600px] px-4 py-6 sm:px-6">
       {/* The visible one is in the header bar, along with the overflow menu that
           used to sit beside it here — see `AccountHeaderMenu`. */}
-      <h1 className="sr-only">Account</h1>
+      <h1 className="sr-only">{tKey("shop.nav.tabs.account")}</h1>
 
       {/* Identity */}
       <div style={{ display: "flex", alignItems: "center", gap: 13, marginBottom: 20 }}>
@@ -136,7 +148,7 @@ export default function AccountPage() {
                 {p.name}
               </div>
               <div className="muted" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-                {[p.phone, p.email].filter(Boolean).join(" · ") || "No contact details"}
+                {[p.phone, p.email].filter(Boolean).join(" · ") || t("noContactDetails")}
               </div>
             </div>
           </>
@@ -147,7 +159,7 @@ export default function AccountPage() {
         <ResourceError
           error={profile.error}
           onRetry={profile.reload}
-          fallback={t("UNKNOWN_ERROR")}
+          fallback={tError("UNKNOWN_ERROR")}
         />
       ) : (
         <div
@@ -159,7 +171,7 @@ export default function AccountPage() {
           }}
         >
           {MENU.map((row) => {
-            const value = p && row.value ? row.value(p) : "";
+            const value = p && row.count ? t(row.count.key, { n: row.count.of(p) }) : "";
 
             const body = (
               <>
@@ -173,7 +185,7 @@ export default function AccountPage() {
                     color: "var(--text-strong)",
                   }}
                 >
-                  {row.label}
+                  {tKey(row.labelKey)}
                 </span>
                 {value && (
                   <span className="muted" style={{ fontSize: 12.5 }}>
@@ -247,7 +259,7 @@ export default function AccountPage() {
                 color: "var(--text-strong)",
               }}
             >
-              Language
+              {t("language")}
             </span>
             <span className="muted" style={{ fontSize: 12.5 }}>
               {currentLang}
@@ -265,12 +277,12 @@ export default function AccountPage() {
             <span
               style={{ flex: 1, fontSize: 14.5, fontWeight: 600, color: "var(--text-strong)" }}
             >
-              Dark mode
+              {t("darkMode")}
             </span>
             <button
               onClick={toggle}
               aria-pressed={dark}
-              aria-label="Toggle dark mode"
+              aria-label={t("toggleDarkMode")}
               style={{
                 width: 44,
                 height: 26,
@@ -310,7 +322,7 @@ export default function AccountPage() {
           from ending a session — and the menu is where you look for the way out
           of an account anyway. Both ask before they act. */}
       <p className="muted" style={{ textAlign: "center", marginTop: 20 }}>
-        Wi-Mall · shopping from your WhatsApp
+        {t("tagline")}
       </p>
     </div>
   );

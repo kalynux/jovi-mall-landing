@@ -62,16 +62,19 @@ import type {
  * this component; see `shop.routes.ts`.
  */
 export function OrderGroupDetail({ cartId }: { cartId: string }) {
+  const t = useTranslations("shop.orders");
+  // Root-scoped: the screen title is `shop.nav`'s, shared with the header bar.
+  const tKey = useTranslations();
   const group = useApiResource<OrderGroup>(() => getOrderGroup(cartId), [cartId]);
 
   return (
-    <AccountShell title="Order details">
+    <AccountShell title={tKey("shop.nav.titles.orderDetails")}>
       <ResourceView
         status={group.status}
         error={group.error}
         data={group.data}
         onRetry={group.reload}
-        errorFallback="We couldn't load this order."
+        errorFallback={t("loadOneFailed")}
       >
         {(g) => (
           <>
@@ -122,6 +125,7 @@ function GroupSummary({
 }) {
   const format = useFormatter();
   const t = useTranslations("errors");
+  const tOrders = useTranslations("shop.orders");
   const { flash } = useToast();
   const [paying, setPaying] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -183,37 +187,33 @@ function GroupSummary({
         // render, so the good news has to be said somewhere that outlives it.
         flash(
           next.paymentStatus === "paid"
-            ? "Payment received — your order is confirmed."
-            : "There is nothing left to pay on this order.",
+            ? tOrders("paymentReceived")
+            : tOrders("nothingLeftToPay"),
         );
       } else if (remaining < due) {
         setChecked({
           tone: "info",
-          message: `Part of your order has been paid. ${formatMoney(remaining, group.currency)} is still due.`,
+          // The amount goes in as a VALUE, keeping the bidi isolate marks
+          // `formatMoney` wraps it in — never rebuilt from parts (§6).
+          message: tOrders("partlyPaid", {
+            amount: formatMoney(remaining, group.currency),
+          }),
         });
       } else if (refused) {
         await forgetPaymentAttempt(group.cartId);
-        setChecked({
-          tone: "danger",
-          message:
-            "That payment did not go through, and nothing was charged. Your order is still held — you can pay for it again.",
-        });
+        setChecked({ tone: "danger", message: tOrders("paymentRefused") });
       } else {
-        setChecked({
-          tone: "info",
-          message:
-            "Not through yet. Mobile money can take a few minutes to clear — this order updates by itself as soon as your provider confirms, so there is no need to pay again.",
-        });
+        setChecked({ tone: "info", message: tOrders("paymentPending") });
       }
     } catch (err) {
       setChecked({
         tone: "danger",
-        message: translateError(t, err, "We couldn't check this payment. Please try again."),
+        message: translateError(t, err, tOrders("checkFailed")),
       });
     } finally {
       setChecking(false);
     }
-  }, [due, flash, group.cartId, group.currency, onRefreshed, t]);
+  }, [due, flash, group.cartId, group.currency, onRefreshed, t, tOrders]);
 
   return (
     <>
@@ -224,13 +224,14 @@ function GroupSummary({
               {formatMoney(group.totalAmount, group.currency)}
             </div>
             <div className="muted" style={{ fontSize: 12.5, marginTop: 3 }}>
-              Placed{" "}
-              {format.dateTime(new Date(group.createdAt), {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
+              {tOrders("placedOn", {
+                date: format.dateTime(new Date(group.createdAt), {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
               })}
             </div>
           </div>
@@ -241,9 +242,8 @@ function GroupSummary({
 
         {group.orderCount > 1 && (
           <p className="muted" style={{ fontSize: 12.5, marginTop: 10, lineHeight: 1.5 }}>
-            <Icon name="info" size={13} style={{ verticalAlign: "-2px" }} /> This order covers{" "}
-            {group.orderCount} vendors. Each ships independently, so they can arrive on different
-            days — you were charged once for the whole order.
+            <Icon name="info" size={13} style={{ verticalAlign: "-2px" }} />{" "}
+            {tOrders("multiVendorNote", { n: group.orderCount })}
           </p>
         )}
 
@@ -265,8 +265,7 @@ function GroupSummary({
             }}
           >
             <p style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--text-body)", margin: "0 0 10px" }}>
-              This order is waiting to be paid and your items are held — pay now to have the
-              seller start on it.
+              {tOrders("unpaidHeld")}
             </p>
             <Button
               block
@@ -274,7 +273,7 @@ function GroupSummary({
               disabled={checking}
               onClick={() => setPaying(true)}
             >
-              Pay {formatMoney(due, group.currency)}
+              {tOrders("payAmount", { amount: formatMoney(due, group.currency) })}
             </Button>
 
             {/* Secondary, and deliberately so: to a shopper who has not paid
@@ -287,7 +286,7 @@ function GroupSummary({
               style={{ marginTop: 8 }}
               onClick={() => void check()}
             >
-              {checking ? "Checking…" : "Already paid? Check now"}
+              {checking ? tOrders("checking") : tOrders("alreadyPaid")}
             </Button>
 
             {checked && (
@@ -355,6 +354,7 @@ export function VendorOrderCard({
   const [confirmCancel, setConfirmCancel] = useState(false);
   const { flash, flashError } = useToast();
   const t = useTranslations("errors");
+  const tOrders = useTranslations("shop.orders");
   const format = useFormatter();
 
   // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
@@ -383,32 +383,32 @@ export function VendorOrderCard({
     setBusy(true);
     try {
       await cancelOrder(order.id);
-      flash("Order cancelled");
+      flash(tOrders("orderCancelled"));
       onChanged();
     } catch (err) {
       // The vendor's cancellation policy and the paid-order rule both refuse
       // here with a specific reason. Showing that reason is the whole point —
       // "something went wrong" would leave the customer retrying a button that
       // can never succeed.
-      flashError(translateError(t, err, "We couldn't cancel this order."));
+      flashError(translateError(t, err, tOrders("cancelFailed")));
     } finally {
       setBusy(false);
       setConfirmCancel(false);
     }
-  }, [order.id, flash, flashError, onChanged, t]);
+  }, [order.id, flash, flashError, onChanged, t, tOrders]);
 
   const onConfirm = useCallback(async () => {
     setBusy(true);
     try {
       await confirmDelivery(order.id);
-      flash("Thanks — delivery confirmed");
+      flash(tOrders("deliveryConfirmed"));
       onChanged();
     } catch (err) {
-      flashError(translateError(t, err, "We couldn't confirm this delivery."));
+      flashError(translateError(t, err, tOrders("confirmFailed")));
     } finally {
       setBusy(false);
     }
-  }, [order.id, flash, flashError, onChanged, t]);
+  }, [order.id, flash, flashError, onChanged, t, tOrders]);
 
   return (
     <AccountCard style={{ marginBottom: 12 }}>
@@ -420,16 +420,16 @@ export function VendorOrderCard({
             href={storePath(order.store.slug)}
             style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text-strong)" }}
           >
-            {order.store.name ?? "Seller"}
+            {order.store.name ?? tOrders("seller")}
           </Link>
         ) : (
           <span style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text-strong)" }}>
-            {order.store?.name ?? "Seller"}
+            {order.store?.name ?? tOrders("seller")}
           </span>
         )}
         <div style={{ flex: 1 }} />
         <Badge size="sm" productType={order.orderType}>
-          {order.orderType}
+          {tKey(`shop.ds.productType.${order.orderType}`)}
         </Badge>
       </div>
       <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
@@ -445,7 +445,7 @@ export function VendorOrderCard({
         </Badge>
         {cod && (
           <Badge size="sm" tone="neutral" icon="banknote">
-            Cash on delivery
+            {tOrders("cashOnDelivery")}
           </Badge>
         )}
       </div>
@@ -492,7 +492,7 @@ export function VendorOrderCard({
                     className="muted"
                     style={{ fontSize: 11.5, display: "block", marginTop: 1 }}
                   >
-                    Free delivery
+                    {tKey("shop.ds.freeDelivery")}
                   </span>
                 )}
               </span>
@@ -538,24 +538,30 @@ export function VendorOrderCard({
         {order.priceBreakdown && (
           <>
             <BreakdownRow
-              label="Items"
+              label={tOrders("breakdown.items")}
               value={formatMoney(order.priceBreakdown.base, order.currency)}
             />
             {order.orderType === "physical" && (
               <BreakdownRow
-                label="Delivery"
-                value={<span style={{ color: "var(--success)", fontWeight: 700 }}>Included</span>}
+                label={tOrders("breakdown.delivery")}
+                value={
+                  <span style={{ color: "var(--success)", fontWeight: 700 }}>
+                    {tOrders("breakdown.included")}
+                  </span>
+                }
               />
             )}
             {order.priceBreakdown.discount > 0 && (
               <BreakdownRow
-                label="Discount"
-                value={`− ${formatMoney(order.priceBreakdown.discount, order.currency)}`}
+                label={tOrders("breakdown.discount")}
+                value={tOrders("breakdown.discountAmount", {
+                  amount: formatMoney(order.priceBreakdown.discount, order.currency),
+                })}
               />
             )}
             {order.priceBreakdown.tax > 0 && (
               <BreakdownRow
-                label="Tax"
+                label={tOrders("breakdown.tax")}
                 value={formatMoney(order.priceBreakdown.tax, order.currency)}
               />
             )}
@@ -571,7 +577,7 @@ export function VendorOrderCard({
             paddingTop: order.priceBreakdown ? 6 : 0,
           }}
         >
-          <span>Order total</span>
+          <span>{tOrders("breakdown.total")}</span>
           <span style={{ fontVariantNumeric: "tabular-nums" }}>
             {formatMoney(order.total, order.currency)}
           </span>
@@ -633,11 +639,12 @@ export function VendorOrderCard({
             style={{ color: "var(--success)", flexShrink: 0 }}
           />
           <span>
-            {order.completion?.auto ? "Confirmed automatically on" : "Delivery confirmed on"}{" "}
-            {format.dateTime(new Date(confirmedAt), {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
+            {tOrders(order.completion?.auto ? "confirmedAutoOn" : "confirmedOn", {
+              date: format.dateTime(new Date(confirmedAt), {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              }),
             })}
           </span>
         </div>
@@ -655,7 +662,7 @@ export function VendorOrderCard({
         >
           {canConfirmDelivery(order) && (
             <Button size="sm" leadingIcon="circle-check-big" disabled={busy} onClick={onConfirm}>
-              Confirm delivery
+              {tOrders("confirmDelivery")}
             </Button>
           )}
           <div style={{ flex: 1 }} />
@@ -668,7 +675,7 @@ export function VendorOrderCard({
               onClick={() => setConfirmCancel(true)}
               style={{ color: "var(--danger)" }}
             >
-              Cancel order
+              {tOrders("cancelOrder")}
             </Button>
           )}
         </div>
@@ -679,18 +686,16 @@ export function VendorOrderCard({
           button sits beside "Confirm delivery", which is the opposite answer. */}
       <ConfirmDialog
         open={confirmCancel}
-        title="Cancel this order?"
+        title={tOrders("cancelTitle")}
         tone="danger"
         icon="circle-x"
-        confirmLabel="Cancel order"
-        cancelLabel="Keep it"
+        confirmLabel={tOrders("cancelOrder")}
+        cancelLabel={tOrders("keepIt")}
         busy={busy}
         onConfirm={() => void onCancel()}
         onCancel={() => setConfirmCancel(false)}
       >
-        This tells {order.store?.name ?? "the seller"} to stop preparing it. It cannot be
-        un-cancelled — you would have to order again. Anything already paid is refunded under the
-        seller&apos;s policy.
+        {tOrders("cancelBody", { store: order.store?.name ?? tOrders("theSeller") })}
       </ConfirmDialog>
     </AccountCard>
   );
@@ -713,16 +718,38 @@ function BreakdownRow({ label, value }: { label: string; value: React.ReactNode 
   );
 }
 
-/** The five words a customer is shown, and nothing from the dispatch machinery. */
+/**
+ * The five words a customer is shown, and nothing from the dispatch machinery.
+ *
+ * These are the *shipment* vocabulary — a different enum from the order
+ * fulfilment statuses Phase 1 put in `shop.status`, and deliberately worded
+ * for a parcel rather than an order.
+ */
 const SHIPMENT_LABEL: Record<
   CustomerShipmentStatus,
-  { label: string; icon: IconName; tone: StatusChip["tone"] }
+  { labelKey: string; icon: IconName; tone: StatusChip["tone"] }
 > = {
-  preparing: { label: "Preparing", icon: "package", tone: "neutral" },
-  shipped: { label: "On its way", icon: "truck", tone: "brand" },
-  out_for_delivery: { label: "Out for delivery", icon: "map-pin", tone: "brand" },
-  delivered: { label: "Delivered", icon: "circle-check-big", tone: "success" },
-  delivery_failed: { label: "Delivery failed", icon: "triangle-alert", tone: "danger" },
+  preparing: {
+    labelKey: "shop.orders.shipmentStatus.preparing",
+    icon: "package",
+    tone: "neutral",
+  },
+  shipped: { labelKey: "shop.orders.shipmentStatus.shipped", icon: "truck", tone: "brand" },
+  out_for_delivery: {
+    labelKey: "shop.orders.shipmentStatus.out_for_delivery",
+    icon: "map-pin",
+    tone: "brand",
+  },
+  delivered: {
+    labelKey: "shop.orders.shipmentStatus.delivered",
+    icon: "circle-check-big",
+    tone: "success",
+  },
+  delivery_failed: {
+    labelKey: "shop.orders.shipmentStatus.delivery_failed",
+    icon: "triangle-alert",
+    tone: "danger",
+  },
 };
 
 /**
@@ -764,6 +791,9 @@ export function Shipments({
   const [busy, setBusy] = useState<string | null>(null);
   const { flash, flashError } = useToast();
   const t = useTranslations("errors");
+  const tOrders = useTranslations("shop.orders");
+  // Root-scoped: `SHIPMENT_LABEL` emits absolute keys, as the lib modules do.
+  const tKey = useTranslations();
   const format = useFormatter();
 
   const load = useCallback(() => {
@@ -781,16 +811,16 @@ export function Shipments({
       setBusy(shipmentId);
       try {
         await confirmShipmentDelivery(orderId, shipmentId);
-        flash("Thanks — delivery confirmed");
+        flash(tOrders("deliveryConfirmed"));
         load();
         onChanged();
       } catch (err) {
-        flashError(translateError(t, err, "We couldn't confirm this parcel."));
+        flashError(translateError(t, err, tOrders("confirmParcelFailed")));
       } finally {
         setBusy(null);
       }
     },
-    [orderId, flash, flashError, load, onChanged, t]
+    [orderId, flash, flashError, load, onChanged, t, tOrders]
   );
 
   // `null` while the read is still in flight either way: a flash of "no parcels"
@@ -801,7 +831,7 @@ export function Shipments({
   return (
     <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--border-subtle)" }}>
       <p className="ds-overline" style={{ marginBottom: 8 }}>
-        {shipments.length === 1 ? "Parcel" : `${shipments.length} parcels`}
+        {tOrders("parcelCount", { n: shipments.length })}
       </p>
 
       {shipments.map((shipment) => {
@@ -818,7 +848,7 @@ export function Shipments({
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <Badge size="sm" tone={view.tone} icon={view.icon}>
-                {view.label}
+                {tKey(view.labelKey)}
               </Badge>
               {shipment.trackingNumber && (
                 <span
@@ -863,7 +893,9 @@ export function Shipments({
                       size={13}
                       style={{ color: "var(--brand)", flexShrink: 0 }}
                     />
-                    <span style={{ fontWeight: 600 }}>{SHIPMENT_LABEL[step.status].label}</span>
+                    <span style={{ fontWeight: 600 }}>
+                      {tKey(SHIPMENT_LABEL[step.status].labelKey)}
+                    </span>
                     <span style={{ marginLeft: "auto" }}>
                       {format.dateTime(new Date(step.at), {
                         day: "numeric",
@@ -879,9 +911,7 @@ export function Shipments({
 
             {shipment.failedAttempts > 0 && (
               <p className="muted" style={{ fontSize: 12, marginTop: 6 }}>
-                {shipment.failedAttempts} delivery attempt
-                {shipment.failedAttempts === 1 ? "" : "s"} did not succeed. The courier will try
-                again.
+                {tOrders("failedAttempts", { n: shipment.failedAttempts })}
               </p>
             )}
 
@@ -894,7 +924,7 @@ export function Shipments({
                 <ReviewDisclosure
                   subjectType="delivery"
                   subjectId={shipment.id}
-                  label="this delivery"
+                  label={tOrders("thisDelivery")}
                 />
               </div>
             )}
@@ -908,7 +938,7 @@ export function Shipments({
                   disabled={busy === shipment.id}
                   onClick={() => void confirm(shipment.id)}
                 >
-                  I received this parcel
+                  {tOrders("receivedParcel")}
                 </Button>
               </div>
             )}
@@ -965,16 +995,17 @@ function Carrier({
   // this is a belt-and-braces fallback rather than a real disagreement — and it
   // tolerates the one case the API documents, a magazin that exists but has not
   // been filled in, whose `name` is `""`.
+  const t = useTranslations("shop.orders.carrier");
   const name = agency?.name || agencyName || null;
   const contacts = [
-    agency?.supportPhone && { icon: "phone", label: "Call", href: `tel:${agency.supportPhone}` },
+    agency?.supportPhone && { icon: "phone", key: "call", href: `tel:${agency.supportPhone}` },
     agency?.supportWhatsapp && {
       icon: "message-circle",
-      label: "WhatsApp",
+      key: "whatsapp",
       href: `https://wa.me/${agency.supportWhatsapp.replace(/D/g, "")}`,
     },
-    agency?.supportEmail && { icon: "mail", label: "Email", href: `mailto:${agency.supportEmail}` },
-  ].filter(Boolean) as { icon: IconName; label: string; href: string }[];
+    agency?.supportEmail && { icon: "mail", key: "email", href: `mailto:${agency.supportEmail}` },
+  ].filter(Boolean) as { icon: IconName; key: string; href: string }[];
 
   if (!name && !agent) return null;
 
@@ -988,7 +1019,7 @@ function Carrier({
               {name}
             </p>
             <p className="muted" style={{ fontSize: 11, margin: 0 }}>
-              Delivery company
+              {t("company")}
             </p>
           </div>
           {contacts.length > 0 && (
@@ -997,8 +1028,8 @@ function Carrier({
                 <a
                   key={c.icon}
                   href={c.href}
-                  aria-label={`${c.label} ${name}`}
-                  title={`${c.label} ${name}`}
+                  aria-label={t(c.key, { name })}
+                  title={t(c.key, { name })}
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
@@ -1035,7 +1066,7 @@ function Carrier({
               {agent.displayName}
             </p>
             <p className="muted" style={{ fontSize: 11, margin: 0 }}>
-              Carrying your parcel
+              {t("carrying")}
             </p>
           </div>
         </div>
@@ -1067,6 +1098,7 @@ function DeliveryCodeCard({
   const [cooldown, setCooldown] = useState(0);
   const { flash, flashError } = useToast();
   const t = useTranslations("errors");
+  const tCod = useTranslations("shop.orders.cod");
 
   // Tick the resend cooldown down to zero. Without this the button would show
   // "Wait 43s" and stay disabled forever, because nothing else re-renders this
@@ -1082,7 +1114,7 @@ function DeliveryCodeCard({
     try {
       const next = await resendDeliveryCode(orderId, collection.shipmentId);
       setCode(next.deliveryCode);
-      flash("A new code was generated");
+      flash(tCod("newCode"));
       onResent();
     } catch (err) {
       // Regeneration is capped at one per 60 s. Telling someone to wait 43
@@ -1101,14 +1133,14 @@ function DeliveryCodeCard({
            last resort, since it is the documented cap. */
         const retry = err.retryAfterSeconds ?? 60;
         setCooldown(retry);
-        flashError(`Please wait ${retry}s before requesting another code.`);
+        flashError(tCod("waitBeforeResend", { seconds: retry }));
       } else {
-        flashError(translateError(t, err, "We couldn't send a new code."));
+        flashError(translateError(t, err, tCod("resendFailed")));
       }
     } finally {
       setBusy(false);
     }
-  }, [orderId, collection.shipmentId, flash, flashError, onResent, t]);
+  }, [orderId, collection.shipmentId, flash, flashError, onResent, t, tCod]);
 
   if (!code) return null;
 
@@ -1125,7 +1157,9 @@ function DeliveryCodeCard({
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
         <Icon name="banknote" size={18} style={{ color: "var(--brand-hover)" }} />
         <span style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text-strong)" }}>
-          Pay {formatMoney(collection.expectedAmount, collection.currency)} in cash
+          {tCod("payInCash", {
+            amount: formatMoney(collection.expectedAmount, collection.currency),
+          })}
         </span>
       </div>
 
@@ -1155,8 +1189,7 @@ function DeliveryCodeCard({
       >
         <Icon name="triangle-alert" size={15} style={{ color: "var(--warning)", flexShrink: 0, marginTop: 1 }} />
         <span>
-          Only give this code to the delivery agent <strong>after</strong> you have received your
-          package and paid. It is what records your payment.
+          {tCod.rich("warning", { strong: (chunks) => <strong>{chunks}</strong> })}
         </span>
       </p>
 
@@ -1169,7 +1202,7 @@ function DeliveryCodeCard({
           disabled={busy || cooldown > 0}
           onClick={resend}
         >
-          {cooldown > 0 ? `Wait ${cooldown}s` : "Send a new code"}
+          {cooldown > 0 ? tCod("waitSeconds", { seconds: cooldown }) : tCod("sendNewCode")}
         </Button>
       </div>
     </div>

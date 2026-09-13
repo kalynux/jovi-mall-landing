@@ -6,41 +6,22 @@ import type { UiRole } from "@/lib/auth/auth.types";
 import { useTranslations } from "next-intl";
 
 // ─── Role Config ─────────────────────────────────────────────────────────────
-const ROLE_CONFIG: Record<
-  UiRole,
-  {
-    icon: React.ElementType;
-    label: string;
-    headline: string;
-    description: string;
-    isWa?: boolean;
-  }
-> = {
-  vendor: {
-    icon: Store,
-    label: "Vendor",
-    headline: "I want to sell products",
-    description: "Upload your catalog and let AI sell for you on WhatsApp",
-  },
-  agency: {
-    icon: Building2,
-    label: "Agency",
-    headline: "I manage deliveries",
-    description: "Coordinate agents and earn commission on every delivery",
-  },
-  agent: {
-    icon: Bike,
-    label: "Agent",
-    headline: "I deliver orders",
-    description: "Pick up assignments and earn per successful delivery",
-  },
-  customer: {
-    icon: MessageCircle,
-    label: "Customer",
-    headline: "I want to shop",
-    description: "Just WhatsApp us — browse, buy, and get it delivered",
-    isWa: true,
-  },
+/**
+ * What is true about a role that is NOT copy: which glyph it wears, and whether
+ * it is the WhatsApp-green one.
+ *
+ * The label, headline and description used to sit here too, in English, and were
+ * already dead — every one of them is rendered from `modal.roles.<role>.*`
+ * below. They are gone rather than converted to `labelKey`s, because the
+ * catalogue is keyed by the same role id this map is: `ROLE_CONFIG[role]` and
+ * `t("roles.<role>.label")` are two lookups on one key, and a second copy of the
+ * key would only add a way for them to disagree.
+ */
+const ROLE_CONFIG: Record<UiRole, { icon: React.ElementType; isWa?: boolean }> = {
+  vendor: { icon: Store },
+  agency: { icon: Building2 },
+  agent: { icon: Bike },
+  customer: { icon: MessageCircle, isWa: true },
 };
 
 // ─── Props ───────────────────────────────────────────────────────────────────
@@ -49,6 +30,7 @@ interface RolePickerProps {
   onSelect: (role: UiRole) => void;
   /** Roles to hide (e.g. already-held roles on the add-role page) */
   ownedRoles?: UiRole[];
+  /** Badge on an already-held role. Defaults to `authMe.ownedBadge`. */
   ownedRolesLabel?: string;
   /**
    * Role that is disabled (greyed-out, non-clickable).
@@ -56,7 +38,7 @@ interface RolePickerProps {
    * Uses the shared "Current role" badge label from authMe.currentBadge.
    */
   disabledRole?: UiRole;
-  /** Label for the badge shown on the disabled card. Pass t("authMe.currentBadge"). */
+  /** Badge on the disabled card. Defaults to `authMe.currentBadge`. */
   disabledRoleLabel?: string;
   /** If set, renders a skip button with this message */
   skipMessage?: string;
@@ -72,9 +54,9 @@ export default function RolePicker({
   selected,
   onSelect,
   ownedRoles = [],
-  ownedRolesLabel = "Owned",
+  ownedRolesLabel,
   disabledRole,
-  disabledRoleLabel = "Current",
+  disabledRoleLabel,
   skipMessage,
   onSkip,
   customerCallout = false,
@@ -86,6 +68,12 @@ export default function RolePicker({
   // ).filter((r) => !ownedRoles.includes(r));
 
   const t = useTranslations("modal");
+  const tMe = useTranslations("authMe");
+
+  // The two badges default to the shared account vocabulary rather than to
+  // English. Callers that already hold a translator still pass their own.
+  const ownedLabel = ownedRolesLabel ?? tMe("ownedBadge");
+  const currentLabel = disabledRoleLabel ?? tMe("currentBadge");
 
   return (
     <div className={cn("flex flex-col gap-3", className)}>
@@ -93,6 +81,7 @@ export default function RolePicker({
         {(Object.keys(ROLE_CONFIG) as UiRole[]).map((role, i) => {
           const config = ROLE_CONFIG[role];
           const Icon = config.icon;
+          const headline = t(`roles.${role}.headline` as Parameters<typeof t>[0]);
           const isSelected = selected === role;
           const isWa = config.isWa;
           const isDisabled = role === disabledRole;
@@ -116,7 +105,13 @@ export default function RolePicker({
               tabIndex={isDisabled ? -1 : undefined}
               aria-disabled={isDisabled ? "true" : undefined}
               aria-pressed={isDisabled ? undefined : isSelected}
-              aria-label={isDisabled ? `${config.headline} (${disabledRoleLabel})` : config.headline}
+              // One message, not a headline glued to a badge: the parenthesis
+              // and the word order inside it are the translator's to move (§4).
+              aria-label={
+                isDisabled
+                  ? tMe("roleAriaCurrent", { role: headline })
+                  : headline
+              }
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{
@@ -152,11 +147,11 @@ export default function RolePicker({
                 </div>
                 {isDisabled ? (
                   <div className="text-[9px] font-display font-bold px-2 py-0.5 rounded-full bg-[var(--border-medium)] text-[var(--text-muted)]">
-                    {disabledRoleLabel}
+                    {currentLabel}
                   </div>
                 ) : isOwned && (
                   <div className="text-[9px] font-display font-bold px-2 py-0.5 rounded-full bg-[var(--border-medium)] text-[var(--text-muted)]">
-                    {ownedRolesLabel}
+                    {ownedLabel}
                   </div>
                 )}
               </div>
@@ -181,7 +176,7 @@ export default function RolePicker({
               </div>
 
               <h3 className="font-display font-semibold text-sm text-[var(--text-primary)] mb-0.5">
-                {t(`roles.${role}.headline` as Parameters<typeof t>[0])}
+                {headline}
               </h3>
               <p className="text-xs text-[var(--text-muted)] leading-relaxed">
                 {t(`roles.${role}.description` as Parameters<typeof t>[0])}

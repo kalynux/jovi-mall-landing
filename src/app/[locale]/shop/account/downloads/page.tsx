@@ -17,25 +17,27 @@ import type { DigitalEntitlement } from "@/lib/shop/customer.types";
 
 export default function DownloadsPage() {
   const library = useApiResource<DigitalEntitlement[]>(() => getMyDigitalProducts());
+  const t = useTranslations("shop.downloads");
+  const tKey = useTranslations();
 
   return (
     <AccountShell
-      title="My downloads"
-      description="Everything digital you've bought."
+      title={tKey("shop.nav.titles.downloads")}
+      description={t("description")}
     >
       <ResourceView
         status={library.status}
         error={library.error}
         data={library.data}
         onRetry={library.reload}
-        errorFallback="We couldn't load your downloads."
+        errorFallback={t("loadFailed")}
       >
         {(items) =>
           items.length === 0 ? (
             <EmptyState
               icon="download"
-              title="Nothing to download yet"
-              description="E-books, courses and other digital purchases appear here as soon as payment clears."
+              title={t("emptyTitle")}
+              description={t("emptyDescription")}
             />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -60,7 +62,9 @@ function DownloadRow({
   const [busy, setBusy] = useState(false);
   const { flashError } = useToast();
   const format = useFormatter();
-  const t = useTranslations("errors");
+  const t = useTranslations("shop.downloads");
+  const tCommon = useTranslations("shop.common");
+  const tError = useTranslations("errors");
 
   const download = useCallback(async () => {
     setBusy(true);
@@ -79,11 +83,11 @@ function DownloadRow({
       // is not one behind.
       onUsed();
     } catch (err) {
-      flashError(translateError(t, err, "We couldn't start that download."));
+      flashError(translateError(tError, err, t("startFailed")));
     } finally {
       setBusy(false);
     }
-  }, [item.id, flashError, onUsed, t]);
+  }, [item.id, flashError, onUsed, t, tError]);
 
   const expired = item.expiresAt != null && new Date(item.expiresAt).getTime() < Date.now();
   const remaining = item.downloadsRemaining;
@@ -94,7 +98,7 @@ function DownloadRow({
         <Icon name="file-down" size={20} style={{ color: "var(--brand)", marginTop: 2, flexShrink: 0 }} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-strong)" }}>
-            {item.productTitle ?? item.fileName ?? "Digital item"}
+            {item.productTitle ?? item.fileName ?? t("untitled")}
           </div>
           {item.variantName && (
             <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
@@ -105,15 +109,15 @@ function DownloadRow({
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
             {item.revoked ? (
               <Badge size="sm" tone="danger" icon="circle-x">
-                Revoked
+                {t("revoked")}
               </Badge>
             ) : expired ? (
               <Badge size="sm" tone="warning" icon="clock">
-                Expired
+                {t("expired")}
               </Badge>
             ) : (
               <Badge size="sm" tone="success" icon="circle-check-big">
-                Available
+                {t("available")}
               </Badge>
             )}
 
@@ -121,17 +125,18 @@ function DownloadRow({
                 "0 left" for an unlimited entitlement would read as spent. */}
             {remaining != null && (
               <Badge size="sm" tone={remaining > 0 ? "neutral" : "danger"}>
-                {remaining} download{remaining === 1 ? "" : "s"} left
+                {t("remaining", { n: remaining })}
               </Badge>
             )}
 
             {item.expiresAt && !expired && (
               <span className="muted" style={{ fontSize: 11.5, alignSelf: "center" }}>
-                Until{" "}
-                {format.dateTime(new Date(item.expiresAt), {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
+                {t("until", {
+                  date: format.dateTime(new Date(item.expiresAt), {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  }),
                 })}
               </span>
             )}
@@ -152,10 +157,10 @@ function DownloadRow({
           size="sm"
           leadingIcon="download"
           disabled={!item.canDownload || busy}
-          title={item.canDownload ? undefined : "This download is no longer available"}
+          title={item.canDownload ? undefined : t("unavailable")}
           onClick={download}
         >
-          {busy ? "Preparing…" : "Download"}
+          {busy ? t("preparing") : tCommon("download")}
         </Button>
       </div>
     </AccountCard>

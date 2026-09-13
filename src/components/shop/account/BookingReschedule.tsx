@@ -1,5 +1,7 @@
 "use client";
 
+import { useFormatter, useTranslations } from "next-intl";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Button, Chip, Skeleton } from "@/components/shop/ds";
@@ -35,6 +37,15 @@ const WINDOW_DAYS = 21;
  * for those two.
  */
 export function BookingReschedule({ bookingId }: { bookingId: string }) {
+  // Bound above the guards below: this component renders a skeleton, then a
+  // "cannot be moved" branch, then the picker, so a hook called after an early
+  // return would change the hook order between renders.
+  const t = useTranslations("shop.bookings");
+  // Root-scoped, for the screen title Phase 1 put in `shop.nav`.
+  const tKey = useTranslations();
+  // Dates are never translated — they are formatted, against the app's locale
+  // rather than the browser's. See LOCALISATION.md §6.
+  const format = useFormatter();
   const router = useRouter();
   const { flash } = useToast();
   const { status } = useAuthGuard();
@@ -93,16 +104,12 @@ export function BookingReschedule({ bookingId }: { bookingId: string }) {
         setHeld(slot.id);
       } catch (err) {
         const code = err instanceof ApiError ? err.code : undefined;
-        flash(
-          code === "BOOKING_SLOT_LOCKED"
-            ? "Someone else is taking that time right now. Try another."
-            : "Could not hold that time.",
-        );
+        flash(code === "BOOKING_SLOT_LOCKED" ? t("slotLocked") : t("holdFailed"));
       } finally {
         setBusy(false);
       }
     },
-    [productId, held, flash],
+    [productId, held, flash, t],
   );
 
   const commit = useCallback(async () => {
@@ -111,7 +118,7 @@ export function BookingReschedule({ bookingId }: { bookingId: string }) {
     try {
       await rescheduleBooking(bookingId, held);
       setHeld(null);
-      flash("Your booking has been moved.");
+      flash(t("moved"));
       router.push(bookingPath(bookingId));
     } catch (err) {
       const code = err instanceof ApiError ? err.code : undefined;
@@ -134,18 +141,18 @@ export function BookingReschedule({ bookingId }: { bookingId: string }) {
          was unreachable. It works now. */
       flash(
         code === "BOOKING_NOT_RESCHEDULABLE"
-          ? "This booking can no longer be moved."
+          ? t("notReschedulable")
           : code === "BOOKING_SLOT_FULL"
-            ? "That session is full. Please pick another time."
+            ? t("slotFull")
             : code === "BOOKING_SLOT_UNAVAILABLE"
-              ? "Someone took that time first. Please pick another."
-              : "Could not move that booking.",
+              ? t("slotTaken")
+              : t("moveFailed"),
       );
       setHeld(null);
     } finally {
       setBusy(false);
     }
-  }, [held, bookingId, router, flash]);
+  }, [held, bookingId, router, flash, t]);
 
   if (status === "loading" || booking.status === "loading" || slots === null) {
     return (
@@ -159,13 +166,13 @@ export function BookingReschedule({ bookingId }: { bookingId: string }) {
   if (!b || (b.status !== "pending" && b.status !== "confirmed")) {
     return (
       <div className="mx-auto max-w-[560px] px-4 py-6 sm:px-6">
-        <p style={{ fontSize: 14.5 }}>This booking can no longer be moved.</p>
+        <p style={{ fontSize: 14.5 }}>{t("notReschedulable")}</p>
         <Button
           variant="secondary"
           size="sm"
           onClick={() => router.push(bookingPath(bookingId))}
         >
-          Back to the booking
+          {t("backToBooking")}
         </Button>
       </div>
     );
@@ -173,27 +180,28 @@ export function BookingReschedule({ bookingId }: { bookingId: string }) {
 
   return (
     <div className="mx-auto max-w-[560px] px-4 py-6 sm:px-6">
-      <h1 className="sr-only">Move your booking</h1>
+      <h1 className="sr-only">{tKey("shop.nav.titles.bookingReschedule")}</h1>
 
       <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
-        Currently{" "}
-        {new Date(b.startAt).toLocaleString(undefined, {
-          weekday: "short",
-          day: "numeric",
-          month: "short",
-          hour: "2-digit",
-          minute: "2-digit",
+        {t("currently", {
+          when: format.dateTime(new Date(b.startAt), {
+            weekday: "short",
+            day: "numeric",
+            month: "short",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
         })}
       </p>
 
       {slots.length === 0 ? (
-        <p style={{ fontSize: 14 }}>There are no other times open at the moment.</p>
+        <p style={{ fontSize: 14 }}>{t("noOtherTimes")}</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12, maxHeight: 360, overflowY: "auto" }}>
           {byDay.map(([day, daySlots]) => (
             <div key={day}>
               <div className="ds-overline" style={{ marginBottom: 6 }}>
-                {new Date(daySlots[0].start).toLocaleDateString(undefined, {
+                {format.dateTime(new Date(daySlots[0].start), {
                   weekday: "short",
                   day: "numeric",
                   month: "short",
@@ -207,12 +215,14 @@ export function BookingReschedule({ bookingId }: { bookingId: string }) {
                     disabled={!slot.available || busy}
                     onClick={() => void choose(slot)}
                   >
-                    {new Date(slot.start).toLocaleTimeString(undefined, {
+                    {format.dateTime(new Date(slot.start), {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
                     {slot.spotsRemaining !== undefined &&
-                      (slot.available ? ` · ${slot.spotsRemaining} left` : " · Full")}
+                      ` · ${
+                        slot.available ? t("spotsLeft", { n: slot.spotsRemaining }) : t("full")
+                      }`}
                   </Chip>
                 ))}
               </div>
@@ -224,13 +234,13 @@ export function BookingReschedule({ bookingId }: { bookingId: string }) {
       {held && (
         <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
           <Button disabled={busy} onClick={() => void commit()}>
-            {busy ? "Moving…" : "Move my booking"}
+            {busy ? t("moving") : t("moveMyBooking")}
           </Button>
           <Button
             variant="ghost"
             onClick={() => router.push(bookingPath(bookingId))}
           >
-            Cancel
+            {tKey("shop.common.cancel")}
           </Button>
         </div>
       )}

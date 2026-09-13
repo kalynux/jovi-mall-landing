@@ -46,12 +46,18 @@ import type { CartQuote, CartDropReason } from "@/lib/shop/customer.types";
  * nothing behind it.
  */
 
-const DROP_REASON: Record<CartDropReason, string> = {
-  PRODUCT_UNAVAILABLE: "no longer on sale",
-  PRODUCT_TYPE_CONFLICT: "a different product type to the cart you already had",
-  DIGITAL_LIMIT_REACHED: "a second digital product — only one fits in a cart",
-  SERVICE_NOT_ALLOWED: "a service, which is booked rather than carted",
-  SERVER_CART_KEPT: "already replaced by the cart on your account",
+/**
+ * Keys into `shop.cart.dropReason`, never sentences — this is a module-level
+ * constant, so there is no render and no locale to read here. `DroppedNotice`
+ * resolves them. Renamed from `DROP_REASON` so a call site that still expects a
+ * finished string cannot compile.
+ */
+const DROP_REASON_KEY: Record<CartDropReason, string> = {
+  PRODUCT_UNAVAILABLE: "dropReason.PRODUCT_UNAVAILABLE",
+  PRODUCT_TYPE_CONFLICT: "dropReason.PRODUCT_TYPE_CONFLICT",
+  DIGITAL_LIMIT_REACHED: "dropReason.DIGITAL_LIMIT_REACHED",
+  SERVICE_NOT_ALLOWED: "dropReason.SERVICE_NOT_ALLOWED",
+  SERVER_CART_KEPT: "dropReason.SERVER_CART_KEPT",
 };
 
 export default function CartPage() {
@@ -71,7 +77,10 @@ export default function CartPage() {
     removeLine,
   } = useCart();
   const { flashError } = useToast();
-  const t = useTranslations("errors");
+  const t = useTranslations("shop.cart");
+  /* The shared backend-code ladder, and the frozen shared vocabulary. */
+  const tErrors = useTranslations("errors");
+  const tKey = useTranslations();
 
   /**
    * Run a cart write and SAY SO if it fails.
@@ -90,9 +99,9 @@ export default function CartPage() {
    */
   const write = useCallback(
     (op: Promise<void>, failed: string) => {
-      void op.catch((err: unknown) => flashError(translateError(t, err, failed)));
+      void op.catch((err: unknown) => flashError(translateError(tErrors, err, failed)));
     },
-    [flashError, t],
+    [flashError, tErrors],
   );
 
   const [quote, setQuote] = useState<CartQuote | null>(null);
@@ -106,7 +115,7 @@ export default function CartPage() {
   /* A digital cart is one product from one seller with nothing to deliver, so it
      is not a basket being assembled — it is a purchase waiting to be paid for.
      The header bar says so; everything else here is named by the route. */
-  useShopPageTitle(isDigital ? "Your purchase" : null);
+  useShopPageTitle(isDigital ? t("purchaseTitle") : null);
 
   /**
    * The quote is a server computation over the *server* cart, so it is only
@@ -166,7 +175,7 @@ export default function CartPage() {
   if (!hydrated) {
     return (
       <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-6">
-        <h1 className="sr-only">Cart</h1>
+        <h1 className="sr-only">{tKey("shop.nav.tabs.cart")}</h1>
         <div className="flex flex-col gap-3">
           {[0, 1, 2].map((i) => (
             <Skeleton key={i} height={92} radius="var(--radius-card)" />
@@ -179,7 +188,7 @@ export default function CartPage() {
   if (count === 0) {
     return (
       <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-6">
-        <h1 className="sr-only">Cart</h1>
+        <h1 className="sr-only">{tKey("shop.nav.tabs.cart")}</h1>
         {dropped.length > 0 && <DroppedNotice dropped={dropped} onDismiss={dismissDropped} />}
         {negotiationLapsed.length > 0 && (
           <NegotiationLapsedNotice
@@ -189,9 +198,9 @@ export default function CartPage() {
         )}
         <EmptyState
           icon="shopping-cart"
-          title="Your cart is empty"
-          description="Let’s fix that — browse the market and add something you love."
-          actionLabel="Continue shopping"
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
+          actionLabel={t("continueShopping")}
           actionIcon="arrow-left"
           onAction={() => router.push("/shop")}
         />
@@ -202,13 +211,11 @@ export default function CartPage() {
   return (
     <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-6">
       {/* The visible title is the header bar's. */}
-      <h1 className="sr-only">{isDigital ? "Your purchase" : "Cart"}</h1>
+      <h1 className="sr-only">{isDigital ? t("purchaseTitle") : tKey("shop.nav.tabs.cart")}</h1>
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 16 }}>
         <Icon name={isDigital ? "zap" : "info"} size={15} style={{ color: "var(--text-muted)" }} />
         <span className="muted" style={{ fontSize: 12.5 }}>
-          {isDigital
-            ? "One digital product, paid for on its own. Nothing to deliver."
-            : "Items from different sellers become separate orders — you pay once."}
+          {isDigital ? t("digitalNote") : t("multiVendorNote")}
         </span>
       </div>
 
@@ -242,11 +249,11 @@ export default function CartPage() {
           >
             {productType && (
               <Badge productType={productType} size="sm">
-                {productType === "digital" ? "Digital products" : "Physical products"}
+                {productType === "digital" ? t("digitalProducts") : t("physicalProducts")}
               </Badge>
             )}
             <span className="muted" style={{ marginLeft: "auto", fontSize: 12.5 }}>
-              {lines.length} line{lines.length === 1 ? "" : "s"}
+              {t("lineCount", { n: lines.length })}
             </span>
           </div>
 
@@ -291,7 +298,7 @@ export default function CartPage() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                   {productType === "digital" ? (
                     <span className="muted" style={{ fontSize: 12.5 }}>
-                      Qty 1
+                      {t("qtyOne")}
                     </span>
                   ) : (
                     /* The stepper can go *down* now. `POST /items` only ever
@@ -302,7 +309,7 @@ export default function CartPage() {
                       size="sm"
                       value={line.qty}
                       max={99}
-                      onChange={(q) => write(setQty(line.variantId, q), "We couldn't change that quantity.")}
+                      onChange={(q) => write(setQty(line.variantId, q), t("qtyFailed"))}
                     />
                   )}
                   <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
@@ -322,7 +329,7 @@ export default function CartPage() {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        your agreed price
+                        {t("agreedPrice")}
                       </span>
                     )}
                   </span>
@@ -338,7 +345,7 @@ export default function CartPage() {
                 icon="trash-2"
                 variant="plain"
                 size="sm"
-                label="Remove"
+                label={tKey("shop.common.remove")}
                 disabled={busy}
                 onClick={() =>
                   setPendingRemoval({ variantId: line.variantId, title: line.title })
@@ -359,32 +366,42 @@ export default function CartPage() {
             }}
           >
             <p className="ds-overline" style={{ marginBottom: 12 }}>
-              Order summary
+              {t("orderSummary")}
             </p>
 
-            <Row label="Subtotal" value={formatMoney(subtotal, currency)} />
+            <Row label={t("subtotal")} value={formatMoney(subtotal, currency)} />
 
             {!isDigital && (
               <Row
-                label="Delivery"
-                value={<span style={{ color: "var(--success)", fontWeight: 700 }}>Included</span>}
+                label={t("delivery")}
+                value={
+                  <span style={{ color: "var(--success)", fontWeight: 700 }}>
+                    {t("deliveryIncluded")}
+                  </span>
+                }
               />
             )}
 
             {/* Informational only, and never added to the total. */}
             {quote?.absorbedByVendor ? (
               <p className="muted" style={{ fontSize: 11.5, lineHeight: 1.5, margin: "2px 0 6px" }}>
-                Your seller covers {formatMoney(quote.absorbedByVendor, currency)} of delivery on
-                this order.
+                {t("vendorCoversDelivery", {
+                  amount: formatMoney(quote.absorbedByVendor, currency),
+                })}
               </p>
             ) : null}
 
             {/* Pinned zeros server-side — shown only if either ever becomes real,
                 so the receipt does not change shape the day one does. */}
             {quote && quote.discount > 0 && (
-              <Row label="Discount" value={`− ${formatMoney(quote.discount, currency)}`} />
+              <Row
+                label={t("discount")}
+                value={t("discountAmount", { amount: formatMoney(quote.discount, currency) })}
+              />
             )}
-            {quote && quote.tax > 0 && <Row label="Tax" value={formatMoney(quote.tax, currency)} />}
+            {quote && quote.tax > 0 && (
+              <Row label={t("tax")} value={formatMoney(quote.tax, currency)} />
+            )}
 
             <div
               style={{
@@ -396,7 +413,9 @@ export default function CartPage() {
                 paddingTop: 12,
               }}
             >
-              <span style={{ fontSize: 13.5, color: "var(--text-muted)", fontWeight: 600 }}>Total</span>
+              <span style={{ fontSize: 13.5, color: "var(--text-muted)", fontWeight: 600 }}>
+                {t("total")}
+              </span>
               <span
                 style={{
                   fontSize: 22,
@@ -420,17 +439,17 @@ export default function CartPage() {
               >
                 {signedIn
                   ? isDigital
-                    ? "Continue to payment"
-                    : "Checkout"
+                    ? t("continueToPayment")
+                    : t("checkout")
                   : isDigital
-                    ? "Sign in to pay"
-                    : "Sign in to check out"}
+                    ? t("signInToPay")
+                    : t("signInToCheckout")}
               </Button>
             </div>
 
             {!signedIn && (
               <p className="muted" style={{ fontSize: 11.5, lineHeight: 1.5, marginTop: 10 }}>
-                Your cart moves with you when you sign in.
+                {t("cartFollowsYou")}
               </p>
             )}
           </div>
@@ -439,11 +458,11 @@ export default function CartPage() {
 
       <ConfirmDialog
         open={pendingRemoval !== null}
-        title="Remove this item?"
+        title={t("removeTitle")}
         tone="danger"
         icon="trash-2"
-        confirmLabel="Remove"
-        cancelLabel="Keep it"
+        confirmLabel={tKey("shop.common.remove")}
+        cancelLabel={t("keepIt")}
         busy={busy}
         onConfirm={() => {
           const line = pendingRemoval;
@@ -453,13 +472,15 @@ export default function CartPage() {
           // line simply still being there. The failure is not silent, though —
           // `write` puts it in a toast, so a removal that did not happen says
           // why instead of just not happening.
-          write(removeLine(line.variantId), "We couldn't remove that item.");
+          write(removeLine(line.variantId), t("removeFailed"));
           setPendingRemoval(null);
         }}
         onCancel={() => setPendingRemoval(null)}
       >
-        <strong>{pendingRemoval?.title}</strong> comes out of your cart. You can add it again from
-        its page.
+        {t.rich("removeBody", {
+          title: pendingRemoval?.title ?? "",
+          b: (chunks) => <strong>{chunks}</strong>,
+        })}
       </ConfirmDialog>
     </div>
   );
@@ -508,6 +529,9 @@ function NegotiationLapsedNotice({
   titles: string[];
   onDismiss: () => void;
 }) {
+  const t = useTranslations("shop.cart");
+  const tKey = useTranslations();
+
   return (
     <div
       role="status"
@@ -525,14 +549,10 @@ function NegotiationLapsedNotice({
       <Icon name="triangle-alert" size={17} style={{ color: "var(--warning)", flexShrink: 0, marginTop: 1 }} />
       <div style={{ flex: 1 }}>
         <p style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--text-body)", margin: 0 }}>
-          <strong>
-            {titles.length === 1
-              ? "Your agreed price no longer applies."
-              : `${titles.length} agreed prices no longer apply.`}
-          </strong>{" "}
-          A price agreed in chat is tied to the quantity it was agreed for, so
-          these lines are back at their normal price. Message the seller again to
-          re-negotiate.
+          {t.rich("negotiationLapsed", {
+            n: titles.length,
+            b: (chunks) => <strong>{chunks}</strong>,
+          })}
         </p>
         <ul style={{ margin: "6px 0 0", paddingLeft: 16, fontSize: 12, color: "var(--text-muted)" }}>
           {titles.map((title) => (
@@ -540,7 +560,13 @@ function NegotiationLapsedNotice({
           ))}
         </ul>
       </div>
-      <IconButton icon="x" variant="plain" size="sm" label="Dismiss" onClick={onDismiss} />
+      <IconButton
+        icon="x"
+        variant="plain"
+        size="sm"
+        label={tKey("shop.common.dismiss")}
+        onClick={onDismiss}
+      />
     </div>
   );
 }
@@ -552,6 +578,9 @@ function DroppedNotice({
   dropped: { variantId: string; reason: CartDropReason }[];
   onDismiss: () => void;
 }) {
+  const t = useTranslations("shop.cart");
+  const tKey = useTranslations();
+
   return (
     <div
       role="status"
@@ -569,18 +598,23 @@ function DroppedNotice({
       <Icon name="triangle-alert" size={17} style={{ color: "var(--warning)", flexShrink: 0, marginTop: 1 }} />
       <div style={{ flex: 1 }}>
         <p style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--text-body)", margin: 0 }}>
-          <strong>
-            {dropped.length} item{dropped.length === 1 ? "" : "s"} could not be added to your
-            account cart.
-          </strong>
+          <strong>{t("dropped", { n: dropped.length })}</strong>
         </p>
         <ul style={{ margin: "6px 0 0", paddingLeft: 16, fontSize: 12, color: "var(--text-muted)" }}>
           {dropped.map((line) => (
-            <li key={line.variantId}>{DROP_REASON[line.reason] ?? "unavailable"}</li>
+            <li key={line.variantId}>
+              {t(DROP_REASON_KEY[line.reason] ?? "dropReason.unknown")}
+            </li>
           ))}
         </ul>
       </div>
-      <IconButton icon="x" variant="plain" size="sm" label="Dismiss" onClick={onDismiss} />
+      <IconButton
+        icon="x"
+        variant="plain"
+        size="sm"
+        label={tKey("shop.common.dismiss")}
+        onClick={onDismiss}
+      />
     </div>
   );
 }

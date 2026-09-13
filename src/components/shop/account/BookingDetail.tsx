@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 import { useCallback, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
@@ -42,6 +42,22 @@ import { ReviewDisclosure } from "./ReviewForm";
  * to hand back themselves — so it says so rather than implying money is coming.
  */
 export function BookingDetail({ bookingId }: { bookingId: string }) {
+  // ⚠ BOTH TRANSLATORS ARE BOUND HERE, ABOVE THE GUARDS BELOW, AND THAT
+  //   POSITION IS THE POINT.
+  //   `tKey` used to sit after the early returns, which is a real rules-of-hooks
+  //   violation rather than a style one: this component renders a skeleton while
+  //   loading, then a "not found" branch, then the full view — so the number of
+  //   hooks React saw CHANGED between renders as the data arrived. React matches
+  //   hooks by call order, so the first render after loading finishes can read
+  //   another hook's state, and the symptom is a crash or wrong state on a
+  //   screen that worked a moment earlier.
+  //
+  //   `tKey` is root-scoped, for the absolute keys the lib modules emit
+  //   (`shop.status.booking.…`) and the screen title in `shop.nav`.
+  const t = useTranslations("shop.bookings");
+  const tKey = useTranslations();
+  // Dates are formatted against the app's locale, never the browser's. §6.
+  const format = useFormatter();
   const router = useRouter();
   const { flash } = useToast();
   const { status: authStatus } = useAuthGuard();
@@ -68,32 +84,17 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
       const code = err instanceof ApiError ? err.code : undefined;
       flash(
         code === "CANCELLATION_NOT_ALLOWED"
-          ? "The seller's cancellation window for this booking has passed."
+          ? t("cancelWindowPassed")
           : code === "BOOKING_NOT_CANCELLABLE"
-            ? "This booking can no longer be cancelled."
+            ? t("notCancellable")
             : code === "BOOKING_ALREADY_CANCELLED"
-              ? "This booking is already cancelled."
-              : "Could not cancel that booking.",
+              ? t("alreadyCancelled")
+              : t("cancelFailed"),
       );
     } finally {
       setBusy(false);
     }
-  }, [bookingId, booking, flash]);
-
-  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
-  //
-  // ⚠ CALLED HERE, ABOVE THE GUARDS BELOW, AND THAT POSITION IS THE POINT.
-  //   It used to sit after the early returns, which is a real rules-of-hooks
-  //   violation rather than a style one: this component renders a skeleton while
-  //   loading, then a "not found" branch, then the full view — so the number of
-  //   hooks React saw CHANGED between renders as the data arrived. React matches
-  //   hooks by call order, so the first render after loading finishes can read
-  //   another hook's state, and the symptom is a crash or wrong state on a screen
-  //   that worked a moment earlier.
-  //
-  //   It takes no arguments and depends on nothing below, so there was never a
-  //   reason for it to be down there.
-  const tKey = useTranslations();
+  }, [bookingId, booking, flash, t]);
 
   if (authStatus === "loading" || booking.status === "loading") {
     return (
@@ -107,9 +108,9 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
   if (!b) {
     return (
       <div className="mx-auto max-w-[680px] px-4 py-6 sm:px-6">
-        <p className="muted">That booking could not be found.</p>
+        <p className="muted">{t("notFound")}</p>
         <Button variant="secondary" size="sm" onClick={() => router.push(BOOKING_LIST)}>
-          Back to bookings
+          {t("backToList")}
         </Button>
       </div>
     );
@@ -122,7 +123,7 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
 
   return (
     <div className="mx-auto max-w-[680px] px-4 py-6 sm:px-6">
-      <h1 className="sr-only">Booking</h1>
+      <h1 className="sr-only">{tKey("shop.nav.titles.booking")}</h1>
 
       <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
         {state && (
@@ -137,10 +138,12 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
         )}
       </div>
 
-      <div style={{ fontSize: 19, fontWeight: 800 }}>{b.product?.title ?? "Service"}</div>
+      <div style={{ fontSize: 19, fontWeight: 800 }}>
+        {b.product?.title ?? t("serviceFallback")}
+      </div>
       {b.vendor?.name && (
         <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>
-          with {b.vendor.name}
+          {t("withVendor", { vendor: b.vendor.name })}
         </div>
       )}
       {/*
@@ -158,22 +161,22 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
       )}
 
       <dl style={{ margin: "14px 0", display: "grid", gap: 8 }}>
+        {/* `dateTimeRange` rather than two formatted dates glued with a dash:
+            it collapses a same-day appointment the way each locale does it, and
+            the separator is not ours to hard-code. */}
         <Row
-          label="When"
-          value={`${new Date(b.startAt).toLocaleString(undefined, {
+          label={t("when")}
+          value={format.dateTimeRange(new Date(b.startAt), new Date(b.endAt), {
             weekday: "long",
             day: "numeric",
             month: "long",
             hour: "2-digit",
             minute: "2-digit",
-          })} – ${new Date(b.endAt).toLocaleTimeString(undefined, {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}`}
+          })}
         />
-        <Row label="Price" value={formatMoney(b.priceSnapshot, b.currency)} />
+        <Row label={t("price")} value={formatMoney(b.priceSnapshot, b.currency)} />
         {typeof b.metadata?.notes === "string" && b.metadata.notes && (
-          <Row label="Your note" value={b.metadata.notes} />
+          <Row label={t("yourNote")} value={b.metadata.notes} />
         )}
       </dl>
 
@@ -182,10 +185,7 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
           "refunded" here would tell a customer they have been repaid when they
           have not. */}
       {b.paymentStatus === "refund_pending" && (
-        <p style={{ fontSize: 13.5, margin: "0 0 12px" }}>
-          Your refund is being processed by hand and has not arrived yet. We have opened a
-          support ticket to track it.
-        </p>
+        <p style={{ fontSize: 13.5, margin: "0 0 12px" }}>{t("refundByHand")}</p>
       )}
 
       {bal && bal.outstanding > 0 && (
@@ -197,19 +197,24 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
             marginBottom: 12,
           }}
         >
+          {/* The amounts go through `formatMoney` and into the message as
+              VALUES. They carry bidi isolate marks, so they survive an Arabic
+              paragraph — which rebuilding the sentence from fragments would
+              not. */}
           <div style={{ fontWeight: 700, fontSize: 14.5, marginBottom: 4 }}>
-            {formatMoney(bal.outstanding, bal.currency)} still to pay
+            {t("stillToPay", { amount: formatMoney(bal.outstanding, bal.currency) })}
           </div>
           <p className="muted" style={{ fontSize: 13, margin: "0 0 10px" }}>
-            The appointment settled at {formatMoney(bal.finalPrice, bal.currency)}, above the{" "}
-            {formatMoney(bal.quotedPrice, bal.currency)} quoted. You can pay it here, or settle
-            with the seller directly.
+            {t("settledAbove", {
+              final: formatMoney(bal.finalPrice, bal.currency),
+              quoted: formatMoney(bal.quotedPrice, bal.currency),
+            })}
           </p>
           <Button
             size="sm"
             onClick={() => router.push(bookingBalancePath(bookingId))}
           >
-            Pay the balance
+            {t("payBalance")}
           </Button>
         </div>
       )}
@@ -218,9 +223,7 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
           not read as money on its way back. */}
       {bal && bal.creditDue > 0 && (
         <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
-          The seller settled {formatMoney(bal.creditDue, bal.currency)} below what you paid. This
-          is recorded on your booking but is not refunded automatically — contact the seller, or
-          open a support ticket.
+          {t("creditRecorded", { amount: formatMoney(bal.creditDue, bal.currency) })}
         </p>
       )}
 
@@ -238,19 +241,17 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
           }}
         >
           <div style={{ fontWeight: 700, fontSize: 14.5, marginBottom: 4 }}>
-            {formatMoney(b.priceSnapshot, b.currency)} to pay
+            {t("toPay", { amount: formatMoney(b.priceSnapshot, b.currency) })}
           </div>
           <p className="muted" style={{ fontSize: 13, margin: "0 0 10px" }}>
-            {b.status === "confirmed"
-              ? "Your appointment is held. Pay to keep it — unpaid bookings are released after a while."
-              : "You can pay once the seller has accepted."}
+            {b.status === "confirmed" ? t("heldPayToKeep") : t("payAfterAccepted")}
           </p>
           <Button
             size="sm"
             disabled={b.status !== "confirmed"}
             onClick={() => router.push(bookingPayPath(bookingId))}
           >
-            Pay now
+            {t("payNow")}
           </Button>
         </div>
       )}
@@ -262,16 +263,16 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
             size="sm"
             onClick={() => router.push(bookingReschedulePath(bookingId))}
           >
-            Move to another time
+            {t("moveToAnotherTime")}
           </Button>
         )}
         {cancellable && (
           <Button variant="ghost" size="sm" disabled={busy} onClick={() => setConfirmCancel(true)}>
-            Cancel booking
+            {t("cancelBooking")}
           </Button>
         )}
         <Button variant="ghost" size="sm" onClick={() => router.push(BOOKING_LIST)}>
-          All bookings
+          {t("allBookings")}
         </Button>
       </div>
 
@@ -289,17 +290,15 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
 
       <ConfirmDialog
         open={confirmCancel}
-        title="Cancel this booking?"
+        title={t("confirmCancelTitle")}
         tone="danger"
         icon="calendar-clock"
-        confirmLabel="Cancel it"
-        cancelLabel="Keep it"
+        confirmLabel={t("confirmCancelAction")}
+        cancelLabel={t("keepIt")}
         onConfirm={() => void cancel()}
         onCancel={() => setConfirmCancel(false)}
       >
-        {b.paymentStatus === "paid"
-          ? "If the seller's policy allows it, your payment will be refunded. Some payment methods have to be refunded by hand, which takes longer."
-          : "The seller sets the cancellation policy, so this may not be allowed close to the appointment."}
+        {b.paymentStatus === "paid" ? t("confirmCancelPaid") : t("confirmCancelUnpaid")}
       </ConfirmDialog>
     </div>
   );

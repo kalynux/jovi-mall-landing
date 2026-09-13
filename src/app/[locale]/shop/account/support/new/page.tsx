@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 import { useCallback, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
@@ -21,6 +21,7 @@ import {
   listTicketProductRefs,
   missingRequiredInfo,
   TICKET_TYPE_GROUPS,
+  ticketTypeLabelKey,
   type TicketEntityType,
   type TicketImportance,
   type TicketType,
@@ -29,6 +30,8 @@ import {
 const MAX_SUBJECT = 200;
 /** The create schema's cap. `PATCH` allows 10000; creation does not. */
 const MAX_DESCRIPTION = 700;
+/** What the attachment endpoint accepts in one ticket. */
+const MAX_FILES = 5;
 
 /**
  * What a customer can file a ticket about.
@@ -39,19 +42,14 @@ const MAX_DESCRIPTION = 700;
  * `VENDOR`, …) are omitted: they take an id with **no existence check**, so
  * offering a free-text field for one is offering a way to file an unresolvable
  * ticket.
+ *
+ * Values only: the labels live in `shop.support.subjects.*`, because a module
+ * constant is evaluated once at import time and has no locale to read.
  */
-const SUBJECTS = [
-  { value: "ORDER", label: "An order" },
-  { value: "PRODUCT", label: "A product" },
-  { value: "OTHER", label: "Something else" },
-] as const;
+const SUBJECTS = ["ORDER", "PRODUCT", "OTHER"] as const;
 
-const IMPORTANCE: { value: TicketImportance; label: string }[] = [
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-  { value: "critical", label: "Critical" },
-];
+/** Likewise — the labels are `shop.support.importance.*`. */
+const IMPORTANCE: TicketImportance[] = ["low", "medium", "high", "critical"];
 
 /**
  * Open a support ticket.
@@ -71,8 +69,11 @@ const IMPORTANCE: { value: TicketImportance; label: string }[] = [
  * other.
  */
 export default function NewTicketPage() {
-  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
+  const t = useTranslations("shop.support");
+  // Root-scoped: the lib modules emit absolute keys (`shop.support.types.…`,
+  // and the optgroup names, which live in `shop.common`).
   const tKey = useTranslations();
+  const format = useFormatter();
   const router = useRouter();
   const { flash } = useToast();
   const { status: authStatus } = useAuthGuard();
@@ -104,30 +105,38 @@ export default function NewTicketPage() {
     async (picked: File[]) => {
       const tooBig = picked.find((f) => f.size > maxBytesFor(f));
       if (tooBig) {
-        flash(`${tooBig.name} is too large.`);
+        flash(t("fileTooLarge", { name: tooBig.name }));
         return;
       }
       setBusy(true);
       try {
-        const uploaded = await uploadAttachments(picked.slice(0, 5 - files.length));
+        const uploaded = await uploadAttachments(picked.slice(0, MAX_FILES - files.length));
         setFiles((prev) => [...prev, ...uploaded]);
       } catch (err) {
         // `UPLOAD_POLICY_VIOLATION` names each offending file, which is the only
         // information the person can act on — "could not upload" leaves them
         // guessing which of five files was the problem.
+        //
+        // `v.message` is the server's sentence and is already in the shopper's
+        // language; only the frame around it is ours.
         const violations = uploadViolations(err);
         flash(
           violations.length > 0
             ? violations
-                .map((v) => `${v.fileName ?? "That file"}: ${v.message ?? v.code}`)
+                .map((v) =>
+                  t("violation", {
+                    name: v.fileName ?? t("thatFile"),
+                    detail: v.message ?? v.code,
+                  }),
+                )
                 .join(" · ")
-            : "Could not upload that file.",
+            : t("uploadFailed"),
         );
       } finally {
         setBusy(false);
       }
     },
-    [files.length, flash],
+    [files.length, flash, t],
   );
 
   const submit = useCallback(async () => {
@@ -151,14 +160,10 @@ export default function NewTicketPage() {
         // The seller's policy, which the shopper has never seen. Ask for exactly
         // what it wants and keep everything already typed.
         setMissing(gaps);
-        flash("This seller needs a little more before we can file this.");
+        flash(t("requiredInfoMissing"));
       } else {
         const code = (err as { code?: string })?.code;
-        flash(
-          code === "TICKET_ENTITY_NOT_FOUND"
-            ? "We could not find that order or product."
-            : "Could not open that ticket. Please try again.",
-        );
+        flash(code === "TICKET_ENTITY_NOT_FOUND" ? t("entityNotFound") : t("createFailed"));
       }
     } finally {
       setBusy(false);
@@ -174,6 +179,7 @@ export default function NewTicketPage() {
     files,
     router,
     flash,
+    t,
   ]);
 
   if (authStatus === "loading") {
@@ -194,10 +200,10 @@ export default function NewTicketPage() {
 
   return (
     <div className="mx-auto max-w-[680px] px-4 py-6 sm:px-6">
-      <h1 className="sr-only">New ticket</h1>
+      <h1 className="sr-only">{tKey("shop.nav.titles.supportNew")}</h1>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <Field label="What is this about?">
+        <Field label={t("about")}>
           <Select
             value={entityType}
             onChange={(e) => {
@@ -205,12 +211,12 @@ export default function NewTicketPage() {
               setEntityId("");
               setMissing([]);
             }}
-            options={SUBJECTS.map((s) => ({ value: s.value, label: s.label }))}
+            options={SUBJECTS.map((value) => ({ value, label: t(`subjects.${value}`) }))}
           />
         </Field>
 
         {entityType === "ORDER" && (
-          <Field label="Which order?">
+          <Field label={t("whichOrder")}>
             {orders.status === "loading" ? (
               <Skeleton height={40} />
             ) : (
@@ -226,10 +232,16 @@ export default function NewTicketPage() {
                   if (tracked?.trackingNumber) setTrackingNumber(tracked.trackingNumber);
                 }}
                 options={[
-                  { value: "", label: "Choose an order" },
+                  { value: "", label: t("chooseOrder") },
                   ...(orders.data?.data ?? []).map((o) => ({
                     value: o.id,
-                    label: `${o.orderNumber} · ${new Date(o.createdAt).toLocaleDateString()}`,
+                    // An order number and a date, not a sentence — the vendor's
+                    // reference first because that is what a shopper scans for.
+                    label: `${o.orderNumber} · ${format.dateTime(new Date(o.createdAt), {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}`,
                   })),
                 ]}
               />
@@ -238,7 +250,7 @@ export default function NewTicketPage() {
         )}
 
         {entityType === "PRODUCT" && (
-          <Field label="Which product?">
+          <Field label={t("whichProduct")}>
             {products.status === "loading" ? (
               <Skeleton height={40} />
             ) : (
@@ -246,7 +258,7 @@ export default function NewTicketPage() {
                 value={entityId}
                 onChange={(e) => setEntityId(e.target.value)}
                 options={[
-                  { value: "", label: "Choose a product" },
+                  { value: "", label: t("chooseProduct") },
                   ...(products.data?.data ?? []).map((p) => ({ value: p.id, label: p.title })),
                 ]}
               />
@@ -254,7 +266,7 @@ export default function NewTicketPage() {
           </Field>
         )}
 
-        <Field label="Type">
+        <Field label={t("typeLabel")}>
           <select
             className="field"
             value={type}
@@ -264,7 +276,7 @@ export default function NewTicketPage() {
               <optgroup key={group.labelKey} label={tKey(group.labelKey)}>
                 {group.types.map((value) => (
                   <option key={value} value={value}>
-                    {value.replace(/_/g, " ").toLowerCase()}
+                    {tKey(ticketTypeLabelKey(value))}
                   </option>
                 ))}
               </optgroup>
@@ -272,25 +284,25 @@ export default function NewTicketPage() {
           </select>
         </Field>
 
-        <Field label="How urgent is it?" hint="This cannot be changed later.">
+        <Field label={t("urgency")} hint={t("urgencyHint")}>
           <Select
             value={importance}
             onChange={(e) => setImportance(e.target.value as TicketImportance)}
-            options={IMPORTANCE}
+            options={IMPORTANCE.map((value) => ({ value, label: t(`importance.${value}`) }))}
           />
         </Field>
 
-        <Field label="Subject">
+        <Field label={t("subjectLabel")}>
           <input
             className="field"
             maxLength={MAX_SUBJECT}
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            placeholder="Short summary"
+            placeholder={t("subjectPlaceholder")}
           />
         </Field>
 
-        <Field label="What happened?" hint={`${description.length}/${MAX_DESCRIPTION}`}>
+        <Field label={t("whatHappened")} hint={`${description.length}/${MAX_DESCRIPTION}`}>
           <textarea
             className="field"
             rows={5}
@@ -303,10 +315,7 @@ export default function NewTicketPage() {
         {/* Only rendered once the backend has said this seller requires it —
             asking everyone for a tracking number would be wrong for most. */}
         {needsTracking && (
-          <Field
-            label="Tracking number"
-            hint="This seller needs it before they can look into an order."
-          >
+          <Field label={t("trackingNumber")} hint={t("trackingHint")}>
             <input
               className="field"
               maxLength={120}
@@ -317,11 +326,9 @@ export default function NewTicketPage() {
         )}
 
         <Field
-          label="Photos or video"
+          label={t("media")}
           hint={
-            needsMedia
-              ? "This seller needs at least one before they can look into it."
-              : "Optional. Up to 5."
+            needsMedia ? t("mediaRequiredHint") : t("mediaOptionalHint", { n: MAX_FILES })
           }
         >
           {files.length > 0 && (
@@ -331,7 +338,7 @@ export default function NewTicketPage() {
               ))}
             </ul>
           )}
-          {files.length < 5 && (
+          {files.length < MAX_FILES && (
             <label style={{ fontSize: 13, cursor: busy ? "default" : "pointer" }}>
               <input
                 type="file"
@@ -345,17 +352,17 @@ export default function NewTicketPage() {
                   if (picked.length) void pickFiles(picked);
                 }}
               />
-              <span style={{ textDecoration: "underline" }}>Add a file</span>
+              <span style={{ textDecoration: "underline" }}>{t("addFile")}</span>
             </label>
           )}
         </Field>
 
         <div style={{ display: "flex", gap: 8 }}>
           <Button disabled={!valid || busy} onClick={() => void submit()}>
-            {busy ? "Sending…" : "Open ticket"}
+            {busy ? tKey("shop.common.sending") : t("openTicket")}
           </Button>
           <Button variant="ghost" onClick={() => router.push("/shop/account/support")}>
-            Cancel
+            {tKey("shop.common.cancel")}
           </Button>
         </div>
       </div>

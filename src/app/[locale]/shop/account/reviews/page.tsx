@@ -1,5 +1,7 @@
 "use client";
 
+import { useFormatter, useTranslations } from "next-intl";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Badge, EmptyState, Rating, Skeleton } from "@/components/shop/ds";
@@ -19,6 +21,11 @@ import { listMyReviews, type Review } from "@/lib/shop/reviews.api";
  * that implies it is queued for a page it will never reach.
  */
 export default function MyReviewsPage() {
+  const t = useTranslations("shop.reviews");
+  // Root-scoped: both the screen title and the "My orders" action already exist
+  // in `shop.nav`, which Phase 1 froze.
+  const tKey = useTranslations();
+  const format = useFormatter();
   const router = useRouter();
   const { status } = useAuthGuard();
   const [reviews, setReviews] = useState<Review[] | null>(null);
@@ -49,14 +56,14 @@ export default function MyReviewsPage() {
 
   return (
     <div className="mx-auto max-w-[760px] px-4 py-6 sm:px-6">
-      <h1 className="sr-only">My reviews</h1>
+      <h1 className="sr-only">{tKey("shop.nav.titles.reviews")}</h1>
 
       {reviews.length === 0 ? (
         <EmptyState
           icon="star"
-          title="No reviews yet"
-          description="Rate a product or a delivery from one of your completed orders."
-          actionLabel="My orders"
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
+          actionLabel={tKey("shop.nav.titles.orders")}
           onAction={() => router.push("/shop/account/orders")}
         />
       ) : (
@@ -74,7 +81,11 @@ export default function MyReviewsPage() {
                 <Rating value={review.rating} showValue={false} size={14} />
                 <StatusBadge review={review} />
                 <span className="muted" style={{ marginLeft: "auto", fontSize: 12 }}>
-                  {new Date(review.createdAt).toLocaleDateString()}
+                  {format.dateTime(new Date(review.createdAt), {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
                 </span>
               </div>
 
@@ -93,12 +104,14 @@ export default function MyReviewsPage() {
 }
 
 function StatusBadge({ review }: { review: Review }) {
+  const t = useTranslations("shop.reviews");
+
   // A delivery review is an internal signal and never publishes, so "pending"
   // would be a promise the platform has no intention of keeping.
   if (review.subjectType === "delivery") {
     return (
       <Badge size="sm" tone="neutral" icon="truck">
-        Delivery feedback
+        {t("deliveryFeedback")}
       </Badge>
     );
   }
@@ -106,7 +119,7 @@ function StatusBadge({ review }: { review: Review }) {
   if (review.status === "published") {
     return (
       <Badge size="sm" tone="success" icon="circle-check-big">
-        Published
+        {t("published")}
       </Badge>
     );
   }
@@ -114,14 +127,14 @@ function StatusBadge({ review }: { review: Review }) {
   if (review.status === "rejected") {
     return (
       <Badge size="sm" tone="danger" icon="circle-x">
-        Not published
+        {t("notPublished")}
       </Badge>
     );
   }
 
   return (
     <Badge size="sm" tone="warning" icon="clock">
-      Being checked
+      {t("beingChecked")}
     </Badge>
   );
 }

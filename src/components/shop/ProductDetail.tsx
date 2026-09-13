@@ -105,6 +105,9 @@ export function ProductDetail({
   const { addItem, productType, count } = useCart();
   const { isFavorite, toggle } = useFavorites();
   const { flash } = useToast();
+  const t = useTranslations("shop.product");
+  const tDs = useTranslations("shop.ds");
+  const tCommon = useTranslations("shop.common");
   // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
   const tKey = useTranslations();
 
@@ -243,23 +246,23 @@ export function ProductDetail({
               // The toast is the message; the tap is the confirmation you feel
               // without reading. Fire-and-forget, and silent on the web.
               void tapFeedback();
-              flash(`Added to cart · ${variant.name}`);
+              flash(t("addedToCart", { variant: variant.name }));
             }
             break;
           case "type_conflict":
             if (replace) {
               // The retry conflicted too, which the server should not do —
               // report it rather than failing silently.
-              flash("Could not replace your cart. Please empty it and try again.");
+              flash(t("replaceFailed"));
             } else {
               setConflict({ current: outcome.current });
             }
             break;
           case "digital_limit":
-            flash("Your cart already holds a digital product. Pay for that one first.");
+            flash(t("digitalLimit"));
             break;
           case "service_not_allowed":
-            flash("Services are booked, not added to a cart.");
+            flash(t("serviceNotCarted"));
             break;
           case "offline":
             flash(tKey(CART_OFFLINE_MESSAGE_KEY));
@@ -278,7 +281,7 @@ export function ProductDetail({
         setWorking(false);
       }
     },
-    [addItem, p, variant, lineQty, buyNow, router, flash, tKey]
+    [addItem, p, variant, lineQty, buyNow, router, flash, tKey, t]
   );
 
   /**
@@ -290,20 +293,21 @@ export function ProductDetail({
    * it never conflicts.
    */
   const held = !isService && productType && productType !== p.type ? productType : null;
-  const heldPlural = count === 1 ? "" : "s";
 
+  // The count lives inside the message, not beside it: "1 item"/"2 items" is a
+  // plural rule, and it is not the same rule in Arabic. See LOCALISATION.md §4.
   const conflictNote =
     held === "digital"
-      ? "Your cart holds a digital product you have not paid for yet. Adding this removes it — a cart holds one kind at a time."
+      ? t("conflictNoteDigital")
       : held === "physical"
-        ? `Your cart holds ${count} physical item${heldPlural}. Buying this now empties it — digital products are paid for on their own.`
+        ? t("conflictNotePhysical", { n: count })
         : null;
 
   const tabs = [
-    { value: "desc", label: "Description" },
-    { value: "specs", label: isDigital ? "What’s included" : "Specifications" },
-    { value: "policies", label: "Returns & cancellation" },
-    { value: "reviews", label: "Reviews", count: p.rating?.count || undefined },
+    { value: "desc", label: t("tabDescription") },
+    { value: "specs", label: isDigital ? t("tabIncluded") : t("tabSpecs") },
+    { value: "policies", label: t("tabPolicies") },
+    { value: "reviews", label: t("tabReviews"), count: p.rating?.count || undefined },
   ];
 
   return (
@@ -320,13 +324,15 @@ export function ProductDetail({
           fontWeight: 600,
         }}
       >
-        <Icon name="arrow-left" size={16} /> Back to shop
+        <Icon name="arrow-left" size={16} /> {t("backToShop")}
       </button>
 
       {store.isOpen === false && (
         <Notice tone="warning" icon="palmtree">
-          <strong>{store.name} is on holiday.</strong> You can still order — the seller will
-          dispatch when they reopen.
+          {t.rich("holidayNotice", {
+            store: store.name,
+            b: (chunks) => <strong>{chunks}</strong>,
+          })}
         </Notice>
       )}
 
@@ -350,7 +356,7 @@ export function ProductDetail({
             />
             <div style={{ position: "absolute", top: 12, left: 12, display: "flex", gap: 6 }}>
               <Badge productType={p.type} variant="solid">
-                {p.type[0].toUpperCase() + p.type.slice(1)}
+                {tDs(`productType.${p.type}`)}
               </Badge>
               {pct && (
                 <Badge tone="danger" variant="solid">
@@ -376,7 +382,7 @@ export function ProductDetail({
                     cursor: "pointer",
                     background: "none",
                   }}
-                  aria-label={`Image ${i + 1}`}
+                  aria-label={t("imageAria", { n: i + 1 })}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={publicUrl(im) ?? "/no_product_image.png"} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}  />
@@ -466,7 +472,7 @@ export function ProductDetail({
                   size="lg"
                 />
                 <p className="muted" style={{ fontSize: 12.5, marginTop: 4 }}>
-                  {variant.service.priceUnit} · charged for the time actually booked
+                  {t("serviceRateNote", { unit: variant.service.priceUnit })}
                 </p>
               </div>
             ) : (
@@ -537,7 +543,10 @@ export function ProductDetail({
             >
               <Icon name="check" size={16} style={{ color: "var(--brand)", flexShrink: 0 }} />
               <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>
-                You’re buying: <strong>{variant.name}</strong>
+                {t.rich("buyingVariant", {
+                  variant: variant.name,
+                  b: (chunks) => <strong>{chunks}</strong>,
+                })}
               </span>
               {/* A boolean, because that is what the API publishes. */}
               <span
@@ -568,7 +577,7 @@ export function ProductDetail({
               variant="fav"
               active={isFavorite(p.id)}
               onClick={() => toggle(p.id)}
-              label="Save"
+              label={tDs("saveToFavorites")}
               className="order-1 sm:order-3"
             />
             <div className="order-2 w-full min-w-0 sm:w-auto sm:flex-1">
@@ -586,10 +595,12 @@ export function ProductDetail({
                   {!buyable
                     ? tKey(unavailableLabelKey(p.type))
                     : working
-                      ? "Working…"
+                      ? tDs("working")
                       : buyNow
-                        ? `Buy now · ${formatMoney(unitPrice, currency)}`
-                        : `Add to cart · ${formatMoney(unitPrice * lineQty, currency)}`}
+                        ? t("buyNowPrice", { price: formatMoney(unitPrice, currency) })
+                        : t("addToCartPrice", {
+                            price: formatMoney(unitPrice * lineQty, currency),
+                          })}
                 </Button>
               )}
             </div>
@@ -607,57 +618,76 @@ export function ProductDetail({
               style={{ fontSize: 12, marginTop: 8, display: "flex", alignItems: "center", gap: 5 }}
             >
               <Icon name="zap" size={13} style={{ color: "var(--brand)", flexShrink: 0 }} />
-              Straight to payment — nothing to deliver, so there is no cart step.
+              {t("buyNowNote")}
             </p>
           )}
 
           {/* Type-specific facts, all from the API */}
           <div style={{ marginTop: 18 }}>
             {p.type === "physical" && (
-              <InfoCard title="Delivery" icon="truck">
+              <InfoCard title={tCommon("delivery")} icon="truck">
                 <InfoRow
                   icon="coins"
-                  label="Delivery"
-                  value={
-                    p.freeDelivery
-                      ? "Free delivery on this item"
-                      : "Included — the seller covers delivery"
-                  }
+                  label={tCommon("delivery")}
+                  value={p.freeDelivery ? t("deliveryFree") : t("deliveryIncluded")}
                 />
-                <InfoRow icon="package-check" label="Ships from" value={store.city ?? "Cameroon"} />
+                <InfoRow
+                  icon="package-check"
+                  label={t("shipsFrom")}
+                  value={store.city ?? t("defaultOrigin")}
+                />
               </InfoCard>
             )}
             {isDigital && variant?.digital && (
-              <InfoCard title="Digital delivery" icon="download">
-                <InfoRow icon="file-down" label="Download" value="Available after payment" />
+              <InfoCard title={t("digitalDelivery")} icon="download">
+                <InfoRow
+                  icon="file-down"
+                  label={tCommon("download")}
+                  value={t("downloadAvailable")}
+                />
                 <InfoRow
                   icon="repeat"
-                  label="Download limit"
+                  label={t("downloadLimit")}
                   value={
                     variant.digital.maxDownloads === null
-                      ? "Unlimited downloads"
-                      : `${variant.digital.maxDownloads} downloads`
+                      ? t("downloadsUnlimited")
+                      : t("downloadsCount", { n: variant.digital.maxDownloads })
                   }
                 />
                 <InfoRow
                   icon="clock"
-                  label="Access"
+                  label={t("access")}
                   value={
                     variant.digital.expiresAfterDays === null
-                      ? "No expiry"
-                      : `${variant.digital.expiresAfterDays} days after purchase`
+                      ? t("noExpiry")
+                      : t("expiryDays", { n: variant.digital.expiresAfterDays })
                   }
                 />
               </InfoCard>
             )}
             {isService && variant?.service && (
-              <InfoCard title="Booking" icon="calendar-clock">
-                <InfoRow icon="clock" label="Session length" value={`${variant.service.durationMinutes} minutes`} />
-                <InfoRow icon="coins" label="Rate" value={`${formatMoney(variant.service.priceFrom, currency)} ${variant.service.priceUnit}`} />
+              <InfoCard title={t("bookingCard")} icon="calendar-clock">
+                <InfoRow
+                  icon="clock"
+                  label={t("sessionLength")}
+                  value={t("minutes", { n: variant.service.durationMinutes })}
+                />
+                <InfoRow
+                  icon="coins"
+                  label={t("rate")}
+                  value={t("ratePerUnit", {
+                    price: formatMoney(variant.service.priceFrom, currency),
+                    unit: variant.service.priceUnit,
+                  })}
+                />
                 {variant.service.bufferAfterMinutes > 0 && (
-                  <InfoRow icon="hourglass" label="Buffer after" value={`${variant.service.bufferAfterMinutes} minutes`} />
+                  <InfoRow
+                    icon="hourglass"
+                    label={t("bufferAfter")}
+                    value={t("minutes", { n: variant.service.bufferAfterMinutes })}
+                  />
                 )}
-                <InfoRow icon="info" label="Note" value="Services are booked with the seller, not added to a cart." />
+                <InfoRow icon="info" label={t("note")} value={t("serviceNote")} />
               </InfoCard>
             )}
           </div>
@@ -675,13 +705,15 @@ export function ProductDetail({
           )}
           {tab === "specs" && (
             <div>
-              <InfoRow icon="dot" label="Category" value={p.category} />
-              <InfoRow icon="dot" label="Sold by" value={store.name} />
-              {variant && <InfoRow icon="dot" label="SKU" value={variant.sku} />}
+              <InfoRow icon="dot" label={t("specCategory")} value={p.category} />
+              <InfoRow icon="dot" label={t("specSoldBy")} value={store.name} />
+              {variant && <InfoRow icon="dot" label={t("specSku")} value={variant.sku} />}
               {p.options.map((o) => (
                 <InfoRow key={o.id} icon="dot" label={o.name} value={o.values.map((v) => v.value).join(", ")} />
               ))}
-              {p.tags.length > 0 && <InfoRow icon="dot" label="Tags" value={p.tags.join(", ")} />}
+              {p.tags.length > 0 && (
+                <InfoRow icon="dot" label={t("specTags")} value={p.tags.join(", ")} />
+              )}
             </div>
           )}
           {tab === "policies" && <PolicyBlock store={store} />}
@@ -693,7 +725,9 @@ export function ProductDetail({
       {relatedItems.length > 0 && (
         <div style={{ marginTop: 32 }}>
           <p className="ds-overline" style={{ marginBottom: 12 }}>
-            {relatedSource === "co_purchase" ? "Frequently bought together" : "More in this category"}
+            {relatedSource === "co_purchase"
+              ? t("relatedCoPurchase")
+              : t("relatedSameCategory")}
           </p>
           <div style={{ display: "flex", gap: 16, overflowX: "auto", paddingBottom: 8, scrollbarWidth: "none" }}>
             {relatedItems.map((item) => (
@@ -724,7 +758,7 @@ export function ProductDetail({
       {moreFromStore.length > 0 && (
         <div style={{ marginTop: 32 }}>
           <p className="ds-overline" style={{ marginBottom: 12 }}>
-            More from {store.name}
+            {t("moreFromStore", { store: store.name })}
           </p>
           <div style={{ display: "flex", gap: 16, overflowX: "auto", paddingBottom: 8, scrollbarWidth: "none" }}>
             {moreFromStore.map((item) => (
@@ -755,12 +789,12 @@ export function ProductDetail({
           cart is deleted. */}
       <ConfirmDialog
         open={conflict !== null}
-        title={conflict?.current === "digital" ? "Replace your cart?" : "This empties your cart"}
+        title={conflict?.current === "digital" ? t("replaceCartTitle") : t("emptyCartTitle")}
         tone="warning"
         icon="triangle-alert"
         busy={working}
-        confirmLabel={buyNow ? "Empty cart & buy now" : "Replace cart"}
-        cancelLabel="Keep my cart"
+        confirmLabel={buyNow ? t("emptyCartAndBuy") : t("replaceCart")}
+        cancelLabel={t("keepCart")}
         onCancel={() => setConflict(null)}
         onConfirm={() => void commit(true)}
         alternative={
@@ -768,30 +802,23 @@ export function ProductDetail({
           // payment away from being finished, so offer that instead of the swap.
           conflict?.current === "digital"
             ? {
-                label: "Pay for the digital item first",
+                label: t("payDigitalFirst"),
                 icon: "arrow-right",
                 onClick: () => router.push("/shop/checkout"),
               }
             : undefined
         }
       >
-        {conflict?.current === "digital" ? (
-          <>
-            Your cart holds a <strong>digital product</strong> you have not paid for yet, and a cart
-            holds one kind at a time. Adding <strong>{p.title}</strong> removes it. Nothing has been
-            charged either way.
-          </>
-        ) : (
-          <>
-            Your cart holds{" "}
-            <strong>
-              {count} physical item{heldPlural}
-            </strong>
-            . <strong>{p.title}</strong> is digital — paid for on its own, with nothing to deliver —
-            so it cannot share a cart with them. Continuing removes what is in your cart now.
-            Nothing has been charged.
-          </>
-        )}
+        {conflict?.current === "digital"
+          ? t.rich("conflictBodyDigital", {
+              product: p.title,
+              b: (chunks) => <strong>{chunks}</strong>,
+            })
+          : t.rich("conflictBodyPhysical", {
+              n: count,
+              product: p.title,
+              b: (chunks) => <strong>{chunks}</strong>,
+            })}
       </ConfirmDialog>
     </div>
   );
@@ -808,6 +835,8 @@ export function ProductDetail({
  * French copy as though it were the Portuguese translation.
  */
 function LanguageNote({ contentLanguage, locale }: { contentLanguage: string; locale: string }) {
+  const t = useTranslations("shop.product");
+
   if (!contentLanguage) return null;
 
   const base = contentLanguage.split("-")[0].toLowerCase();
@@ -824,9 +853,9 @@ function LanguageNote({ contentLanguage, locale }: { contentLanguage: string; lo
     <span
       className="muted"
       style={{ fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 3 }}
-      title="Product text is written by the seller and is not translated."
+      title={t("languageNoteTitle")}
     >
-      <Icon name="languages" size={13} /> Written in {name}
+      <Icon name="languages" size={13} /> {t("writtenIn", { language: name })}
     </span>
   );
 }
@@ -840,14 +869,15 @@ function LanguageNote({ contentLanguage, locale }: { contentLanguage: string; lo
  * means the vendor configured none — no defaults are invented, here or there.
  */
 function PolicyBlock({ store }: { store: Product["store"] }) {
+  const t = useTranslations("shop.product");
   const { returnPolicy, cancellationPolicy } = store.policies;
 
   if (!returnPolicy && !cancellationPolicy) {
     return (
       <EmptyState
         icon="file-text"
-        title="No published policy"
-        description={`${store.name} has not published return or cancellation terms. Message the seller before ordering if this matters to you.`}
+        title={t("noPolicyTitle")}
+        description={t("noPolicyDescription", { store: store.name })}
       />
     );
   }
@@ -861,65 +891,97 @@ function PolicyBlock({ store }: { store: Product["store"] }) {
 }
 
 function ReturnTerms({ policy }: { policy: ReturnPolicy }) {
+  const t = useTranslations("shop.product");
+
   const payer: Record<ReturnPolicy["returnShippingPayer"], string> = {
-    vendor: "The seller pays return shipping",
-    customer: "You pay return shipping",
-    customer_reimbursed_if_defect: "You pay return shipping, refunded if the item is faulty",
+    vendor: t("returnShippingVendor"),
+    customer: t("returnShippingCustomer"),
+    customer_reimbursed_if_defect: t("returnShippingCustomerReimbursed"),
   };
 
+  // The percentage is inside the message rather than appended to it — a
+  // parenthesised suffix is not punctuation every language shares.
   const refund =
     policy.refundType === "full"
-      ? "Full refund"
+      ? t("refundFull")
       : policy.refundType === "partial"
-        ? `Partial refund${policy.refundPercentage !== null ? ` (${policy.refundPercentage}%)` : ""}`
-        : "No refund";
+        ? policy.refundPercentage !== null
+          ? t("refundPartialPct", { pct: policy.refundPercentage })
+          : t("refundPartial")
+        : t("refundNone");
 
   return (
     <div style={{ marginBottom: 22 }}>
       <p className="ds-overline" style={{ marginBottom: 8 }}>
-        Returns
+        {t("returnsHeading")}
       </p>
       {policy.eligible ? (
         <>
-          <InfoRow icon="calendar-days" label="Return window" value={`${policy.windowDays} days from delivery`} />
-          <InfoRow icon="banknote" label="Refund" value={refund} />
-          <InfoRow icon="truck" label="Return shipping" value={payer[policy.returnShippingPayer]} />
-          <InfoRow icon="clock" label="Refund processed in" value={`${policy.refundProcessingDays} days`} />
-          {policy.conditionNotes && <InfoRow icon="info" label="Condition" value={policy.conditionNotes} />}
+          <InfoRow
+            icon="calendar-days"
+            label={t("returnWindow")}
+            value={t("returnWindowDays", { n: policy.windowDays })}
+          />
+          <InfoRow icon="banknote" label={t("refundLabel")} value={refund} />
+          <InfoRow
+            icon="truck"
+            label={t("returnShippingLabel")}
+            value={payer[policy.returnShippingPayer]}
+          />
+          <InfoRow
+            icon="clock"
+            label={t("refundProcessedIn")}
+            value={t("refundProcessingDays", { n: policy.refundProcessingDays })}
+          />
+          {policy.conditionNotes && (
+            <InfoRow icon="info" label={t("conditionLabel")} value={policy.conditionNotes} />
+          )}
         </>
       ) : (
-        <InfoRow icon="circle-slash" label="Returns" value="This seller does not accept returns" />
+        <InfoRow
+          icon="circle-slash"
+          label={t("returnsHeading")}
+          value={t("noReturnsValue")}
+        />
       )}
     </div>
   );
 }
 
 function CancellationTerms({ policy }: { policy: CancellationPolicy }) {
+  const t = useTranslations("shop.product");
+
   const deadline =
     policy.deadline === "before_vendor_confirmation"
-      ? "Until the seller confirms the order"
+      ? t("cancelUntilConfirmed")
       : policy.deadlineDays !== null
-        ? `Up to ${policy.deadlineDays} days after ordering`
-        : (policy.deadline ?? "See seller terms");
+        ? t("cancelUpToDays", { n: policy.deadlineDays })
+        : // A raw `deadline` is a wire value the API invented; it is not ours to
+          // translate, and the fallback covers it being absent entirely.
+          (policy.deadline ?? t("cancelSeeTerms"));
 
   return (
     <div>
       <p className="ds-overline" style={{ marginBottom: 8 }}>
-        Cancellation
+        {t("cancellationHeading")}
       </p>
       {policy.cancellable ? (
         <>
-          <InfoRow icon="calendar-x" label="Cancel by" value={deadline} />
+          <InfoRow icon="calendar-x" label={t("cancelBy")} value={deadline} />
           {policy.feeType && policy.feeValue !== null && (
             <InfoRow
               icon="banknote"
-              label="Cancellation fee"
+              label={t("cancellationFee")}
               value={policy.feeType === "percentage" ? `${policy.feeValue}%` : formatMoney(policy.feeValue, "XAF")}
             />
           )}
         </>
       ) : (
-        <InfoRow icon="circle-slash" label="Cancellation" value="This order cannot be cancelled once placed" />
+        <InfoRow
+          icon="circle-slash"
+          label={t("cancellationHeading")}
+          value={t("noCancellationValue")}
+        />
       )}
     </div>
   );

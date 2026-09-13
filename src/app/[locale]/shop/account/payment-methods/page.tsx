@@ -23,17 +23,25 @@ import { forgetWalletNumber, rememberWalletNumber } from "@/lib/shop/wallet-numb
 import { useApiResource } from "@/lib/shop/useApiResource";
 import type { PaymentMethodType, SavedPaymentMethod } from "@/lib/shop/customer.types";
 
-const TYPE_META: Record<PaymentMethodType, { label: string; icon: IconName }> = {
-  mobile_money: { label: "Mobile money", icon: "smartphone" },
-  card: { label: "Card", icon: "credit-card" },
-  bank_transfer: { label: "Bank transfer", icon: "landmark" },
+const TYPE_META: Record<PaymentMethodType, { labelKey: string; icon: IconName }> = {
+  mobile_money: { labelKey: "shop.paymentMethods.types.mobile_money", icon: "smartphone" },
+  card: { labelKey: "shop.paymentMethods.types.card", icon: "credit-card" },
+  bank_transfer: { labelKey: "shop.paymentMethods.types.bank_transfer", icon: "landmark" },
 };
 
-/** The mobile-money providers the platform's gateways actually settle against. */
+/**
+ * The mobile-money providers the platform's gateways actually settle against.
+ *
+ * `brandName` is a proper noun, not copy: MTN Mobile Money is called that in
+ * every language we ship, and the string is also half of the `display_label`
+ * sent to the backend and read back on every later render. Translating it would
+ * make the saved label disagree with itself the moment a shopper switched
+ * language. Deliberately not in the catalogue — see LOCALISATION.md §6.
+ */
 const MOMO_PROVIDERS = [
-  { id: "mtn_momo", label: "MTN Mobile Money" },
-  { id: "orange_money", label: "Orange Money" },
-  { id: "moov_money", label: "Moov Money" },
+  { id: "mtn_momo", brandName: "MTN Mobile Money" },
+  { id: "orange_money", brandName: "Orange Money" },
+  { id: "moov_money", brandName: "Moov Money" },
 ];
 
 export default function PaymentMethodsPage() {
@@ -43,7 +51,10 @@ export default function PaymentMethodsPage() {
   /** The method the shopper has asked to remove, held until they confirm. */
   const [pendingRemoval, setPendingRemoval] = useState<SavedPaymentMethod | null>(null);
   const { flash, flashError } = useToast();
-  const t = useTranslations("errors");
+  const t = useTranslations("shop.paymentMethods");
+  const tCommon = useTranslations("shop.common");
+  const tKey = useTranslations();
+  const tError = useTranslations("errors");
 
   const run = useCallback(
     async (id: string, op: () => Promise<unknown>, done: string) => {
@@ -53,21 +64,21 @@ export default function PaymentMethodsPage() {
         methods.reload();
         flash(done);
       } catch (err) {
-        flashError(translateError(t, err, "We couldn't update your payment methods."));
+        flashError(translateError(tError, err, t("updateError")));
       } finally {
         setBusyId(null);
       }
     },
-    [methods, flash, flashError, t],
+    [methods, flash, flashError, t, tError],
   );
 
   return (
     <AccountShell
-      title="Payment methods"
-      description="Saved for faster checkout."
+      title={tKey("shop.nav.titles.paymentMethods")}
+      description={t("description")}
       action={
         <Button size="sm" leadingIcon="plus" onClick={() => setSheetOpen(true)}>
-          Add
+          {tCommon("add")}
         </Button>
       }
     >
@@ -76,15 +87,15 @@ export default function PaymentMethodsPage() {
         error={methods.error}
         data={methods.data}
         onRetry={methods.reload}
-        errorFallback="We couldn't load your payment methods."
+        errorFallback={t("loadError")}
       >
         {(list) =>
           list.length === 0 ? (
             <EmptyState
               icon="wallet"
-              title="No saved payment methods"
-              description="Add a mobile money number or card so checkout is one tap."
-              actionLabel="Add a method"
+              title={t("emptyTitle")}
+              description={t("emptyDescription")}
+              actionLabel={t("emptyAction")}
               actionIcon="plus"
               onAction={() => setSheetOpen(true)}
             />
@@ -96,7 +107,7 @@ export default function PaymentMethodsPage() {
                   method={m}
                   busy={busyId === m.id}
                   onMakeDefault={() =>
-                    run(m.id, () => setDefaultPaymentMethod(m.id), "Default payment method updated")
+                    run(m.id, () => setDefaultPaymentMethod(m.id), t("defaultUpdated"))
                   }
                   onRemove={() => setPendingRemoval(m)}
                 />
@@ -112,17 +123,17 @@ export default function PaymentMethodsPage() {
         onAdded={() => {
           setSheetOpen(false);
           methods.reload();
-          flash("Payment method added");
+          flash(t("added"));
         }}
       />
 
       <ConfirmDialog
         open={pendingRemoval !== null}
-        title="Remove this payment method?"
+        title={t("removeTitle")}
         tone="danger"
         icon="trash-2"
-        confirmLabel="Remove"
-        cancelLabel="Keep it"
+        confirmLabel={tCommon("remove")}
+        cancelLabel={t("removeCancel")}
         busy={pendingRemoval !== null && busyId === pendingRemoval.id}
         onConfirm={async () => {
           const method = pendingRemoval;
@@ -135,14 +146,16 @@ export default function PaymentMethodsPage() {
               // leaves a method that checkout should still be able to prefill.
               await forgetWalletNumber(method.id);
             },
-            "Payment method removed",
+            t("removed"),
           );
           setPendingRemoval(null);
         }}
         onCancel={() => setPendingRemoval(null)}
       >
-        <strong>{pendingRemoval?.display_label}</strong> will no longer be offered at checkout.
-        Nothing already paid for is affected.
+        {t.rich("removeBody", {
+          label: pendingRemoval?.display_label ?? "",
+          name: (chunks) => <strong>{chunks}</strong>,
+        })}
       </ConfirmDialog>
     </AccountShell>
   );
@@ -159,10 +172,15 @@ function MethodRow({
   onMakeDefault: () => void;
   onRemove: () => void;
 }) {
+  const t = useTranslations("shop.paymentMethods");
+  const tCommon = useTranslations("shop.common");
+  const tKey = useTranslations();
   const meta = TYPE_META[method.method_type] ?? TYPE_META.card;
   const expiry =
     method.exp_month && method.exp_year
-      ? `Expires ${String(method.exp_month).padStart(2, "0")}/${String(method.exp_year).slice(-2)}`
+      ? t("expires", {
+          date: `${String(method.exp_month).padStart(2, "0")}/${String(method.exp_year).slice(-2)}`,
+        })
       : null;
 
   return (
@@ -176,12 +194,12 @@ function MethodRow({
             </span>
             {method.is_default && (
               <Badge size="sm" tone="brand">
-                Default
+                {t("defaultBadge")}
               </Badge>
             )}
           </div>
           <div className="muted" style={{ fontSize: 12.5, marginTop: 3 }}>
-            {[meta.label, method.brand, expiry].filter(Boolean).join(" · ")}
+            {[tKey(meta.labelKey), method.brand, expiry].filter(Boolean).join(" · ")}
           </div>
         </div>
       </div>
@@ -196,10 +214,21 @@ function MethodRow({
         }}
       >
         {!method.is_default && (
-          <CardAction label="Make default" icon="check" disabled={busy} onClick={onMakeDefault} />
+          <CardAction
+            label={t("makeDefault")}
+            icon="check"
+            disabled={busy}
+            onClick={onMakeDefault}
+          />
         )}
         <div style={{ flex: 1 }} />
-        <CardAction label="Remove" icon="trash-2" danger disabled={busy} onClick={onRemove} />
+        <CardAction
+          label={tCommon("remove")}
+          icon="trash-2"
+          danger
+          disabled={busy}
+          onClick={onRemove}
+        />
       </div>
     </AccountCard>
   );
@@ -227,7 +256,9 @@ function AddMethodSheet({
   const [isDefault, setIsDefault] = useState(false);
   const [saving, setSaving] = useState(false);
   const { flashError } = useToast();
-  const t = useTranslations("errors");
+  const t = useTranslations("shop.paymentMethods");
+  const tCommon = useTranslations("shop.common");
+  const tError = useTranslations("errors");
 
   const valid = isValidPhone(phone);
 
@@ -236,7 +267,7 @@ function AddMethodSheet({
     if (!e164) return;
     setSaving(true);
     try {
-      const label = MOMO_PROVIDERS.find((p) => p.id === provider)?.label ?? "Mobile money";
+      const brandName = MOMO_PROVIDERS.find((p) => p.id === provider)?.brandName ?? "Mobile money";
       const created = await addPaymentMethod({
         provider,
         // The wallet IS the phone number for mobile money: the gateway keys the
@@ -244,7 +275,7 @@ function AddMethodSheet({
         gateway_customer_id: e164,
         gateway_instrument_id: e164,
         method_type: "mobile_money",
-        display_label: `${label} · ${e164.slice(-4).padStart(8, "•")}`,
+        display_label: `${brandName} · ${e164.slice(-4).padStart(8, "•")}`,
         last4: e164.slice(-4),
         is_default: isDefault,
       });
@@ -263,7 +294,7 @@ function AddMethodSheet({
       setIsDefault(false);
       onAdded();
     } catch (err) {
-      flashError(translateError(t, err, "We couldn't save that payment method."));
+      flashError(translateError(tError, err, t("saveError")));
     } finally {
       setSaving(false);
     }
@@ -273,20 +304,20 @@ function AddMethodSheet({
     <BottomSheet
       open={open}
       onClose={onClose}
-      title="Add a payment method"
+      title={t("sheetTitle")}
       footer={
         <div style={{ display: "flex", gap: 10 }}>
           <Button variant="ghost" onClick={onClose} disabled={saving}>
-            Cancel
+            {tCommon("cancel")}
           </Button>
           <Button block onClick={save} disabled={!valid || saving}>
-            {saving ? "Saving…" : "Save method"}
+            {saving ? tCommon("saving") : t("saveCta")}
           </Button>
         </div>
       }
     >
       <p className="ds-overline" style={{ marginBottom: 8 }}>
-        Provider
+        {t("provider")}
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
         {MOMO_PROVIDERS.map((p) => (
@@ -315,7 +346,7 @@ function AddMethodSheet({
             <span
               style={{ flex: 1, fontSize: 14.5, fontWeight: 700, color: "var(--text-strong)" }}
             >
-              {p.label}
+              {p.brandName}
             </span>
             <span
               style={{
@@ -332,13 +363,13 @@ function AddMethodSheet({
 
       <PhoneField
         variant="stacked"
-        label="Wallet number"
+        label={t("walletNumber")}
         required
         name="momo-wallet"
         autoComplete="tel"
         value={phone}
         onChange={setPhone}
-        hint="The number this wallet is registered to."
+        hint={t("walletHint")}
       />
 
       <label
@@ -359,12 +390,11 @@ function AddMethodSheet({
           onChange={(e) => setIsDefault(e.target.checked)}
           style={{ width: 17, height: 17, accentColor: "var(--brand)" }}
         />
-        Use as my default payment method
+        {t("useAsDefault")}
       </label>
 
       <p className="muted" style={{ fontSize: 12, marginTop: 14, lineHeight: 1.5 }}>
-        Cards are saved automatically the first time you pay with one — there is nothing to
-        enter here, and no card number is ever stored by Wi-Mall.
+        {t("cardNote")}
       </p>
     </BottomSheet>
   );

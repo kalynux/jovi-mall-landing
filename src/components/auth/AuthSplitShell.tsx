@@ -159,7 +159,7 @@ export default function AuthSplitShell({
       )}
     >
       {/* ── Form pane ──────────────────────────────────────────────────────── */}
-      <div className="flex flex-col px-0 py-2 sm:px-10 sm:py-9 lg:px-12">
+      <div className="flex flex-col px-0 py-6 sm:px-10 sm:py-9 lg:px-12">
         {/* Brand row — `sm` and up only. See the note at the top of the file. */}
         <div className="hidden items-center justify-between gap-4 sm:flex">
           <Link href={homePath()} className="group flex items-center gap-2" aria-label={t("backToHome")}>
@@ -184,20 +184,24 @@ export default function AuthSplitShell({
             {title}
           </h1>
           {subtitle && (
-            <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">{subtitle}</p>
+            <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">{subtitle}</p>
           )}
           {steps && steps.length > 1 && (
-            <div className="mt-5">
+            <div className="mt-6">
               <Stepper steps={steps} current={currentStep} onSelect={onStepSelect} />
             </div>
           )}
         </div>
 
-        {/* Body */}
-        <div className="mt-7 flex-1">{children}</div>
+        {/* Body.
+            The gap here is what separates "what this screen is" from "what you
+            have to do on it". It was `mt-7`, which on a phone put the first
+            control close enough to the stepper that the heading block and the
+            form read as one undifferentiated stack. */}
+        <div className="mt-10 flex-1 sm:mt-12">{children}</div>
 
         {footer && (
-          <div className="mt-8 border-t border-[var(--border)] pt-5 text-center text-sm text-[var(--text-muted)]">
+          <div className="mt-10 border-t border-[var(--border)] pt-6 text-center text-sm text-[var(--text-muted)]">
             {footer}
           </div>
         )}

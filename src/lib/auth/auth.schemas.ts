@@ -9,6 +9,56 @@ import { phoneErrorMessage, toE164, validatePhone } from "@/lib/phone/phone";
 const UI_ROLE_VALUES = ["vendor", "agency", "agent", "customer"] as const;
 export const UiRoleSchema = z.enum(UI_ROLE_VALUES);
 
+// ─── Field-error keys ────────────────────────────────────────────────────────
+/**
+ * **A schema never returns a sentence. It returns a key.**
+ *
+ * These schemas are module-level constants, built once at import time, outside
+ * any React render — so there is no `useTranslations` to call and no locale to
+ * read. That is the same wall `lib/shop/*` hit, and the same answer applies
+ * (LOCALISATION.md §3): the module names the string, the call site resolves it.
+ *
+ * Here the "call site" is `useLocalizedResolver`, which wraps `zodResolver` and
+ * translates every message as react-hook-form's error object is built. Doing it
+ * there rather than at each `error={errors.x?.message}` is what makes this total:
+ * a field added tomorrow is localised without anybody remembering to wrap it.
+ *
+ * `AUTH_FIELD_ERROR_PREFIX` is what keeps ours distinguishable from a backend
+ * field message, which must be passed through untouched — the server already
+ * wrote it in the shopper's language. Exactly the contract `phoneErrorMessage` /
+ * `parsePhoneErrorMessage` established in `lib/phone/phone.ts`.
+ */
+export const AUTH_FIELD_ERROR_PREFIX = "auth.fieldErrors." as const;
+
+/** Absolute catalogue key for one field-error code. */
+function fieldError(code: string): string {
+    return `${AUTH_FIELD_ERROR_PREFIX}${code}`;
+}
+
+/**
+ * Reads a code back out of a Zod message. `null` for anything that did not come
+ * from this module, so callers can pass those through.
+ */
+export function parseAuthFieldError(message: string | undefined): string | null {
+    if (!message?.startsWith(AUTH_FIELD_ERROR_PREFIX)) return null;
+    return message.slice(AUTH_FIELD_ERROR_PREFIX.length);
+}
+
+// ─── The numeric rules ───────────────────────────────────────────────────────
+/**
+ * Named because the catalogue interpolates them. "Password must be at least 6
+ * characters" is one sentence with one number in it, not a sentence glued to a
+ * number (§4) — so the message carries `{passwordMin}` and the value comes from
+ * here, which keeps the rule and the copy from drifting apart.
+ */
+/** Backend minimum on register and login (api-doc/auth/README.md). */
+const PASSWORD_MIN = 6;
+/** The backend's stricter PasswordStrengthSchema, used on reset. */
+const RESET_PASSWORD_MIN = 8;
+const NAME_MIN = 2;
+const IDENTIFIER_MIN = 3;
+const CODE_MAX = 32;
+
 // ─── Business name ───────────────────────────────────────────────────────────
 /**
  * `business_name` / `agency_name` are NOT stored on the role profile.
@@ -31,6 +81,21 @@ export const BUSINESS_NAME_MAX = 100;
 /** Roles whose business name is stored away from the role profile. */
 export const ROLES_WITH_BUSINESS_NAME: readonly UiRole[] = ["vendor", "agency"];
 
+/**
+ * Every value an `auth.fieldErrors.*` message may interpolate, handed to `t()`
+ * as one object. next-intl ignores the ones a given message does not name, so
+ * the resolver does not have to know which key wants which number.
+ */
+export const AUTH_FIELD_ERROR_VALUES = {
+    businessNameMin: String(BUSINESS_NAME_MIN),
+    businessNameMax: String(BUSINESS_NAME_MAX),
+    passwordMin: String(PASSWORD_MIN),
+    resetPasswordMin: String(RESET_PASSWORD_MIN),
+    nameMin: String(NAME_MIN),
+    identifierMin: String(IDENTIFIER_MIN),
+    codeMax: String(CODE_MAX),
+} as const;
+
 function refineBusinessName(
     value: string | undefined,
     path: "business_name" | "agency_name",
@@ -46,7 +111,7 @@ function refineBusinessName(
     if (trimmed.length < BUSINESS_NAME_MIN) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: `Must be at least ${BUSINESS_NAME_MIN} characters`,
+            message: fieldError("businessNameTooShort"),
             path: [path],
         });
         return;
@@ -54,7 +119,7 @@ function refineBusinessName(
     if (trimmed.length > BUSINESS_NAME_MAX) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: `Must be at most ${BUSINESS_NAME_MAX} characters`,
+            message: fieldError("businessNameTooLong"),
             path: [path],
         });
     }
@@ -77,7 +142,7 @@ export const LoginSchema = z
     .object({
         identifier_type: IdentifierTypeSchema,
         identifier: z.string().trim(),
-        password: z.string().min(6, "Password must be at least 6 characters"),
+        password: z.string().min(PASSWORD_MIN, fieldError("passwordTooShort")),
         role: UiRoleSchema.optional(),
     })
     .superRefine((data, ctx) => {
@@ -96,7 +161,7 @@ export const LoginSchema = z
         if (!data.identifier) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "Email is required",
+                message: fieldError("emailRequired"),
                 path: ["identifier"],
             });
             return;
@@ -104,7 +169,7 @@ export const LoginSchema = z
         if (!z.string().email().safeParse(data.identifier).success) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "Invalid email",
+                message: fieldError("emailInvalid"),
                 path: ["identifier"],
             });
         }
@@ -129,12 +194,12 @@ export const RegisterSchema = z
         // (api-doc/auth/README.md); every number that satisfies its country's
         // plan and carries a calling code clears it.
         phone: PhoneSchema,
-        email: z.string().email("Invalid email").optional().or(z.literal("")),
-        name: z.string().min(2, "Name must be at least 2 characters").trim(),
+        email: z.string().email(fieldError("emailInvalid")).optional().or(z.literal("")),
+        name: z.string().min(NAME_MIN, fieldError("nameTooShort")).trim(),
         password: z
             // Backend minimum is 6 characters (api-doc/auth/README.md).
             .string()
-            .min(6, "Password must be at least 6 characters"),
+            .min(PASSWORD_MIN, fieldError("passwordTooShort")),
         role: UiRoleSchema,
         /** Seeds Store.name — see refineBusinessName. */
         business_name: z.string().optional(),
@@ -165,7 +230,7 @@ export const RegisterSchema = z
         if (data.role === "vendor" && !data.email?.trim()) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "Email is required for vendors",
+                message: fieldError("emailRequiredVendor"),
                 path: ["email"],
             });
         }
@@ -173,7 +238,7 @@ export const RegisterSchema = z
             refineBusinessName(
                 data.business_name,
                 "business_name",
-                "Business name is required for vendors",
+                fieldError("businessNameRequired"),
                 ctx
             );
         }
@@ -181,7 +246,7 @@ export const RegisterSchema = z
             refineBusinessName(
                 data.agency_name,
                 "agency_name",
-                "Agency name is required",
+                fieldError("agencyNameRequired"),
                 ctx
             );
         }
@@ -205,7 +270,7 @@ export const AddRoleSchema = z
         if (data.role !== "customer" && !data.name?.trim()) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "Name is required",
+                message: fieldError("nameRequired"),
                 path: ["name"],
             });
         }
@@ -214,7 +279,7 @@ export const AddRoleSchema = z
             refineBusinessName(
                 data.business_name,
                 "business_name",
-                "Business name is required for vendors",
+                fieldError("businessNameRequired"),
                 ctx
             );
         }
@@ -223,7 +288,7 @@ export const AddRoleSchema = z
             refineBusinessName(
                 data.agency_name,
                 "agency_name",
-                "Agency name is required",
+                fieldError("agencyNameRequired"),
                 ctx
             );
         }
@@ -243,7 +308,7 @@ export type AddRoleFormValues = z.infer<typeof AddRoleSchema>;
  * is the real rule; the endpoint answers 200 either way.
  */
 export const ForgotPasswordSchema = z.object({
-    identifier: z.string().trim().min(3, "Enter your phone number or email"),
+    identifier: z.string().trim().min(IDENTIFIER_MIN, fieldError("identifierRequired")),
 });
 
 export type ForgotPasswordFormValues = z.infer<typeof ForgotPasswordSchema>;
@@ -262,15 +327,15 @@ export const ResetPasswordSchema = z
     .object({
         password: z
             .string()
-            .min(8, "Password must be at least 8 characters")
-            .regex(/[a-z]/, "Include a lowercase letter")
-            .regex(/[A-Z]/, "Include an uppercase letter")
-            .regex(/[0-9]/, "Include a number")
-            .regex(/[^A-Za-z0-9]/, "Include a symbol"),
+            .min(RESET_PASSWORD_MIN, fieldError("resetPasswordTooShort"))
+            .regex(/[a-z]/, fieldError("passwordNeedsLowercase"))
+            .regex(/[A-Z]/, fieldError("passwordNeedsUppercase"))
+            .regex(/[0-9]/, fieldError("passwordNeedsDigit"))
+            .regex(/[^A-Za-z0-9]/, fieldError("passwordNeedsSymbol")),
         confirm: z.string(),
     })
     .refine((data) => data.password === data.confirm, {
-        message: "The two passwords do not match",
+        message: fieldError("passwordMismatch"),
         path: ["confirm"],
     });
 
@@ -299,8 +364,8 @@ export const MagicCodeSchema = z
         code: z
             .string()
             .trim()
-            .min(1, "Enter the code the bot sent you")
-            .max(32, "That is not a sign-in code"),
+            .min(1, fieldError("codeRequired"))
+            .max(CODE_MAX, fieldError("codeTooLong")),
     })
     .superRefine((data, ctx) => {
         if (data.identifier_type === "phone") {
@@ -318,7 +383,7 @@ export const MagicCodeSchema = z
         if (!data.identifier) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "Email is required",
+                message: fieldError("emailRequired"),
                 path: ["identifier"],
             });
             return;
@@ -326,7 +391,7 @@ export const MagicCodeSchema = z
         if (!z.string().email().safeParse(data.identifier).success) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "Invalid email",
+                message: fieldError("emailInvalid"),
                 path: ["identifier"],
             });
         }

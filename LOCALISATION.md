@@ -248,6 +248,15 @@ the reason phases 2–9 can run at the same time.
 phase's namespace, put your own copy in your own namespace. A duplicated string
 is cheap; a merge conflict between two parallel worktrees is not.
 
+> **This table is history now.** It existed to stop two phases writing into one
+> JSON subtree while phases 2–9 ran in parallel worktrees. All ten have landed,
+> nothing runs in parallel any more, and §12 is the live procedure. Phase 10
+> itself wrote outside its row four times, deliberately, because the string
+> belonged where it put it rather than where the table said: `authMe.subtitle`
+> and `authMe.roleAriaCurrent` (replacing `subtitlePrefix`), `shop.meta.payTitle`
+> for the `/pay/:token` tab title, and `shop.support.replyCharCount` for the
+> reply counter. Each sits with the screen that renders it.
+
 ### 🔒 `shop.common` is FROZEN
 
 `shop.common` is the one region more than one phase could plausibly reach for,
@@ -307,27 +316,42 @@ Run it once per locale (five times), then commit.
 ## 9 · The gate
 
 ```bash
-node scripts/check-i18n.mjs            # summary
-node scripts/check-i18n.mjs --verbose  # with sample strings per file
+npm run check:i18n                     # the gate — this is what CI runs
+node scripts/check-i18n.mjs --verbose  # with every offending string
+node scripts/check-i18n.mjs --allowlist # print the deliberately-English list
 ```
 
-It answers two questions:
+It answers two questions, and **since Phase 10 both of them fail the run**:
 
 1. **Are the five catalogues in step?** Every key in `en.json` must exist in fr,
-   es, pt and ar. A missing key is a `MISSING_MESSAGE` crash in next-intl, not a
-   cosmetic gap. **This is the half that fails the run** (exit 1), so the script
-   is safe to wire into CI.
-2. **How much English is left in the shop tree?** A per-file count, a total, and
-   a percentage against the frozen Phase 1 baseline of **625 strings across 94
-   files**. This half is a progress report and never fails the run.
+   es, pt and ar, and no locale may carry a key `en.json` does not. A missing key
+   is a `MISSING_MESSAGE` crash in next-intl, not a cosmetic gap.
+2. **Is there hardcoded English in the shop, auth or pay trees?** A per-file
+   count with the strings, plus a percentage against the frozen Phase 1 baseline
+   of **625 strings across 94 files**.
+
+Question 2 was a progress report through phases 1–9 — the tree was still being
+converted, and a build broken by a miscounting regex would have been worse than
+useless. Phase 10 finished the conversion, so it is now a gate. The scanner is
+still a regex pass rather than a parser, and the **`ALLOWLIST`** at the top of
+the script is what keeps that honest: see §11.
 
 Do not "refresh" the baseline constants. They are the fixed denominator every
-phase divides into; moving them makes the percentage meaningless.
+phase divides into; moving them makes the percentage meaningless. They were
+measured over the *shop* tree, which is why the percentage is still reported
+against the shop tree alone now that auth and pay are scanned too.
 
-**The known `errors.*` gap.** `pt` is missing 161 `errors.*` keys and `ar` 163.
-This predates the project. The script reports it on its own line and does **not**
-fail on it. Phase 10 backfills it; until then, every other namespace is held to
-strict parity from Phase 1 onwards.
+**The `errors.*` exception is gone.** `pt` was missing 161 backend error codes
+and `ar` 163 — a gap that predated the project, and one that handed a Portuguese
+or Arabic shopper English at the exact moment something went wrong. Phase 10
+translated all of them, and `KNOWN_GAP_PREFIXES` in the script is now empty and
+must stay empty. A namespace that is not ready is a reason not to merge it, not
+a reason to stop checking it.
+
+**ESLint is a second opinion, not the gate.** `eslint.config.mjs` runs
+`react/jsx-no-literals` over the same three trees, which catches a bare
+`<p>Hello</p>` at the moment it is typed. It is a **warning**, and `npm run lint`
+is not a reliable gate in this repository — the script is.
 
 ### Finish your phase with all three
 
@@ -401,3 +425,142 @@ For anyone tracing why a file looks the way it does.
   `shop.support.types.<TICKET_TYPE>`.
 
 **State at handoff:** `npx tsc --noEmit` exits 0; five catalogues at parity.
+
+---
+
+## 12 · Adding a string from now on
+
+The project is finished. This is the whole procedure for the next string anybody
+writes in the shop, auth or pay trees.
+
+**1. Put the English in `messages/en.json`,** in the namespace that owns the
+screen (§1, §7). Read the neighbouring keys first and match them — this product
+speaks plainly and in the second person.
+
+**2. Translate it into the other four, yourself, in the same commit.** Not
+later. A key that exists in `en.json` and not in `ar.json` is a
+`MISSING_MESSAGE` crash, and the gate will stop you — but a key that exists in
+all five with English text in four of them passes every check and ships. French
+matters most; Portuguese is European Portuguese; Arabic is MSA and the page is
+RTL. §10 has the detail.
+
+**3. Write the files with the exact formula in §5** — CRLF, 4-space, trailing
+newline — or your two-line change arrives as a 2 000-line diff:
+
+```js
+JSON.stringify(catalogue, null, 4).replace(/\n/g, "\r\n") + "\r\n"
+```
+
+**4. Read it in the component**, never in a plain module:
+
+```tsx
+const t = useTranslations("shop.cart");       // client
+const t = await getTranslations({ locale, namespace: "shop.cart" });  // server
+const tKey = useTranslations();               // absolute keys from lib modules
+```
+
+A module that is not a component **emits a key** and the component resolves it
+(§3). Two patterns already exist for that and you should copy one rather than
+invent a third:
+
+- a `labelKey` field, as `lib/shop/order-status.ts` does;
+- a prefixed sentinel string, as `lib/phone/phone.ts` and
+  `lib/auth/auth.schemas.ts` do — the value carries `phone.errors.` or
+  `auth.fieldErrors.` and one seam (`usePhoneErrorText`,
+  `useLocalizedResolver`) turns every one of them back into copy.
+
+**5. Interpolate; never concatenate.** `t("itemsInCart", { n })`, not
+`{t("youHave")} {n} {t("items")}`. Markup goes through `t.rich()`. This is §4
+and it is the one rule that cannot be fixed later from the catalogue.
+
+**6. Do not translate** money, dates, backend error codes, vendor-written data,
+enum values or wire constants. §6 says which is which.
+
+**7. Run the gate before you push:**
+
+```bash
+npx tsc --noEmit      # proves you caught every call site
+npm run check:i18n    # parity + no hardcoded copy; both fail the run
+```
+
+### If the string genuinely should stay English
+
+There are a few: a build-time diagnostic, a brand name, a message that is only
+reachable when the catalogue itself failed to load. If you have one:
+
+- add it to **`ALLOWLIST` in `scripts/check-i18n.mjs`** — the *file plus the
+  exact string plus the reason*. Never a blanket file skip: the allowlist
+  forgives the strings it names and nothing else, so real copy added to the same
+  file tomorrow still fails.
+- record it in §13 below, so the decision is readable without grepping a script.
+- if the scanner does not flag it, **do not add a dead allowlist entry** — the
+  script warns about entries that match nothing. Record it in §13 only.
+
+---
+
+## 13 · What Phase 10 did
+
+The last phase. It closed the three things that were still open.
+
+**Built**
+- `npm run check:i18n`, and the gate now **fails** on hardcoded copy as well as
+  on catalogue drift (§9). The scan covers the shop, auth and pay trees.
+- `ALLOWLIST` in `scripts/check-i18n.mjs` — exact-string exemptions with
+  reasons, plus a warning for any entry that stops matching.
+- `react/jsx-no-literals` in `eslint.config.mjs`, scoped to the same three
+  trees, as an editor-time second opinion. A warning, not the gate.
+- `lib/auth/useLocalizedResolver.ts` — wraps `zodResolver` so every
+  react-hook-form validation message is resolved once, at the seam, instead of
+  at each of the ~20 places a field error is rendered.
+
+**Converted**
+
+| Module | What changed |
+|---|---|
+| `auth.schemas.ts` | Every Zod message → `auth.fieldErrors.*` keys, via `AUTH_FIELD_ERROR_PREFIX`. The numeric rules (`PASSWORD_MIN`, `BUSINESS_NAME_MAX`…) became named constants the catalogue interpolates, so the rule and the copy cannot drift. |
+| `RolePicker.tsx` | `ROLE_CONFIG` lost its dead English `label`/`headline`/`description` — all three were already rendered from `modal.roles.*`. The two badge defaults now come from `authMe.*` instead of literals. |
+| `auth-me/page.tsx` | Two concatenations of translated fragments (§4) became single interpolated messages: `authMe.subtitle` replaced `subtitlePrefix`, and `authMe.roleAriaCurrent` replaced a hand-built aria-label. |
+| `pay/[token]/page.tsx` | Static `metadata` → `generateMetadata`, so the tab title follows the locale in the URL. |
+| `addresses/page.tsx`, `payment-methods/page.tsx` | Phase 7 filled `shop.addresses` and `shop.paymentMethods` in all five catalogues but never wired the two pages, which still held 51 hardcoded strings. Wired. `TYPE_META` now carries a `labelKey` (§3). |
+| `TicketDetail.tsx` | `{reply.length}/300` → `shop.support.replyCharCount`, and the `300` became one constant shared by the cap and the counter. |
+| `layout/Footer.tsx` | `BRAND.description` rendered an English paragraph on every localised page, the shop screens included — the web build puts the marketing footer under them. The **visible** usage now reads `footer.description`; the constant still feeds `app/manifest.ts` and `lib/seo/jsonld.ts`, which are not per-locale. |
+
+**Found and NOT fixed — it is the backend's string.** A support ticket's related
+entity arrives already labelled: `ticket-enrichment.service.ts:412` builds
+``label: `Order ${d.order_number}` `` server-side, so `/fr/shop/account/support/`
+shows "Order ORD-2026-000042" whatever the locale. Nothing in this repository can
+translate it — the fix belongs in the API.
+
+**Backfilled** — `errors.*` was missing 161 codes in `pt` and 163 in `ar`, so
+those two languages fell back to the backend's English at the exact moment
+something went wrong. All translated. Every catalogue now carries all 266 error
+codes and `KNOWN_GAP_PREFIXES` is empty.
+
+**Deliberately English**, with the reason. The first two are in `ALLOWLIST`
+because the scanner flags them; the rest are recorded here only, because it does
+not, and a dead allowlist entry rots:
+
+- `lib/shop/catalog.api.ts` — `CatalogApiError`'s message is a **build-time
+  diagnostic**, read by a developer in a `next build` log. Phase 1's decision,
+  unchanged.
+- `components/shop/ShopHeader.tsx` — the **Wi-Mall wordmark**. A brand name, the
+  same in five languages, and the hyphen is load-bearing (`wi-mall.com`; plain
+  `wimall.com` is somebody else's). Split in two only to colour the second half.
+- `lib/errors/is-network-error.ts` — `OfflineError`'s default constructor
+  message. Never rendered: `isNetworkError` claims the error by name and the UI
+  resolves it to `errors.NETWORK_ERROR` rather than reading `.message`.
+- `lib/auth/error-translator.ts` — the last rung of the fallback ladder, reached
+  only when `t("UNKNOWN_ERROR")` itself throws, i.e. when the catalogue failed
+  to load. There is no locale to translate into at that point.
+- `MOMO_PROVIDERS` in `payment-methods/page.tsx` — "MTN Mobile Money", "Orange
+  Money", "Moov Money" are **proper nouns**, and the string is also half of the
+  `display_label` stored on the backend and read back later. Translating it
+  would make a saved label disagree with itself the moment somebody switched
+  language. The field is named `brandName`, not `label`, to say so.
+- `KB` / `MB` / `GB` in the file-size helper — unit symbols, on the
+  `allowedStrings` list in `eslint.config.mjs`. French would prefer *Ko*; if
+  that is ever wanted it is a real string and it comes off the list.
+
+**State at handoff:** `npx tsc --noEmit` exits 0. `npm run check:i18n` reports
+five catalogues at 2 388 keys each and **zero** hardcoded strings across the
+shop, auth and pay trees.

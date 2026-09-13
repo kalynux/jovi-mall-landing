@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useLocalizedResolver } from "@/lib/auth/useLocalizedResolver";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -41,7 +42,7 @@ function ResetPasswordContent() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<ResetPasswordFormValues>({
-    resolver: zodResolver(ResetPasswordSchema),
+    resolver: useLocalizedResolver(zodResolver(ResetPasswordSchema)),
     defaultValues: { password: "", confirm: "" },
   });
 

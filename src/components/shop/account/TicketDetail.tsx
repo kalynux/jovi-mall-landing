@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 import { useCallback, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
@@ -18,7 +18,7 @@ import {
   listTicketNotes,
   MAX_TICKET_ATTACHMENTS,
   TICKET_STATUS_LABEL,
-  ticketTypeLabel,
+  ticketTypeLabelKey,
   type TicketAttachment,
   type TicketNote,
 } from "@/lib/shop/tickets.api";
@@ -41,6 +41,21 @@ import { TICKET_LIST } from "@/lib/shop/shop.routes";
  * status is a `400`, so the only transition offered is closing.
  */
 export function TicketDetail({ ticketId }: { ticketId: string }) {
+  // ⚠ BOTH TRANSLATORS ARE BOUND HERE, ABOVE THE GUARDS BELOW, AND THAT
+  //   POSITION IS THE POINT.
+  //   `tKey` used to sit after the early returns, which is a real rules-of-hooks
+  //   violation rather than a style one: this component renders a skeleton while
+  //   loading, then a "not found" branch, then the full view — so the number of
+  //   hooks React saw CHANGED between renders as the data arrived. React matches
+  //   hooks by call order, so the first render after loading finishes can read
+  //   another hook's state, and the symptom is a crash or wrong state on a
+  //   screen that worked a moment earlier.
+  //
+  //   Note the name: this file binds `t` to the TICKET, so the screen's own copy
+  //   is `tSupport`. `tKey` is root-scoped, for the absolute keys the lib
+  //   modules emit (`shop.status.ticket.…`, `shop.support.types.…`).
+  const tSupport = useTranslations("shop.support");
+  const tKey = useTranslations();
   const router = useRouter();
   const { flash } = useToast();
   const { status: authStatus } = useAuthGuard();
@@ -53,6 +68,8 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
   );
 
   const [reply, setReply] = useState("");
+  /** The cap the textarea enforces and the counter reports. One source. */
+  const REPLY_MAX = 300;
   const [busy, setBusy] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
 
@@ -67,24 +84,24 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
       // The reply may have moved the ticket off `waiting_on_customer`.
       ticket.reload();
     } catch {
-      flash("Could not send that. Please try again.");
+      flash(tSupport("sendFailed"));
     } finally {
       setBusy(false);
     }
-  }, [reply, ticketId, notes, ticket, flash]);
+  }, [reply, ticketId, notes, ticket, flash, tSupport]);
 
   const attach = useCallback(
     async (files: File[]) => {
       const current = attachments.data?.length ?? 0;
       const room = MAX_TICKET_ATTACHMENTS - current;
       if (room <= 0) {
-        flash(`A ticket can hold ${MAX_TICKET_ATTACHMENTS} attachments.`);
+        flash(tSupport("attachmentLimit", { n: MAX_TICKET_ATTACHMENTS }));
         return;
       }
 
       const tooBig = files.find((f) => f.size > maxBytesFor(f));
       if (tooBig) {
-        flash(`${tooBig.name} is too large.`);
+        flash(tSupport("fileTooLarge", { name: tooBig.name }));
         return;
       }
 
@@ -97,20 +114,25 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
         attachments.reload();
       } catch (err) {
         // Name the offending file rather than the batch — the same reason the
-        // create form does.
+        // create form does. `v.message` is the server's own sentence.
         const violations = uploadViolations(err);
         flash(
           violations.length > 0
             ? violations
-                .map((v) => `${v.fileName ?? "That file"}: ${v.message ?? v.code}`)
+                .map((v) =>
+                  tSupport("violation", {
+                    name: v.fileName ?? tSupport("thatFile"),
+                    detail: v.message ?? v.code,
+                  }),
+                )
                 .join(" · ")
-            : "Could not attach that file.",
+            : tSupport("attachFailed"),
         );
       } finally {
         setBusy(false);
       }
     },
-    [attachments, ticketId, flash],
+    [attachments, ticketId, flash, tSupport],
   );
 
   const close = useCallback(async () => {
@@ -120,26 +142,11 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
       await closeTicket(ticketId);
       ticket.reload();
     } catch {
-      flash("Could not close that ticket.");
+      flash(tSupport("closeFailed"));
     } finally {
       setBusy(false);
     }
-  }, [ticketId, ticket, flash]);
-
-  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
-  //
-  // ⚠ CALLED HERE, ABOVE THE GUARDS BELOW, AND THAT POSITION IS THE POINT.
-  //   It used to sit after the early returns, which is a real rules-of-hooks
-  //   violation rather than a style one: this component renders a skeleton while
-  //   loading, then a "not found" branch, then the full view — so the number of
-  //   hooks React saw CHANGED between renders as the data arrived. React matches
-  //   hooks by call order, so the first render after loading finishes can read
-  //   another hook's state, and the symptom is a crash or wrong state on a screen
-  //   that worked a moment earlier.
-  //
-  //   It takes no arguments and depends on nothing below, so there was never a
-  //   reason for it to be down there.
-  const tKey = useTranslations();
+  }, [ticketId, ticket, flash, tSupport]);
 
   if (authStatus === "loading" || ticket.status === "loading") {
     return (
@@ -154,9 +161,9 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
   if (!t) {
     return (
       <div className="mx-auto max-w-[760px] px-4 py-6 sm:px-6">
-        <p className="muted">That ticket could not be found.</p>
+        <p className="muted">{tSupport("notFound")}</p>
         <Button variant="secondary" size="sm" onClick={() => router.push(TICKET_LIST)}>
-          Back to support
+          {tSupport("backToSupport")}
         </Button>
       </div>
     );
@@ -186,7 +193,7 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
         <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-0.01em" }}>{t.subject}</div>
 
         <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>
-          {ticketTypeLabel(t.type)}
+          {tKey(ticketTypeLabelKey(t.type))}
           {t.entity?.label ? ` · ${t.entity.label}` : ""}
         </div>
 
@@ -219,22 +226,26 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
       <Conversation notes={notes.data ?? []} />
 
       {isClosed ? (
+        /* Two whole sentences rather than one with the status dropped into it.
+           The English version lower-cased the badge text to read "this ticket is
+           closed", which only works in a language that has cases and where the
+           adjective does not have to agree with anything. */
         <p className="muted" style={{ fontSize: 13.5, marginTop: 16 }}>
-          This ticket is {tKey(view.labelKey).toLowerCase()}. Open a new one if you still need help.
+          {t.status === "resolved" ? tSupport("resolvedNotice") : tSupport("closedNotice")}
         </p>
       ) : (
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
           <textarea
             className="field"
             rows={3}
-            maxLength={300}
-            placeholder="Add a reply…"
+            maxLength={REPLY_MAX}
+            placeholder={tSupport("replyPlaceholder")}
             value={reply}
             onChange={(e) => setReply(e.target.value)}
           />
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <Button size="sm" disabled={!reply.trim() || busy} onClick={() => void send()}>
-              {busy ? "Sending…" : "Send"}
+              {busy ? tKey("shop.common.sending") : tKey("shop.common.send")}
             </Button>
             <Button
               variant="ghost"
@@ -243,25 +254,25 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
               onClick={() => setConfirmClose(true)}
               style={{ marginLeft: "auto" }}
             >
-              Close ticket
+              {tSupport("closeTicket")}
             </Button>
           </div>
           <span className="muted" style={{ fontSize: 12 }}>
-            {reply.length}/300
+            {tSupport("replyCharCount", { n: reply.length, max: REPLY_MAX })}
           </span>
         </div>
       )}
 
       <ConfirmDialog
         open={confirmClose}
-        title="Close this ticket?"
+        title={tSupport("confirmCloseTitle")}
         tone="warning"
         icon="circle-check-big"
-        confirmLabel="Close it"
+        confirmLabel={tSupport("confirmCloseAction")}
         onConfirm={() => void close()}
         onCancel={() => setConfirmClose(false)}
       >
-        You can always open a new ticket if you need to.
+        {tSupport("confirmCloseBody")}
       </ConfirmDialog>
     </div>
   );
@@ -278,10 +289,12 @@ function Attachments({
   disabled: boolean;
   onPick: (files: File[]) => Promise<void>;
 }) {
+  const t = useTranslations("shop.support");
+
   return (
     <section style={{ marginBottom: 16 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-        <span className="ds-overline">Attachments</span>
+        <span className="ds-overline">{t("attachments")}</span>
         <span className="muted" style={{ fontSize: 12 }}>
           {items.length}/{MAX_TICKET_ATTACHMENTS}
         </span>
@@ -314,9 +327,7 @@ function Attachments({
                   <span>{file.fileName}</span>
                 )}
                 <span className="muted"> · {Math.round(file.fileSize / 1024)} KB</span>
-                {blocked === "blocked" && (
-                  <span className="muted"> · locked — over the storage limit</span>
-                )}
+                {blocked === "blocked" && <span className="muted"> · {t("fileLocked")}</span>}
               </li>
             );
           })}
@@ -345,7 +356,7 @@ function Attachments({
               if (files.length) void onPick(files);
             }}
           />
-          <span style={{ textDecoration: "underline" }}>Add a file</span>
+          <span style={{ textDecoration: "underline" }}>{t("addFile")}</span>
         </label>
       )}
     </section>
@@ -353,10 +364,13 @@ function Attachments({
 }
 
 function Conversation({ notes }: { notes: TicketNote[] }) {
+  const t = useTranslations("shop.support");
+  const format = useFormatter();
+
   if (notes.length === 0) {
     return (
       <p className="muted" style={{ fontSize: 13.5 }}>
-        No replies yet.
+        {t("noReplies")}
       </p>
     );
   }
@@ -377,16 +391,23 @@ function Conversation({ notes }: { notes: TicketNote[] }) {
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
             {!note.is_system_note && (
               <Avatar
-                name={note.author?.name ?? "Support"}
+                name={note.author?.name ?? t("supportAuthor")}
                 src={publicUrl(note.author?.avatar) ?? undefined}
                 size={22}
               />
             )}
             <span style={{ fontSize: 13, fontWeight: 700 }}>
-              {note.is_system_note ? "System" : (note.author?.name ?? "Support")}
+              {note.is_system_note
+                ? t("systemAuthor")
+                : (note.author?.name ?? t("supportAuthor"))}
             </span>
             <span className="muted" style={{ marginLeft: "auto", fontSize: 12 }}>
-              {new Date(note.created_at).toLocaleString()}
+              {format.dateTime(new Date(note.created_at), {
+                day: "numeric",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </span>
           </div>
           <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>{note.content}</p>
