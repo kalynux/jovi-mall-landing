@@ -151,8 +151,19 @@ jobs:
         # the debug key, so this still proves the app compiles.
         run: ./gradlew assembleRelease
 
+      # ⚠ A GLOB, BECAUSE THE FILENAME DEPENDS ON WHETHER SIGNING SECRETS EXIST.
+      #   An unsigned release build is `app-release-unsigned.apk`, not
+      #   `app-release.apk` — app/build.gradle applies no release signingConfig when
+      #   WI_MALL_KEYSTORE* are absent (`canSignRelease` is false), which is
+      #   deliberate: it refuses to fall back to the debug key. So with no secrets
+      #   set, gradle succeeds and writes a name this step was not looking for, and
+      #   the job failed at UPLOAD with "No files were found" while the build itself
+      #   was fine. Measured on run 34739823284.
+      #
+      #   `if-no-files-found: error` is kept on purpose: a release build that
+      #   produces no APK at all should still fail loudly.
       - uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: android/app/build/outputs/apk/release/app-release.apk
+          path: android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
