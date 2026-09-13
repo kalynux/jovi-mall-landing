@@ -13,10 +13,7 @@ import TrustSection from "@/components/sections/TrustSection";
 import FinalCTASection from "@/components/sections/FinalCTASection";
 import RoleSelectorModal from "@/components/ui/RoleSelectorModal";
 import SectionProgressIndicator from "@/components/ui/SectionProgressIndicator";
-import AuroraBackground from "@/components/layout/AuroraBackground";
-import InteractiveNetwork from "@/components/layout/InteractiveNetwork";
-import OrbitalBackground from "@/components/layout/orbital";
-import GrainOverlay from "@/components/layout/GrainOverlay";
+import AmbientBackground from "@/components/layout/AmbientBackground";
 import { SectionNavProvider } from "@/components/scroll/SectionNavProvider";
 import { SECTION_IDS } from "@/lib/constants";
 
@@ -30,13 +27,9 @@ export default function LandingPage() {
 
   return (
     <SectionNavProvider sections={SECTION_IDS}>
-      {/* Ambient background layers (fixed, behind everything).
-          OrbitalBackground sits after the aurora + network so it paints on top
-          of them, and before the grain so the grain still tops the stack. */}
-      <AuroraBackground />
-      <InteractiveNetwork />
-      <OrbitalBackground />
-      <GrainOverlay />
+      {/* Ambient background (fixed, behind everything). Which layers actually
+          mount depends on what the device can afford — see AmbientBackground. */}
+      <AmbientBackground />
 
       {/* Sticky Navbar */}
       <Navbar onGetStarted={() => setModalOpen(true)} />

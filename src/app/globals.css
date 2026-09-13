@@ -618,6 +618,23 @@ html.dark,
 
   .aurora-blob { position: absolute; border-radius: 9999px; filter: blur(56px); will-change: transform, opacity; }
 
+  /* The `lite` render tier — see lib/render-tier.ts.
+     Everything the four animated layers were for, as one paint: the same three
+     --aurora-* colours (so it follows the theme), as gradients that fade out on
+     their own rather than solid circles pushed through a 56px blur. No
+     keyframes, no blend mode, no canvas — it rasterises once and is then pure
+     composite, which is what takes a mid-range phone from 10fps to 46fps. */
+  .ambient-static {
+    position: fixed;
+    inset: 0;
+    z-index: -10;
+    pointer-events: none;
+    background:
+      radial-gradient(60vh 60vh at 10% 6%, var(--aurora-1), transparent 70%),
+      radial-gradient(65vh 65vh at 95% 42%, var(--aurora-2), transparent 70%),
+      radial-gradient(55vh 55vh at 32% 97%, var(--aurora-3), transparent 70%);
+  }
+
   .grain {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
   }

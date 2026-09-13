@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, type MotionValue } from "framer-motion";
 import { Monitor, Smartphone, Tablet, Wifi, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useRenderTier } from "@/lib/render-tier";
 
 /**
  * DeviceShell — one console, three bodies.
@@ -35,6 +36,24 @@ const DEVICE_ICON: Record<Device, LucideIcon> = {
 };
 
 const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
+/**
+ * The size change is a **layout** animation — width, and the two heights that
+ * travel with it — so every frame of it is a reflow of the whole dashboard
+ * inside the frame, not a composite. On a desktop that is affordable and it is
+ * the best thing on the page. On a mid-range phone it was the single most
+ * expensive moment in the section: 16 long tasks totalling 1.07s in a 10s
+ * sample, and the dashboard visibly blanking out mid-travel because the raster
+ * could not keep up with the geometry.
+ *
+ * On the lite tier it therefore snaps. The story the rail tells — one console,
+ * three bodies — is unchanged; it just cuts between them instead of tweening
+ * through forty-odd intermediate layouts. See lib/render-tier.ts.
+ */
+const SIZE_TWEEN = { duration: 0.72, ease: [0.65, 0, 0.2, 1] } as const;
+const CHROME_TWEEN = { duration: 0.45, ease: [0.65, 0, 0.2, 1] } as const;
+const TABBAR_TWEEN = { duration: 0.36, ease: [0.22, 1, 0.36, 1] } as const;
+const INSTANT = { duration: 0 } as const;
 
 interface DeviceShellProps {
   device: Device;
@@ -83,6 +102,7 @@ export default function DeviceShell({
   className,
   children,
 }: DeviceShellProps) {
+  const lite = useRenderTier() === "lite";
   const holder = useRef<HTMLDivElement>(null);
   // The frame's width has to be a number for it to animate, and a number is
   // exactly what the server doesn't have. So until we've measured, the frame is
@@ -117,7 +137,7 @@ export default function DeviceShell({
           className={cn("relative h-full shrink-0 box-border", width === null && "w-full")}
           initial={false}
           animate={width === null ? { padding: handheld ? 9 : 0 } : { width, padding: handheld ? 9 : 0 }}
-          transition={{ duration: 0.72, ease: [0.65, 0, 0.2, 1] }}
+          transition={lite ? INSTANT : SIZE_TWEEN}
         >
           {/* Two bodies, cross-faded under one screen: the aluminium slab a
               handheld is milled from, and the light window a browser draws. */}
@@ -165,7 +185,7 @@ export default function DeviceShell({
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
+                  transition={lite ? INSTANT : TABBAR_TWEEN}
                   className="flex shrink-0 items-center justify-around overflow-hidden border-t border-[var(--border)] bg-[var(--bg)] px-2 pb-2 pt-1.5"
                   aria-hidden="true"
                 >
@@ -261,13 +281,14 @@ function Chrome({
   address: string;
   title: string;
 }) {
+  const lite = useRenderTier() === "lite";
   return (
     <motion.div
       className="relative shrink-0 overflow-hidden"
       aria-hidden="true"
       initial={false}
       animate={{ height: CHROME_H[device] }}
-      transition={{ duration: 0.45, ease: [0.65, 0, 0.2, 1] }}
+      transition={lite ? INSTANT : CHROME_TWEEN}
     >
       <AnimatePresence initial={false}>
         {device === "desktop" && (

@@ -269,7 +269,7 @@ function LoginFormContent() {
             {...stepMotion}
             onSubmit={handleSubmit(onSubmit)}
             noValidate
-            className="flex flex-col gap-5"
+            className="flex flex-col gap-7"
           >
             {/* Role pill */}
             {selectedRole && (
@@ -288,7 +288,7 @@ function LoginFormContent() {
             )}
 
             {/* Identifier — phone or email, each with the input it deserves. */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
               <IdentifierTypeToggle
                 value={identifierType}
                 onChange={handleIdentifierType}
@@ -338,7 +338,7 @@ function LoginFormContent() {
               )}
             </div>
 
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
               <AuthFormField
                 variant="floating"
                 label={t("passwordLabel")}
@@ -386,7 +386,7 @@ function LoginFormContent() {
                 made the one escape route off this screen both hard to read and
                 hard to hit. It keeps the secondary weight and gets the size and
                 the clearance of something meant to be used. */}
-            <div className="mt-4 flex flex-col gap-6">
+            <div className="mt-2 flex flex-col gap-6">
               <button
                 type="submit"
                 disabled={isSubmitting}
