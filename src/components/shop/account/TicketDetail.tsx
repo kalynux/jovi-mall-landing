@@ -126,6 +126,21 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
     }
   }, [ticketId, ticket, flash]);
 
+  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
+  //
+  // ⚠ CALLED HERE, ABOVE THE GUARDS BELOW, AND THAT POSITION IS THE POINT.
+  //   It used to sit after the early returns, which is a real rules-of-hooks
+  //   violation rather than a style one: this component renders a skeleton while
+  //   loading, then a "not found" branch, then the full view — so the number of
+  //   hooks React saw CHANGED between renders as the data arrived. React matches
+  //   hooks by call order, so the first render after loading finishes can read
+  //   another hook's state, and the symptom is a crash or wrong state on a screen
+  //   that worked a moment earlier.
+  //
+  //   It takes no arguments and depends on nothing below, so there was never a
+  //   reason for it to be down there.
+  const tKey = useTranslations();
+
   if (authStatus === "loading" || ticket.status === "loading") {
     return (
       <div className="mx-auto max-w-[760px] px-4 py-6 sm:px-6">
@@ -147,8 +162,6 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
     );
   }
 
-  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
-  const tKey = useTranslations();
   const view = TICKET_STATUS_LABEL[t.status] ?? {
     labelKey: "shop.status.unknown",
     tone: "neutral" as const,

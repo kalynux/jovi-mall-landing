@@ -61,6 +61,20 @@ export const ALLOWED_RETURN_HOSTS: string[] = [
  * separate hosts, and the caller opens them in the system browser rather than
  * steering the WebView out of its own origin.
  */
+/**
+ * Is this value one of the five roles?
+ *
+ * Derived from `ROLE_SUBDOMAIN_MAP` rather than repeating the list: that map is
+ * `Record<Role, string>`, so the compiler already forces it to name every role,
+ * and a sixth role added to the union cannot be forgotten here.
+ *
+ * Needed because the session's `role` is typed `string | null` — it comes off a
+ * wire payload — while everything downstream wants the narrow union.
+ */
+export function isRole(value: unknown): value is Role {
+    return typeof value === "string" && value in ROLE_SUBDOMAIN_MAP;
+}
+
 export function getRoleUrl(role: Role, path = ""): string {
     if (IS_NATIVE_BUILD) {
         if (role === "customer") return path || "/shop";

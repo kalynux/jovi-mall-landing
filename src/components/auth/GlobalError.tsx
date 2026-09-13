@@ -106,6 +106,14 @@ export function GlobalError({
 
     // Reset toggle when the error changes
     useEffect(() => {
+        // Collapses the requestId panel when a DIFFERENT error arrives.
+        //
+        // ⚠ KNOWN EXCEPTION, NOT A DISMISSAL. React's preferred form is to adjust
+        //   state during render on an identity change, or to let the parent pass a
+        //   `key`. Both are small refactors of a live error banner. The effect is
+        //   correct in the meantime: it runs once per error and the only state it
+        //   touches is this component's own disclosure toggle.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsOpen(false);
     }, [message, requestId]);
 

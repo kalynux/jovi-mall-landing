@@ -12,6 +12,7 @@ import {
 } from "@/components/shop/PaymentMethodPicker";
 import { useSavedPayment } from "@/components/shop/useSavedPayment";
 import { PayLinkShare } from "./PayLinkShare";
+import { CARD_PAYMENTS_AVAILABLE } from "@/components/shop/PaymentMethodPicker";
 import { translateError } from "@/lib/auth/error-translator";
 import { formatMoney } from "@/lib/shop/format";
 import { initiatePayment, isSettledFailure } from "@/lib/shop/payments.api";
@@ -233,13 +234,23 @@ export function PayGroupSheet({
           than on the order card: the shopper is already answering "how do I pay
           for this", and "somebody else will" is one of the answers. It is also
           the only card path the storefront has — see the note in
-          `PayLinkShare`. */}
-      <PayLinkShare
-        cartId={group.cartId}
-        amount={amount}
-        currency={currency}
-        reference={orders[0]?.orderNumber}
-      />
+          `PayLinkShare`.
+
+          ⚠ HIDDEN WHILE CARDS ARE OFF, and the reason is that this is a CARD
+            path, not merely a sharing one: it mints the link by calling
+            `initiatePayment({ gateway: "STRIPE" })`. With no
+            `STRIPE_SECRET_KEY` on the backend that request fails 503, so the
+            shopper would tap "send a payment link" and get a server error.
+            Gating the checkout picker alone would have left this one live —
+            which is why the flag is shared rather than applied at the list. */}
+      {CARD_PAYMENTS_AVAILABLE && (
+        <PayLinkShare
+          cartId={group.cartId}
+          amount={amount}
+          currency={currency}
+          reference={orders[0]?.orderNumber}
+        />
+      )}
     </BottomSheet>
   );
 }

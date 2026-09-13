@@ -123,6 +123,11 @@ function RegisterFormContent() {
         role: selectedRole,
       });
 
+      // ⚠ THE RULE IS WRONG HERE, PERMANENTLY — see the same note in
+      //   (auth)/auth-me/page.tsx. Assigning window.location.href is a full page
+      //   navigation, not a mutation of React state, and the new account's session
+      //   must be loaded fresh rather than carried over client-side.
+      // eslint-disable-next-line react-hooks/immutability
       window.location.href = await registerAndGetRedirect(payload as RegisterFormValues);
     } catch (err) {
       mapApiErrors(err, setError, tErrors);
@@ -252,7 +257,7 @@ function RegisterFormContent() {
                 required
                 hint={hasBusinessName ? t("personalNameHint") : undefined}
                 {...register("name", {
-                  onChange: () => clearErrors(["name", "root"] as any),
+                  onChange: () => { clearErrors("name"); clearErrors("root"); },
                 })}
                 error={errors.name?.message}
               />
@@ -274,7 +279,8 @@ function RegisterFormContent() {
                     value={field.value ?? ""}
                     onChange={(next) => {
                       field.onChange(next);
-                      clearErrors(["phone", "root"] as any);
+                      clearErrors("phone");
+                      clearErrors("root");
                     }}
                     onBlur={field.onBlur}
                     inputRef={field.ref}
@@ -303,7 +309,7 @@ function RegisterFormContent() {
                 placeholder={t("emailPlaceholder")}
                 required={selectedRole === "vendor"}
                 {...register("email", {
-                  onChange: () => clearErrors(["email", "root"] as any),
+                  onChange: () => { clearErrors("email"); clearErrors("root"); },
                 })}
                 error={errors.email?.message}
               />
@@ -324,7 +330,7 @@ function RegisterFormContent() {
                   maxLength={BUSINESS_NAME_MAX}
                   hint={t("businessNameHint")}
                   {...register("business_name", {
-                    onChange: () => clearErrors(["business_name", "root"] as any),
+                    onChange: () => { clearErrors("business_name"); clearErrors("root"); },
                   })}
                   error={errors.business_name?.message}
                 />
@@ -342,7 +348,7 @@ function RegisterFormContent() {
                   maxLength={BUSINESS_NAME_MAX}
                   hint={t("agencyNameHint")}
                   {...register("agency_name", {
-                    onChange: () => clearErrors(["agency_name", "root"] as any),
+                    onChange: () => { clearErrors("agency_name"); clearErrors("root"); },
                   })}
                   error={errors.agency_name?.message}
                 />
@@ -356,7 +362,7 @@ function RegisterFormContent() {
                 placeholder={t("newPasswordPlaceholder")}
                 required
                 {...register("password", {
-                  onChange: () => clearErrors(["password", "root"] as any),
+                  onChange: () => { clearErrors("password"); clearErrors("root"); },
                 })}
                 error={errors.password?.message}
               />

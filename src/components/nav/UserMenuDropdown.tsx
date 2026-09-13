@@ -19,11 +19,30 @@ import { ChevronDown, LayoutDashboard, RefreshCw, LogOut, PlusCircle } from "luc
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
-import type { AuthRoleEntity } from "@/lib/auth/auth.types";
+import { Link } from "@/i18n/navigation";
+import type { AuthRoleEntity, Role } from "@/lib/auth/auth.types";
 import { getRoleUrl } from "@/lib/auth/auth.redirect";
 
+/**
+ * The role entity plus the caller's notion of which role is active.
+ *
+ * ⚠ `active_role` IS NOT AN API FIELD. The auth endpoints do not return it;
+ *   `Navbar` builds it from the session's own `role` and passes the pair down.
+ *   It is spelled out here because the alternative — adding it to
+ *   `AuthRoleEntity` — would assert that the server sends it, and that file
+ *   deliberately marks which of its fields the endpoints really return.
+ *
+ * ⚠ Until 2026-09-13 this prop was typed as a bare `AuthRoleEntity` and the caller
+ *   cast the extra field in. That compiled only because the interface ended in
+ *   `[key: string]: any`, so `user.active_role` was `any` and
+ *   `getRoleUrl(user.active_role)` type-checked against a five-value union
+ *   without anything being verified. Narrowing the catch-all to `unknown` turned
+ *   it into the compile error that produced this type.
+ */
+export type ActiveRoleUser = AuthRoleEntity & { active_role: Role | null };
+
 interface UserMenuDropdownProps {
-  user: AuthRoleEntity;
+  user: ActiveRoleUser;
   onLogout: () => Promise<void>;
   onSwitchRole: () => void;
 }
@@ -42,8 +61,19 @@ export default function UserMenuDropdown({
   // Guard anyway for resilience.
   const displayName = user.name || user.display_name || user.agency_name || user.business_name || user.email || t("userMenuAriaLabel");
 
-  // Dashboard URL for current active role
-  const dashboardUrl = getRoleUrl(user.active_role);
+  // Dashboard URL for the current active role, when there is one.
+  //
+  // ⚠ `null` IS NOT DEFENSIVE PADDING — it removes a broken link. `getRoleUrl`
+  //   reads `ROLE_SUBDOMAIN_MAP[role]`, so a missing role produced the string
+  //   "https://undefined" and the menu showed a Dashboard entry that went nowhere.
+  //   It type-checked only because `active_role` resolved through the old
+  //   `[key: string]: any` catch-all on AuthRoleEntity.
+  //
+  // ⚠ The MENU STILL RENDERS in that state, deliberately. The obvious fix — guard
+  //   the whole dropdown in Navbar — falls through to the signed-out controls and
+  //   takes LOG OUT away from someone who is signed in. Hiding one link is the
+  //   small failure; stranding a session with no way out is the large one.
+  const dashboardUrl = user.active_role ? getRoleUrl(user.active_role) : null;
 
   // Close on outside click
   useEffect(() => {
@@ -125,7 +155,8 @@ export default function UserMenuDropdown({
             transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
             className="absolute right-0 mt-2 w-44 glass border border-[var(--border)] rounded-xl shadow-lg overflow-hidden z-50"
           >
-            {/* 1. Dashboard */}
+            {/* 1. Dashboard — omitted when no active role resolved; see above. */}
+            {dashboardUrl && (
             <a
               href={dashboardUrl}
               role="menuitem"
@@ -135,6 +166,7 @@ export default function UserMenuDropdown({
               <LayoutDashboard className="w-4 h-4" aria-hidden="true" />
               {t("dashboard")}
             </a>
+            )}
 
             {/* 2. Switch Role */}
             {/* <button
@@ -145,7 +177,7 @@ export default function UserMenuDropdown({
               <RefreshCw className="w-4 h-4" aria-hidden="true" />
               {t("switchRole")}
             </button> */}
-            <a
+            <Link
               href="/auth-me"
               role="menuitem"
               className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--accent-light)] transition-colors"
@@ -153,10 +185,10 @@ export default function UserMenuDropdown({
             >
               <RefreshCw className="w-4 h-4" aria-hidden="true" />
               {t("switchRole")}
-            </a>
+            </Link>
 
             {/* 3. Add Role */}
-            <a
+            <Link
               href="/add-role"
               role="menuitem"
               className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--accent-light)] transition-colors"
@@ -164,7 +196,7 @@ export default function UserMenuDropdown({
             >
               <PlusCircle className="w-4 h-4" aria-hidden="true" />
               {t("addRole")}
-            </a>
+            </Link>
 
             {/* Divider */}
             <div className="h-px bg-[var(--border-medium)] mx-2 my-1" />

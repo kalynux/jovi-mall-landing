@@ -4,6 +4,7 @@ import { Loader2, UserCircle2 } from "lucide-react";
 import { Store, Building2, Bike, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import { switchRoleAndGetRedirect } from "@/lib/auth/auth.service";
 import { ApiError } from "@/lib/auth/auth.types";
@@ -56,6 +57,12 @@ export default function AuthMePage() {
     setError(null);
     setSwitching(role);
     try {
+      // ⚠ THE RULE IS WRONG HERE, PERMANENTLY. react-hooks/immutability reads this
+      //   as modifying a value the component must not touch; it is the platform API
+      //   for leaving the page, not React state. A full navigation is also the point
+      //   — a client-side route would keep the loaded bundle and the stale session
+      //   it holds, which is exactly what switching role must not do.
+      // eslint-disable-next-line react-hooks/immutability
       window.location.href = await switchRoleAndGetRedirect(role);
     } catch (err) {
       setSwitching(null);
@@ -162,12 +169,12 @@ export default function AuthMePage() {
         )}
 
         {/* Add role — replaces the previous Sign Out button */}
-        <a
+        <Link
           href="/add-role"
           className="btn-secondary w-full text-center text-sm"
         >
           {t("addRoleBtn")}
-        </a>
+        </Link>
       </div>
     </AuthCard>
   );

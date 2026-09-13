@@ -96,7 +96,10 @@ export interface AuthRoleEntity {
     onboarding_step?: number;
     business_description?: string | null;
     country?: string | null;
-    payout_details?: any | null;
+    // `unknown`, not `any`: the shape is the payment provider's and is not
+    // modelled here, so a reader has to narrow it rather than being handed a
+    // value that silently defeats type checking wherever it is passed on.
+    payout_details?: unknown | null;
     notification_preferences?: {
         email: boolean;
         whatsapp: boolean;
@@ -125,8 +128,8 @@ export interface AuthRoleEntity {
         logo_file_id: string | null;
         cover_image_file_id: string | null;
     };
-    business_addresses?: any[];
-    operating_hours?: any[];
+    business_addresses?: unknown[];
+    operating_hours?: unknown[];
     kyc_details?: {
         national_id_number: string | null;
         legit_verified: boolean;
@@ -136,7 +139,10 @@ export interface AuthRoleEntity {
         facebook: string | null;
         twitter: string | null;
     };
-    [key: string]: any;
+    // ⚠ The catch-all stays, because the server genuinely sends fields this
+    //   interface does not name. `unknown` keeps that open without making every
+    //   unnamed field implicitly assignable to anything.
+    [key: string]: unknown;
 }
 
 // ─── Auth State ──────────────────────────────────────────────────────────────

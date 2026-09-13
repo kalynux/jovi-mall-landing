@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { isRole } from "@/lib/auth/auth.redirect";
 import { Link } from "@/i18n/navigation";
 import { usePathname } from "@/i18n/navigation";
 import { Menu, X, Sun, Moon, Globe, ChevronDown, LogIn } from "lucide-react";
@@ -59,7 +60,15 @@ function AuthControls({
   if (status === "authenticated" && user && role_entity) {
     return (
       <UserMenuDropdown
-        user={{ ...role_entity, active_role: role } as AuthRoleEntity}
+        // No cast: the literal satisfies `ActiveRoleUser` exactly. It used to be
+        // `as AuthRoleEntity`, which quietly asserted that `active_role` belonged
+        // to the API shape when it does not.
+        //
+        // ⚠ `isRole` rather than passing `role` straight through: it arrives as
+        //   `string | null` off a wire payload, and the dropdown needs the narrow
+        //   union to build a dashboard URL. An unrecognised value becomes `null`,
+        //   which the dropdown handles by omitting that one link.
+        user={{ ...role_entity, active_role: isRole(role) ? role : null }}
         onLogout={logout}
         onSwitchRole={() => {
           setMenuOpen(false);

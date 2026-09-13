@@ -330,7 +330,7 @@ function LoginFormContent() {
                   placeholder={t("emailPlaceholder")}
                   required
                   {...register("identifier", {
-                    onChange: () => clearErrors(["identifier", "root"] as any),
+                    onChange: () => { clearErrors("identifier"); clearErrors("root"); },
                   })}
                   error={errors.identifier?.message}
                 />
@@ -346,7 +346,7 @@ function LoginFormContent() {
                 placeholder={t("passwordPlaceholder")}
                 required
                 {...register("password", {
-                  onChange: () => clearErrors(["password", "root"] as any),
+                  onChange: () => { clearErrors("password"); clearErrors("root"); },
                 })}
                 error={errors.password?.message}
               />

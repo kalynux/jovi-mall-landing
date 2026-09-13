@@ -37,6 +37,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       (window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
         : "light");
+    // The stored theme lives in localStorage, which does not exist during the
+    // server render — so it cannot be the useState initialiser without breaking SSR
+    // or causing a hydration mismatch. The flash that would otherwise cause is
+    // already handled by the pre-paint script in app/[locale]/layout.tsx, which sets
+    // the class before first paint.
+    //
+    // ⚠ KNOWN EXCEPTION, NOT A DISMISSAL. The correct long-term form is
+    //   useSyncExternalStore — a refactor of theme handling rather than a line
+    //   change. Worth doing deliberately; not worth doing blind to satisfy a linter
+    //   in the same change that put the site live.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTheme(preferred);
     document.documentElement.classList.toggle("dark", preferred === "dark");
   }, []);

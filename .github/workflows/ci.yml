@@ -49,22 +49,24 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx tsc --noEmit
-      # ⚠ NON-BLOCKING, AND THE NUMBER IS WHY. Measured 2026-09-13, before any
-      #   deployment change: this repository's lint reports 135 ERRORS and 15,261
-      #   WARNINGS. The errors are overwhelmingly React Compiler rules
-      #   (react-hooks/set-state-in-effect and friends) across the existing
-      #   components; none is in anything the deployment touches, and the production
-      #   build below passes.
+      # ⚠ BLOCKING, AND IT WAS NOT ON 2026-09-13. It reported 135 errors and 15,261
+      #   warnings that day, so it was added non-blocking to avoid a pipeline that was
+      #   red on arrival. All of it is now resolved and the gate is on, which is the
+      #   point — a lint step that cannot fail is decoration.
       #
-      #   A warning count in five figures almost certainly means a rule is
-      #   mis-scoped rather than that the code is 15,000 ways wrong — worth an hour
-      #   with the eslint config before anyone tries to fix them one by one.
+      #   What the numbers actually were: 76 errors and 15,256 warnings came from
+      #   eslint reading `android/`, where `cap sync` deposits the MINIFIED web build
+      #   in three places. Minified code trips the same rules endlessly. Ignoring the
+      #   native projects left 59 real findings, and those were fixed — including two
+      #   genuine bugs the noise had buried: `useTranslations` called after an early
+      #   return in two screens (a rules-of-hooks violation that can crash when data
+      #   arrives), and a Dashboard link that resolved to "https://undefined" for any
+      #   session without a role.
       #
-      #   It runs, it reports, and it does not gate: a pipeline that is red on
-      #   arrival for pre-existing reasons is a pipeline nobody reads. ⚠ Delete the
-      #   continue-on-error line once the error count is zero.
+      #   Six exceptions remain as `eslint-disable-next-line` with written reasons:
+      #   two where the rule is simply wrong about `window.location.href`, and four
+      #   deferred refactors. None is a blanket rule-off.
       - name: Lint
-        continue-on-error: true
         run: npm run lint
       # No `env:` block. The host comes from the committed `.env.production`, which
       # is the same file the Dockerfile builds from — so this step and the real

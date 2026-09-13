@@ -114,8 +114,53 @@ export const COD: PaymentOption = {
 /** The two mobile-money rails, which are the only ones proven end to end. */
 export const MOBILE_MONEY_OPTIONS: PaymentOption[] = [MTN, ORANGE];
 
-/** Everything checkout offers, in the order checkout has always offered it. */
-export const CHECKOUT_OPTIONS: PaymentOption[] = [MTN, ORANGE, CARD, COD];
+/**
+ * Whether card payments are offered anywhere in the storefront.
+ *
+ * ── Why this is keyed on the publishable key ──────────────────────────────────
+ *
+ * Cards need BOTH halves of a Stripe account, and the two live on opposite sides:
+ * `STRIPE_SECRET_KEY` on the backend, which mints the payment, and this
+ * publishable key in the browser, which Stripe's Payment Element needs to confirm
+ * it (see `PayLink`, which reads exactly this variable). Neither half works alone,
+ * so "is the publishable key set" is a faithful proxy for "can a card payment
+ * complete" — and it means switching cards on is a configuration change, not a
+ * code change.
+ *
+ * ── Why it is FALSE in production today ──────────────────────────────────────
+ *
+ * Stripe is deliberately switched off on the backend: `STRIPE_SECRET_KEY` is
+ * absent from the deployed environment, and its absence IS the off switch.
+ * NotchPay and MyCoolPay carry real payments.
+ *
+ * ⚠ WHAT THAT COST BEFORE THIS FLAG EXISTED, measured on 2026-09-13: the gateway
+ *   is registered unconditionally on the backend, so a card request reached
+ *   `getStripeClient()`, which throws `PAYMENT_GATEWAY_NOT_IMPLEMENTED` at **503**
+ *   — "Stripe is not configured". A shopper could pick "Card (Visa or Mastercard)"
+ *   at checkout, or send themselves a pay link, and get a server error after
+ *   committing to a choice. That is the worst moment to fail.
+ *
+ * ⚠ SET THE BACKEND SECRET FIRST, THEN THIS. In the other order there is a window
+ *   where the UI offers what the server cannot complete, which is the state this
+ *   flag exists to remove.
+ *
+ * Inlined at build time by Next, so with the key unset `CARD` is simply not in the
+ * list the bundle ships.
+ */
+export const CARD_PAYMENTS_AVAILABLE = Boolean(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim()
+);
+
+/**
+ * Everything checkout offers, in the order checkout has always offered it.
+ *
+ * `CARD` is kept defined above rather than deleted: it is correct, it is what
+ * should appear the moment Stripe is switched on, and deleting it would mean
+ * rebuilding the logos, the copy and the gateway wiring from scratch later.
+ */
+export const CHECKOUT_OPTIONS: PaymentOption[] = CARD_PAYMENTS_AVAILABLE
+  ? [MTN, ORANGE, CARD, COD]
+  : [MTN, ORANGE, COD];
 
 /**
  * The `channel` for a chosen option.

@@ -88,6 +88,17 @@ export function useSavedPayment(options: PaymentOption[], enabled = true): Saved
    * usable, because no saved method maps to a rail that comes and goes.
    */
   const optionsRef = useRef(options);
+  // ⚠ KNOWN EXCEPTION, AND THE RULE IS RIGHT IN PRINCIPLE. Writing a ref during
+  //   render is not safe under concurrent rendering. The reason it is here is in the
+  //   note above: the hook needs the caller's latest option list WITHOUT making it a
+  //   dependency, because checkout's list changes identity for reasons that cannot
+  //   affect which saved methods are usable.
+  //
+  //   Not restructured as part of a lint cleanup, deliberately: this hook decides
+  //   which saved payment method a shopper is shown and whether it contradicts what
+  //   they typed. That needs its behaviour re-reasoned and exercised against a real
+  //   cart — not changed blind on a storefront that is now taking orders.
+  // eslint-disable-next-line react-hooks/refs
   optionsRef.current = options;
 
   /**
@@ -179,6 +190,8 @@ export function useSavedPayment(options: PaymentOption[], enabled = true): Saved
    */
   const contradicted =
     active !== null &&
+    // Same known exception as the ref write above; this is its read side.
+    // eslint-disable-next-line react-hooks/refs
     (optionForSavedMethod(active, optionsRef.current)?.id !== option.id ||
       (option.needsPhone &&
         Boolean(active.last4) &&
