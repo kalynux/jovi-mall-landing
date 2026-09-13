@@ -8,10 +8,8 @@
  * the pointer on a desktop — and it is one component rather than two so the two
  * halves cannot drift apart.
  *
- * The scroll lock and the gesture shield are ModalShell's, imported rather than
- * re-implemented: a dialog opened over a page that uses SectionNavProvider
- * would otherwise have its own body scroll cancelled by that provider's
- * window-level `touchmove` handler.
+ * The body scroll lock is ModalShell's, imported rather than re-implemented so
+ * the two dialogs cannot drift apart on that either.
  */
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useId, useRef, type ReactNode } from "react";
@@ -19,7 +17,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHydrated } from "@/lib/use-hydrated";
-import { gestureShieldProps, useBodyScrollLock } from "@/components/ui/ModalShell";
+import { useBodyScrollLock } from "@/components/ui/ModalShell";
 
 interface ResponsiveDialogProps {
   open: boolean;
@@ -85,7 +83,6 @@ export default function ResponsiveDialog({
             // Bottom-anchored on a phone, centred once there is room.
             "items-end p-0 sm:items-center sm:p-4"
           )}
-          {...gestureShieldProps}
         >
           <motion.div
             ref={panelRef}

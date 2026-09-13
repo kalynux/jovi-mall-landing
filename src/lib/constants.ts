@@ -77,13 +77,25 @@ export const BOT_COMMANDS = {
 // src/lib/nav/menu.ts, which is the only one now.
 
 // ─── Section IDs (for progress indicator) ───────────────────────────────────
+/**
+ * Landing sections **in the order LandingPage renders them**. That ordering is
+ * load-bearing, not decorative: the rail numbers the dots from it, and
+ * SectionNavProvider resolves a rail click or a footer anchor to `list[index]`.
+ *
+ * It had drifted — `customers` sat sixth here while rendering second — which
+ * put the rail's dots in one order and the page in another, and (while the
+ * provider still snapped per gesture) sent "the next section" to whichever
+ * section happened to be next in this array rather than next on screen.
+ *
+ * Keep in sync with components/LandingPage.tsx.
+ */
 export const SECTION_IDS = [
     { id: "hero", label: "Home" },
+    { id: "customers", label: "Customers" },
     { id: "how-it-works", label: "Platform" },
     { id: "vendors", label: "Vendors" },
     { id: "agencies", label: "Agencies" },
     { id: "agents", label: "Agents" },
-    { id: "customers", label: "Customers" },
     { id: "why-wi-mall", label: "Built For You" },
     { id: "trust", label: "Trust" },
     { id: "cta", label: "Get Started" },

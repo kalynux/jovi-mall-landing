@@ -7,48 +7,17 @@
  * app dialog and the switch-role verification gate became the second and third
  * consumers.
  *
- * The part that is NOT boilerplate: the gesture shield. On the landing page
- * SectionNavProvider owns window-level `wheel`, `keydown` and `touchmove`
- * listeners and calls preventDefault() on them (SectionNavProvider.tsx:278-282)
- * so one gesture maps to exactly one section. A modal mounted inside that has
- * arrow keys snapping the page behind it, and on a phone whose current section
- * fits the viewport `touchmove` is cancelled outright, so the modal's own body
- * cannot be scrolled at all. React attaches its listeners to the root
- * container, which sits below `window`, so stopping propagation here keeps the
- * native event from ever reaching those handlers.
- *
- * Only the keys SectionNavProvider actually acts on are blocked — Tab, Escape
- * and everything else still bubble, so nested focus traps keep working.
+ * This used to carry a "gesture shield" as well — onWheel/onTouchMove/onKeyDown
+ * handlers that called stopPropagation so a modal's own scrolling survived the
+ * landing page's full-page scroller, which owned window-level `wheel`,
+ * `keydown` and `touchmove` listeners and preventDefault()ed them. That
+ * scroller is gone (see SectionNavProvider) and with it the only thing the
+ * shield defended against, so it has gone too rather than linger as a no-op
+ * whose comment describes code that no longer exists.
  */
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
-
-/** Keys SectionNavProvider snaps on. */
-const NAV_KEYS = new Set([
-    "ArrowDown",
-    "ArrowUp",
-    "PageDown",
-    "PageUp",
-    "Home",
-    "End",
-    " ",
-    "Spacebar",
-]);
-
-/**
- * Spread onto any full-screen overlay rendered on a page that uses
- * SectionNavProvider. Exported because the WhatsApp verification gate brings
- * its own chrome and so cannot go through ModalShell, but still needs the
- * window-level gesture handlers held off.
- */
-export const gestureShieldProps = {
-    onWheel: (e: React.WheelEvent) => e.stopPropagation(),
-    onTouchMove: (e: React.TouchEvent) => e.stopPropagation(),
-    onKeyDown: (e: React.KeyboardEvent) => {
-        if (NAV_KEYS.has(e.key)) e.stopPropagation();
-    },
-} as const;
 
 /** Holds body scroll while `isOpen`, and restores it on close/unmount. */
 export function useBodyScrollLock(isOpen: boolean) {
@@ -88,11 +57,10 @@ export default function ModalShell({
     className,
     layer = "default",
 }: ModalShellProps) {
-    const shieldRef = useRef<HTMLDivElement | null>(null);
+    const panelRef = useRef<HTMLDivElement | null>(null);
 
     // Escape — only for dismissible modals. Bound to the document so it works
-    // whether or not focus made it inside the dialog; Escape is never in
-    // NAV_KEYS, so the shield below does not intercept it on the way up.
+    // whether or not focus made it inside the dialog.
     useEffect(() => {
         if (!isOpen || !onClose) return;
         const handler = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -102,10 +70,10 @@ export default function ModalShell({
 
     useBodyScrollLock(isOpen);
 
-    // Move focus into the dialog so the shield's key handling is in the path
-    // and screen readers announce the new context.
+    // Move focus into the dialog so screen readers announce the new context
+    // and the keyboard starts inside it rather than behind it.
     useEffect(() => {
-        if (isOpen) shieldRef.current?.focus();
+        if (isOpen) panelRef.current?.focus();
     }, [isOpen]);
 
     const backdropZ = layer === "top" ? "z-[110]" : "z-[100]";
@@ -128,7 +96,7 @@ export default function ModalShell({
 
                     <motion.div
                         key="panel"
-                        ref={shieldRef}
+                        ref={panelRef}
                         tabIndex={-1}
                         role="dialog"
                         aria-modal="true"
@@ -146,9 +114,6 @@ export default function ModalShell({
                         // so click-outside has to be handled here — putting it
                         // on the backdrop alone never fires.
                         onClick={onClose}
-                        // ── Gesture shield. Bubble phase on purpose: capture
-                        // would run ahead of any nested focus trap.
-                        {...gestureShieldProps}
                     >
                         <div
                             className={cn(

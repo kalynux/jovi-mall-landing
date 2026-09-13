@@ -1,21 +1,33 @@
 "use client";
 /**
- * SectionNavProvider — the full-page ("arena-breakout") scroll engine.
+ * SectionNavProvider — section awareness for the landing page.
  *
- * Keeps the native window scroll (so HeroSection's useScroll, anchors and the
- * URL all keep working) and layers a lightweight navigator on top:
+ * The page scrolls natively. This provider never touches the scroll position
+ * unless something asks it to; it only watches:
  *
- *  • wheel / keyboard / touch gestures snap one full section per gesture,
- *    with a short lock so a single gesture never skips two sections;
- *  • tall sections (short viewports) scroll natively until their top/bottom
- *    edge is reached, only then does a gesture advance to the neighbour;
  *  • a rAF-throttled scroll listener tracks the active section and syncs the
  *    URL hash via history.replaceState (no back-button spam);
- *  • prefers-reduced-motion disables the hijack entirely (plain scrolling),
- *    while hash + active tracking keep working.
+ *  • scrollToIndex / scrollToId smooth-scroll on request — the section rail,
+ *    the footer's in-page anchors and an incoming #hash on mount;
+ *  • prefers-reduced-motion makes those requested jumps instant.
  *
- * Consumers (Navbar, Footer, SectionProgressIndicator) read state and trigger
- * navigation through the useSectionNav() hook.
+ * It used to hijack wheel, keyboard and touch to snap exactly one section per
+ * gesture. That is gone, and deliberately so:
+ *
+ *  • on a phone `touchmove` was cancelled outright for any section that fitted
+ *    the viewport, so a swipe did not scroll the page at all — it armed a 780ms
+ *    programmatic jump that fired on release. The destination arrived before
+ *    its own entrance animations had run, which is the "the whole section
+ *    appears at once" glitch;
+ *  • the gate for that cancel was `height > innerHeight`, and on mobile
+ *    `innerHeight` changes every time the URL bar hides, so the same swipe was
+ *    sometimes captured and sometimes not;
+ *  • it stepped through sections by their index in SECTION_IDS, whose order had
+ *    drifted from the DOM, so "the next section" was regularly not the next
+ *    section on screen.
+ *
+ * Consumers (Footer, SectionProgressIndicator) read state and trigger
+ * navigation through the useSectionNav() hook, exactly as before.
  */
 import {
     createContext,
@@ -43,7 +55,7 @@ interface SectionNavValue {
 
 const SectionNavContext = createContext<SectionNavValue | null>(null);
 
-/** Access the full-page nav state. Must be used under <SectionNavProvider>. */
+/** Access the section nav state. Must be used under <SectionNavProvider>. */
 export function useSectionNav(): SectionNavValue {
     const ctx = useContext(SectionNavContext);
     if (!ctx) {
@@ -55,20 +67,11 @@ export function useSectionNav(): SectionNavValue {
 /**
  * Like useSectionNav but returns null instead of throwing when there is no
  * provider. Used by Navbar/Footer so they can be reused on pages (e.g. /shop)
- * that don't mount the full-page scroll engine.
+ * that don't mount the landing page's section rail.
  */
 export function useOptionalSectionNav(): SectionNavValue | null {
     return useContext(SectionNavContext);
 }
-
-// How far past the edge (px) still counts as "at the edge" of a tall section.
-const EDGE = 4;
-// Minimum |deltaY| to treat a wheel event as intentional.
-const WHEEL_THRESHOLD = 4;
-// Minimum vertical travel (px) for a touch swipe to count.
-const SWIPE_THRESHOLD = 48;
-// How long gestures are ignored while a programmatic scroll settles.
-const LOCK_MS = 780;
 
 export function SectionNavProvider({
     sections,
@@ -79,8 +82,6 @@ export function SectionNavProvider({
 }) {
     const [activeIndex, setActiveIndex] = useState(0);
     const activeIndexRef = useRef(0);
-    const lockedRef = useRef(false);
-    const lockTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const els = useCallback(
         () =>
@@ -89,14 +90,6 @@ export function SectionNavProvider({
                 .filter((el): el is HTMLElement => el != null),
         [sections]
     );
-
-    const lock = useCallback(() => {
-        lockedRef.current = true;
-        if (lockTimer.current) clearTimeout(lockTimer.current);
-        lockTimer.current = setTimeout(() => {
-            lockedRef.current = false;
-        }, LOCK_MS);
-    }, []);
 
     const prefersReduced = useCallback(
         () =>
@@ -112,15 +105,12 @@ export function SectionNavProvider({
             const el = list[clamped];
             if (!el) return;
             const top = window.scrollY + el.getBoundingClientRect().top;
-            lock();
-            activeIndexRef.current = clamped;
-            setActiveIndex(clamped);
             window.scrollTo({
                 top,
                 behavior: prefersReduced() ? "auto" : "smooth",
             });
         },
-        [els, lock, prefersReduced]
+        [els, prefersReduced]
     );
 
     const scrollToId = useCallback(
@@ -185,114 +175,6 @@ export function SectionNavProvider({
         }
         // run once on mount
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    // ─── Gesture hijack (wheel / keyboard / touch) ────────────────────────────
-    useEffect(() => {
-        if (prefersReduced()) return; // plain native scrolling
-
-        const canAdvance = (dir: 1 | -1): boolean => {
-            const list = els();
-            const el = list[activeIndexRef.current];
-            if (!el) return false;
-            const r = el.getBoundingClientRect();
-            if (dir === 1) {
-                // only jump forward once the section is fully revealed to bottom
-                const atBottom = r.bottom <= window.innerHeight + EDGE;
-                return atBottom && activeIndexRef.current < list.length - 1;
-            }
-            const atTop = r.top >= -EDGE;
-            return atTop && activeIndexRef.current > 0;
-        };
-
-        const go = (dir: 1 | -1) => scrollToIndex(activeIndexRef.current + dir);
-
-        const onWheel = (e: WheelEvent) => {
-            if (Math.abs(e.deltaY) < WHEEL_THRESHOLD) return;
-            if (lockedRef.current) {
-                e.preventDefault();
-                return;
-            }
-            const dir: 1 | -1 = e.deltaY > 0 ? 1 : -1;
-            if (canAdvance(dir)) {
-                e.preventDefault();
-                go(dir);
-            }
-            // else: let the tall section scroll natively (no preventDefault)
-        };
-
-        const onKey = (e: KeyboardEvent) => {
-            const target = e.target as HTMLElement | null;
-            if (
-                target &&
-                (target.tagName === "INPUT" ||
-                    target.tagName === "TEXTAREA" ||
-                    target.isContentEditable)
-            ) {
-                return;
-            }
-            let dir: 1 | -1 | 0 = 0;
-            if (["ArrowDown", "PageDown", " ", "Spacebar"].includes(e.key)) dir = 1;
-            else if (["ArrowUp", "PageUp"].includes(e.key)) dir = -1;
-            else if (e.key === "Home") {
-                e.preventDefault();
-                scrollToIndex(0);
-                return;
-            } else if (e.key === "End") {
-                e.preventDefault();
-                scrollToIndex(els().length - 1);
-                return;
-            }
-            if (dir === 0 || lockedRef.current) return;
-            if (canAdvance(dir)) {
-                e.preventDefault();
-                go(dir);
-            }
-        };
-
-        let touchStartY = 0;
-        // Is the current section taller than the viewport? If so we let native
-        // touch-scrolling run inside it; otherwise we block it for crisp snapping.
-        const currentIsTall = () => {
-            const el = els()[activeIndexRef.current];
-            return el ? el.getBoundingClientRect().height > window.innerHeight + EDGE : false;
-        };
-
-        const onTouchStart = (e: TouchEvent) => {
-            touchStartY = e.touches[0]?.clientY ?? 0;
-        };
-        const onTouchMove = (e: TouchEvent) => {
-            // Sections that fit the viewport shouldn't free-scroll — block the
-            // native pan so one swipe maps to exactly one section.
-            if (!currentIsTall() && e.cancelable) e.preventDefault();
-        };
-        const onTouchEnd = (e: TouchEvent) => {
-            if (lockedRef.current) return;
-            const endY = e.changedTouches[0]?.clientY ?? touchStartY;
-            const dy = touchStartY - endY; // swipe up (dy>0) => go down
-            if (Math.abs(dy) < SWIPE_THRESHOLD) return;
-            const dir: 1 | -1 = dy > 0 ? 1 : -1;
-            if (canAdvance(dir)) go(dir);
-        };
-
-        window.addEventListener("wheel", onWheel, { passive: false });
-        window.addEventListener("keydown", onKey);
-        window.addEventListener("touchstart", onTouchStart, { passive: true });
-        window.addEventListener("touchmove", onTouchMove, { passive: false });
-        window.addEventListener("touchend", onTouchEnd, { passive: true });
-        return () => {
-            window.removeEventListener("wheel", onWheel);
-            window.removeEventListener("keydown", onKey);
-            window.removeEventListener("touchstart", onTouchStart);
-            window.removeEventListener("touchmove", onTouchMove);
-            window.removeEventListener("touchend", onTouchEnd);
-        };
-    }, [els, prefersReduced, scrollToIndex]);
-
-    useEffect(() => {
-        return () => {
-            if (lockTimer.current) clearTimeout(lockTimer.current);
-        };
     }, []);
 
     const value = useMemo<SectionNavValue>(
