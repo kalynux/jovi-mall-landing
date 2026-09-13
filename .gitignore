@@ -34,6 +34,11 @@ yarn-error.log*
 .env*
 # ...except the template, which carries no values — only the list of keys.
 !.env.example
+# `.env.production` is committed on purpose as of 2026-09-13. Every value in it
+# is NEXT_PUBLIC_, which Next inlines into the bundle sent to every visitor, so
+# none of it is secret — and CI has no other way to learn the production hosts.
+# `.env.local` stays ignored and still overrides it locally.
+!.env.production
 
 # vercel
 .vercel

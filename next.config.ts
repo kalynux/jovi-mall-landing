@@ -72,7 +72,35 @@ const nextConfig: NextConfig = {
          */
         images: { unoptimized: true },
       }
-    : {}),
+    : {
+        /**
+         * The WEB build ships as a container, so it needs the self-contained
+         * output rather than a tree that assumes `node_modules` is still beside
+         * it.
+         *
+         * `standalone` makes `next build` trace the server's actual imports and
+         * emit `.next/standalone/server.js` with only those files. The runtime
+         * image then carries no `node_modules`, no source and no build tooling —
+         * it went from roughly 1.4 GB of installed dependencies to a couple of
+         * hundred megabytes, which on a 2 vCPU / 8 GB host shared with Mongo,
+         * three Redis, two Postgres clusters and n8n is the difference between
+         * affordable and not.
+         *
+         * ⚠ THIS CHANGES HOW THE SERVER IS STARTED, NOT WHAT IT DOES. Everything
+         *   the web build relies on is still there: server components, the
+         *   next-intl middleware, ISR and image optimisation. It is not
+         *   `output: "export"` — that is the native branch above, and it is the
+         *   one that genuinely drops middleware and the optimiser.
+         *
+         * ⚠ TWO DIRECTORIES ARE NOT TRACED AND MUST BE COPIED BY HAND.
+         *   `public/` and `.next/static/` are deliberately excluded by Next, on
+         *   the assumption a CDN serves them. Nothing here does, so the
+         *   Dockerfile copies both. Forgetting either gives a site that renders
+         *   its HTML correctly and has no CSS, no JavaScript and no images — a
+         *   200 with a broken page, which is why the Dockerfile says so too.
+         */
+        output: "standalone" as const,
+      }),
 };
 
 export default withNextIntl(nextConfig);

@@ -1,0 +1,199 @@
+# Builds the storefront image and pushes it to GHCR.
+#
+# Sibling of the three backend release.yml files and of the three dashboards';
+# the tag conventions below are deliberately identical to
+# backend/admin/.github/workflows/release.yml so that one rollback procedure
+# covers every service on the host.
+#
+# ⚠ THIS DOES NOT GATE ON ci.yml. That workflow runs on the same push, in
+#   parallel. A type error cannot produce an image — the Dockerfile runs the real
+#   build — but a lint failure still can. Confirm CI is green before moving the
+#   deployment onto a new tag.
+#
+# ⚠ NOTHING IS DEPLOYED BY THIS FILE. It builds and publishes; putting an image
+#   live is a deliberate press of Deploy in Dokploy. That is the chosen
+#   arrangement rather than an omission — see the deploy job at the bottom.
+#
+# ⚠ THIS BUILD REACHES OUT TO THE LIVE API, AND THAT IS BY DESIGN UPSTREAM.
+#   /pricing refuses to publish without real prices, so `next build` fails when
+#   nothing answers at NEXT_PUBLIC_API_URL. There is no offline fallback and adding
+#   one would mean shipping invented prices. The consequence for this file: a build
+#   can fail for a reason that has nothing to do with the commit — if it does,
+#   check https://api.wi-mall.com/api/health before reading the diff.
+
+name: Release image
+
+on:
+  push:
+    # ─── ONE BRANCH PUBLISHES ─────────────────────────────────────────────────
+    #   production   the LIVE line. Builds production + latest + sha-xxxxxxx.
+    #
+    # ⚠ main IS ABSENT ON PURPOSE. There is no test environment: the test backend
+    #   is waiting on a server upgrade, so a test image would have no API to talk
+    #   to — and for THIS app that is worse than useless, because the build itself
+    #   needs a reachable API, so a test build would simply fail. main is still
+    #   fully checked by ci.yml; it just produces no artefact.
+    branches: [production]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  image:
+    name: Build and push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Fail fast and legibly if the API is down, rather than 4 minutes into a
+      # Next build with a pricing assertion error that reads like a code fault.
+      - name: Check the API the build depends on
+        run: |
+          if ! curl --fail --silent --show-error --max-time 20 \
+                 https://api.wi-mall.com/api/health > /dev/null; then
+            echo "::error::https://api.wi-mall.com/api/health is not answering."
+            echo "This build is not hermetic: /pricing refuses to publish without"
+            echo "real prices, so it will fail part-way through. Fix the API first."
+            exit 1
+          fi
+          echo "API is up."
+
+      # ⚠ THE API BEING UP IS NOT ENOUGH, AND THIS IS THE FAILURE WE ACTUALLY HIT.
+      #   On 2026-09-13 the API answered 200 on /api/health and the build still
+      #   failed, four minutes in, on:
+      #
+      #     Error occurred prerendering page "/en/pricing"
+      #     Marketing copy no longer matches the public plan catalog:
+      #       plan "starter" is no longer in the catalog, but ... still describe it
+      #
+      #   The cause was not stale copy. The production jovi_mall database was
+      #   created FRESH, with no development data carried up, so the pricing-plan
+      #   collection was simply EMPTY — /api/public/plans returned 0 plans for all
+      #   three roles. assertCopyMatchesCatalog was correctly refusing to publish a
+      #   pricing page describing plans the platform does not offer.
+      #
+      #   The fix is a one-off seed on the backend, not a change here:
+      #
+      #     cd /etc/dokploy/compose/wimallbackend-wimallbackend-xe7md3/code
+      #     docker compose -p wimallbackend-wimallbackend-xe7md3 --env-file .env \
+      #       -f docker-compose.yml run --rm jovi-mall-toolbox npm run seed:plans
+      #
+      #   It is an idempotent upsert and safe to re-run. This step exists so that
+      #   failure is named in five seconds instead of being discovered as a
+      #   prerender error in a 280-page build log.
+      - name: Check the plan catalogue is populated
+        run: |
+          empty=0
+          for role in vendor agency agent; do
+            n=$(curl --fail --silent --max-time 20 \
+                  "https://api.wi-mall.com/api/public/plans?role=$role&includeInactive=true" \
+                | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{const j=JSON.parse(s);process.stdout.write(String((j.data||[]).length))}catch(e){process.stdout.write('0')}})")
+            echo "  $role plans: $n"
+            [ "$n" = "0" ] && empty=1
+          done
+          if [ "$empty" = "1" ]; then
+            echo "::error::The public plan catalogue is empty for at least one role."
+            echo "/pricing will refuse to prerender and this build WILL fail."
+            echo "Seed it on the backend: npm run seed:plans via the jovi-mall-toolbox."
+            echo "See the comment above this step for the exact command."
+            exit 1
+          fi
+          echo "Plan catalogue is populated."
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          # Supplied by Actions itself. No personal token is involved in PUSHING;
+          # the read:packages token held by Dokploy is a separate credential used
+          # only for PULLING onto the host.
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          # ⚠ Lowercase. GHCR rejects an uppercase character anywhere in an image
+          #   path, and github.repository_owner preserves the case you typed.
+          #
+          # ⚠ The image is named for the PRODUCT, not the repository. This repo is
+          #   still called jovi-mall-landing; the thing it builds is the Wi-Mall
+          #   storefront, and the other three images are wimall-*-dash.
+          images: ghcr.io/${{ github.repository_owner }}/wimall-landing
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/production' }}
+            type=raw,value=production,enable=${{ github.ref == 'refs/heads/production' }}
+            # Always. This is the immutable tag you pin in the Dokploy Environment
+            # tab and the one you roll back TO — production moves under you, so on
+            # its own it gives you nothing to return to.
+            type=sha,format=short
+            type=ref,event=tag
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          # ⚠ The VPS is x86_64. Building arm64 as well would double the build time
+          #   to produce a layer nothing on this host can run — and this is already
+          #   the slowest of the four, because a Next build is not a Vite build.
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=landing
+          cache-to: type=gha,mode=max,scope=landing
+
+      - name: Deployable tag
+        run: |
+          {
+            echo "### Built from \`$GITHUB_REF_NAME\`"
+            echo
+            echo "Pin this as \`LANDING_TAG\` in the Dokploy Environment tab to deploy it immutably:"
+            echo '```'
+            echo "LANDING_TAG=sha-$(git rev-parse --short HEAD)"
+            echo '```'
+            echo "Or leave \`LANDING_TAG\` unset to follow the moving \`production\` tag."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ─── Optional: turn this into continuous deployment ─────────────────────────
+  #
+  # INERT AS SHIPPED. Skipped unless the repository has a DOKPLOY_DEPLOY_URL
+  # secret, and it has none — by choice: putting a build live is currently a
+  # deliberate click in Dokploy.
+  #
+  # To switch continuous deployment on later, two things have to be true, and the
+  # second is the real work:
+  #
+  #   1. Add the secret. Dokploy shows a per-service deploy webhook URL on the
+  #      Compose service's Deployments tab. Copy it into this repository's
+  #      Settings -> Secrets and variables -> Actions as DOKPLOY_DEPLOY_URL.
+  #
+  #   2. Make Dokploy reachable from GitHub. ⚠ THIS IS THE CATCH, and it is why
+  #      the job is off rather than merely unconfigured. dok.wi-mall.com resolves
+  #      to 100.89.182.51, a Tailscale address GitHub's runners cannot reach — so
+  #      this step would fail with a connection timeout that reads as Dokploy being
+  #      down. Either point a hostname at the public IP, or join the tailnet in
+  #      this job with tailscale/github-action first. Dokploy already answers on
+  #      the public IP; only its DNS is private.
+  deploy:
+    name: Trigger Dokploy deploy
+    needs: image
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/production'
+    steps:
+      - name: Call the deploy webhook
+        env:
+          DEPLOY_URL: ${{ secrets.DOKPLOY_DEPLOY_URL }}
+        run: |
+          if [ -z "$DEPLOY_URL" ]; then
+            echo "No DOKPLOY_DEPLOY_URL secret set - skipping."
+            echo "The image is published; press Deploy in Dokploy to put it live."
+            exit 0
+          fi
+          # --fail so an HTTP error is a failed job rather than a green tick over a
+          # deploy that never happened.
+          curl --fail --silent --show-error --max-time 60 -X POST "$DEPLOY_URL"
+          echo "Deploy triggered."

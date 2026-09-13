@@ -1,0 +1,60 @@
+# What does NOT go into the build context.
+#
+# Beyond upload speed, two entries here are correctness rather than tidiness.
+#
+#   `.env.local` would be copied by `COPY . .` and Next loads it AFTER
+#   `.env.production`, so it WINS. A developer's copy points at
+#   http://localhost:8022; if it reached the build, the image would be built
+#   against a host that does not exist in production, the build would still
+#   succeed, and the site would fail at runtime with nothing to explain it.
+#
+#   `node_modules` from a Windows machine holds native binaries for the wrong
+#   platform — sharp above all, which is what `next/image` needs — and `npm ci`
+#   in the deps stage must be free to install the musl builds instead.
+
+# Installed fresh inside the image, for linux/amd64 on alpine.
+node_modules
+**/node_modules
+
+# Build output — produced by the build stage, never copied in.
+.next
+out
+*.tsbuildinfo
+next-env.d.ts
+
+# ⚠ THE NATIVE TARGET IS THE BIGGEST WIN HERE. The Android and iOS projects carry
+#   a Gradle cache, CocoaPods, and a copy of the last static export — hundreds of
+#   megabytes that the web build never reads, and which would make every
+#   `COPY . .` layer churn on each `cap sync`.
+android
+ios
+.gradle
+
+# ⚠ DEVELOPER AND APP-ONLY ENV FILES. `.env.production` is deliberately NOT
+#   excluded: it is the configuration this image is built from. `.env.mobile`
+#   belongs to `npm run build:native` and would only confuse this one.
+.env.local
+.env.*.local
+.env.development
+.env.mobile
+.env.test
+
+# Vercel's local state — this deploys to Dokploy, not Vercel.
+.vercel
+
+# History and tooling the build never reads.
+.git
+.github
+.vscode
+.idea
+*.log
+npm-debug.log*
+coverage
+
+# Docs and planning.
+*.md
+!README.md
+
+# OS noise.
+.DS_Store
+Thumbs.db

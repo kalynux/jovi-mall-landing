@@ -1,0 +1,159 @@
+# The customer storefront and marketing site, in production. One Node server
+# (Next.js standalone), routed by the Traefik that Dokploy already runs.
+#
+# Pasted into a Dokploy Compose service with source type **Raw**, matching how
+# n8n-with-its-dbs and wi-mall-backend are both set up here. The values it
+# interpolates go in that service's **Environment** tab — see deploy/README.md.
+#
+# ─── THIS IS THE ONE THAT IS NOT nginx ───────────────────────────────────────
+# The three dashboards are static bundles and cap out at 64 MB. This one runs a
+# server, because the site needs one: locale middleware on every request, server
+# components that fetch at request time, ISR, and on-demand image optimisation.
+# It is budgeted accordingly — see the memory note below.
+#
+# ─── NOTHING IS BUILT HERE ───────────────────────────────────────────────────
+# image:, never build:. Besides the host's size, this build needs the commerce API
+# reachable (/pricing refuses to publish without real prices), so it belongs
+# somewhere with a network and a timeout, not on a box running the database.
+# ⚠ In the Dokploy UI, deploy this WITHOUT --build.
+#
+# ─── CERTIFICATES ARE DNS-01 ─────────────────────────────────────────────────
+# Read from this host's live Traefik static configuration, not assumed:
+#
+#     certificatesResolvers.letsencrypt.acme.dnsChallenge.provider: cloudflare
+#
+# So port 80 is never used to prove ownership — the redirect routers below can
+# take all of it — and Cloudflake's proxy setting (orange vs grey cloud) has no
+# bearing on issuance. That choice is purely about caching and DDoS protection.
+#
+# ⚠ wi-mall.com IS CURRENTLY PROXIED BY CLOUDFLARE (it resolves to 104.21.64.240
+#   and 172.67.138.43, which are Cloudflare addresses). That is a reasonable place
+#   for a marketing site to be, but it carries one requirement and one hazard:
+#
+#     REQUIREMENT — Cloudflare's SSL/TLS mode must be Full or Full (strict). On
+#     Flexible, Cloudflare fetches the origin over plain HTTP, the redirect router
+#     below sends it back to HTTPS, and the two loop until the browser gives up.
+#     That is the classic redirect loop and it reads as a Traefik fault.
+#
+#     HAZARD — do NOT add a "Cache Everything" page rule. Cloudflare does not
+#     cache HTML by default, which is what keeps this safe: a cached document
+#     names a hashed asset bundle, so serving yesterday's HTML after a deploy is a
+#     blank page rather than a stale one.
+
+name: wi-landing
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+networks:
+  # Created by Dokploy at install and shared by every routed container on this
+  # host. Declared external so this file never tries to own it.
+  # ⚠ Traefik's docker provider is configured with network: dokploy-network, so a
+  #   container that does not join it is invisible to Traefik no matter how
+  #   correct its labels are.
+  dokploy-network:
+    external: true
+    name: dokploy-network
+
+services:
+  landing:
+    image: ghcr.io/${GHCR_OWNER:?set GHCR_OWNER}/wimall-landing:${LANDING_TAG:-production}
+
+    # ⚠ BOTH CEILINGS, ON PURPOSE. mem_limit is the key plain docker compose reads;
+    #   deploy.resources.limits is the one Swarm reads. Dokploy can deploy a compose
+    #   stack either way, and a limit the orchestrator ignores is the same as no
+    #   limit.
+    #
+    # ⚠ 512 MB IS A CAP, NOT A RESERVATION, AND IT IS EIGHT TIMES THE DASHBOARDS'.
+    #   A Next server holds the rendered route cache, the ISR cache and sharp's
+    #   image buffers; steady state is roughly 150-250 MB. The image-optimisation
+    #   path is the spiky part — a large product photo is decoded in memory.
+    #   NODE_OPTIONS in the Dockerfile caps the V8 heap at 384 MB, BELOW this, so
+    #   V8 collects hard rather than the kernel killing the process: a killed
+    #   container drops every in-flight request, a GC pause does not.
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 512M
+    mem_limit: 512m
+
+    # Next finishes in-flight requests on SIGTERM. The default 10 s is enough for
+    # a page render; this is the same allowance the backend services get, for the
+    # same reason — a hard kill turns a deploy into an error for whoever was
+    # mid-request.
+    stop_grace_period: 30s
+
+    networks: [dokploy-network]
+    logging: *logging
+    restart: unless-stopped
+
+    # ⚠ NO VOLUME FOR THE ISR CACHE, DELIBERATELY. Next writes revalidated pages
+    #   under .next/cache, which is per-container and therefore lost on every
+    #   deploy. That costs the first visitor after a release one slow render per
+    #   page and nothing else — the cache rebuilds itself. A volume would make it
+    #   survive, and would also carry a PREVIOUS release's rendered HTML into a new
+    #   container, which is a much worse failure than a cold cache.
+
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: dokploy-network
+
+      # ─── 1. The site itself, over HTTPS ──────────────────────────────────
+      traefik.http.routers.wi-landing.rule: Host(`${SITE_HOST:?set SITE_HOST}`)
+      traefik.http.routers.wi-landing.entrypoints: websecure
+      traefik.http.routers.wi-landing.tls.certresolver: letsencrypt
+      traefik.http.routers.wi-landing.service: wi-landing
+      traefik.http.services.wi-landing.loadbalancer.server.port: "3000"
+
+      # ─── 2. Plain HTTP redirects to HTTPS ────────────────────────────────
+      # ⚠ THERE IS NO GLOBAL REDIRECT ON THIS HOST. Measured, not assumed:
+      #   http://api.wi-mall.com/ and http://the8n.wi-mall.com/ both answer 404,
+      #   because every existing router is bound to websecure only.
+      #
+      #   This matters far more here than on a dashboard. Customers type
+      #   "wi-mall.com" into a phone, and links reach them through WhatsApp and
+      #   Telegram messages where an http:// scheme is entirely possible. Without
+      #   these labels every one of those arrivals is Traefik's 404.
+      traefik.http.routers.wi-landing-http.rule: Host(`${SITE_HOST}`)
+      traefik.http.routers.wi-landing-http.entrypoints: web
+      traefik.http.routers.wi-landing-http.middlewares: wi-landing-https
+      traefik.http.middlewares.wi-landing-https.redirectscheme.scheme: https
+      traefik.http.middlewares.wi-landing-https.redirectscheme.permanent: "true"
+
+      # ─── 3. www redirects to the bare domain ─────────────────────────────
+      # One canonical origin, for two reasons that are not about neatness.
+      # NEXT_PUBLIC_SITE_URL is https://wi-mall.com and every canonical tag,
+      # sitemap entry and OpenGraph URL is built from it — so a www copy serving
+      # the same pages is duplicate content pointing at its twin. And the auth
+      # cookie is host-scoped: a customer who signs in on one host is not signed
+      # in on the other, which presents as a session that randomly disappears.
+      #
+      # ⚠ $${1} IS NOT A TYPO. Compose interpolates $VAR in this file before
+      #   Docker ever sees it, so a single $ {1} would be eaten as an empty
+      #   variable and the redirect would drop the path. $$ escapes to a literal $
+      #   for Traefik's regex replacement.
+      #
+      # ⚠ This needs its own DNS record for www.wi-mall.com, and its own
+      #   certificate — which DNS-01 issues automatically once the record exists.
+      #   Until the record exists these three labels are simply inert.
+      traefik.http.routers.wi-landing-www.rule: Host(`${SITE_HOST_WWW:-www.wi-mall.com}`)
+      traefik.http.routers.wi-landing-www.entrypoints: websecure
+      traefik.http.routers.wi-landing-www.tls.certresolver: letsencrypt
+      traefik.http.routers.wi-landing-www.middlewares: wi-landing-dewww
+      traefik.http.routers.wi-landing-www.service: wi-landing
+      traefik.http.middlewares.wi-landing-dewww.redirectregex.regex: ^https?://www\.(.+)
+      traefik.http.middlewares.wi-landing-dewww.redirectregex.replacement: https://$${1}
+      traefik.http.middlewares.wi-landing-dewww.redirectregex.permanent: "true"
+
+      # ─── 4. www over plain HTTP, same destination ────────────────────────
+      # Handled by the same regex, which rewrites the scheme as well as the host,
+      # so http://www.wi-mall.com/shop reaches https://wi-mall.com/shop in one hop
+      # rather than two.
+      traefik.http.routers.wi-landing-www-http.rule: Host(`${SITE_HOST_WWW:-www.wi-mall.com}`)
+      traefik.http.routers.wi-landing-www-http.entrypoints: web
+      traefik.http.routers.wi-landing-www-http.middlewares: wi-landing-dewww
+      traefik.http.routers.wi-landing-www-http.service: wi-landing
