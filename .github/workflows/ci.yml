@@ -107,11 +107,37 @@ jobs:
 
       # Restores the keystore from a base64 secret. Written outside the workspace
       # so a stray `actions/upload-artifact` on the repo cannot pick it up.
+      #
+      # 🔴 THE MISSING `if:` IS THE WHOLE FIX, AND IT IS WHY THIS FILE NEVER RAN.
+      #    This step used to carry `if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}`.
+      #    The `secrets` context is NOT available in an `if:` expression — only in
+      #    `env:`, `with:` and job-level `secrets:`. GitHub rejects the ENTIRE
+      #    workflow file for it, so every run failed before starting, with
+      #    "This run likely failed because of a workflow file issue" and no logs at
+      #    all. Four runs failed that way, the oldest seven days before this fix, and
+      #    the file's own header said it had "never run" — which was the symptom, not
+      #    an accident of timing.
+      #
+      #    ⚠ IT IS NOT A SYNTAX ERROR AND NO LOCAL CHECK CATCHES IT. The YAML parses
+      #      perfectly; it is a rejected *expression context*. Validating this file
+      #      with a YAML parser says it is fine, which is exactly how it survived.
+      #      The cheap check is the one that found it: look at whether the run is
+      #      listed under its workflow NAME or under its FILENAME — GitHub shows the
+      #      filename when the file itself was refused.
+      #
+      #    The secret has to reach the shell through `env:` and be tested there.
       - name: Restore signing key
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-        run: echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "No ANDROID_KEYSTORE_BASE64 set - the APK will be built UNSIGNED."
+            echo "build.gradle leaves the signing config off rather than falling back"
+            echo "to the debug key, so this still proves the app compiles."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+          echo "Keystore restored."
 
       - name: Assemble release
         env:
