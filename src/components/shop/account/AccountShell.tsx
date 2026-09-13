@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { Button, EmptyState, Skeleton } from "@/components/shop/ds";
+import { Button, EmptyState, Skeleton, type IconName } from "@/components/shop/ds";
 import { useShopPageTitle } from "@/components/shop/ShopChrome";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import { translateError } from "@/lib/auth/error-translator";
@@ -100,6 +100,9 @@ export function ResourceError({
   fallback?: string;
 }) {
   const t = useTranslations("errors");
+  // Root-scoped: the heading and the action are shop vocabulary, the body is
+  // an `errors.*` code — two namespaces, one screen.
+  const tKey = useTranslations();
 
   /**
    * An unreachable server gets its own heading and icon.
@@ -116,9 +119,9 @@ export function ResourceError({
   return (
     <EmptyState
       icon={offline ? "wifi-off" : "circle-alert"}
-      title={offline ? "No connection" : "Something went wrong"}
+      title={tKey(offline ? "shop.feedback.noConnection" : "shop.feedback.somethingWentWrong")}
       description={translateError(t, error, fallback)}
-      actionLabel="Try again"
+      actionLabel={tKey("shop.common.tryAgain")}
       actionIcon="refresh-cw"
       onAction={onRetry}
     />
@@ -185,7 +188,7 @@ export function CardAction({
   onClick,
 }: {
   label: string;
-  icon?: string;
+  icon?: IconName;
   danger?: boolean;
   disabled?: boolean;
   onClick: () => void;

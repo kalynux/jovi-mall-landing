@@ -3,11 +3,11 @@
 import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "@/i18n/navigation";
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "./Icon";
 import { BottomSheet } from "./BottomSheet";
 
 export interface MenuSheetItem {
-  icon: string;
+  icon: IconName;
   label: string;
   /** Where it goes. Mutually exclusive with `onClick`. */
   href?: string;

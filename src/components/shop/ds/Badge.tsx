@@ -2,7 +2,7 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import type { ProductType } from "@/lib/shop/shop.types";
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "./Icon";
 
 type Tone = "brand" | "neutral" | "success" | "warning" | "danger" | "info";
 type Variant = "soft" | "solid" | "outline";
@@ -13,7 +13,7 @@ export interface BadgeProps {
   productType?: ProductType;
   size?: "sm" | "md";
   dot?: boolean;
-  icon?: string;
+  icon?: IconName;
   children: ReactNode;
   style?: CSSProperties;
 }

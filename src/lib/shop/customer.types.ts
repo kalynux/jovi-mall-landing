@@ -339,6 +339,41 @@ export interface CustomerOrder {
   codCollections?: CodCollection[];
   /** Present on the group-detail read, absent on the list. */
   items?: OrderItem[];
+  /**
+   * The escrow-release gate — and the **only** thing that says whether this order
+   * has already been confirmed.
+   *
+   * 🔴 `fulfillmentStatus` cannot answer that question. Confirming stamps
+   * `completion` server-side and leaves fulfilment exactly where it was —
+   * `fulfilled` stays `fulfilled`, `delivered` stays `delivered` — so a re-read
+   * after a successful confirm returns a body identical to the one before it.
+   * Gating a confirm action on fulfilment alone therefore offers it forever, into
+   * a guaranteed `409 EARNINGS_ALREADY_COMPLETED`. That shipped; see
+   * `canConfirmDelivery`.
+   *
+   * Optional only so a client running against a backend older than this field
+   * degrades to the previous behaviour rather than crashing — treat `undefined`
+   * as "not confirmed", which is what it used to mean implicitly.
+   */
+  completion?: OrderCompletion;
+}
+
+/**
+ * When an order was completed, and by which path.
+ *
+ * ⚠ `confirmedBy` is **not** "who clicked". A COD order completes as `customer`
+ * when the *agent* enters the customer's delivery code — the code is the
+ * customer's act, performed through someone else's handset. `system` is the
+ * auto-confirm sweep that fires when the confirmation window elapses.
+ *
+ * So `auto` is the field to word copy from: it separates a real confirmation from
+ * an elapsed window, which `confirmedBy` does not.
+ */
+export interface OrderCompletion {
+  /** ISO 8601, or `null` while the order is still confirmable. */
+  confirmedAt: string | null;
+  confirmedBy: "customer" | "system" | null;
+  auto: boolean;
 }
 
 /** `POST /api/customer/orders/checkout` — one order per vendor, one `cartId`. */
@@ -471,7 +506,19 @@ export interface OrderGroup {
 
 // ─── Notifications ───────────────────────────────────────────────────────────
 
-export type NotificationAggregate = "booking" | "order" | "shipment" | "payment";
+/**
+ * The subject areas a customer notification can be about.
+ *
+ * `ticket` arrived with GAP-012 and was missing here, so a customer already
+ * receiving support notifications had no way to filter to them and every such
+ * row fell through to the generic icon.
+ */
+export type NotificationAggregate =
+  | "booking"
+  | "order"
+  | "shipment"
+  | "payment"
+  | "ticket";
 
 export interface CustomerNotification {
   _id: string;
@@ -528,8 +575,20 @@ export interface DigitalEntitlement {
   id: string;
   orderId?: string;
   productId?: string;
+  /**
+   * ⚠ **Can be missing on a perfectly valid entitlement.**
+   *
+   * It is resolved by `populate` from the product, and an entitlement is never
+   * removed with its product — somebody who bought a file keeps the right to
+   * download it after the seller withdraws the listing. So a purchase from a
+   * year ago can arrive with no title at all. Same for {@link variantName}.
+   *
+   * Fall back to `fileName`, which comes off the asset itself and therefore
+   * survives: it is the one name that cannot disappear.
+   */
   productTitle?: string;
   variantId?: string;
+  /** Missing whenever the variant was deleted since purchase — see `productTitle`. */
   variantName?: string;
   fileName?: string;
   mimeType?: string;
@@ -578,6 +637,39 @@ export interface ServerCartItem {
   quantity: number;
   price: number;
   currency: string;
+  /**
+   * Set when this line's price was **haggled in chat**, and equal to `price`.
+   *
+   * It exists so the line can be labelled *"your agreed price"* rather than
+   * *"price"* — it is **not** a second number. Never compute a total from it;
+   * `price` is the total's input, and the two are the same integer anyway.
+   *
+   * ⚠ **Omitted entirely when absent — never `null`.** The test is
+   * `"negotiatedUnitPrice" in item`, not a truthiness check, because a price of
+   * zero is not the same fact as no negotiation.
+   */
+  negotiatedUnitPrice?: number;
+  /**
+   * The lock this line will spend at checkout. Opaque — do not parse it.
+   *
+   * The storefront never mints one and never sends one: bargaining happens in
+   * WhatsApp or Telegram, the bargaining agent mints the lock, and the bot puts
+   * the line in this cart. All this client does is read it, render what came
+   * back, and translate the refusals.
+   */
+  negotiationLockRef?: string;
+}
+
+/**
+ * Does this line carry a price the customer agreed in chat?
+ *
+ * A key test rather than a truthiness one, for the reason on
+ * {@link ServerCartItem.negotiatedUnitPrice}: the fields are omitted when
+ * absent, so `undefined` and "not negotiated" are the same state and a falsy
+ * check on the number would also swallow a legitimate zero.
+ */
+export function isNegotiatedLine(item: ServerCartItem): boolean {
+  return "negotiatedUnitPrice" in item && item.negotiatedUnitPrice !== undefined;
 }
 
 /**

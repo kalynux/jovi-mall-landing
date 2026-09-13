@@ -177,7 +177,7 @@ function EmailSection({
       ) : (
         <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
           <input
-            className="input"
+            className="field"
             style={{ flex: "1 1 200px" }}
             type="email"
             inputMode="email"
@@ -294,7 +294,7 @@ function PhoneSection({
         <>
           <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
             <input
-              className="input"
+              className="field"
               style={{ flex: "1 1 200px" }}
               type="tel"
               inputMode="tel"
@@ -370,7 +370,7 @@ function PasswordSection() {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }}>
           <input
-            className="input"
+            className="field"
             type="password"
             autoComplete="current-password"
             placeholder="Current password"
@@ -378,7 +378,7 @@ function PasswordSection() {
             onChange={(e) => setOld(e.target.value)}
           />
           <input
-            className="input"
+            className="field"
             type="password"
             autoComplete="new-password"
             placeholder="New password"

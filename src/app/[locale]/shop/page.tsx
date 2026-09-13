@@ -18,7 +18,7 @@
  */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { listCategories, listProducts } from "@/lib/shop/catalog.api";
+import { listCategories, listProducts, resolveVariantBySku } from "@/lib/shop/catalog.api";
 import { parseProductSearchParams } from "@/lib/shop/shop.query";
 import { ShopBrowser } from "@/components/shop/ShopBrowser";
 import { ShopBrowserClient } from "@/components/shop/ShopBrowserClient";
@@ -86,5 +86,25 @@ export default async function CatalogPage({
     listCategories(),
   ]);
 
-  return <ShopBrowser products={products} meta={meta} categories={categories} query={query} />;
+  /*
+     A second lookup, and only ever after the first one came back empty.
+
+     `?q=` is a `$text` search over title, tags and description; it does not
+     index SKU and never will, so a customer typing a code off a package or a
+     WhatsApp message got a blank page indistinguishable from "we do not sell
+     that". This asks the one question the search cannot.
+
+     Conditional on purpose: it is an extra round trip, and on a query that
+     matched products it would buy nothing. */
+  const skuMatch = products.length === 0 && query.q ? await resolveVariantBySku(query.q) : null;
+
+  return (
+    <ShopBrowser
+      products={products}
+      meta={meta}
+      categories={categories}
+      query={query}
+      skuMatch={skuMatch}
+    />
+  );
 }

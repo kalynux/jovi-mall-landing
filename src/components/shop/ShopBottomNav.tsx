@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useEffect, useRef } from "react";
 import { Link } from "@/i18n/navigation";
 import { usePathname } from "@/i18n/navigation";
@@ -24,6 +26,8 @@ import { SHOP_TABS } from "@/lib/shop/shop.pages";
  * `shop-tabbar` class below is what it hooks onto.
  */
 export function ShopBottomNav() {
+  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
+  const tKey = useTranslations();
   const pathname = usePathname();
   const { count: cartCount } = useCart();
   const { count: favCount } = useFavorites();
@@ -134,7 +138,7 @@ export function ShopBottomNav() {
                 </span>
               )}
             </span>
-            {it.label}
+            {tKey(it.labelKey)}
           </Link>
         );
       })}

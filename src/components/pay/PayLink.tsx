@@ -9,10 +9,15 @@ import {
   useElements,
   useStripe,
 } from "@stripe/react-stripe-js";
-import { Button, Icon, Skeleton } from "@/components/shop/ds";
+import { Button, Icon, Skeleton, type IconName } from "@/components/shop/ds";
 import { ApiError } from "@/lib/auth/auth.types";
 import { formatMoney } from "@/lib/shop/format";
-import { getPayLinkSession, isPayLinkToken, type PayLinkSession } from "@/lib/shop/pay-link.api";
+import {
+  getPayLinkSession,
+  isPayLinkToken,
+  type PayLinkPaidFor,
+  type PayLinkSession,
+} from "@/lib/shop/pay-link.api";
 import { verifyPayment } from "@/lib/shop/payments.api";
 
 /**
@@ -458,6 +463,60 @@ function Amount({ session }: { session: PayLinkSession }) {
           Your card will be charged {charged}
         </p>
       )}
+      {session.paidFor && <PaidFor paidFor={session.paidFor} />}
+    </div>
+  );
+}
+
+/**
+ * What the money is for, composed here from the server's facts.
+ *
+ * ── Why the page writes the sentence ────────────────────────────────────────
+ *
+ * The storefront asked for a rendered `description` and was declined, for a
+ * reason specific to this screen: the holder of a pay link has no account and no
+ * `preferred_language`, so a sentence composed server-side would arrive in
+ * English on a page otherwise translated into five languages. The locale is in
+ * the URL this page was opened with. Facts from the server, sentence from here.
+ *
+ * Three shapes, and the differences are all contractual:
+ *
+ *  - **A booking** carries no seller and no item count — `sellers` is `[]` on
+ *    purpose, because a service provider's name is frequently the sensitive fact
+ *    itself. It gets its reference and nothing more.
+ *  - **A multi-vendor basket** is one payment settling several orders, so it
+ *    reads as "order X and N others" rather than listing them — which is why the
+ *    server sends `reference` plus `orderCount` and not an array.
+ *  - **`reference` can be `null`** on a row predating the field, so every line
+ *    here has to hold up without it.
+ */
+function PaidFor({ paidFor }: { paidFor: PayLinkPaidFor }) {
+  const { kind, reference, orderCount, itemCount, sellers } = paidFor;
+
+  const items =
+    typeof itemCount === "number" && itemCount > 0
+      ? `${itemCount} item${itemCount === 1 ? "" : "s"}`
+      : null;
+  const from = sellers.length > 0 ? sellers.join(", ") : null;
+
+  // "3 items from Boutique Ndogbong", or whichever half survives.
+  const what =
+    items && from ? `${items} from ${from}` : (items ?? from ?? (kind === "booking" ? "Booking" : "Order"));
+
+  const others = orderCount > 1 ? ` and ${orderCount - 1} other${orderCount === 2 ? "" : "s"}` : "";
+
+  return (
+    <div style={{ marginTop: 12 }}>
+      <p style={{ fontSize: 13.5, color: "var(--text-body)", margin: 0 }}>{what}</p>
+      {reference && (
+        <p
+          className="muted"
+          style={{ fontSize: 12, marginTop: 3, fontVariantNumeric: "tabular-nums" }}
+        >
+          {reference}
+          {others}
+        </p>
+      )}
     </div>
   );
 }
@@ -536,7 +595,7 @@ function Outcome({
   tone,
   children,
 }: {
-  icon: string;
+  icon: IconName;
   title: string;
   tone: "success" | "danger" | "neutral";
   children: React.ReactNode;

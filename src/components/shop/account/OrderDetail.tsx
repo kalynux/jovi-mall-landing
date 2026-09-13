@@ -1,6 +1,6 @@
 "use client";
 
-import { useFormatter } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import {
   AccountCard,
   AccountShell,
@@ -79,6 +79,8 @@ export function OrderDetail({ orderId }: { orderId: string }) {
 function OrderHeader({ order }: { order: CustomerOrder }) {
   const format = useFormatter();
   const router = useRouter();
+  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
+  const tKey = useTranslations();
   const payment = paymentChip(order.paymentStatus);
 
   /**
@@ -121,7 +123,7 @@ function OrderHeader({ order }: { order: CustomerOrder }) {
           )}
         </div>
         <Badge tone={payment.tone} icon={payment.icon}>
-          {payment.label}
+          {tKey(payment.labelKey)}
         </Badge>
       </div>
 

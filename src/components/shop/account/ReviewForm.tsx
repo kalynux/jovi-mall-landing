@@ -159,14 +159,14 @@ export function ReviewForm({
       </div>
 
       <input
-        className="input"
+        className="field"
         placeholder="Title (optional)"
         maxLength={MAX_TITLE}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
       <textarea
-        className="input"
+        className="field"
         placeholder="Tell others about it (optional)"
         maxLength={MAX_BODY}
         rows={3}

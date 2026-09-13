@@ -102,6 +102,16 @@ class CatalogApiError extends Error {
   }
 }
 
+/**
+ * The cap `GET /api/public/products/by-ids` applies per request. Naming more
+ * than this is a `400`, so {@link listProductsByIds} chunks at it rather than
+ * letting the caller find out.
+ */
+const BY_IDS_MAX = 50;
+
+/** `GET /api/public/variants/by-sku/:sku` answers 400 beyond this. */
+const SKU_MAX_LENGTH = 64;
+
 type Envelope<T> = {
   success?: boolean;
   data?: T;
@@ -179,14 +189,17 @@ async function getList<T>(
     throw new CatalogApiError(`${API_BASE}${path}`, `${result.error.code} (${result.error.statusCode})`);
   }
   const data = Array.isArray(result.data) ? result.data : [];
-  const meta = result.meta ?? {};
+  const meta = (result.meta ?? {}) as Partial<ListMeta> & { totalPages?: number };
   return {
     data,
     meta: {
       total: meta.total ?? data.length,
       page: meta.page ?? 1,
       limit: meta.limit ?? data.length,
-      pages: meta.pages ?? 1,
+      // Both spellings, for the same reason `apiFetchList` accepts both: the
+      // page count is `pages` on most endpoints and `totalPages` on some, and a
+      // caller reading only one gets a silent "one page" rather than an error.
+      pages: meta.pages ?? meta.totalPages ?? 1,
     },
   };
 }
@@ -392,6 +405,128 @@ export interface RelatedProduct {
  * never been bought alongside anything yet.
  */
 export type RelatedSource = "co_purchase" | "same_category";
+
+/**
+ * GET /api/public/products/by-ids — unauthenticated, batch hydration.
+ *
+ * The same rows the browse grid returns, for a set of ids the caller already
+ * holds, in **one** request instead of N. Three properties are the contract and
+ * all three are easy to break:
+ *
+ *  - **Your `ids` order is preserved.** A ranking computed elsewhere survives
+ *    hydration with no re-sorting, which is what this route exists for. Do not
+ *    sort the result.
+ *  - **Duplicates collapse** before the cap is applied, so repeating an id is
+ *    allowed and costs nothing.
+ *  - **`missing` is an answer, not an error.** An id that is no longer
+ *    publishable — archived, suspended, deleted, or belonging to a suspended
+ *    vendor — is named there and the request still answers `200`. Rendering
+ *    `products` and ignoring `missing` leaves a gap in a list the caller built
+ *    earlier with no explanation of it; the caller should prune instead.
+ *
+ * The API caps a request at **50 ids**, so this chunks above that and stitches
+ * the pages back together in the order they were asked for. An empty `ids` is
+ * answered here rather than at the network, because the API treats it as a
+ * `400` and "nothing to hydrate" is not an error.
+ */
+export async function listProductsByIds(
+  ids: string[],
+  options: CatalogReadOptions = {},
+): Promise<{ products: ProductListItem[]; missing: string[] }> {
+  // Collapse locally too. The API does it anyway, but doing it here is what
+  // keeps the chunk arithmetic honest — 60 ids of which 20 are repeats is one
+  // request, not two.
+  const unique = [...new Set(ids.filter(Boolean))];
+  if (unique.length === 0) return { products: [], missing: [] };
+
+  const chunks: string[][] = [];
+  for (let i = 0; i < unique.length; i += BY_IDS_MAX) chunks.push(unique.slice(i, i + BY_IDS_MAX));
+
+  const products: ProductListItem[] = [];
+  const missing: string[] = [];
+
+  for (const chunk of chunks) {
+    const result = await request<{ products: ProductListItem[]; missing?: string[] }>(
+      `/api/public/products/by-ids?ids=${chunk.map(encodeURIComponent).join(",")}`,
+      options,
+    );
+
+    // A failed chunk is reported as missing rather than thrown. These lists are
+    // rebuilt from ids the client stored — a wishlist, a recently-viewed strip —
+    // and losing the whole strip because one batch failed is worse than showing
+    // the rest of it.
+    if (!result.ok) {
+      missing.push(...chunk);
+      continue;
+    }
+
+    products.push(...(result.data.products ?? []));
+    missing.push(...(result.data.missing ?? []));
+  }
+
+  return { products, missing };
+}
+
+/** What a printed product code resolves to. */
+export interface VariantBySku {
+  productId: string;
+  variantId: string;
+  /** Echoed **as stored**, which is not always what was sent — see the case rule. */
+  sku: string;
+  title: string;
+  /** The vendor's own name, else the options spelled out, else the SKU itself. */
+  variantName: string;
+  /** This variant's own price, not the product card's. */
+  price: number;
+  currency: string;
+  /** This variant's own availability. */
+  inStock: boolean;
+  store: { slug: string; name: string };
+}
+
+/**
+ * GET /api/public/variants/by-sku/:sku — unauthenticated.
+ *
+ * **It exists because search cannot do this.** `?q=` is a MongoDB `$text` search
+ * over title, tags and description; it does not index SKU and will never match
+ * one, so a customer typing a real code off a package got an empty result
+ * indistinguishable from "we do not sell that".
+ *
+ * ⚠ **It answers a RESOLUTION, not a product card.** A SKU names one specific
+ * variant, very often not the default one a card quotes, so the price and
+ * `inStock` here are that variant's own. Rendering the product card's numbers
+ * instead would show the wrong price to precisely the customer who typed a
+ * precise code.
+ *
+ * ⚠ **Case: three spellings are tried and the one you sent wins.** `sku` is a
+ * case-sensitive unique index, so the value as typed, its uppercase form and its
+ * lowercase form are all tried in one indexed lookup. A stored *mixed-case* SKU
+ * therefore only resolves when typed exactly — do not promise otherwise.
+ *
+ * `null` covers both `404` outcomes, which the backend makes **deliberately
+ * indistinguishable**: an unknown code and a code whose product is draft,
+ * archived, suspended or deleted answer the same way, or the endpoint becomes an
+ * oracle for enumerating an unreleased catalogue.
+ */
+export async function resolveVariantBySku(
+  sku: string,
+  options: CatalogReadOptions = {},
+): Promise<VariantBySku | null> {
+  const trimmed = sku.trim();
+  // The API bounds this at 64 characters and answers 400 beyond it. Checked here
+  // so a paste of a whole product description never leaves the browser.
+  if (!trimmed || trimmed.length > SKU_MAX_LENGTH) return null;
+
+  // `encodeURIComponent` is what makes a SKU containing "/" addressable at all —
+  // unencoded it splits the path and the route never matches. Express decodes
+  // the segment before the route sees it.
+  const result = await request<VariantBySku>(
+    `/api/public/variants/by-sku/${encodeURIComponent(trimmed)}`,
+    options,
+  );
+
+  return result.ok ? result.data : null;
+}
 
 /**
  * GET /api/public/products/:productId/related — unauthenticated.

@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { createContext, useCallback, useContext, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { Icon } from "@/components/shop/ds";
+import { Icon, type IconName } from "@/components/shop/ds";
 import { errorFeedback } from "@/lib/native/haptics";
 
 export type ToastVariant = "success" | "error";
@@ -22,7 +22,7 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 
 const DURATION: Record<ToastVariant, number> = { success: 2200, error: 4500 };
 
-const STYLE: Record<ToastVariant, { icon: string; iconColor: string; background: string }> = {
+const STYLE: Record<ToastVariant, { icon: IconName; iconColor: string; background: string }> = {
   success: {
     icon: "circle-check-big",
     iconColor: "var(--green-400)",

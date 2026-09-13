@@ -1,7 +1,7 @@
 "use client";
 
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from "react";
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "./Icon";
 
 type Variant = "primary" | "secondary" | "ghost" | "whatsapp" | "danger";
 type Size = "sm" | "md" | "lg";
@@ -11,8 +11,8 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
   size?: Size;
   block?: boolean;
   elevated?: boolean;
-  leadingIcon?: string;
-  trailingIcon?: string;
+  leadingIcon?: IconName;
+  trailingIcon?: IconName;
   children?: ReactNode;
 }
 

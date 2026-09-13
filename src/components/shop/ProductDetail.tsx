@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import {
@@ -16,10 +18,12 @@ import {
   QtyStepper,
   Rating,
   Tabs,
+  type IconName,
 } from "@/components/shop/ds";
 import { useCart, useFavorites, useToast } from "@/components/shop/providers";
-import { CART_OFFLINE_MESSAGE } from "@/lib/shop/cart-errors";
+import { CART_OFFLINE_MESSAGE_KEY } from "@/lib/shop/cart-errors";
 import { useShopPageTitle } from "@/components/shop/ShopChrome";
+import { availabilityLabelKey, unavailableLabelKey } from "@/lib/shop/availability";
 import { discountPct, formatMoney } from "@/lib/shop/format";
 import { tapFeedback } from "@/lib/native/haptics";
 import { productPathFor, storePath } from "@/lib/shop/shop.routes";
@@ -101,6 +105,8 @@ export function ProductDetail({
   const { addItem, productType, count } = useCart();
   const { isFavorite, toggle } = useFavorites();
   const { flash } = useToast();
+  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
+  const tKey = useTranslations();
 
   // The header bar says which product this is, so a shopper who has scrolled
   // past the <h1> still knows. Route-derived it could only say "Product".
@@ -256,10 +262,10 @@ export function ProductDetail({
             flash("Services are booked, not added to a cart.");
             break;
           case "offline":
-            flash(CART_OFFLINE_MESSAGE);
+            flash(tKey(CART_OFFLINE_MESSAGE_KEY));
             break;
           case "error":
-            flash(outcome.message);
+            flash(outcome.message ?? tKey(outcome.messageKey));
             break;
           default:
             // Exhaustive: a new outcome must choose what the shopper is told.
@@ -272,7 +278,7 @@ export function ProductDetail({
         setWorking(false);
       }
     },
-    [addItem, p, variant, lineQty, buyNow, router, flash]
+    [addItem, p, variant, lineQty, buyNow, router, flash, tKey]
   );
 
   /**
@@ -337,7 +343,7 @@ export function ProductDetail({
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={image?.url ?? "/no_product_image.png"}
+              src={publicUrl(image) ?? "/no_product_image.png"}
               alt={image?.originalName ?? p.title}
               style={{ width: "100%", aspectRatio: "1 / 1", objectFit: "cover", display: "block" }}
               
@@ -395,7 +401,7 @@ export function ProductDetail({
               marginBottom: 10,
             }}
           >
-            <Avatar name={store.name} src={store.logo?.url} size={24} />
+            <Avatar name={store.name} src={publicUrl(store.logo)} size={24} />
             <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-body)" }}>{store.name}</span>
             {store.verified && <Icon name="badge-check" size={14} style={{ color: "var(--brand)" }} />}
             <Icon name="chevron-right" size={14} style={{ color: "var(--text-subtle)" }} />
@@ -423,7 +429,9 @@ export function ProductDetail({
             </button>
           )}
 
+          {/* `ds-ugc`: a vendor-written title, in a page that may be RTL. */}
           <h1
+            className="ds-ugc"
             style={{
               fontSize: 24,
               fontWeight: 800,
@@ -539,7 +547,7 @@ export function ProductDetail({
                   color: variant.inStock ? "var(--success)" : "var(--danger)",
                 }}
               >
-                {variant.inStock ? "In stock" : "Out of stock"}
+                {tKey(availabilityLabelKey(p.type, variant.inStock))}
               </span>
             </div>
           )}
@@ -576,7 +584,7 @@ export function ProductDetail({
                   onClick={() => void commit(false)}
                 >
                   {!buyable
-                    ? "Out of stock"
+                    ? tKey(unavailableLabelKey(p.type))
                     : working
                       ? "Working…"
                       : buyNow
@@ -923,7 +931,7 @@ function Notice({
   children,
 }: {
   tone: "warning" | "info";
-  icon: string;
+  icon: IconName;
   children: React.ReactNode;
 }) {
   return (
@@ -946,7 +954,7 @@ function Notice({
   );
 }
 
-function InfoRow({ icon, label, value }: { icon: string; label: string; value: string }) {
+function InfoRow({ icon, label, value }: { icon: IconName; label: string; value: string }) {
   return (
     <div style={{ display: "flex", gap: 12, padding: "11px 0", borderBottom: "1px solid var(--border-subtle)" }}>
       <Icon name={icon} size={19} style={{ color: "var(--brand)", marginTop: 1 }} />
@@ -958,7 +966,7 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
   );
 }
 
-function InfoCard({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
+function InfoCard({ title, icon, children }: { title: string; icon: IconName; children: React.ReactNode }) {
   return (
     <div style={{ border: "1px solid var(--border)", borderRadius: "var(--radius-lg)", overflow: "hidden" }}>
       <div

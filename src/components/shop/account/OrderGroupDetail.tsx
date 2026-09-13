@@ -7,7 +7,7 @@ import {
   AccountShell,
   ResourceView,
 } from "@/components/shop/account/AccountShell";
-import { Avatar, Badge, Button, ConfirmDialog, Icon } from "@/components/shop/ds";
+import { Avatar, Badge, Button, ConfirmDialog, Icon, type IconName } from "@/components/shop/ds";
 import { useToast } from "@/components/shop/providers";
 import { ApiError } from "@/lib/auth/auth.types";
 import { translateError } from "@/lib/auth/error-translator";
@@ -136,6 +136,8 @@ function GroupSummary({
    */
   const [checked, setChecked] = useState<{ tone: "info" | "danger"; message: string } | null>(null);
 
+  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
+  const tKey = useTranslations();
   const payment = groupPaymentChip(group.paymentStatus);
   const payable = canPayGroup(group);
   const due = payableTotal(group);
@@ -233,7 +235,7 @@ function GroupSummary({
             </div>
           </div>
           <Badge tone={payment.tone} icon={payment.icon}>
-            {payment.label}
+            {tKey(payment.labelKey)}
           </Badge>
         </div>
 
@@ -353,8 +355,12 @@ export function VendorOrderCard({
   const [confirmCancel, setConfirmCancel] = useState(false);
   const { flash, flashError } = useToast();
   const t = useTranslations("errors");
+  const format = useFormatter();
 
+  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
+  const tKey = useTranslations();
   const fulfillment = fulfillmentChip(order.fulfillmentStatus);
+  const confirmedAt = order.completion?.confirmedAt ?? null;
 
   /**
    * A cheap pre-filter for "has this arrived at all".
@@ -432,10 +438,10 @@ export function VendorOrderCard({
 
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
         <Badge size="sm" tone={fulfillment.tone} icon={fulfillment.icon}>
-          {fulfillment.label}
+          {tKey(fulfillment.labelKey)}
         </Badge>
         <Badge size="sm" tone={payment.tone} icon={payment.icon}>
-          {payment.label}
+          {tKey(payment.labelKey)}
         </Badge>
         {cod && (
           <Badge size="sm" tone="neutral" icon="banknote">
@@ -594,6 +600,49 @@ export function VendorOrderCard({
         />
       ))}
 
+      {/*
+          Once the order is completed, say so where the button was.
+
+          Not merely hiding it: a customer who confirms and watches the button
+          vanish has no evidence the click landed, and confirmation is the act
+          that starts the seller's payout — the one moment in an order where
+          "did that work?" deserves an answer that survives a reload. The date
+          comes from the server's own `completion`, so it is the same fact the
+          escrow window is counted from.
+
+          `auto` rather than `confirmedBy` decides the wording: COD completes as
+          'customer' when the *agent* enters the delivery code, so `confirmedBy`
+          would have us tell a shopper they confirmed something they never
+          tapped. `auto` only ever means the window elapsed. */}
+      {confirmedAt && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
+            marginTop: 12,
+            paddingTop: 10,
+            borderTop: "1px solid var(--border-subtle)",
+            fontSize: 12.5,
+            color: "var(--text-muted)",
+          }}
+        >
+          <Icon
+            name="circle-check-big"
+            size={14}
+            style={{ color: "var(--success)", flexShrink: 0 }}
+          />
+          <span>
+            {order.completion?.auto ? "Confirmed automatically on" : "Delivery confirmed on"}{" "}
+            {format.dateTime(new Date(confirmedAt), {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </span>
+        </div>
+      )}
+
       {(canCancel(order) || canConfirmDelivery(order)) && (
         <div
           style={{
@@ -667,7 +716,7 @@ function BreakdownRow({ label, value }: { label: string; value: React.ReactNode 
 /** The five words a customer is shown, and nothing from the dispatch machinery. */
 const SHIPMENT_LABEL: Record<
   CustomerShipmentStatus,
-  { label: string; icon: string; tone: StatusChip["tone"] }
+  { label: string; icon: IconName; tone: StatusChip["tone"] }
 > = {
   preparing: { label: "Preparing", icon: "package", tone: "neutral" },
   shipped: { label: "On its way", icon: "truck", tone: "brand" },
@@ -925,7 +974,7 @@ function Carrier({
       href: `https://wa.me/${agency.supportWhatsapp.replace(/D/g, "")}`,
     },
     agency?.supportEmail && { icon: "mail", label: "Email", href: `mailto:${agency.supportEmail}` },
-  ].filter(Boolean) as { icon: string; label: string; href: string }[];
+  ].filter(Boolean) as { icon: IconName; label: string; href: string }[];
 
   if (!name && !agent) return null;
 
@@ -1039,9 +1088,18 @@ function DeliveryCodeCard({
       // Regeneration is capped at one per 60 s. Telling someone to wait 43
       // seconds is actionable; "too many requests" is not.
       if (err instanceof ApiError && err.code === "COD_CODE_RESEND_TOO_SOON") {
-        const retry = Number(
-          (err.details as { retryInSeconds?: number } | undefined)?.retryInSeconds ?? 60,
-        );
+        /*
+           From the header, not from `details`.
+
+           The service raises this with `{ retryInSeconds }`, but a 429 is in the
+           `rate_limit` category, whose `details` is filtered to
+           `retryAfterSeconds` / `limit` / `windowSeconds` — and "in" is not
+           "after", so nothing survives and `details` is omitted entirely. The
+           old read here therefore always fell through to its default and told
+           every customer to wait exactly 60 seconds, whatever the server
+           thought. `Retry-After` is the channel that carries it; 60 stays as the
+           last resort, since it is the documented cap. */
+        const retry = err.retryAfterSeconds ?? 60;
         setCooldown(retry);
         flashError(`Please wait ${retry}s before requesting another code.`);
       } else {

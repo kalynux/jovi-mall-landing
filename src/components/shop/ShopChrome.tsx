@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import {
   createContext,
   useCallback,
@@ -14,7 +16,7 @@ import { installNavDepth, navDepth } from "@/lib/shop/nav-depth";
 import {
   backIgnoresHistory,
   isShopTab,
-  shopPageTitle,
+  shopPageTitleKey,
   shopParentPath,
 } from "@/lib/shop/shop.pages";
 import { normalizePath } from "@/lib/shop/shop.routes";
@@ -38,6 +40,8 @@ interface ShopChromeValue {
 const ShopChromeContext = createContext<ShopChromeValue | null>(null);
 
 export function ShopChromeProvider({ children }: { children: ReactNode }) {
+  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
+  const tKey = useTranslations();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -72,12 +76,12 @@ export function ShopChromeProvider({ children }: { children: ReactNode }) {
   const value = useMemo<ShopChromeValue>(() => {
     const here = normalizePath(pathname);
     return {
-      title: override?.path === here ? override.title : shopPageTitle(here),
+      title: override?.path === here ? override.title : tKey(shopPageTitleKey(here)),
       showBack: !isShopTab(here),
       goBack,
       setTitleFor,
     };
-  }, [pathname, override, goBack, setTitleFor]);
+  }, [pathname, override, goBack, setTitleFor, tKey]);
 
   return <ShopChromeContext.Provider value={value}>{children}</ShopChromeContext.Provider>;
 }

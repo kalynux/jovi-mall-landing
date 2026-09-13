@@ -73,7 +73,28 @@ export type BookingPaymentStatus =
   | "refunded";
 
 export interface Booking {
-  _id: string;
+  /**
+   * 🔴 **`id`, not `_id`.** `Booking` is built on the backend's
+   * `BaseSchemaOptions`, whose `toJSON` deletes `_id` and exposes the `id`
+   * virtual, and every customer booking route returns the mongoose document
+   * straight (no `.lean()`). So `_id` is absent from **every** booking read.
+   *
+   * This was typed as `_id` and read as `_id` at three call sites, each of
+   * which navigated to `/shop/account/bookings/undefined` — including the
+   * redirect a customer lands on immediately after paying.
+   */
+  id: string;
+  /**
+   * The human handle — `BKG-2026-000123`, the same shape as an order's
+   * `ORD-2026-000123`. Generated at creation and never editable; this is the
+   * string to show the customer and to quote to the vendor or to support.
+   *
+   * ⚠ **`null` on bookings created before the field existed** — show a fallback
+   * rather than a bare `#`. And it is **not a count**: a booking that fails
+   * after the number is drawn burns it, so `BKG-2026-000042` does not mean "the
+   * 42nd booking of 2026". Requests still take `id`.
+   */
+  bookingNumber: string | null;
   productId: string;
   userId: string;
   vendorId: string;
@@ -365,27 +386,32 @@ export async function payBookingBalance(
 
 /* ── Presentation ────────────────────────────────────────────────────────── */
 
+/**
+ * ⚠ `labelKey` is a full dotted message key, not a sentence. A non-React module
+ * cannot translate; the component does it with a root-scoped `t()`. See
+ * LOCALISATION.md.
+ */
 export const BOOKING_STATUS_LABEL: Record<
   BookingStatus,
-  { label: string; tone: "neutral" | "info" | "warning" | "success" | "danger" }
+  { labelKey: string; tone: "neutral" | "info" | "warning" | "success" | "danger" }
 > = {
-  pending: { label: "Awaiting the seller", tone: "warning" },
-  confirmed: { label: "Confirmed", tone: "success" },
-  completed: { label: "Completed", tone: "neutral" },
-  "no-show": { label: "Missed", tone: "danger" },
-  cancelled: { label: "Cancelled", tone: "neutral" },
+  pending: { labelKey: "shop.status.booking.pending", tone: "warning" },
+  confirmed: { labelKey: "shop.status.booking.confirmed", tone: "success" },
+  completed: { labelKey: "shop.status.booking.completed", tone: "neutral" },
+  "no-show": { labelKey: "shop.status.booking.no-show", tone: "danger" },
+  cancelled: { labelKey: "shop.status.booking.cancelled", tone: "neutral" },
 };
 
 export const BOOKING_PAYMENT_LABEL: Record<
   BookingPaymentStatus,
-  { label: string; tone: "neutral" | "info" | "warning" | "success" | "danger" }
+  { labelKey: string; tone: "neutral" | "info" | "warning" | "success" | "danger" }
 > = {
-  unpaid: { label: "Not paid", tone: "warning" },
-  pending: { label: "Payment in progress", tone: "info" },
-  paid: { label: "Paid", tone: "success" },
-  disputed: { label: "Disputed", tone: "danger" },
-  failed: { label: "Payment failed", tone: "danger" },
+  unpaid: { labelKey: "shop.status.bookingPayment.unpaid", tone: "warning" },
+  pending: { labelKey: "shop.status.bookingPayment.pending", tone: "info" },
+  paid: { labelKey: "shop.status.bookingPayment.paid", tone: "success" },
+  disputed: { labelKey: "shop.status.bookingPayment.disputed", tone: "danger" },
+  failed: { labelKey: "shop.status.bookingPayment.failed", tone: "danger" },
   // Deliberately not "Refunded": the money has not arrived yet.
-  refund_pending: { label: "Refund on the way", tone: "warning" },
-  refunded: { label: "Refunded", tone: "neutral" },
+  refund_pending: { labelKey: "shop.status.bookingPayment.refund_pending", tone: "warning" },
+  refunded: { labelKey: "shop.status.bookingPayment.refunded", tone: "neutral" },
 };

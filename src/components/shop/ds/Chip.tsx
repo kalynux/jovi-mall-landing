@@ -1,7 +1,8 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { CSSProperties, ReactNode } from "react";
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "./Icon";
 
 export interface ChipProps {
   children: ReactNode;
@@ -10,7 +11,7 @@ export interface ChipProps {
   size?: "sm" | "md";
   removable?: boolean;
   onRemove?: () => void;
-  icon?: string;
+  icon?: IconName;
   onClick?: () => void;
   /**
    * Rendered but not selectable — an option value with no sellable variant
@@ -33,6 +34,8 @@ export function Chip({
   disabled,
   style,
 }: ChipProps) {
+  const tCommon = useTranslations("shop.common");
+
   let bg = "var(--surface)";
   let color = "var(--text-body)";
   let border = "var(--border)";
@@ -77,7 +80,7 @@ export function Chip({
       {removable && (
         <span
           role="button"
-          aria-label="Remove"
+          aria-label={tCommon("remove")}
           onClick={(e) => {
             e.stopPropagation();
             onRemove?.();

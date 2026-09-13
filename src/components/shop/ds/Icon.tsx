@@ -22,10 +22,12 @@ import {
   ChevronUp,
   CircleAlert,
   CircleCheckBig,
+  CircleDot,
   CircleHelp,
   CircleSlash,
   CircleX,
   Clock,
+  CloudDownload,
   Coins,
   CreditCard,
   Dot,
@@ -39,10 +41,15 @@ import {
   Hourglass,
   Info,
   KeyRound,
+  Landmark,
   Languages,
   Layers,
   LayoutGrid,
+  LifeBuoy,
+  Link2Off,
   List,
+  Loader,
+  LocateFixed,
   Lock,
   LogOut,
   type LucideIcon,
@@ -57,6 +64,7 @@ import {
   Package,
   PackageCheck,
   PackageOpen,
+  PackageX,
   Phone,
   Play,
   Plus,
@@ -65,8 +73,10 @@ import {
   Repeat,
   Search,
   SearchX,
+  Send,
   Settings,
   Share2,
+  Shield,
   ShieldCheck,
   ShoppingCart,
   SlidersHorizontal,
@@ -79,6 +89,7 @@ import {
   TreePalm,
   TriangleAlert,
   Truck,
+  Undo2,
   User,
   UserX,
   Wallet,
@@ -90,11 +101,22 @@ import {
 // Kebab-name → component. Statically imported so icons render on the server
 // (no lazy/Suspense) and tree-shake to only what's referenced here.
 //
-// An unmapped name falls back to `Dot`, which is silent — so every name passed
-// anywhere in `src/components/shop` and `src/app/[locale]/shop` belongs here.
-// A batch of them did not, which is why the shop's warning notices were drawing
-// a small dot where a triangle was meant to be.
-const ICONS: Record<string, LucideIcon> = {
+// ── Why this map is `satisfies`-checked and `IconName` is derived from it ────
+//
+// An unmapped name used to fall back to `Dot` silently, so a name that was
+// never added here rendered a small dot and nothing — not tsc, not the build,
+// not a console warning — said so. It happened twice. The first batch drew dots
+// where the shop's warning triangles were meant to be; the second was found on
+// 2026-09-09: ten names across ten files, including the account menu's "Sign-in
+// details" row, Telegram in two places, the Returned / Refunded / Mixed / Unknown
+// order-status chips, and "locate-fixed" on the address form's own button — that
+// last one was invisible to a grep and was found only by this type.
+//
+// `IconName` below is `keyof typeof ICONS`, and `IconProps.name` is typed to it,
+// so the third batch is a compile error instead of a dot. `satisfies` keeps that
+// key union narrow — annotating this as `Record<string, LucideIcon>` would widen
+// `keyof` back to `string` and give the check nothing to bite on.
+const ICONS = {
   "arrow-left": ArrowLeft,
   "arrow-right": ArrowRight,
   "arrow-up-down": ArrowUpDown,
@@ -115,10 +137,12 @@ const ICONS: Record<string, LucideIcon> = {
   "chevron-up": ChevronUp,
   "circle-alert": CircleAlert,
   "circle-check-big": CircleCheckBig,
+  "circle-dot": CircleDot,
   "circle-help": CircleHelp,
   "circle-slash": CircleSlash,
   "circle-x": CircleX,
   clock: Clock,
+  "cloud-download": CloudDownload,
   coins: Coins,
   "credit-card": CreditCard,
   dot: Dot,
@@ -132,10 +156,15 @@ const ICONS: Record<string, LucideIcon> = {
   hourglass: Hourglass,
   info: Info,
   "key-round": KeyRound,
+  landmark: Landmark,
   languages: Languages,
   layers: Layers,
   "layout-grid": LayoutGrid,
+  "life-buoy": LifeBuoy,
+  "link-2-off": Link2Off,
   list: List,
+  loader: Loader,
+  "locate-fixed": LocateFixed,
   lock: Lock,
   "log-out": LogOut,
   mail: Mail,
@@ -149,6 +178,7 @@ const ICONS: Record<string, LucideIcon> = {
   package: Package,
   "package-check": PackageCheck,
   "package-open": PackageOpen,
+  "package-x": PackageX,
   // `Palmtree` is lucide's deprecated alias for this glyph; the current export
   // is `TreePalm`, and the shop's holiday notice asks for the old name.
   palmtree: TreePalm,
@@ -160,8 +190,10 @@ const ICONS: Record<string, LucideIcon> = {
   repeat: Repeat,
   search: Search,
   "search-x": SearchX,
+  send: Send,
   settings: Settings,
   "share-2": Share2,
+  shield: Shield,
   "shield-check": ShieldCheck,
   "shopping-cart": ShoppingCart,
   "sliders-horizontal": SlidersHorizontal,
@@ -173,16 +205,31 @@ const ICONS: Record<string, LucideIcon> = {
   "trash-2": Trash2,
   "triangle-alert": TriangleAlert,
   truck: Truck,
+  "undo-2": Undo2,
   user: User,
   "user-x": UserX,
   wallet: Wallet,
   "wifi-off": WifiOff,
   x: X,
   zap: Zap,
-};
+} satisfies Record<string, LucideIcon>;
+
+/**
+ * Every icon this design system can draw.
+ *
+ * Derived from `ICONS` rather than written out, so adding a glyph is one edit
+ * and the union cannot drift from the map.
+ */
+export type IconName = keyof typeof ICONS;
 
 export interface IconProps {
-  name: string;
+  /**
+   * ⚠ Typed to {@link IconName}, not `string`, deliberately — see the note on
+   * `ICONS`. A name that is not in the map is now a compile error rather than a
+   * silently-rendered dot. If you are reaching for a glyph that is not here,
+   * import it from lucide and add it to the map; do not widen this type.
+   */
+  name: IconName;
   size?: number;
   strokeWidth?: number;
   color?: string;
@@ -192,7 +239,9 @@ export interface IconProps {
 
 /** Renders a lucide icon by the design's kebab-case name. */
 export function Icon({ name, size = 20, strokeWidth = 2, color, className, style }: IconProps) {
-  const Cmp = ICONS[name] ?? Dot;
+  // The `?? Dot` is unreachable through the typed prop and stays only for
+  // callers that reach this through an `as` cast or untyped JSON.
+  const Cmp: LucideIcon = ICONS[name] ?? Dot;
   return (
     <Cmp
       size={size}

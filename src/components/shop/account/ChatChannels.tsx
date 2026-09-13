@@ -20,7 +20,7 @@
 import { useCallback, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { AccountCard, ResourceView } from "./AccountShell";
-import { Badge, Button, ConfirmDialog, Icon } from "@/components/shop/ds";
+import { Badge, Button, ConfirmDialog, Icon, type IconName } from "@/components/shop/ds";
 import { useToast } from "@/components/shop/providers";
 import { translateError } from "@/lib/auth/error-translator";
 import {
@@ -32,7 +32,7 @@ import {
 } from "@/lib/me/connections.api";
 import { useApiResource } from "@/lib/shop/useApiResource";
 
-const CHANNEL_META: Record<MessagingChannel, { label: string; icon: string }> = {
+const CHANNEL_META: Record<MessagingChannel, { label: string; icon: IconName }> = {
   whatsapp: { label: "WhatsApp", icon: "message-circle" },
   telegram: { label: "Telegram", icon: "send" },
 };

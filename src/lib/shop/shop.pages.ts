@@ -17,12 +17,21 @@
  * comparison quietly false.
  */
 
+import type { IconName } from "@/components/shop/ds";
 import { normalizePath } from "./shop.routes";
 
 export interface ShopTab {
   href: string;
-  icon: string;
-  label: string;
+  /** `IconName`, not `string` — the tab bar is on every shop screen, so an
+   *  unregistered name would draw a dot four times on every page. */
+  icon: IconName;
+  /**
+   * A full dotted message key, never a word. This file is imported by the
+   * header, the tab bar and the back arrow, none of which can hand it a
+   * translator — and it has no React context of its own to call one from. See
+   * LOCALISATION.md.
+   */
+  labelKey: string;
 }
 
 /**
@@ -33,10 +42,10 @@ export interface ShopTab {
  * a tab is a root, and a root has nothing behind it.
  */
 export const SHOP_TABS: ShopTab[] = [
-  { href: "/shop", icon: "store", label: "Shop" },
-  { href: "/shop/saved", icon: "heart", label: "Saved" },
-  { href: "/shop/cart", icon: "shopping-cart", label: "Cart" },
-  { href: "/shop/account", icon: "user", label: "Account" },
+  { href: "/shop", icon: "store", labelKey: "shop.nav.tabs.shop" },
+  { href: "/shop/saved", icon: "heart", labelKey: "shop.nav.tabs.saved" },
+  { href: "/shop/cart", icon: "shopping-cart", labelKey: "shop.nav.tabs.cart" },
+  { href: "/shop/account", icon: "user", labelKey: "shop.nav.tabs.account" },
 ];
 
 export function isShopTab(pathname: string): boolean {
@@ -51,56 +60,63 @@ export function isShopTab(pathname: string): boolean {
  * on either target.
  */
 const EXACT_TITLES: Record<string, string> = {
-  "/shop/checkout": "Checkout",
-  "/shop/checkout/success": "Order confirmed",
-  "/shop/account/orders": "My orders",
-  "/shop/account/order": "Order details",
-  "/shop/account/booking": "Booking",
-  "/shop/account/booking/pay": "Booking payment",
-  "/shop/account/booking/balance": "Pay the balance",
-  "/shop/account/booking/reschedule": "Move your booking",
-  "/shop/account/ticket": "Ticket",
-  "/shop/account/addresses": "Addresses",
-  "/shop/account/payment-methods": "Payment methods",
-  "/shop/account/notifications": "Notifications",
-  "/shop/account/notifications/settings": "Notification settings",
-  "/shop/account/downloads": "My downloads",
-  "/shop/account/reviews": "My reviews",
-  "/shop/account/security": "Sign-in details",
-  "/shop/account/bookings": "My bookings",
-  "/shop/account/support": "Support",
-  "/shop/account/support/new": "New ticket",
-  "/shop/account/close": "Close account",
-  "/shop/p": "Product",
-  "/shop/store": "Store",
+  "/shop/checkout": "shop.nav.titles.checkout",
+  "/shop/checkout/success": "shop.nav.titles.checkoutSuccess",
+  "/shop/account/orders": "shop.nav.titles.orders",
+  "/shop/account/order": "shop.nav.titles.orderDetails",
+  "/shop/account/booking": "shop.nav.titles.booking",
+  "/shop/account/booking/pay": "shop.nav.titles.bookingPay",
+  "/shop/account/booking/balance": "shop.nav.titles.bookingBalance",
+  "/shop/account/booking/reschedule": "shop.nav.titles.bookingReschedule",
+  "/shop/account/ticket": "shop.nav.titles.ticket",
+  "/shop/account/addresses": "shop.nav.titles.addresses",
+  "/shop/account/payment-methods": "shop.nav.titles.paymentMethods",
+  "/shop/account/notifications": "shop.nav.titles.notifications",
+  "/shop/account/notifications/settings": "shop.nav.titles.notificationSettings",
+  "/shop/account/downloads": "shop.nav.titles.downloads",
+  "/shop/account/reviews": "shop.nav.titles.reviews",
+  "/shop/account/security": "shop.nav.titles.security",
+  "/shop/account/bookings": "shop.nav.titles.bookings",
+  "/shop/account/support": "shop.nav.titles.support",
+  "/shop/account/support/new": "shop.nav.titles.supportNew",
+  "/shop/account/close": "shop.nav.titles.close",
+  "/shop/p": "shop.nav.titles.product",
+  "/shop/store": "shop.nav.titles.store",
 };
 
 const PATTERN_TITLES: [RegExp, string][] = [
-  [/^\/shop\/account\/orders\/[^/]+$/, "Order details"],
-  [/^\/shop\/account\/bookings\/[^/]+$/, "Booking"],
-  [/^\/shop\/account\/bookings\/[^/]+\/pay$/, "Booking payment"],
-  [/^\/shop\/account\/bookings\/[^/]+\/balance$/, "Pay the balance"],
-  [/^\/shop\/account\/bookings\/[^/]+\/reschedule$/, "Move your booking"],
-  [/^\/shop\/account\/support\/[^/]+$/, "Ticket"],
-  [/^\/shop\/stores\/[^/]+\/products\/[^/]+$/, "Product"],
-  [/^\/shop\/stores\/[^/]+$/, "Store"],
-  [/^\/shop\/p\/[^/]+$/, "Product"],
+  [/^\/shop\/account\/orders\/[^/]+$/, "shop.nav.titles.orderDetails"],
+  [/^\/shop\/account\/bookings\/[^/]+$/, "shop.nav.titles.booking"],
+  [/^\/shop\/account\/bookings\/[^/]+\/pay$/, "shop.nav.titles.bookingPay"],
+  [/^\/shop\/account\/bookings\/[^/]+\/balance$/, "shop.nav.titles.bookingBalance"],
+  [/^\/shop\/account\/bookings\/[^/]+\/reschedule$/, "shop.nav.titles.bookingReschedule"],
+  [/^\/shop\/account\/support\/[^/]+$/, "shop.nav.titles.ticket"],
+  [/^\/shop\/stores\/[^/]+\/products\/[^/]+$/, "shop.nav.titles.product"],
+  [/^\/shop\/stores\/[^/]+$/, "shop.nav.titles.store"],
+  [/^\/shop\/p\/[^/]+$/, "shop.nav.titles.product"],
 ];
 
-export function shopPageTitle(pathname: string): string {
+/**
+ * The message key naming this screen — resolve it with a root-scoped `t()`.
+ *
+ * Renamed from `shopPageTitle` so the compiler flags every consumer: the old
+ * name returned a finished title, and a call site that kept it would have
+ * printed `shop.nav.titles.checkout` into the header with nothing to catch it.
+ */
+export function shopPageTitleKey(pathname: string): string {
   const here = normalizePath(pathname);
 
   const tab = SHOP_TABS.find((t) => t.href === here);
-  if (tab) return tab.label;
+  if (tab) return tab.labelKey;
 
   const exact = EXACT_TITLES[here];
   if (exact) return exact;
 
-  for (const [pattern, title] of PATTERN_TITLES) {
-    if (pattern.test(here)) return title;
+  for (const [pattern, titleKey] of PATTERN_TITLES) {
+    if (pattern.test(here)) return titleKey;
   }
 
-  return "Shop";
+  return "shop.nav.titles.shop";
 }
 
 /**

@@ -15,14 +15,35 @@
  * See api-doc/uploads/README.md and api-doc/files/private-files.md.
  */
 import { apiFetch } from "@/lib/api/client";
+import type { FileAccess } from "./shop.types";
 
-/** One uploaded file as the upload and list routes return it. */
+/**
+ * One uploaded file as the upload routes return it.
+ *
+ * ⚠ **This is a file *record*, not a `FileDetail`** — a strict superset of one,
+ * keeping `provider`, the owner fields and the timestamps a `FileDetail` does
+ * not carry. Only the fields this app actually reads are declared.
+ *
+ * `url` and `access` are computed by the same resolver every other file on the
+ * platform passes through, so they carry the same privacy and quota rules.
+ * **Attaching by `id` is still the right thing to do with the file**; `url` is
+ * for *showing* it before it is attached to anything. Never store a URL where an
+ * id belongs, never derive an id from a URL, and never hand-build a URL from
+ * `key` — that last one is what these two fields exist to stop.
+ */
 export interface UploadedFile {
   id: string;
   originalName: string;
   mimeType: string;
   size: number;
   url: string | null;
+  /**
+   * Present on every `/api/files/*` response since 2026-09-08.
+   *
+   * Optional only so an older backend degrades rather than crashing — read it
+   * through `publicUrl`, which treats a missing value as "not public".
+   */
+  access?: FileAccess;
   provider: string;
   ownerType: string;
   createdAt: string;
@@ -53,33 +74,52 @@ export const CUSTOMER_MAX_VIDEOS = 1;
  * declared `Content-Type`, and follows any conversion the pipeline applies, so
  * the caller does not get to choose where it lands.
  *
- * A policy failure is `400 UPLOAD_POLICY_VIOLATION` with
- * `error.details.violations[]` naming each one — `MIME_NOT_ALLOWED`,
- * `MIME_TYPE_MISMATCH`, `UNDETECTABLE_TYPE`, `QUOTA_EXCEEDED`,
- * `VIRUS_DETECTED` — which is worth surfacing per file rather than as one
- * "upload failed".
+ * A policy failure is `UPLOAD_POLICY_VIOLATION` with
+ * `error.details.violations[]` naming each offending file, which is worth
+ * surfacing per file rather than as one "upload failed". See
+ * {@link UploadViolation} for the twelve codes.
+ *
+ * ⚠ **Two mechanisms answer here and they produce different codes.** Multer
+ * parses the multipart before the handler runs, so its own ceilings are hit
+ * first and answer with no `details`: a field name other than `files` or more
+ * than ten parts is `400 VALIDATION_ERROR`, and a part over multer's hard 2 GB
+ * ceiling is `413 CATALOG_FILE_TOO_LARGE`. Everything else is
+ * `UPLOAD_POLICY_VIOLATION` — `413` when the file is over the caller's own role
+ * ceiling, `400` otherwise, **including "no files attached"**, whose
+ * `violations[0].code` is `NO_FILES_UPLOADED`. Sending nothing and sending
+ * files under the wrong field name are therefore two different answers.
  */
 export async function uploadFiles(files: File[]): Promise<UploadedFile[]> {
+  const batch = files.slice(0, MAX_FILES_PER_UPLOAD);
   const form = new FormData();
-  for (const file of files.slice(0, MAX_FILES_PER_UPLOAD)) form.append("files", file);
+  for (const file of batch) form.append("files", file);
 
-  const data = await apiFetch<UploadedFile[]>("/api/files/upload", {
-    method: "POST",
-    body: form,
-  });
-  return Array.isArray(data) ? data : [];
+  try {
+    const data = await apiFetch<UploadedFile[]>("/api/files/upload", {
+      method: "POST",
+      body: form,
+    });
+    return Array.isArray(data) ? data : [];
+  } catch (err) {
+    rethrowWithFileNames(err, batch);
+  }
 }
 
 /** POST /api/files/upload/video — form field `videos`. */
 export async function uploadVideos(videos: File[]): Promise<UploadedFile[]> {
+  const batch = videos.slice(0, CUSTOMER_MAX_VIDEOS);
   const form = new FormData();
-  for (const video of videos.slice(0, CUSTOMER_MAX_VIDEOS)) form.append("videos", video);
+  for (const video of batch) form.append("videos", video);
 
-  const data = await apiFetch<UploadedFile[]>("/api/files/upload/video", {
-    method: "POST",
-    body: form,
-  });
-  return Array.isArray(data) ? data : [];
+  try {
+    const data = await apiFetch<UploadedFile[]>("/api/files/upload/video", {
+      method: "POST",
+      body: form,
+    });
+    return Array.isArray(data) ? data : [];
+  } catch (err) {
+    rethrowWithFileNames(err, batch);
+  }
 }
 
 
@@ -94,8 +134,30 @@ export async function uploadVideos(videos: File[]): Promise<UploadedFile[]> {
  * message loses the only information the caller can act on.
  */
 export interface UploadViolation {
+  /**
+   * **Drive the UI off this, never off `message`.** The twelve values are
+   * `FILE_TOO_LARGE`, `MIME_NOT_ALLOWED`, `MIME_TYPE_MISMATCH`,
+   * `UNDETECTABLE_TYPE`, `POLYGLOT_DETECTED`, `VIRUS_DETECTED`,
+   * `QUOTA_EXCEEDED`, `TOTAL_SIZE_EXCEEDED`, `DUPLICATE_FILE`,
+   * `PERMISSION_DENIED`, `TOO_MANY_FILES` and `NO_FILES_UPLOADED`.
+   */
   code: string;
   message?: string;
+  /**
+   * Which file in the batch, by position.
+   *
+   * ⚠ **The API sends `fileIndex`, not a name.** This field was declared as
+   * `fileName` and was therefore always `undefined`, so every violation
+   * rendered as "That file" and the per-file attribution the endpoint goes to
+   * the trouble of sending was silently thrown away.
+   */
+  fileIndex?: number;
+  metadata?: Record<string, unknown>;
+  /**
+   * Filled in **client-side** by {@link uploadFiles} / {@link uploadVideos},
+   * which are the only places that still know which `File` an index refers to.
+   * Never sent by the API.
+   */
   fileName?: string;
 }
 
@@ -103,6 +165,28 @@ export interface UploadViolation {
 export function uploadViolations(err: unknown): UploadViolation[] {
   const details = (err as { details?: { violations?: UploadViolation[] } })?.details;
   return Array.isArray(details?.violations) ? details.violations : [];
+}
+
+/**
+ * Resolve each violation's `fileIndex` to the name of the file it refers to,
+ * then rethrow.
+ *
+ * Done here rather than at the call sites because an index is only meaningful
+ * against *the batch that was posted*, and `uploadAttachments` splits a mixed
+ * pick across two routes — so by the time an error reaches a component, nothing
+ * knows whether index 0 means the first document or the first video.
+ *
+ * The violations are mutated in place on the caught error rather than wrapped in
+ * a new one, so `instanceof ApiError` and every other field survive for the
+ * shared error ladder.
+ */
+function rethrowWithFileNames(err: unknown, batch: File[]): never {
+  for (const violation of uploadViolations(err)) {
+    if (typeof violation.fileIndex === "number") {
+      violation.fileName = batch[violation.fileIndex]?.name;
+    }
+  }
+  throw err;
 }
 
 /**

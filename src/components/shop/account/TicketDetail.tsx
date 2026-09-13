@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useCallback, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Avatar, Badge, Button, ConfirmDialog, Skeleton } from "@/components/shop/ds";
@@ -20,7 +22,7 @@ import {
   type TicketAttachment,
   type TicketNote,
 } from "@/lib/shop/tickets.api";
-import { publicUrl } from "@/lib/shop/shop.types";
+import { fileUnavailableReason, publicUrl } from "@/lib/shop/shop.types";
 import { TICKET_LIST } from "@/lib/shop/shop.routes";
 
 /**
@@ -145,7 +147,12 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
     );
   }
 
-  const view = TICKET_STATUS_LABEL[t.status] ?? { label: t.status, tone: "neutral" as const };
+  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
+  const tKey = useTranslations();
+  const view = TICKET_STATUS_LABEL[t.status] ?? {
+    labelKey: "shop.status.unknown",
+    tone: "neutral" as const,
+  };
   const isClosed = t.status === "closed" || t.status === "resolved";
 
   return (
@@ -154,11 +161,12 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
 
       <header style={{ marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+          {/* See the note in the support list: there is no `ticket_number`. */}
           <span className="muted" style={{ fontSize: 12.5, fontVariantNumeric: "tabular-nums" }}>
-            {t.ticket_number}
+            #{t.id.slice(-6)}
           </span>
           <Badge size="sm" tone={view.tone}>
-            {view.label}
+            {tKey(view.labelKey)}
           </Badge>
         </div>
 
@@ -199,12 +207,12 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
 
       {isClosed ? (
         <p className="muted" style={{ fontSize: 13.5, marginTop: 16 }}>
-          This ticket is {view.label.toLowerCase()}. Open a new one if you still need help.
+          This ticket is {tKey(view.labelKey).toLowerCase()}. Open a new one if you still need help.
         </p>
       ) : (
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
           <textarea
-            className="input"
+            className="field"
             rows={3}
             maxLength={300}
             placeholder="Add a reply…"
@@ -269,7 +277,15 @@ function Attachments({
       {items.length > 0 && (
         <ul style={{ listStyle: "none", padding: 0, margin: "0 0 8px", display: "grid", gap: 6 }}>
           {items.map((file) => {
-            const href = publicUrl({ id: file.id, url: file.url });
+            // Rebuilt rather than passed whole because a TicketAttachment is not
+            // a FileDetail — `access` has to be copied across explicitly, and
+            // omitting it is what made every blocked file look authorized.
+            const href = publicUrl({ id: file.id, url: file.url, access: file.access });
+            const blocked = fileUnavailableReason({
+              id: file.id,
+              url: file.url,
+              access: file.access,
+            });
             return (
               <li key={file.id} style={{ fontSize: 13.5 }}>
                 {href ? (
@@ -277,11 +293,17 @@ function Attachments({
                     {file.fileName}
                   </a>
                 ) : (
-                  // An authorized file has no URL to link. It still exists —
-                  // render its name, never an empty slot.
+                  // The file exists in both no-URL cases — render its name, never
+                  // an empty slot. The reasons differ and so does the sentence:
+                  // "locked" is a billing state the owner can undo, and saying
+                  // "deleted" about a file nothing deleted sends a customer to
+                  // support over a vendor's storage plan.
                   <span>{file.fileName}</span>
                 )}
                 <span className="muted"> · {Math.round(file.fileSize / 1024)} KB</span>
+                {blocked === "blocked" && (
+                  <span className="muted"> · locked — over the storage limit</span>
+                )}
               </li>
             );
           })}
@@ -330,7 +352,7 @@ function Conversation({ notes }: { notes: TicketNote[] }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       {notes.map((note) => (
         <div
-          key={note._id}
+          key={note.id}
           style={{
             border: "1px solid var(--border)",
             borderRadius: "var(--radius-lg)",

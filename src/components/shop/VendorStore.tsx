@@ -1,11 +1,13 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useCallback, useEffect, useState } from "react";
 import { isNetworkError } from "@/lib/errors/is-network-error";
 import { useRouter } from "@/i18n/navigation";
-import { Avatar, Badge, Button, EmptyState, Icon, ProductCard, Tabs } from "@/components/shop/ds";
+import { Avatar, Badge, Button, EmptyState, Icon, ProductCard, Tabs, type IconName } from "@/components/shop/ds";
 import { useCart, useFavorites, useToast } from "@/components/shop/providers";
-import { CART_OFFLINE_MESSAGE } from "@/lib/shop/cart-errors";
+import { CART_OFFLINE_MESSAGE_KEY } from "@/lib/shop/cart-errors";
 import { useShopPageTitle } from "@/components/shop/ShopChrome";
 import { resolveQuickAdd } from "@/lib/shop/quick-add";
 import { productPathFor, storePath } from "@/lib/shop/shop.routes";
@@ -46,6 +48,8 @@ const TYPE_TABS: { value: string; label: string; type?: ProductType }[] = [
 ];
 
 export function VendorStore({ store, products, meta, activeType }: Props) {
+  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
+  const tKey = useTranslations();
   const router = useRouter();
   const { addItem } = useCart();
   const { isFavorite, toggle, syncGrid } = useFavorites();
@@ -95,8 +99,8 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
           // Digital skips the cart — see `ProductDetail`. The card's ⚡ says so.
           if (resolved.product.type === "digital") router.push("/shop/checkout");
           else flash(`Added to cart · ${resolved.product.title}`);
-        } else if (outcome.kind === "offline") flash(CART_OFFLINE_MESSAGE);
-        else if (outcome.kind === "error") flash(outcome.message);
+        } else if (outcome.kind === "offline") flash(tKey(CART_OFFLINE_MESSAGE_KEY));
+        else if (outcome.kind === "error") flash(outcome.message ?? tKey(outcome.messageKey));
         else router.push(productPathFor(item));
       } catch (err) {
         /**
@@ -111,11 +115,13 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
          * reporting a raw engine string long after this looked fixed.
          */
         flash(
-          isNetworkError(err) ? CART_OFFLINE_MESSAGE : "Could not add that to your cart. Please try again."
+          isNetworkError(err)
+            ? tKey(CART_OFFLINE_MESSAGE_KEY)
+            : "Could not add that to your cart. Please try again."
         );
       }
     },
-    [addItem, flash, router]
+    [addItem, flash, router, tKey]
   );
 
   const card = (item: ProductListItem) => (
@@ -160,7 +166,7 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
           <div style={{ position: "absolute", bottom: -34, left: 16 }}>
             <Avatar
               name={store.name}
-              src={store.logo?.url}
+              src={publicUrl(store.logo)}
               size={80}
               shape="squircle"
               ring
@@ -329,7 +335,7 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
   );
 }
 
-function AboutRow({ icon, label, value }: { icon: string; label: string; value: string }) {
+function AboutRow({ icon, label, value }: { icon: IconName; label: string; value: string }) {
   return (
     <div style={{ display: "flex", gap: 12, padding: "12px 0", borderBottom: "1px solid var(--border-subtle)" }}>
       <Icon name={icon} size={19} style={{ color: "var(--brand)", marginTop: 1 }} />

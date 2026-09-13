@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { AccountShell } from "@/components/shop/account/AccountShell";
-import { Button, Icon } from "@/components/shop/ds";
+import { Button, Icon, type IconName } from "@/components/shop/ds";
 import { useAuth } from "@/lib/auth/useAuth";
 import { translateError } from "@/lib/auth/error-translator";
 import {
@@ -31,7 +31,7 @@ import {
  */
 
 /** What closing does, in the order someone worries about it. */
-const CONSEQUENCES: { icon: string; text: string }[] = [
+const CONSEQUENCES: { icon: IconName; text: string }[] = [
   {
     icon: "user-x",
     text: "Your name, phone number, email address and saved addresses are removed from your profile.",

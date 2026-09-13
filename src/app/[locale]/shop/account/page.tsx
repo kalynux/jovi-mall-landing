@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
-import { Avatar, Icon, Skeleton } from "@/components/shop/ds";
+import { Avatar, Icon, Skeleton, type IconName } from "@/components/shop/ds";
 import { ResourceError } from "@/components/shop/account/AccountShell";
 import { LanguageSheet } from "@/components/shop/LanguageSheet";
 import { useTheme } from "@/lib/theme";
@@ -19,7 +19,7 @@ import { absoluteUrl } from "@/lib/site";
 import type { CustomerProfile } from "@/lib/shop/customer.types";
 
 interface MenuRow {
-  icon: string;
+  icon: IconName;
   label: string;
   href: string;
   /** Right-hand summary, derived from the real record — never invented. */

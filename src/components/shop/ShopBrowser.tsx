@@ -1,8 +1,10 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { isNetworkError } from "@/lib/errors/is-network-error";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import {
   BottomSheet,
   Button,
@@ -14,12 +16,13 @@ import {
   SearchBar,
   Select,
   VendorCard,
+  type IconName,
 } from "@/components/shop/ds";
 import { ShopSearchRow } from "@/components/shop/ShopSearch";
 import { useCart, useFavorites, useToast } from "@/components/shop/providers";
-import { CART_OFFLINE_MESSAGE } from "@/lib/shop/cart-errors";
-import { formatXAF } from "@/lib/shop/format";
-import { productPathFor, storePath } from "@/lib/shop/shop.routes";
+import { CART_OFFLINE_MESSAGE_KEY } from "@/lib/shop/cart-errors";
+import { formatMoney, formatXAF } from "@/lib/shop/format";
+import { productIdPath, productPathFor, storePath } from "@/lib/shop/shop.routes";
 import { resolveQuickAdd } from "@/lib/shop/quick-add";
 import { rememberSearch } from "@/lib/shop/recent-searches";
 import {
@@ -36,6 +39,7 @@ import type {
   SortKey,
 } from "@/lib/shop/shop.types";
 import { publicUrl } from "@/lib/shop/shop.types";
+import type { VariantBySku } from "@/lib/shop/catalog.api";
 
 /**
  * The browse controls. Rendering happens on the server; this owns the inputs.
@@ -86,9 +90,28 @@ interface Props {
   categories: CategoryCount[];
   /** Already parsed and validated by `parseProductSearchParams`. */
   query: ProductListQuery;
+  /**
+   * What `?q=` resolved to as a **product code**, when it matched no products.
+   *
+   * `?q=` is a MongoDB `$text` search over title, tags and description and does
+   * not index SKU, so a customer reading a code off a package or an advert gets
+   * an empty page that looks exactly like "we do not sell that". This is the
+   * separate lookup that says otherwise. Only ever set when the ordinary search
+   * found nothing.
+   */
+  skuMatch?: VariantBySku | null;
 }
 
-export function ShopBrowser({ products, meta, categories, query }: Props) {
+export function ShopBrowser({ products, meta, categories, query, skuMatch }: Props) {
+  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
+  const tKey = useTranslations();
+  // Sort labels are keys in `shop.query.sort`; <Select> wants finished text.
+  // Relevance is offered only with a query behind it: without one there is no
+  // relevance score, and the API would be ranking on nothing.
+  const sortOptions = SORT_OPTIONS.filter((o) => o.value !== "relevance" || Boolean(query.q)).map((o) => ({
+    value: o.value,
+    label: tKey(o.labelKey),
+  }));
   const router = useRouter();
   const { addItem } = useCart();
   const { isFavorite, toggle, syncGrid } = useFavorites();
@@ -210,10 +233,10 @@ export function ShopBrowser({ products, meta, categories, query }: Props) {
             router.push(productPathFor(product));
             break;
           case "offline":
-            flash(CART_OFFLINE_MESSAGE);
+            flash(tKey(CART_OFFLINE_MESSAGE_KEY));
             break;
           case "error":
-            flash(outcome.message);
+            flash(outcome.message ?? tKey(outcome.messageKey));
             break;
         }
       } catch (err) {
@@ -229,11 +252,13 @@ export function ShopBrowser({ products, meta, categories, query }: Props) {
          * reporting a raw engine string long after this looked fixed.
          */
         flash(
-          isNetworkError(err) ? CART_OFFLINE_MESSAGE : "Could not add that to your cart. Please try again."
+          isNetworkError(err)
+            ? tKey(CART_OFFLINE_MESSAGE_KEY)
+            : "Could not add that to your cart. Please try again."
         );
       }
     },
-    [addItem, flash, router]
+    [addItem, flash, router, tKey]
   );
 
   const card = (product: ProductListItem, showVendor: boolean) => (
@@ -393,7 +418,7 @@ export function ShopBrowser({ products, meta, categories, query }: Props) {
             leadingIcon="arrow-up-down"
             // Offered only with a query behind it: without one there is no
             // relevance score, and the API would be ranking on nothing.
-            options={SORT_OPTIONS.filter((o) => o.value !== "relevance" || Boolean(query.q))}
+            options={sortOptions}
             aria-label="Sort products"
           />
           <IconButton
@@ -448,20 +473,24 @@ export function ShopBrowser({ products, meta, categories, query }: Props) {
       {/* Results */}
       <div style={{ opacity: busy ? 0.55 : 1, transition: "opacity .15s" }}>
         {products.length === 0 ? (
-          <EmptyState
-            icon="search-x"
-            title="No products found"
-            description={
-              query.q
-                ? `Nothing matches “${query.q}”. Search matches whole words, so try a complete one — or clear a filter.`
-                : "Try clearing a filter or searching something else."
-            }
-            actionLabel="Clear all"
-            onAction={() => {
-              setSearch("");
-              startTransition(() => router.push("/shop"));
-            }}
-          />
+          skuMatch ? (
+            <SkuMatchResult match={skuMatch} />
+          ) : (
+            <EmptyState
+              icon="search-x"
+              title="No products found"
+              description={
+                query.q
+                  ? `Nothing matches “${query.q}”. Search matches whole words, so try a complete one — or clear a filter.`
+                  : "Try clearing a filter or searching something else."
+              }
+              actionLabel="Clear all"
+              onAction={() => {
+                setSearch("");
+                startTransition(() => router.push("/shop"));
+              }}
+            />
+          )
         ) : grouped ? (
           Array.from(byStore.entries()).map(([slug, store]) => (
             <div key={slug} className="mb-8">
@@ -689,6 +718,14 @@ function FilterBody({
   categorySheetOpen: boolean;
   setCategorySheetOpen: (open: boolean) => void;
 }) {
+  const tKey = useTranslations();
+  // Sort labels are keys in `shop.query.sort`; <Select> wants finished text.
+  // Relevance is offered only with a query behind it: without one there is no
+  // relevance score, and the API would be ranking on nothing.
+  const sortOptions = SORT_OPTIONS.filter((o) => o.value !== "relevance" || hasQuery).map((o) => ({
+    value: o.value,
+    label: tKey(o.labelKey),
+  }));
   const toggleType = (t: ProductType) =>
     setDraft((f) => {
       const current = f.type ?? [];
@@ -714,7 +751,7 @@ function FilterBody({
             value={draft.sort ?? "newest"}
             onChange={(e) => setDraft((f) => ({ ...f, sort: e.target.value as SortKey }))}
             leadingIcon="arrow-up-down"
-            options={SORT_OPTIONS.filter((o) => o.value !== "relevance" || hasQuery)}
+            options={sortOptions}
             aria-label="Sort products"
           />
         </Section>
@@ -958,7 +995,7 @@ function ToggleRow({
   onChange,
 }: {
   label: string;
-  icon: string;
+  icon: IconName;
   on: boolean;
   onChange: (v: boolean) => void;
 }) {
@@ -996,6 +1033,72 @@ function ToggleRow({
           }}
         />
       </button>
+    </div>
+  );
+}
+
+/**
+ * A search that matched no products but **did** match a product code.
+ *
+ * Deliberately not rendered as an ordinary `ProductCard`. A SKU names one
+ * specific variant, and that is very often not the default variant a card
+ * quotes — so a card here would show the wrong price to precisely the customer
+ * who typed a precise code. What the endpoint answers is a resolution: this
+ * variant, this price, this availability, and the id to open the product with.
+ *
+ * Linked by id rather than by slug because the resolution carries no product
+ * slug — only the store's — and `/shop/p/:productId` is the deep-link route
+ * that exists for exactly this.
+ *
+ * The heading says "product code" so the shopper understands why one result
+ * appeared where their search found none.
+ */
+function SkuMatchResult({ match }: { match: VariantBySku }) {
+  return (
+    <div style={{ maxWidth: 520 }}>
+      <div className="ds-overline" style={{ marginBottom: 8 }}>
+        Product code
+      </div>
+      <Link
+        href={productIdPath(match.productId)}
+        style={{
+          display: "block",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--radius-lg)",
+          padding: 14,
+          textDecoration: "none",
+          color: "inherit",
+        }}
+      >
+        <div style={{ fontWeight: 700, fontSize: 14.5 }}>{match.title}</div>
+        <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>
+          {match.variantName} · {match.store.name}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            gap: 8,
+            marginTop: 8,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          <span style={{ fontWeight: 800 }}>{formatMoney(match.price, match.currency)}</span>
+          {/* Deliberately the type-neutral word, not `unavailableLabel()`:
+              `GET /api/public/variants/by-sku/:sku` does not return the product
+              type, so there is nothing here to branch on. "Unavailable" is true
+              for all three; "Out of stock" would be a guess, and it is the guess
+              that was wrong on service products everywhere else. */}
+          {!match.inStock && (
+            <span className="muted" style={{ fontSize: 12.5 }}>
+              Unavailable
+            </span>
+          )}
+        </div>
+        <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
+          Matched the code {match.sku}
+        </div>
+      </Link>
     </div>
   );
 }

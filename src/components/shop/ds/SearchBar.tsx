@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { ChangeEvent } from "react";
 import { Icon } from "./Icon";
 
@@ -12,6 +13,9 @@ export interface SearchBarProps {
 }
 
 export function SearchBar({ value, onChange, onClear, placeholder, filled }: SearchBarProps) {
+  // `placeholder` names what is being searched, so it stays the caller’s.
+  const t = useTranslations("shop.ds");
+
   return (
     <div
       style={{
@@ -44,7 +48,7 @@ export function SearchBar({ value, onChange, onClear, placeholder, filled }: Sea
       {value && onClear && (
         <button
           type="button"
-          aria-label="Clear search"
+          aria-label={t("clearSearch")}
           onClick={onClear}
           style={{ display: "inline-flex", border: "none", background: "transparent", cursor: "pointer", color: "var(--text-muted)" }}
         >

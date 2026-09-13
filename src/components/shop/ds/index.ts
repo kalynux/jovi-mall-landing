@@ -1,4 +1,5 @@
 export { Icon } from "./Icon";
+export type { IconName } from "./Icon";
 export { Button } from "./Button";
 export { IconButton } from "./IconButton";
 export { Badge } from "./Badge";

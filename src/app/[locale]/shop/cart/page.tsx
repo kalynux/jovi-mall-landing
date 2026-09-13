@@ -3,7 +3,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { Badge, Button, ConfirmDialog, EmptyState, Icon, IconButton, QtyStepper } from "@/components/shop/ds";
+import {
+  Badge,
+  Button,
+  ConfirmDialog,
+  EmptyState,
+  Icon,
+  IconButton,
+  QtyStepper,
+  Skeleton,
+} from "@/components/shop/ds";
 import { useShopPageTitle } from "@/components/shop/ShopChrome";
 import { useCart, useToast } from "@/components/shop/providers";
 import { translateError } from "@/lib/auth/error-translator";
@@ -48,7 +57,19 @@ const DROP_REASON: Record<CartDropReason, string> = {
 export default function CartPage() {
   const router = useRouter();
   const { status } = useAuth();
-  const { lines, productType, count, busy, dropped, dismissDropped, setQty, removeLine } = useCart();
+  const {
+    lines,
+    productType,
+    count,
+    busy,
+    hydrated,
+    dropped,
+    dismissDropped,
+    negotiationLapsed,
+    dismissNegotiationLapsed,
+    setQty,
+    removeLine,
+  } = useCart();
   const { flashError } = useToast();
   const t = useTranslations("errors");
 
@@ -132,11 +153,40 @@ export default function CartPage() {
     [router]
   );
 
+  /**
+   * ⚠ Before the empty state, not after it.
+   *
+   * `count === 0` is ambiguous until the cart has actually been read, and this
+   * page answered the ambiguous case with a definitive sentence: a signed-in
+   * shopper holding two lines was told "Your cart is empty" for about three
+   * seconds and offered a button back to browsing. On a slow connection that is
+   * however long the request takes. A skeleton says "loading"; an empty state
+   * says "gone", and only one of those is honest here.
+   */
+  if (!hydrated) {
+    return (
+      <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-6">
+        <h1 className="sr-only">Cart</h1>
+        <div className="flex flex-col gap-3">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} height={92} radius="var(--radius-card)" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (count === 0) {
     return (
       <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-6">
         <h1 className="sr-only">Cart</h1>
         {dropped.length > 0 && <DroppedNotice dropped={dropped} onDismiss={dismissDropped} />}
+        {negotiationLapsed.length > 0 && (
+          <NegotiationLapsedNotice
+            titles={negotiationLapsed}
+            onDismiss={dismissNegotiationLapsed}
+          />
+        )}
         <EmptyState
           icon="shopping-cart"
           title="Your cart is empty"
@@ -163,6 +213,12 @@ export default function CartPage() {
       </div>
 
       {dropped.length > 0 && <DroppedNotice dropped={dropped} onDismiss={dismissDropped} />}
+        {negotiationLapsed.length > 0 && (
+          <NegotiationLapsedNotice
+            titles={negotiationLapsed}
+            onDismiss={dismissNegotiationLapsed}
+          />
+        )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div
@@ -249,8 +305,26 @@ export default function CartPage() {
                       onChange={(q) => write(setQty(line.variantId, q), "We couldn't change that quantity.")}
                     />
                   )}
-                  <span style={{ fontWeight: 800, fontVariantNumeric: "tabular-nums", color: "var(--text-strong)" }}>
-                    {formatMoney(line.price * line.qty, line.currency)}
+                  <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                    <span style={{ fontWeight: 800, fontVariantNumeric: "tabular-nums", color: "var(--text-strong)" }}>
+                      {formatMoney(line.price * line.qty, line.currency)}
+                    </span>
+                    {/* A price haggled in chat. The number is already `price` —
+                        this only says whose number it is, because "24 000" with
+                        no label is indistinguishable from the shelf price the
+                        shopper negotiated away from. */}
+                    {line.negotiated && (
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          color: "var(--success)",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        your agreed price
+                      </span>
+                    )}
                   </span>
                 </div>
               </div>
@@ -415,6 +489,62 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
  * be shown — silently losing a line is the thing `POST /cart/merge` exists to
  * prevent, and swallowing `meta.dropped[]` would reintroduce it.
  */
+/**
+ * A price agreed in chat that this cart no longer has.
+ *
+ * Changing a line's quantity and signing in with an anonymous cart both revert
+ * a negotiated line to the shelf price, and both answer a valid 200 with no
+ * field saying so. Without this the shopper sees only a total that moved.
+ *
+ * Deliberately not phrased as an error: nothing failed, and the backend's
+ * reasoning is sound — a lock is bound to a quantity, so a different quantity
+ * is a different deal. What the shopper needs is the fact and the way back,
+ * which is the same chat they haggled in.
+ */
+function NegotiationLapsedNotice({
+  titles,
+  onDismiss,
+}: {
+  titles: string[];
+  onDismiss: () => void;
+}) {
+  return (
+    <div
+      role="status"
+      className="mb-4"
+      style={{
+        display: "flex",
+        gap: 9,
+        alignItems: "flex-start",
+        border: "1px solid var(--warning-border)",
+        background: "var(--warning-bg)",
+        borderRadius: "var(--radius-md)",
+        padding: "11px 13px",
+      }}
+    >
+      <Icon name="triangle-alert" size={17} style={{ color: "var(--warning)", flexShrink: 0, marginTop: 1 }} />
+      <div style={{ flex: 1 }}>
+        <p style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--text-body)", margin: 0 }}>
+          <strong>
+            {titles.length === 1
+              ? "Your agreed price no longer applies."
+              : `${titles.length} agreed prices no longer apply.`}
+          </strong>{" "}
+          A price agreed in chat is tied to the quantity it was agreed for, so
+          these lines are back at their normal price. Message the seller again to
+          re-negotiate.
+        </p>
+        <ul style={{ margin: "6px 0 0", paddingLeft: 16, fontSize: 12, color: "var(--text-muted)" }}>
+          {titles.map((title) => (
+            <li key={title}>{title}</li>
+          ))}
+        </ul>
+      </div>
+      <IconButton icon="x" variant="plain" size="sm" label="Dismiss" onClick={onDismiss} />
+    </div>
+  );
+}
+
 function DroppedNotice({
   dropped,
   onDismiss,

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
-import { Button, Icon } from "@/components/shop/ds";
+import { Button, Icon, type IconName } from "@/components/shop/ds";
 import { useShopPageTitle } from "@/components/shop/ShopChrome";
 import { verifyPayment } from "@/lib/shop/payments.api";
 import { orderGroupPath } from "@/lib/shop/shop.routes";
@@ -312,7 +312,7 @@ export default function SuccessPage() {
   );
 }
 
-const VIEWS: Record<Phase, { icon: string; tone: string; title: string; body: string }> = {
+const VIEWS: Record<Phase, { icon: IconName; tone: string; title: string; body: string }> = {
   pending: {
     icon: "hourglass",
     tone: "warning",

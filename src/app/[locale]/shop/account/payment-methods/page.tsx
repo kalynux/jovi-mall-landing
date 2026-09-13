@@ -8,7 +8,7 @@ import {
   CardAction,
   ResourceView,
 } from "@/components/shop/account/AccountShell";
-import { Badge, BottomSheet, Button, ConfirmDialog, EmptyState, Icon } from "@/components/shop/ds";
+import { Badge, BottomSheet, Button, ConfirmDialog, EmptyState, Icon, type IconName } from "@/components/shop/ds";
 import { useToast } from "@/components/shop/providers";
 import { translateError } from "@/lib/auth/error-translator";
 import { isValidPhone, toE164 } from "@/lib/phone";
@@ -23,7 +23,7 @@ import { forgetWalletNumber, rememberWalletNumber } from "@/lib/shop/wallet-numb
 import { useApiResource } from "@/lib/shop/useApiResource";
 import type { PaymentMethodType, SavedPaymentMethod } from "@/lib/shop/customer.types";
 
-const TYPE_META: Record<PaymentMethodType, { label: string; icon: string }> = {
+const TYPE_META: Record<PaymentMethodType, { label: string; icon: IconName }> = {
   mobile_money: { label: "Mobile money", icon: "smartphone" },
   card: { label: "Card", icon: "credit-card" },
   bank_transfer: { label: "Bank transfer", icon: "landmark" },

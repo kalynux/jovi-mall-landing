@@ -20,7 +20,7 @@
  * `agency/tickets.md` and `src/modules/tickets/types/ticket.types.ts`.
  */
 import { apiFetch, apiFetchList } from "@/lib/api/client";
-import type { FileDetail, ListMeta } from "./shop.types";
+import type { FileAccess, FileDetail, ListMeta } from "./shop.types";
 
 /**
  * The authoritative `TicketType` enum, grouped as the picker renders it.
@@ -28,9 +28,14 @@ import type { FileDetail, ListMeta } from "./shop.types";
  * Kept as data rather than a flat union so the create form's optgroups and the
  * type itself cannot drift apart. Mirrors `api-doc/ticket_types.txt`.
  */
+/**
+ * ⚠ `labelKey` is a full dotted message key. These nine are plain nouns that
+ * every screen in the shop needs, so they resolve into `shop.common` rather
+ * than a support-only namespace. See LOCALISATION.md.
+ */
 export const TICKET_TYPE_GROUPS = [
   {
-    label: "General",
+    labelKey: "shop.common.general",
     types: [
       "GENERAL_SUPPORT",
       "ACCOUNT_ACCESS",
@@ -40,7 +45,7 @@ export const TICKET_TYPE_GROUPS = [
     ],
   },
   {
-    label: "Orders",
+    labelKey: "shop.common.orders",
     types: [
       "ORDER_ISSUE",
       "ORDER_CANCELLATION",
@@ -50,7 +55,7 @@ export const TICKET_TYPE_GROUPS = [
     ],
   },
   {
-    label: "Payments",
+    labelKey: "shop.common.payments",
     types: [
       "PAYMENT_ISSUE",
       "PAYMENT_FAILED",
@@ -60,7 +65,7 @@ export const TICKET_TYPE_GROUPS = [
     ],
   },
   {
-    label: "Bookings",
+    labelKey: "shop.common.bookings",
     types: [
       "BOOKING_ISSUE",
       "BOOKING_CANCELLATION",
@@ -69,19 +74,19 @@ export const TICKET_TYPE_GROUPS = [
     ],
   },
   {
-    label: "Products",
+    labelKey: "shop.common.products",
     types: ["PRODUCT_ISSUE", "INVENTORY_PROBLEM", "PRICING_ISSUE", "VARIANT_ISSUE"],
   },
   {
-    label: "Delivery",
+    labelKey: "shop.common.delivery",
     types: ["SHIPPING_ISSUE", "DELIVERY_DELAY", "DELIVERY_CONFIRMATION", "ADDRESS_CHANGE"],
   },
   {
-    label: "Technical",
+    labelKey: "shop.common.technical",
     types: ["TECHNICAL_ISSUE", "BUG_REPORT", "INTEGRATION_ISSUE", "API_ACCESS"],
   },
-  { label: "Policy", types: ["POLICY_QUESTION", "COMPLIANCE", "LEGAL_REQUEST"] },
-  { label: "Other", types: ["OTHER"] },
+  { labelKey: "shop.common.policy", types: ["POLICY_QUESTION", "COMPLIANCE", "LEGAL_REQUEST"] },
+  { labelKey: "shop.common.other", types: ["OTHER"] },
 ] as const;
 
 export type TicketType = (typeof TICKET_TYPE_GROUPS)[number]["types"][number];
@@ -166,8 +171,23 @@ export interface TicketEntity {
 }
 
 export interface Ticket {
-  _id: string;
-  ticket_number: string;
+  /**
+   * 🔴 **Key on `id`.** `Ticket` is built on the backend's `BaseSchemaOptions`,
+   * whose `toJSON` deletes `_id` and exposes the `id` virtual, so the three
+   * write endpoints a customer has — `PATCH /:id`, `PATCH /:id/status` and
+   * `POST /:id/close` — return the document with **`id` alone**.
+   *
+   * The three *enriched* reads (create, list, detail) additionally carry a
+   * duplicate `_id`, because `TicketEnrichmentService` builds its payload with
+   * `toObject({ virtuals: true })`, which applies no transform. `id` is the only
+   * identifier present on all six.
+   */
+  id: string;
+  /**
+   * Present only on the three enriched reads — see `id`. Never key on it: a
+   * client that does reads `undefined` the first time it patches a ticket.
+   */
+  _id?: string;
   subject: string;
   description: string;
   type: TicketType;
@@ -193,7 +213,9 @@ export interface Ticket {
 }
 
 export interface TicketNote {
-  _id: string;
+  /** Same `id`/`_id` rule as {@link Ticket} — key on `id`. */
+  id: string;
+  _id?: string;
   ticket_id: string;
   content: string;
   /** Lowercase here. The attachment endpoint uses uppercase — see below. */
@@ -212,6 +234,15 @@ export interface TicketAttachment {
   fileSize: number;
   mimeType: string;
   url: string | null;
+  /**
+   * The same three-value rule every other file on the platform follows.
+   *
+   * This shape is the ticket module's own, not a `FileDetail`, so it has to
+   * carry `access` itself — and it did not, which meant an attachment could
+   * only ever be "has a URL" or "has none". A file held back because its owner
+   * is over their storage plan then read as missing.
+   */
+  access: FileAccess;
   uploadedBy: string;
   uploadedByRole: string;
   uploadedByActor: TicketActor | null;
@@ -452,24 +483,37 @@ export async function listTicketProductRefs(
 
 /* ── Presentation ────────────────────────────────────────────────────────── */
 
-/** Human labels for the status enum, and the tone each carries. */
+/**
+ * Message keys for the status enum, and the tone each carries.
+ *
+ * `labelKey`, not `label` — a non-React module cannot translate, so it names
+ * the string and the component resolves it. See LOCALISATION.md.
+ */
 export const TICKET_STATUS_LABEL: Record<
   TicketStatus,
-  { label: string; tone: "neutral" | "info" | "warning" | "success" | "danger" }
+  { labelKey: string; tone: "neutral" | "info" | "warning" | "success" | "danger" }
 > = {
-  open: { label: "Open", tone: "info" },
-  in_progress: { label: "Being looked at", tone: "info" },
-  waiting_on_admin: { label: "With support", tone: "warning" },
-  waiting_on_vendor: { label: "With the seller", tone: "warning" },
+  open: { labelKey: "shop.status.ticket.open", tone: "info" },
+  in_progress: { labelKey: "shop.status.ticket.in_progress", tone: "info" },
+  waiting_on_admin: { labelKey: "shop.status.ticket.waiting_on_admin", tone: "warning" },
+  waiting_on_vendor: { labelKey: "shop.status.ticket.waiting_on_vendor", tone: "warning" },
   // The one status that is a call to action rather than a report.
-  waiting_on_customer: { label: "Needs your reply", tone: "danger" },
-  waiting_on_agency: { label: "With the courier", tone: "warning" },
-  waiting_on_agent: { label: "With the courier", tone: "warning" },
-  resolved: { label: "Resolved", tone: "success" },
-  closed: { label: "Closed", tone: "neutral" },
+  waiting_on_customer: { labelKey: "shop.status.ticket.waiting_on_customer", tone: "danger" },
+  waiting_on_agency: { labelKey: "shop.status.ticket.waiting_on_agency", tone: "warning" },
+  waiting_on_agent: { labelKey: "shop.status.ticket.waiting_on_agent", tone: "warning" },
+  resolved: { labelKey: "shop.status.ticket.resolved", tone: "success" },
+  closed: { labelKey: "shop.status.ticket.closed", tone: "neutral" },
 };
 
-/** `ORDER_ISSUE` → `Order issue`. The enum is not written for a person to read. */
+/**
+ * `ORDER_ISSUE` → `Order issue`. The enum is not written for a person to read.
+ *
+ * 🔴 **Still English, deliberately.** Phase 1 converted the label MAPS in this
+ * file; this is a derivation over the whole ~50-member `TicketType` enum, and
+ * those names belong to `shop.support`, which the ownership table in
+ * LOCALISATION.md gives to Phase 9. Phase 9 replaces this with a lookup into
+ * `shop.support.types.<TICKET_TYPE>`.
+ */
 export function ticketTypeLabel(type: string): string {
   const spaced = type.replace(/_/g, " ").toLowerCase();
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { BottomSheet, Icon } from "@/components/shop/ds";
 import { LOCALES, useLocale } from "@/lib/i18n-provider";
 
@@ -17,10 +19,11 @@ import { LOCALES, useLocale } from "@/lib/i18n-provider";
  * cannot read.
  */
 export function LanguageSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const t = useTranslations("shop.chrome");
   const { locale, setLocale, pending } = useLocale();
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="Language">
+    <BottomSheet open={open} onClose={onClose} title={t("language")}>
       <div style={{ display: "flex", flexDirection: "column" }}>
         {LOCALES.map((option) => {
           const selected = option.code === locale;

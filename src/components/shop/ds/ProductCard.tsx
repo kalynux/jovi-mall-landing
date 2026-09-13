@@ -1,12 +1,15 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { Rating } from "./Rating";
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
 import type { PriceRange, ProductType } from "@/lib/shop/shop.types";
+import { unavailableLabelKey } from "@/lib/shop/availability";
 import { discountPct } from "@/lib/shop/format";
 import { Badge } from "./Badge";
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "./Icon";
 import { PriceDisplay } from "./PriceDisplay";
 
 /** Shipped in `public/`, for products the vendor listed without a usable image. */
@@ -62,19 +65,19 @@ export interface ProductCardProps {
  * rather than into a cart, and a "+" over that is a lie about where the tap
  * lands.
  */
-const quickAction: Record<ProductType, { icon: string; label: string }> = {
-  physical: { icon: "plus", label: "Quick add" },
-  digital: { icon: "zap", label: "Buy now" },
-  service: { icon: "calendar-clock", label: "Book" },
+const quickAction: Record<ProductType, { icon: IconName; labelKey: string }> = {
+  physical: { icon: "plus", labelKey: "quickAdd" },
+  digital: { icon: "zap", labelKey: "buyNow" },
+  service: { icon: "calendar-clock", labelKey: "book" },
 };
 
-const typeLabel = (t: ProductType) => t[0].toUpperCase() + t.slice(1);
-
 function FavButton({ favorite, onToggleFavorite }: Pick<ProductCardProps, "favorite" | "onToggleFavorite">) {
+  const t = useTranslations("shop.ds");
+
   return (
     <button
       type="button"
-      aria-label={favorite ? "Remove from saved" : "Save"}
+      aria-label={t(favorite ? "removeFromFavorites" : "saveToFavorites")}
       aria-pressed={favorite}
       className="ds-pop"
       onClick={(e) => {
@@ -104,6 +107,9 @@ function FavButton({ favorite, onToggleFavorite }: Pick<ProductCardProps, "favor
 }
 
 export function ProductCard(props: ProductCardProps) {
+  const t = useTranslations("shop.ds");
+  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
+  const tKey = useTranslations();
   const {
     layout = "grid",
     title,
@@ -132,6 +138,10 @@ export function ProductCard(props: ProductCardProps) {
 
   const titleEl = (
     <div
+      // `ds-ugc` — the vendor wrote this string and it can be in any script; see
+      // globals.css. Without it, `Téléviseur LED 32"` renders on /ar with the
+      // inch mark moved to the front.
+      className="ds-ugc"
       style={{
         fontSize: 14,
         fontWeight: 700,
@@ -167,7 +177,7 @@ export function ProductCard(props: ProductCardProps) {
       {freeDelivery && (
         <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 6, fontSize: 11.5, color: "var(--text-muted)", fontWeight: 600 }}>
           <Icon name="truck" size={13} />
-          Free delivery
+          {t("freeDelivery")}
         </div>
       )}
     </>
@@ -195,7 +205,7 @@ export function ProductCard(props: ProductCardProps) {
       />
       <div style={{ position: "absolute", top: 8, left: 8, display: "flex", gap: 5 }}>
         <Badge productType={type} variant="solid" size="sm">
-          {typeLabel(type)}
+          {t(`productType.${type}`)}
         </Badge>
         {pct && (
           <Badge tone="danger" variant="solid" size="sm">
@@ -227,15 +237,15 @@ export function ProductCard(props: ProductCardProps) {
               borderRadius: "var(--radius-pill)",
             }}
           >
-            Out of stock
+            {tKey(unavailableLabelKey(type))}
           </span>
         </div>
       )}
       {inStock && onQuickAdd && (
         <button
           type="button"
-          aria-label={quickAction[type].label}
-          title={quickAction[type].label}
+          aria-label={t(quickAction[type].labelKey)}
+          title={t(quickAction[type].labelKey)}
           className="ds-pop"
           onClick={(e) => {
             e.preventDefault();

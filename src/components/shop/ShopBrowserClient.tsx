@@ -5,7 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { ShopBrowser } from "./ShopBrowser";
 import { Skeleton } from "@/components/shop/ds";
 import { ResourceError } from "@/components/shop/account/AccountShell";
-import { listCategories, listProducts } from "@/lib/shop/catalog.api";
+import { listCategories, listProducts, resolveVariantBySku } from "@/lib/shop/catalog.api";
+import type { VariantBySku } from "@/lib/shop/catalog.api";
 import { parseProductSearchParams } from "@/lib/shop/shop.query";
 import type { CategoryCount, ListMeta, ProductListItem } from "@/lib/shop/shop.types";
 
@@ -64,7 +65,13 @@ function ShopBrowserResolver() {
 
   type Settled =
     | { status: "error"; error: unknown }
-    | { status: "ready"; products: ProductListItem[]; meta: ListMeta; categories: CategoryCount[] };
+    | {
+        status: "ready";
+        products: ProductListItem[];
+        meta: ListMeta;
+        categories: CategoryCount[];
+        skuMatch: VariantBySku | null;
+      };
 
   /**
    * Keyed on the serialised query rather than the parsed object, which is a new
@@ -94,8 +101,16 @@ function ShopBrowserResolver() {
     let cancelled = false;
 
     Promise.all([listProducts(query), listCategories()])
-      .then(([{ data: products, meta }, categories]) => {
-        if (!cancelled) setSettled({ token, value: { status: "ready", products, meta, categories } });
+      .then(async ([{ data: products, meta }, categories]) => {
+        // The same product-code fallback the web page runs, so the packaged app
+        // does not quietly lose it: `?q=` cannot match a SKU, and a customer
+        // reading a code off a package is if anything more likely to be on a
+        // phone. Only asked for when the ordinary search found nothing.
+        const skuMatch =
+          products.length === 0 && query.q ? await resolveVariantBySku(query.q) : null;
+        if (!cancelled) {
+          setSettled({ token, value: { status: "ready", products, meta, categories, skuMatch } });
+        }
       })
       .catch((error: unknown) => {
         if (!cancelled) setSettled({ token, value: { status: "error", error } });
@@ -126,6 +141,7 @@ function ShopBrowserResolver() {
       meta={state.meta}
       categories={state.categories}
       query={query}
+      skuMatch={state.skuMatch}
     />
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useCallback, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Button, Select, Skeleton } from "@/components/shop/ds";
@@ -69,6 +71,8 @@ const IMPORTANCE: { value: TicketImportance; label: string }[] = [
  * other.
  */
 export default function NewTicketPage() {
+  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
+  const tKey = useTranslations();
   const router = useRouter();
   const { flash } = useToast();
   const { status: authStatus } = useAuthGuard();
@@ -140,7 +144,7 @@ export default function NewTicketPage() {
         trackingNumber: trackingNumber.trim() || undefined,
         attachments: files.map((f) => f.id),
       });
-      router.replace(ticketPath(ticket._id));
+      router.replace(ticketPath(ticket.id));
     } catch (err) {
       const gaps = missingRequiredInfo(err);
       if (gaps.length > 0) {
@@ -252,12 +256,12 @@ export default function NewTicketPage() {
 
         <Field label="Type">
           <select
-            className="input"
+            className="field"
             value={type}
             onChange={(e) => setType(e.target.value as TicketType)}
           >
             {TICKET_TYPE_GROUPS.map((group) => (
-              <optgroup key={group.label} label={group.label}>
+              <optgroup key={group.labelKey} label={tKey(group.labelKey)}>
                 {group.types.map((value) => (
                   <option key={value} value={value}>
                     {value.replace(/_/g, " ").toLowerCase()}
@@ -278,7 +282,7 @@ export default function NewTicketPage() {
 
         <Field label="Subject">
           <input
-            className="input"
+            className="field"
             maxLength={MAX_SUBJECT}
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
@@ -288,7 +292,7 @@ export default function NewTicketPage() {
 
         <Field label="What happened?" hint={`${description.length}/${MAX_DESCRIPTION}`}>
           <textarea
-            className="input"
+            className="field"
             rows={5}
             maxLength={MAX_DESCRIPTION}
             value={description}
@@ -304,7 +308,7 @@ export default function NewTicketPage() {
             hint="This seller needs it before they can look into an order."
           >
             <input
-              className="input"
+              className="field"
               maxLength={120}
               value={trackingNumber}
               onChange={(e) => setTrackingNumber(e.target.value)}

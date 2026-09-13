@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { Link } from "@/i18n/navigation";
 import { Avatar } from "./Avatar";
 import { Icon } from "./Icon";
@@ -44,6 +46,9 @@ export function VendorCard({
   isOpen,
   onView,
 }: VendorCardProps) {
+  // `name` and `city` are the vendor’s own words — data, not copy.
+  const t = useTranslations("shop.ds");
+
   const shell = {
     display: "flex",
     alignItems: "center",
@@ -81,7 +86,7 @@ export function VendorCard({
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2, flexWrap: "wrap" }}>
           <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-            {productCount} item{productCount === 1 ? "" : "s"}
+            {t("itemCount", { n: productCount })}
           </span>
           {city && (
             <span style={{ fontSize: 12, color: "var(--text-muted)", display: "inline-flex", alignItems: "center", gap: 2 }}>
@@ -90,7 +95,7 @@ export function VendorCard({
             </span>
           )}
           {isOpen === false && (
-            <span style={{ fontSize: 12, color: "var(--warning)", fontWeight: 700 }}>· On holiday</span>
+            <span style={{ fontSize: 12, color: "var(--warning)", fontWeight: 700 }}>· {t("onHoliday")}</span>
           )}
         </div>
       </div>
@@ -105,7 +110,7 @@ export function VendorCard({
           whiteSpace: "nowrap",
         }}
       >
-        View store <Icon name="chevron-right" size={16} />
+        {t("viewStore")} <Icon name="chevron-right" size={16} />
       </span>
     </>
   );

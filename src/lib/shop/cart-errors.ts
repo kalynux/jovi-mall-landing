@@ -42,10 +42,23 @@ export type CartAddFailure =
    * Only reachable signed in: an anonymous add is a localStorage write.
    */
   | { kind: "offline" }
-  | { kind: "error"; message: string };
+  /**
+   * Anything else.
+   *
+   * Two fields because there are two sources and only one of them is ours:
+   *
+   *   - `message` — the backend's own sentence, already written for a person in
+   *     the language it answered in. Show it when it is there.
+   *   - `messageKey` — the fallback we author, as a message KEY. This module is
+   *     not a component and cannot translate; see LOCALISATION.md.
+   *
+   * At the call site that is one line: `flash(f.message ?? t(f.messageKey))`.
+   */
+  | { kind: "error"; message: string | null; messageKey: string };
 
 /**
- * The message to show for `{ kind: "offline" }`.
+ * The message KEY to show for `{ kind: "offline" }` — resolve it with a
+ * root-scoped `t()`.
  *
  * The only copy of this sentence. Four screens add to the cart and each used to
  * write its own failure line, which is how the shop came to describe the same
@@ -53,7 +66,7 @@ export type CartAddFailure =
  * describe it at all, one falling out of a `switch` in silence and one
  * navigating to a product page instead.
  */
-export const CART_OFFLINE_MESSAGE = "No connection — check your network and try again.";
+export const CART_OFFLINE_MESSAGE_KEY = "shop.cartErrors.offline";
 
 /**
  * The message for a failure we could not name.
@@ -64,9 +77,12 @@ export const CART_OFFLINE_MESSAGE = "No connection — check your network and tr
  * `Error` arriving here is an engine string, and passing those through is the
  * bug described at the top of this file.
  */
-function unnamedFailureMessage(error: unknown): string {
-  return error instanceof AuthError ? error.message : "Something went wrong. Please try again.";
+function unnamedFailureMessage(error: unknown): string | null {
+  return error instanceof AuthError ? error.message : null;
 }
+
+/** The key behind a `null` `message` above. */
+const UNNAMED_FAILURE_KEY = "shop.cartErrors.unknown";
 
 /**
  * Classify a rejected cart write.
@@ -108,5 +124,9 @@ export function classifyCartAddFailure(
     return { kind: "offline" };
   }
 
-  return { kind: "error", message: unnamedFailureMessage(error) };
+  return {
+    kind: "error",
+    message: unnamedFailureMessage(error),
+    messageKey: UNNAMED_FAILURE_KEY,
+  };
 }

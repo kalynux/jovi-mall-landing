@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useRouter } from "@/i18n/navigation";
 import { Badge, EmptyState, Skeleton } from "@/components/shop/ds";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
@@ -53,9 +55,9 @@ export default function BookingsPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {bookings.map((booking) => (
             <BookingRow
-              key={booking._id}
+              key={booking.id}
               booking={booking}
-              onOpen={() => router.push(bookingPath(booking._id))}
+              onOpen={() => router.push(bookingPath(booking.id))}
             />
           ))}
         </div>
@@ -65,6 +67,8 @@ export default function BookingsPage() {
 }
 
 function BookingRow({ booking, onOpen }: { booking: Booking; onOpen: () => void }) {
+  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
+  const tKey = useTranslations();
   const state = BOOKING_STATUS_LABEL[booking.status];
   const pay = BOOKING_PAYMENT_LABEL[booking.paymentStatus];
   const start = new Date(booking.startAt);
@@ -87,13 +91,13 @@ function BookingRow({ booking, onOpen }: { booking: Booking; onOpen: () => void 
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, flexWrap: "wrap" }}>
         {state && (
           <Badge size="sm" tone={state.tone}>
-            {state.label}
+            {tKey(state.labelKey)}
           </Badge>
         )}
         {/* Payment only matters while it is unresolved or went wrong. */}
         {pay && booking.paymentStatus !== "paid" && (
           <Badge size="sm" tone={pay.tone}>
-            {pay.label}
+            {tKey(pay.labelKey)}
           </Badge>
         )}
       </div>
@@ -101,6 +105,16 @@ function BookingRow({ booking, onOpen }: { booking: Booking; onOpen: () => void 
       <div style={{ fontWeight: 700, fontSize: 14.5 }}>
         {booking.product?.title ?? "Service"}
       </div>
+      {/*
+          The handle a customer quotes to the vendor or to support. Null on
+          bookings made before the field existed, so it is omitted rather than
+          rendered as a bare "#" — and it is not a sequence counter, so nothing
+          should read a position out of it. */}
+      {booking.bookingNumber && (
+        <div className="muted" style={{ fontSize: 12, marginTop: 2, fontVariantNumeric: "tabular-nums" }}>
+          {booking.bookingNumber}
+        </div>
+      )}
       <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>
         {start.toLocaleString(undefined, {
           weekday: "short",

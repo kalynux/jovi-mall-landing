@@ -1,3 +1,4 @@
+import { isolateLtr } from "@/lib/bidi";
 import type { Locale } from "@/i18n/routing";
 
 /**
@@ -38,9 +39,19 @@ export function formatNumber(locale: Locale, value: number): string {
  * Written as a suffix rather than through `style: "currency"`: Intl renders XAF
  * variously as "FCFA 5,000", "5 000 F CFA" and "XAF 5,000" depending on locale,
  * and the number followed by FCFA is how the market writes it.
+ *
+ * ⚠ **That suffix is exactly what makes the isolate necessary.** `5 000 FCFA` is
+ * a run of Latin digits and letters joined by a bidi-neutral space, so on `/ar`
+ * — where `<html dir="rtl">` — the paragraph reorders it to `FCFA 000 5`. Pinning
+ * the numbering system to Latin above is what puts a *Latin* run into an Arabic
+ * paragraph in the first place, so the two decisions belong together. See
+ * `lib/bidi.ts`.
+ *
+ * The returned string therefore contains invisible characters: compare against
+ * this function's own output, not against a literal.
  */
 export function formatPrice(locale: Locale, value: number, currency: string): string {
-  return `${formatNumber(locale, value)} ${currencyLabel(currency)}`;
+  return isolateLtr(`${formatNumber(locale, value)} ${currencyLabel(currency)}`);
 }
 
 /** Two decimals — the per-credit column, where the difference between packs is cents. */
@@ -51,5 +62,5 @@ export function formatUnitPrice(locale: Locale, value: number, currency: string)
     maximumFractionDigits: 2,
   }).format(value);
 
-  return `${formatted} ${currencyLabel(currency)}`;
+  return isolateLtr(`${formatted} ${currencyLabel(currency)}`);
 }

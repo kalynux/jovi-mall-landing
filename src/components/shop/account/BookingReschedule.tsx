@@ -115,12 +115,31 @@ export function BookingReschedule({ bookingId }: { bookingId: string }) {
       router.push(bookingPath(bookingId));
     } catch (err) {
       const code = err instanceof ApiError ? err.code : undefined;
+      /*
+         `BOOKING_SLOT_FULL` and `BOOKING_SLOT_UNAVAILABLE` are not the same
+         refusal, and only one of them was handled here.
+
+         A capacity service — a group class — answers `SLOT_FULL` when the seats
+         are gone, because a class with other people already in it is not
+         "taken"; moving into a 3-of-8 class succeeds and makes it 4 of 8.
+         `SLOT_UNAVAILABLE` is the single-occupancy answer and genuinely does
+         mean somebody else has that interval. Reporting a full class as a clash
+         tells the customer to pick another time when what they need to know is
+         that this one is full.
+
+         Worth noting why this went unnoticed: until 2026-09-06 rescheduling a
+         capacity booking failed with `BOOKING_SLOT_NOT_LOCKED` however correct
+         the request was — the reschedule looked for the hold under a different
+         key from the one the lock endpoint writes — so the seat-count branch
+         was unreachable. It works now. */
       flash(
         code === "BOOKING_NOT_RESCHEDULABLE"
           ? "This booking can no longer be moved."
-          : code === "BOOKING_SLOT_UNAVAILABLE"
-            ? "Someone took that time first. Please pick another."
-            : "Could not move that booking.",
+          : code === "BOOKING_SLOT_FULL"
+            ? "That session is full. Please pick another time."
+            : code === "BOOKING_SLOT_UNAVAILABLE"
+              ? "Someone took that time first. Please pick another."
+              : "Could not move that booking.",
       );
       setHeld(null);
     } finally {

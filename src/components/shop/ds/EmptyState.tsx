@@ -1,14 +1,14 @@
 "use client";
 
 import { Button } from "./Button";
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "./Icon";
 
 export interface EmptyStateProps {
-  icon: string;
+  icon: IconName;
   title: string;
   description?: string;
   actionLabel?: string;
-  actionIcon?: string;
+  actionIcon?: IconName;
   onAction?: () => void;
 }
 

@@ -190,6 +190,17 @@ export async function listMyReviews(
  *
  * `meta.rating` is the same aggregate the product body carries, and is `null`
  * when nothing is published.
+ *
+ * ⚠ **This route's paging limits are its own.** `limit` defaults to **10** and
+ * is capped at **50**, not the 20/100 used everywhere else on the platform, so
+ * passing the house default gets a `400` rather than a bigger page. Its page
+ * count also arrives as `meta.totalPages` rather than `meta.pages`;
+ * `apiFetchList` normalises the two, and before it did, this list reported one
+ * page however many reviews a product had.
+ *
+ * ⚠ **Both review query schemas are `.strict()`** — an unknown query parameter
+ * is a `400`, not something ignored. Never append a cache-buster or an
+ * analytics parameter to these URLs.
  */
 export async function listProductReviews(
   productId: string,

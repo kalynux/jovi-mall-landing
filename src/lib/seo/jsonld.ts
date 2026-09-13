@@ -374,6 +374,23 @@ export function productJsonLd(locale: Locale, product: Product): JsonLdNode {
     ? "https://schema.org/InStock"
     : "https://schema.org/OutOfStock";
 
+  /*
+     The only place in this codebase that derives a price band client-side, so
+     it is the one worth checking against the 2026-09-07 storefront flip.
+
+     On a variant carrying a bargain window the shop now quotes
+     `bargain.maxPrice` — the vendor's ask — under the ordinary `price` key, and
+     `variant.price` became a floor that is never published on any public route.
+     Nothing was renamed or retyped, so nothing here fails to compile and the
+     only symptom of getting it wrong would be markup that disagrees with the
+     page.
+
+     This stays correct: the detail read's variants carry display prices, from
+     the same `public-display-price.ts` that computes the browse rows and the
+     `?minPrice=&maxPrice=` filter band, so min/max over them is the same pair
+     the API would send as `priceRange`. What would NOT be safe is deriving a
+     band from anything else — a cached price, or a "from" figure composed by
+     hand. */
   const prices = product.variants.map((v) => v.price).filter((p) => Number.isFinite(p));
   const offers =
     prices.length > 1 && Math.min(...prices) !== Math.max(...prices)
@@ -441,7 +458,10 @@ export function storeJsonLd(locale: Locale, store: Store): JsonLdNode {
     url,
     // Every one of these is nullable on the public DTO, so each is omitted
     // rather than emitted as null — `"telephone": null` is invalid markup.
-    ...(store.banner?.url ?? store.logo?.url ? { image: store.banner?.url ?? store.logo?.url } : {}),
+    ...((() => {
+      const image = publicUrl(store.banner) ?? publicUrl(store.logo);
+      return image ? { image } : {};
+    })()),
     ...(store.supportWhatsapp ? { telephone: store.supportWhatsapp } : {}),
     ...(store.city || store.country
       ? {

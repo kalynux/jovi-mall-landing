@@ -36,8 +36,27 @@ export type ProductType = "physical" | "digital" | "service";
  * `public` carries a URL anything can fetch. `authorized` carries **no URL at
  * all** — the bytes are reachable only through a route that checks who is
  * asking, which for a customer is the digital-download token flow.
+ *
+ * 🔴 **`quota_blocked` is a third value, and it is not about privacy.** The
+ * file's *owner* — a vendor or an agency — is over their plan's storage cap, so
+ * this file is one of the ones being held back. `url` is `null` exactly as for
+ * `authorized`, but no authorized route will serve it either: nothing is wrong
+ * with the caller's permissions.
+ *
+ * Two things follow, and both are easy to get wrong:
+ *
+ *  - **It reaches PUBLIC trees.** The quota check and the tree classification are
+ *    independent, so an ordinary product photo in `images/` can come back
+ *    blocked. A client that only expects `null` on the digital surface shows
+ *    holes on product cards.
+ *  - **It is tested FIRST**, before the private-tree check, so a blocked file
+ *    inside a private tree reports `quota_blocked` rather than `authorized`.
+ *
+ * Nothing was deleted — the row, the bytes and the owner's used-storage total all
+ * survive, and an upgrade restores the same file. Never say "deleted" or
+ * "missing" for one; see {@link fileUnavailableReason}.
  */
-export type FileAccess = "public" | "authorized";
+export type FileAccess = "public" | "authorized" | "quota_blocked";
 
 /**
  * A file resolved by the backend's file service.
@@ -68,10 +87,19 @@ export type FileAccess = "public" | "authorized";
 export interface FileDetail {
   id: string;
   key?: string;
-  /** `null` whenever `access === "authorized"`. See the note above. */
+  /**
+   * A string **iff** `access === "public"`. `null` for both of the other two,
+   * which mean different things — see {@link fileUnavailableReason}.
+   */
   url: string | null;
-  /** Always present on a current backend. Branch on this, not on `url`. */
-  access?: FileAccess;
+  /**
+   * Always present on the wire. Branch on this, never on `url`.
+   *
+   * Required rather than optional on purpose: it was `access?` while the union
+   * had two members, and an optional field is exactly how a client stops
+   * noticing that the server grew a third.
+   */
+  access: FileAccess;
   mimeType?: string;
   size?: number;
   originalName?: string;
@@ -80,14 +108,44 @@ export interface FileDetail {
 /**
  * The URL to put in an `<img>` or an `<a href>`, or `null` if there isn't one.
  *
- * Checks `access` before `url` so that an unclassified tree — which the backend
- * treats as **private by default** — cannot leak a path this client then fails
- * to fetch. Accepts `null`/`undefined` so callers can pass an optional file
- * straight through without a guard of their own.
+ * **An allowlist, not a denylist.** It returns a URL only for `access: "public"`,
+ * so a value this build has never heard of — the way `quota_blocked` arrived —
+ * resolves to `null` rather than to a path the client then fails to fetch. The
+ * previous shape excluded `"authorized"` by name and would have handed a caller
+ * the `url` of anything added after it was written.
+ *
+ * Accepts `null`/`undefined` so callers can pass an optional file straight
+ * through without a guard of their own. **Never read `file.url` directly.**
  */
 export function publicUrl(file: FileDetail | null | undefined): string | null {
-  if (!file || file.access === "authorized") return null;
+  if (!file || file.access !== "public") return null;
   return file.url ?? null;
+}
+
+/**
+ * Why {@link publicUrl} gave you nothing — for the screens whose copy differs.
+ *
+ * `null` means there was no file at all, which is the ordinary empty state.
+ * The other two are a file that **exists** and cannot be shown here, and they
+ * need different sentences:
+ *
+ *  - `"authorized"` — private tree. Fetch it through the route that checks who
+ *    is asking (for a customer, the digital-download token flow).
+ *  - `"blocked"` — the owner is over their storage plan. Say *"locked — over the
+ *    storage limit"*. **Never "deleted" or "missing"**: nothing was removed, and
+ *    an upgrade brings it straight back.
+ *
+ * On the public storefront neither distinction is worth showing a shopper — a
+ * blocked product photo gets the same placeholder as a product with no photo,
+ * because a vendor's billing state is not a customer's business. It matters on
+ * the account screens, where the file is the point: a ticket attachment, a
+ * digital asset the customer paid for.
+ */
+export function fileUnavailableReason(
+  file: FileDetail | null | undefined,
+): "authorized" | "blocked" | null {
+  if (!file || file.access === "public") return null;
+  return file.access === "quota_blocked" ? "blocked" : "authorized";
 }
 
 
@@ -435,6 +493,15 @@ export interface CartLine {
   productSlug: string;
   storeSlug: string;
   storeName: string;
+  /**
+   * True when `price` is a number the customer **agreed in chat**, not the shelf
+   * price. Purely a label: the amount is already in `price`.
+   *
+   * Only ever set from a server line — an anonymous cart cannot hold one, which
+   * is also why signing in with one drops the agreement. See
+   * `ServerCartItem.negotiatedUnitPrice`.
+   */
+  negotiated?: boolean;
 }
 
 /** `null` on an empty cart — the type is only known once something is in it. */

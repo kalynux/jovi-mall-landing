@@ -7,6 +7,7 @@
  * cash-on-delivery shipment, or a cancel button on a paid order, sends the
  * customer into a guaranteed 422.
  */
+import type { IconName } from "@/components/shop/ds";
 import type {
   CustomerOrder,
   FulfillmentStatus,
@@ -18,21 +19,46 @@ import type {
 type Tone = "brand" | "neutral" | "success" | "warning" | "danger" | "info";
 
 export interface StatusChip {
-  label: string;
+  /**
+   * A full dotted message key — `shop.status.fulfillment.shipped` — never a
+   * sentence.
+   *
+   * This module is not a React component, so it cannot call `useTranslations`:
+   * hooks only run inside a render, and the maps below are module-level
+   * constants evaluated once at import. Emitting the key and letting the
+   * component translate it is the only shape that works, and it is the rule for
+   * every non-React module in the shop tree — see LOCALISATION.md.
+   *
+   * Consume it with a ROOT-scoped translator, because the key is absolute:
+   *
+   *     const t = useTranslations();       // no namespace
+   *     t(fulfillmentChip(status).labelKey)
+   */
+  labelKey: string;
   tone: Tone;
-  icon: string;
+  /**
+   * ⚠ `IconName`, not `string` — a type-only import from the design system, so
+   * nothing is pulled into the bundle.
+   *
+   * This file is where the second batch of silent-dot icons lived: `undo-2` on
+   * Returned and Refunded, `circle-dot` on Mixed and Unknown. Every order list
+   * and every order detail draws these chips, so a name that is not in the
+   * registry is a dot on a status the customer is trying to read. Typing it
+   * here is what makes that a build failure.
+   */
+  icon: IconName;
 }
 
 const FULFILLMENT: Record<FulfillmentStatus, StatusChip> = {
-  pending: { label: "Pending", tone: "neutral", icon: "clock" },
-  processing: { label: "Being prepared", tone: "info", icon: "package" },
-  partially_shipped: { label: "Partly shipped", tone: "info", icon: "truck" },
-  shipped: { label: "Shipped", tone: "info", icon: "truck" },
-  partially_delivered: { label: "Partly delivered", tone: "info", icon: "package-check" },
-  delivered: { label: "Delivered", tone: "success", icon: "package-check" },
-  fulfilled: { label: "Delivered", tone: "success", icon: "circle-check-big" },
-  cancelled: { label: "Cancelled", tone: "danger", icon: "circle-x" },
-  returned: { label: "Returned", tone: "warning", icon: "undo-2" },
+  pending: { labelKey: "shop.status.fulfillment.pending", tone: "neutral", icon: "clock" },
+  processing: { labelKey: "shop.status.fulfillment.processing", tone: "info", icon: "package" },
+  partially_shipped: { labelKey: "shop.status.fulfillment.partially_shipped", tone: "info", icon: "truck" },
+  shipped: { labelKey: "shop.status.fulfillment.shipped", tone: "info", icon: "truck" },
+  partially_delivered: { labelKey: "shop.status.fulfillment.partially_delivered", tone: "info", icon: "package-check" },
+  delivered: { labelKey: "shop.status.fulfillment.delivered", tone: "success", icon: "package-check" },
+  fulfilled: { labelKey: "shop.status.fulfillment.fulfilled", tone: "success", icon: "circle-check-big" },
+  cancelled: { labelKey: "shop.status.fulfillment.cancelled", tone: "danger", icon: "circle-x" },
+  returned: { labelKey: "shop.status.fulfillment.returned", tone: "warning", icon: "undo-2" },
 };
 
 /**
@@ -41,13 +67,13 @@ const FULFILLMENT: Record<FulfillmentStatus, StatusChip> = {
  * typo here.
  */
 const PAYMENT: Record<OrderPaymentStatus, StatusChip> = {
-  pending: { label: "Payment pending", tone: "warning", icon: "clock" },
-  AWAITING_PAYMENT: { label: "Awaiting payment", tone: "warning", icon: "clock" },
-  partially_paid: { label: "Partly paid", tone: "warning", icon: "wallet" },
-  paid: { label: "Paid", tone: "success", icon: "circle-check-big" },
-  disputed: { label: "Disputed", tone: "danger", icon: "circle-alert" },
-  failed: { label: "Payment failed", tone: "danger", icon: "circle-x" },
-  refunded: { label: "Refunded", tone: "neutral", icon: "undo-2" },
+  pending: { labelKey: "shop.status.payment.pending", tone: "warning", icon: "clock" },
+  AWAITING_PAYMENT: { labelKey: "shop.status.payment.AWAITING_PAYMENT", tone: "warning", icon: "clock" },
+  partially_paid: { labelKey: "shop.status.payment.partially_paid", tone: "warning", icon: "wallet" },
+  paid: { labelKey: "shop.status.payment.paid", tone: "success", icon: "circle-check-big" },
+  disputed: { labelKey: "shop.status.payment.disputed", tone: "danger", icon: "circle-alert" },
+  failed: { labelKey: "shop.status.payment.failed", tone: "danger", icon: "circle-x" },
+  refunded: { labelKey: "shop.status.payment.refunded", tone: "neutral", icon: "undo-2" },
 };
 
 /**
@@ -59,17 +85,17 @@ const PAYMENT: Record<OrderPaymentStatus, StatusChip> = {
  * happened to my money", and one this map was in a position to answer exactly.
  */
 const GROUP_PAYMENT: Record<GroupPaymentStatus, StatusChip> = {
-  paid: { label: "Paid", tone: "success", icon: "circle-check-big" },
-  awaiting_payment: { label: "Awaiting payment", tone: "warning", icon: "clock" },
-  partially_paid: { label: "Partly paid", tone: "warning", icon: "wallet" },
-  mixed: { label: "Mixed", tone: "neutral", icon: "circle-dot" },
-  refunded: { label: "Refunded", tone: "neutral", icon: "undo-2" },
-  failed: { label: "Payment failed", tone: "danger", icon: "circle-x" },
-  disputed: { label: "Disputed", tone: "danger", icon: "circle-alert" },
-  unknown: { label: "Unknown", tone: "neutral", icon: "circle-dot" },
+  paid: { labelKey: "shop.status.groupPayment.paid", tone: "success", icon: "circle-check-big" },
+  awaiting_payment: { labelKey: "shop.status.groupPayment.awaiting_payment", tone: "warning", icon: "clock" },
+  partially_paid: { labelKey: "shop.status.groupPayment.partially_paid", tone: "warning", icon: "wallet" },
+  mixed: { labelKey: "shop.status.groupPayment.mixed", tone: "neutral", icon: "circle-dot" },
+  refunded: { labelKey: "shop.status.groupPayment.refunded", tone: "neutral", icon: "undo-2" },
+  failed: { labelKey: "shop.status.groupPayment.failed", tone: "danger", icon: "circle-x" },
+  disputed: { labelKey: "shop.status.groupPayment.disputed", tone: "danger", icon: "circle-alert" },
+  unknown: { labelKey: "shop.status.groupPayment.unknown", tone: "neutral", icon: "circle-dot" },
 };
 
-const UNKNOWN: StatusChip = { label: "Unknown", tone: "neutral", icon: "circle-dot" };
+const UNKNOWN: StatusChip = { labelKey: "shop.status.unknown", tone: "neutral", icon: "circle-dot" };
 
 export const fulfillmentChip = (s: FulfillmentStatus): StatusChip => FULFILLMENT[s] ?? UNKNOWN;
 export const paymentChip = (s: OrderPaymentStatus): StatusChip => PAYMENT[s] ?? UNKNOWN;
@@ -145,6 +171,17 @@ export function canCancel(order: CustomerOrder): boolean {
 }
 
 /**
+ * Has this order already been confirmed?
+ *
+ * `completion.confirmedAt` is the server's own escrow-release gate, and it is the
+ * only field that answers this — see `OrderCompletion`. A backend older than that
+ * field sends nothing, which reads here as "not confirmed": the previous
+ * behaviour, unchanged, rather than a crash.
+ */
+export const isCompleted = (order: CustomerOrder): boolean =>
+  Boolean(order.completion?.confirmedAt);
+
+/**
  * Whether to offer "confirm delivery".
  *
  * **Never for cash on delivery.** There the delivery code is what records the
@@ -152,11 +189,20 @@ export function canCancel(order: CustomerOrder): boolean {
  * endpoint returns `422 SHIPMENT_CONFIRMATION_NOT_ALLOWED`. Show the code
  * instead.
  *
+ * 🔴 **Never once the order is completed** — and completion is invisible in
+ * `fulfillmentStatus`, which is why this was wrong for so long. Confirming stamps
+ * `completion.confirmed_at` and leaves fulfilment untouched, so the reload that
+ * follows a successful confirm returns a body identical to the one before it and
+ * the button came straight back, pointing at a guaranteed
+ * `409 EARNINGS_ALREADY_COMPLETED`. The customer had already done the one thing
+ * the button asks for and was still being asked.
+ *
  * Otherwise it is the digital path: a `fulfilled` order is confirmable, while a
  * physical order completes automatically once its last shipment is confirmed.
  */
 export function canConfirmDelivery(order: CustomerOrder): boolean {
   if (isCod(order)) return false;
+  if (isCompleted(order)) return false;
   return order.fulfillmentStatus === "fulfilled";
 }
 

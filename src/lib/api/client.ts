@@ -29,6 +29,22 @@ export interface ListMeta {
 }
 
 /**
+ * `Retry-After` as a number of seconds, or `undefined`.
+ *
+ * Only the delta-seconds form is read. The HTTP-date form is legal and this
+ * service does not send it; parsing it would mean trusting the client clock
+ * against the server's, which on a phone with a wrong date yields a cooldown of
+ * hours or of nothing. A missing value is the safer answer — callers already
+ * have to hold a sane default for the case where no header arrives at all.
+ */
+function retryAfterOf(res: Response): number | undefined {
+    const raw = res.headers.get("retry-after");
+    if (!raw) return undefined;
+    const seconds = Number(raw.trim());
+    return Number.isFinite(seconds) && seconds >= 0 ? seconds : undefined;
+}
+
+/**
  * Throws the structured error contract, or an `AuthError` when the body is not
  * one the backend produced (proxy, network layer, gateway).
  */
@@ -49,7 +65,8 @@ function throwResponseError(res: Response, body: Record<string, unknown>): never
             // than an unchecked string that fails an === comparison later.
             isErrorCategory(structured.error.category)
                 ? structured.error.category
-                : undefined
+                : undefined,
+            retryAfterOf(res)
         );
     }
 
@@ -394,6 +411,19 @@ export async function apiFetchWithMeta<T, M = Record<string, unknown>>(
  * to know which of the two its endpoint happens to use, and a fourth endpoint
  * adopting either key needs no change. `meta` wins when both are somehow
  * present, since it is the documented default.
+ *
+ * ── `totalPages` is the same number under a different name ──────────────────
+ *
+ * The page count is `pages` on most endpoints and **`totalPages`** on reviews
+ * and bookings — the reviews controller says so in its own source comment
+ * ("`pages` at the repository layer, `totalPages` on the wire"). Reading only
+ * `pages` therefore fell to the `?? 1` default on those, which does not throw
+ * and does not look wrong: it silently means "one page". `ProductReviews` set
+ * its page count from it, so a product with sixty reviews rendered the first ten
+ * and no way to reach the rest.
+ *
+ * Both names are accepted for the same reason both envelope keys are: which one
+ * an endpoint uses is not something a call site should have to know.
  */
 export async function apiFetchList<T, M = Record<string, unknown>>(
     path: string,
@@ -408,7 +438,8 @@ export async function apiFetchList<T, M = Record<string, unknown>>(
         pagination?: unknown;
     };
     const data = (Array.isArray(envelope?.data) ? envelope.data : []) as T[];
-    const meta = (envelope?.meta ?? envelope?.pagination ?? {}) as Partial<ListMeta> & M;
+    const meta = (envelope?.meta ?? envelope?.pagination ?? {}) as Partial<ListMeta> &
+        M & { totalPages?: number };
 
     return {
         data,
@@ -417,7 +448,7 @@ export async function apiFetchList<T, M = Record<string, unknown>>(
             total: meta.total ?? data.length,
             page: meta.page ?? 1,
             limit: meta.limit ?? data.length,
-            pages: meta.pages ?? 1,
+            pages: meta.pages ?? meta.totalPages ?? 1,
         } as ListMeta & M,
     };
 }

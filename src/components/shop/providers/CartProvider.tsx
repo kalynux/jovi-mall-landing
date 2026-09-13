@@ -13,7 +13,9 @@ import {
   removeCartVariant,
   setCartItemQuantity,
 } from "@/lib/shop/cart.api";
+import { isNegotiatedLine } from "@/lib/shop/customer.types";
 import type { CartDroppedLine, ServerCart } from "@/lib/shop/customer.types";
+import { publicUrl } from "@/lib/shop/shop.types";
 import type { CartLine, CartProductType, LocalCart, Product, Variant } from "@/lib/shop/shop.types";
 
 /**
@@ -57,9 +59,36 @@ interface CartContextValue {
   count: number;
   /** True while a server call is in flight, for disabling steppers. */
   busy: boolean;
+  /**
+   * True once the cart that *counts* for this session has actually been read —
+   * localStorage when signed out, the server when signed in.
+   *
+   * ⚠ **Anything that treats an empty cart as a fact must wait on this, not on
+   * `!busy`.** `busy` is false before the first fetch even starts, so `count ===
+   * 0` on an early render means "not read yet", not "empty". Two screens read it
+   * as empty and shipped the consequences: the cart page announced "Your cart is
+   * empty" to a shopper holding two lines, and checkout redirected away from
+   * every deep link — a push notification, a bookmark, the app resuming there.
+   *
+   * Showing a skeleton until this is true is the correct default for any screen
+   * whose whole content depends on the cart.
+   */
+  hydrated: boolean;
   /** Lines the last sign-in merge could not carry over. Surface and then dismiss. */
   dropped: CartDroppedLine[];
   dismissDropped: () => void;
+
+  /**
+   * Titles of lines that **lost a price agreed in chat** on the last call.
+   *
+   * Two ordinary actions revert a negotiated line to the shelf price — changing
+   * its quantity, and signing in with an anonymous cart — and both answer a
+   * perfectly valid 200. Nothing in the response says a price moved, so a
+   * shopper watching their total change has no explanation unless we give one.
+   * Surfaced and dismissed exactly like {@link dropped}.
+   */
+  negotiationLapsed: string[];
+  dismissNegotiationLapsed: () => void;
 
   addItem: (
     product: Product,
@@ -164,8 +193,13 @@ function toLine(item: ServerCart["items"][number], snapshot?: CartLine): CartLin
     qty: item.quantity,
     title: item.title,
     variantName: item.variantTitle || item.sku,
+    // Always the server's number, never the snapshot's. That is what makes a
+    // negotiated line correct for free: the agreed price arrives as `price`,
+    // and when the agreement lapses the next read simply carries the shelf
+    // price instead.
     price: item.price,
     currency: item.currency,
+    negotiated: isNegotiatedLine(item),
     image: snapshot?.image ?? null,
     productSlug: snapshot?.productSlug ?? "",
     storeSlug: snapshot?.storeSlug ?? "",
@@ -182,7 +216,10 @@ function snapshotOf(product: Product, variant: Variant, qty: number): CartLine {
     variantName: variant.name,
     price: variant.price,
     currency: variant.currency,
-    image: variant.images?.[0]?.url ?? product.images[0]?.url ?? null,
+    // Through the helper, not off `.url`: a blocked image carries a null URL
+    // and this snapshot outlives the read that produced it, so a raw copy would
+    // freeze a broken thumbnail into the local cart until the shopper clears it.
+    image: publicUrl(variant.images?.[0]) ?? publicUrl(product.images[0]) ?? null,
     productSlug: product.slug,
     storeSlug: product.store.slug,
     storeName: product.store.name,
@@ -199,6 +236,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [server, setServer] = useState<ServerCart | null>(null);
   const [busy, setBusy] = useState(false);
   const [dropped, setDropped] = useState<CartDroppedLine[]>([]);
+  const [negotiationLapsed, setNegotiationLapsed] = useState<string[]>([]);
+
+  /**
+   * ── The two halves of {@link CartContextValue.hydrated} ──────────────────
+   *
+   * `busy` cannot answer "has the cart been read yet?" — it is false *before*
+   * the first fetch starts, so a consumer that waits on `!busy` reads an empty
+   * cart and believes it. That cost two real bugs: `/shop/cart` announced "Your
+   * cart is empty" for ~3s to a shopper holding two lines, and `/shop/checkout`
+   * redirected away entirely on any deep link, because its guard fires on
+   * `status === "authenticated" && count === 0` and `status` flips the moment
+   * `/auth/me` answers — well before the cart GET resolves.
+   *
+   * So each source records that it has been *read*, not that it is idle.
+   */
+  const [localRead, setLocalRead] = useState(false);
+  const [serverSettled, setServerSettled] = useState(false);
 
   /**
    * Snapshots by variantId, kept across the handover.
@@ -221,6 +275,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const stored = readLocal();
     setLocal(stored);
     rememberSnapshots(stored.lines);
+    setLocalRead(true);
   }, [rememberSnapshots]);
 
   const persistLocal = useCallback((next: LocalCart) => {
@@ -240,9 +295,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!signedIn) {
       // Signing out drops back to whatever is in localStorage, and re-arms the
-      // handover for the next sign-in.
+      // handover for the next sign-in — including the "have we read the server
+      // yet?" half of `hydrated`, or the next sign-in would be treated as
+      // already-read and flash the previous account's empty cart.
       merged.current = false;
       setServer(null);
+      setServerSettled(false);
       return;
     }
     if (merged.current) return;
@@ -255,6 +313,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const pending = readLocal();
         if (pending.lines.length > 0) {
           rememberSnapshots(pending.lines);
+
+          /*
+             Read the server cart before merging, purely so we can tell the
+             shopper what the merge cost them.
+
+             A merge re-resolves every line from the shelf, and an anonymous cart
+             cannot carry a price lock — so a line the customer haggled for in
+             chat comes back at list price, silently, inside a valid 200. The
+             merge response says nothing about it, and we cannot reconstruct the
+             prior state afterwards, so the only place to learn it is here.
+
+             Best-effort on purpose: if this read fails the handover still runs.
+             Losing the explanation is bad; losing the basket is worse.
+
+             The cost is one extra round trip at sign-in, and only when the
+             shopper actually has an anonymous basket to hand over. That is a
+             real delay on a slow connection, and it is paid deliberately: being
+             charged more than you agreed, with nothing on screen saying why, is
+             the worse outcome. If this is ever reversed, reverse it knowing that
+             is the trade. */
+          let negotiatedBefore: ServerCart["items"] = [];
+          try {
+            negotiatedBefore = (await getCart()).items.filter(isNegotiatedLine);
+          } catch {
+            /* no explanation available — proceed with the merge regardless */
+          }
+
           const result = await mergeCart(
             pending.lines.map((l) => ({
               productId: l.productId,
@@ -266,6 +351,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
           if (cancelled) return;
           setServer(result.cart);
           setDropped(result.dropped);
+
+          if (negotiatedBefore.length > 0) {
+            const kept = new Set(
+              result.cart.items.filter(isNegotiatedLine).map((i) => i.variantId),
+            );
+            const lost = negotiatedBefore
+              .filter((i) => !kept.has(i.variantId))
+              .map((i) => i.title);
+            if (lost.length > 0) setNegotiationLapsed(lost);
+          }
           // Handed over — the local copy must go, or the next sign-in merges it
           // a second time.
           clearLocal();
@@ -280,6 +375,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         // exactly as it was, and `merged` stays true so this does not spin. The
         // shopper can retry from the cart page.
         merged.current = false;
+      } finally {
+        // Settled means *read*, not *succeeded*. On failure `server` stays null
+        // and `lines` falls back to the local cart, which is then the honest
+        // answer — so the UI must stop waiting either way, or a dropped
+        // connection leaves the cart skeleton up forever.
+        if (!cancelled) setServerSettled(true);
       }
     })();
 
@@ -303,6 +404,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [signedIn, server, local]);
 
   const count = useMemo(() => lines.reduce((total, line) => total + line.qty, 0), [lines]);
+
+  /**
+   * Has the authoritative source been read yet?
+   *
+   * Which source that is depends on the session, so this waits on auth first:
+   * while `status` is `"loading"` we do not yet know whether localStorage or the
+   * server is the answer, and answering from the wrong one is how an empty cart
+   * gets rendered as fact.
+   */
+  const hydrated = useMemo(() => {
+    if (status === "loading" || !localRead) return false;
+    return signedIn ? serverSettled : true;
+  }, [status, localRead, signedIn, serverSettled]);
 
   const refresh = useCallback(async () => {
     if (!signedIn) return;
@@ -398,12 +512,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       try {
         setBusy(true);
-        setServer(await setCartItemQuantity(variantId, qty));
+        /*
+           A price lock is bound to a quantity, so changing the quantity is a
+           different deal and the backend drops the agreement — reverting the
+           line to the shelf price and removing the negotiation fields, in a
+           200 that says nothing about it. Compare across the call and tell the
+           shopper, because the only other signal they get is a total that
+           quietly went up. */
+        const before = server?.items.find((i) => i.variantId === variantId);
+        const next = await setCartItemQuantity(variantId, qty);
+        setServer(next);
+
+        if (before && isNegotiatedLine(before)) {
+          const after = next.items.find((i) => i.variantId === variantId);
+          if (!after || !isNegotiatedLine(after)) {
+            setNegotiationLapsed((prev) =>
+              prev.includes(before.title) ? prev : [...prev, before.title],
+            );
+          }
+        }
       } finally {
         setBusy(false);
       }
     },
-    [signedIn, local, persistLocal]
+    [signedIn, local, persistLocal, server]
   );
 
   const removeLine = useCallback<CartContextValue["removeLine"]>(
@@ -440,6 +572,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [signedIn]);
 
   const dismissDropped = useCallback(() => setDropped([]), []);
+  const dismissNegotiationLapsed = useCallback(() => setNegotiationLapsed([]), []);
 
   const value = useMemo<CartContextValue>(
     () => ({
@@ -447,15 +580,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
       productType,
       count,
       busy,
+      hydrated,
       dropped,
       dismissDropped,
+      negotiationLapsed,
+      dismissNegotiationLapsed,
       addItem,
       setQty,
       removeLine,
       clear,
       refresh,
     }),
-    [lines, productType, count, busy, dropped, dismissDropped, addItem, setQty, removeLine, clear, refresh]
+    [
+      lines,
+      productType,
+      count,
+      busy,
+      hydrated,
+      dropped,
+      dismissDropped,
+      negotiationLapsed,
+      dismissNegotiationLapsed,
+      addItem,
+      setQty,
+      removeLine,
+      clear,
+      refresh,
+    ]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

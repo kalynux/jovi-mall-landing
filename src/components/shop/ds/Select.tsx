@@ -1,7 +1,7 @@
 "use client";
 
 import type { ChangeEvent } from "react";
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "./Icon";
 
 export interface SelectOption {
   value: string;
@@ -21,7 +21,7 @@ export interface SelectProps {
    */
   options: readonly string[] | readonly SelectOption[];
   size?: "sm" | "md";
-  leadingIcon?: string;
+  leadingIcon?: IconName;
   "aria-label"?: string;
 }
 

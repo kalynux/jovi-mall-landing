@@ -5,9 +5,12 @@
  * (`jovi-mall/src/core/error-codes.ts`), as documented in api-doc/errors/README.md.
  *
  * This union mirrors the codes documented in api-doc — **not** the registry in
- * full. api-doc/errors/README.md puts the registry at 547 codes; the ones
- * absent here are on surfaces this app never calls and are not enumerated
- * anywhere in the api-doc checkout.
+ * full. The backend registry stood at **640** codes on 2026-09-08 (it has read
+ * 541 → 621 → 623 → 625 → 640 across editions of the sync programme, so treat
+ * any number written down here as stale and re-measure:
+ * `grep -cE "^s+[A-Z0-9_]+:s*'" api-doc/error-codes.ts`). The ones absent
+ * here are on surfaces this app never calls — the bot surface, the vendor and
+ * agency dashboards, the admin internal API.
  *
  * When the backend adds a new code:
  *   1. It appears in the backend registry / api-doc
@@ -83,6 +86,16 @@ export type BackendErrorCode =
      * (api-doc/auth/README.md § "The 90-day absolute cap").
      */
     | "AUTH_SESSION_CAP_REACHED"
+    /**
+     * 403. The account was **closed by its owner** — checked before suspension
+     * and with its own code, because a 30-day refresh cookie otherwise outlives
+     * a closure by a month.
+     *
+     * **Terminal. There is no path back**, so sign out and do not offer a retry.
+     * Status alone does not separate terminal from retryable on the refresh
+     * path: both 403s there are terminal and four of the five 401s are not.
+     */
+    | "AUTH_ACCOUNT_CLOSED"
     // ─── Passwordless customer sign-in (api-doc/auth/magic-login.md) ───────────
     /** 401. The magic link is unknown, malformed, or already spent. */
     | "MAGIC_LINK_INVALID"
@@ -158,6 +171,22 @@ export type BackendErrorCode =
     | "PAYMENT_ORDER_IS_COD"
     | "PAYMENT_OPERATOR_UNDETERMINED"
     | "PAYMENT_CURRENCY_NOT_SUPPORTED"
+    // ─── The hosted card page (api-doc/payments/README.md § GAP-008) ───────────
+    /**
+     * 404. The pay link is malformed, unknown, **or superseded by a newer mint**
+     * — one code for all three, deliberately, because any difference is an
+     * oracle telling an anonymous caller whether their guess had the right
+     * shape.
+     *
+     * An **expired** link is NOT this code: it resolves normally with
+     * `state: "expired"`, so the page can offer a fresh one rather than claim
+     * the payment does not exist.
+     */
+    | "PAYMENT_LINK_NOT_FOUND"
+    /** 422. A hosted page was asked for on a gateway that completes on the handset. */
+    | "PAYMENT_LINK_NOT_APPLICABLE"
+    /** 422. A link was asked for on a transaction already settled, failed or cancelled. */
+    | "PAYMENT_LINK_NOT_PAYABLE"
     | "STRIPE_WEBHOOK_SIGNATURE_INVALID"
     // ─── Refund ────────────────────────────────────────────────────────────────
     | "REFUND_NOT_ELIGIBLE"
@@ -552,6 +581,34 @@ export type BackendErrorCode =
     | "CART_DIGITAL_LIMIT_REACHED"
     | "CART_NOT_FOUND"
     | "CART_EMPTY_CHECKOUT"
+    // ─── Prices agreed in chat (api-doc/customer/cart.md § Negotiated prices) ──
+    //
+    // The five ways a presented price lock is refused. Raised at BOTH
+    // add-to-cart (where the lock is only peeked) and checkout (where it is
+    // spent), so a lock that passed going into the basket can still be refused
+    // at the till — the vendor's window is re-read at that moment.
+    //
+    // All five are client-safe categories on purpose: the bargaining agent has
+    // to be able to say what happened and reopen the negotiation, and a refusal
+    // filtered down to "an unexpected error occurred" dead-ends a customer
+    // mid-haggle.
+    //
+    // ⚠ Treat an unrecognised NEGOTIATION_LOCK_* as NEGOTIATION_LOCK_INVALID.
+    // The resolver lives in another module and may grow a reason before this
+    // union does; the fall-through is always a refusal, never permission.
+    //
+    // Recovery is the same for all five: drop the lock and add the line at its
+    // ordinary price, or send the shopper back to chat. NEVER retry the lock.
+    /** 404. The reference names no lock at all. */
+    | "NEGOTIATION_LOCK_INVALID"
+    /** 422. The lock aged out. */
+    | "NEGOTIATION_LOCK_EXPIRED"
+    /** 409. Already spent on an order. */
+    | "NEGOTIATION_LOCK_CONSUMED"
+    /** 422. Presented for a different variant, or a different quantity. */
+    | "NEGOTIATION_LOCK_VARIANT_MISMATCH"
+    /** 409. The vendor changed the price since the deal was struck. */
+    | "NEGOTIATION_LOCK_WINDOW_MOVED"
     // ─── Booking ───────────────────────────────────────────────────────────────
     | "BOOKING_PRODUCT_NOT_FOUND"
     | "BOOKING_USER_NOT_FOUND"
@@ -634,8 +691,24 @@ export type BackendErrorCode =
     | "COD_REMITTANCE_ALREADY_RESOLVED"
     | "COD_DISCREPANCY_NOT_FOUND"
     | "COD_DISCREPANCY_ALREADY_RESOLVED"
+    // ─── Reviews (api-doc/reviews.md · api-doc/customer/reviews.md) ────────────
+    /**
+     * 404. No such subject, **or not the caller's** — one answer for both, so the
+     * endpoint cannot be used to probe which ids are real.
+     *
+     * ⚠ The eligibility read does **not** always answer 200. Every *business*
+     * refusal arrives as `200 { eligible: false, reason }`; this one throws a
+     * 404. A client must handle both shapes.
+     */
+    | "REVIEW_SUBJECT_NOT_FOUND"
+    | "REVIEW_NOT_ELIGIBLE"
+    | "REVIEW_SUBJECT_NOT_REVIEWABLE"
+    | "REVIEW_ALREADY_EXISTS"
+    | "REVIEW_ROLE_NOT_ALLOWED"
     // ─── Storage ───────────────────────────────────────────────────────────────
     | "STORAGE_FILE_NOT_FOUND"
+    /** The configured storage provider cannot stream bytes for a download. */
+    | "STORAGE_DOWNLOAD_NOT_SUPPORTED"
     | "STORAGE_DELETE_FAILED"
     | "STORAGE_QUOTA_EXCEEDED"
     | "STORAGE_CLEANUP_FAILED"

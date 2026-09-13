@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useFormatter } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { orderGroupPath } from "@/lib/shop/shop.routes";
 import {
@@ -96,6 +96,8 @@ export default function OrdersPage() {
 
 function OrderGroupRow({ group }: { group: OrderGroup }) {
   const format = useFormatter();
+  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
+  const tKey = useTranslations();
   const payment = groupPaymentChip(group.paymentStatus);
   const hasCod = group.orders.some(isCod);
 
@@ -121,7 +123,7 @@ function OrderGroupRow({ group }: { group: OrderGroup }) {
 
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           <Badge size="sm" tone={payment.tone} icon={payment.icon}>
-            {payment.label}
+            {tKey(payment.labelKey)}
           </Badge>
           {hasCod && (
             <Badge size="sm" tone="neutral" icon="banknote">
@@ -135,7 +137,7 @@ function OrderGroupRow({ group }: { group: OrderGroup }) {
             const chip = fulfillmentChip(s);
             return (
               <Badge key={s} size="sm" tone={chip.tone} icon={chip.icon}>
-                {chip.label}
+                {tKey(chip.labelKey)}
               </Badge>
             );
           })}

@@ -24,6 +24,8 @@
  * body. `apiFetch` unwraps this one, so `PayLinkSession` is the payload.
  */
 import { apiFetch } from "@/lib/api/client";
+import { absoluteUrl } from "@/lib/site";
+import { payPath } from "./shop.routes";
 
 /**
  * What the page may do with this transaction right now.
@@ -34,6 +36,45 @@ import { apiFetch } from "@/lib/api/client";
  * one outcome a payment page must never invite.
  */
 export type PayLinkState = "payable" | "settled" | "closed" | "expired";
+
+/**
+ * What the money is for — facts, not a sentence.
+ *
+ * The page composes the wording, and that split was the backend's explicit
+ * decision rather than a convenience. **This is the one reader the API cannot
+ * localise for**: every other page is served to somebody with an account and a
+ * `preferred_language`, while the holder of a pay link has neither and may not
+ * exist in the database at all. A sentence composed server-side would arrive in
+ * English on a page otherwise translated into five languages — English in the
+ * very line that says what the money is for. The reader's locale is in the URL
+ * they opened, so the page knows it and the server does not.
+ *
+ * It exists because the page previously read, in full, *"Amount due — 24 000
+ * FCFA"*. The payer is **by design** often not the person who ordered, which
+ * makes this the one payment screen where they have no other way to know what
+ * they are paying for — and the one screen where they are about to type card
+ * details, so a page naming no merchant is shaped exactly like a phishing page.
+ */
+export interface PayLinkPaidFor {
+  kind: "order" | "booking";
+  /** The handle the payer can match against a message. `null` on a legacy row. */
+  reference: string | null;
+  /** Greater than 1 when one payment settles a multi-vendor basket. */
+  orderCount: number;
+  /** `null` for a booking. */
+  itemCount: number | null;
+  /**
+   * ⚠ **Always `[]` for a booking, and that is not an oversight to fill in.**
+   *
+   * A shop's name is already a public storefront page, so naming it tells a
+   * stranger only that somebody bought something. A *service provider's* name is
+   * frequently the sensitive fact itself — a clinic, a lawyer — and the platform
+   * cannot tell which vendors are which. A booking travels as its reference and
+   * its amount; the payer confirms with whoever sent them the link. **Do not
+   * fill this in client-side from another endpoint.**
+   */
+  sellers: string[];
+}
 
 export interface PayLinkSession {
   /** Poll `POST /api/payments/verify` with this once the card is confirmed. */
@@ -58,6 +99,14 @@ export interface PayLinkSession {
   /** `null` when the backend has no card key configured — the page says so. */
   publishableKey: string | null;
   expiresAt: string;
+  /**
+   * What is being paid for. **Never null** on a current backend.
+   *
+   * Optional here only so a page served against a backend older than 2026-09-07
+   * degrades to the amount alone rather than crashing — which is what this
+   * screen showed before the field existed.
+   */
+  paidFor?: PayLinkPaidFor;
 }
 
 /**
@@ -88,4 +137,63 @@ export async function getPayLinkSession(token: string): Promise<PayLinkSession> 
  */
 export function isPayLinkToken(value: string): boolean {
   return /^pl_[0-9a-f]{64}$/.test(value);
+}
+
+/* ─── Minting one ─────────────────────────────────────────────────────────── */
+
+export interface MintedPayLink {
+  /** `pl_` + 64 hex. The credential; treat it like one. */
+  token: string;
+  /**
+   * The absolute URL the backend built, or `null` when its `STOREFRONT_URL` is
+   * unset.
+   *
+   * ⚠ `null` is a real deployment state, not an error — see {@link payLinkUrl},
+   * which is what callers should use.
+   */
+  url: string | null;
+  expiresAt: string;
+}
+
+/**
+ * Mint a shareable payment link for a transaction.
+ *
+ * ⚠ **A second mint REVOKES the first, and that is the only revocation there
+ * is.** At most one link per transaction is ever live. That is what makes
+ * "they lost the message, send it again" safe, and what stops a forwarded link
+ * outliving its purpose — but it also means **this must never run on page
+ * load**. Call it from a deliberate tap, and tell the shopper that re-sending
+ * kills the link they sent before.
+ *
+ * ⚠ **A mobile-money transaction cannot have one** (`422
+ * PAYMENT_LINK_NOT_APPLICABLE`): it completes on the payer's own handset
+ * against the payer's own number, so a page would have nothing to do. Pay links
+ * are a card path, which is why the caller creates a `STRIPE` transaction
+ * first. `422 PAYMENT_LINK_NOT_PAYABLE` means it is already settled, failed or
+ * cancelled; `404` means unknown, malformed, or somebody else's —
+ * indistinguishable on purpose.
+ */
+export async function mintPayLink(transactionId: string): Promise<MintedPayLink> {
+  return apiFetch<MintedPayLink>(
+    `/api/payments/${encodeURIComponent(transactionId)}/pay-link`,
+    { method: "POST" },
+  );
+}
+
+/**
+ * The URL to actually send someone.
+ *
+ * Prefers what the backend built, and falls back to composing it from this
+ * deployment's own origin. The fallback is not a workaround: `url: null` only
+ * means the *API* has no `STOREFRONT_URL` configured, and this app is the
+ * storefront — it knows its own address with more authority than the backend
+ * does. The token is identical either way, so the composed link resolves to the
+ * same session.
+ *
+ * ⚠ Always absolute. This link is opened by somebody who is not on the site,
+ * frequently on a different device, from a chat message — a relative path
+ * pasted into WhatsApp is not a link at all.
+ */
+export function payLinkUrl(minted: MintedPayLink): string {
+  return minted.url ?? absoluteUrl(payPath(minted.token));
 }

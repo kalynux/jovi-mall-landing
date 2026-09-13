@@ -1,6 +1,6 @@
 "use client";
 
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "./Icon";
 import { selectionFeedback } from "@/lib/native/haptics";
 
 export interface QtyStepperProps {
@@ -13,7 +13,7 @@ export interface QtyStepperProps {
 
 export function QtyStepper({ value, onChange, max = 99, min = 1, size = "md" }: QtyStepperProps) {
   const dim = size === "sm" ? 30 : 38;
-  const btn = (icon: string, delta: number, disabled: boolean) => (
+  const btn = (icon: IconName, delta: number, disabled: boolean) => (
     <button
       type="button"
       aria-label={delta > 0 ? "Increase quantity" : "Decrease quantity"}

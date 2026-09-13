@@ -1,15 +1,24 @@
 /** Money + slug helpers for the shop. Currency is XAF (FCFA), space-grouped. */
 
+import { isolateLtr } from "@/lib/bidi";
+
 // fr-FR groups thousands with a narrow no-break space (U+202F). Normalise any
 // narrow/no-break space or comma separator to a plain ASCII space.
 const GROUP_SEP = new RegExp("[\\u202F\\u00A0,]", "g");
 // Combining diacritical marks (produced by NFKD) to strip for clean slugs.
 const COMBINING = new RegExp("[\\u0300-\\u036f]", "g");
 
-/** Format an XAF amount like the design: `9 900 FCFA` (regular spaces). */
+/**
+ * Format an XAF amount like the design: `9 900 FCFA` (regular spaces).
+ *
+ * ⚠ **The returned string is bidi-isolated** — see `lib/bidi.ts` for why, and
+ * for the one thing that surprises people: `formatXAF(9900) === "9 900 FCFA"` is
+ * false, because the marks are invisible characters. Strip them before
+ * comparing.
+ */
 export function formatXAF(n: number): string {
   const value = Math.round(Number(n) || 0);
-  return value.toLocaleString("fr-FR").replace(GROUP_SEP, " ") + " FCFA";
+  return isolateLtr(value.toLocaleString("fr-FR").replace(GROUP_SEP, " ") + " FCFA");
 }
 
 /**
@@ -25,7 +34,9 @@ export function formatXAF(n: number): string {
 export function formatMoney(amount: number, currency: string): string {
   if (!currency || currency.toUpperCase() === "XAF") return formatXAF(amount);
   const value = Math.round(Number(amount) || 0);
-  return `${value.toLocaleString("fr-FR").replace(GROUP_SEP, " ")} ${currency.toUpperCase()}`;
+  return isolateLtr(
+    `${value.toLocaleString("fr-FR").replace(GROUP_SEP, " ")} ${currency.toUpperCase()}`,
+  );
 }
 
 /** Discount percentage from a compare-at price, rounded. */

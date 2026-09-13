@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Chip, Icon } from "@/components/shop/ds";
+import { Chip, Icon, type IconName } from "@/components/shop/ds";
 import { PhoneField } from "@/components/ui/phone";
 import { isValidPhone, toE164 } from "@/lib/phone";
 import { detectCameroonOperator } from "@/lib/shop/cm-operator";
@@ -59,7 +59,7 @@ export interface PaymentOption {
    */
   art?: "tile" | "plate";
   /** Fallback when there is no artwork — a lucide name. */
-  icon?: string;
+  icon?: IconName;
   gateway: PaymentGateway;
   /** What tells the gateway which prompt to send. Mobile money only. */
   operator?: PhoneOperator;

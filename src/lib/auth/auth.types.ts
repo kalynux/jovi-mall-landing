@@ -345,7 +345,23 @@ export class ApiError extends AuthError {
          * from a parsed response: `undefined` means the body carried no valid
          * category, not that the contract permits its absence.
          */
-        public readonly category?: ErrorCategory
+        public readonly category?: ErrorCategory,
+        /**
+         * `Retry-After`, in seconds, when the response carried one.
+         *
+         * It is here because the body often cannot answer the same question.
+         * The `rate_limit` category filters `details` down to a three-key
+         * allowlist — `retryAfterSeconds`, `limit`, `windowSeconds` — and the
+         * comparison, while it lower-cases and strips separators, still matches
+         * whole words. So `COD_CODE_RESEND_TOO_SOON`, which is raised with
+         * `{ retryInSeconds }`, arrives with **no `details` at all**: "in" is a
+         * different word from "after", nothing survives the filter, and an empty
+         * projection is omitted entirely rather than sent as `{}`.
+         *
+         * The header is the reliable channel, so it is read once here instead of
+         * guessed at each call site.
+         */
+        public readonly retryAfterSeconds?: number
     ) {
         super(message, statusCode);
         this.name = "ApiError";

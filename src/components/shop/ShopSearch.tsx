@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Icon, IconButton } from "@/components/shop/ds";
+import { useTranslations } from "next-intl";
+import { Icon, IconButton, type IconName } from "@/components/shop/ds";
 import {
   clearRecentSearches,
   forgetSearch,
@@ -68,6 +69,9 @@ export function ShopSearchRow({
   suggestions = [],
   recommended = [],
 }: Props) {
+  const t = useTranslations("shop.chrome.search");
+  // Root-scoped, for the shared vocabulary in `shop.common`.
+  const tKey = useTranslations();
   const [open, setOpen] = useState(false);
   const [recent, setRecent] = useState<string[]>([]);
   const listboxId = useId();
@@ -165,7 +169,7 @@ export function ShopSearchRow({
           {value && (
             <button
               type="button"
-              aria-label="Clear search"
+              aria-label={t("clear")}
               onClick={() => {
                 onChange("");
                 onClear();
@@ -190,7 +194,11 @@ export function ShopSearchRow({
           <IconButton
             icon="sliders-horizontal"
             variant="surface"
-            label={filterCount ? `Filters (${filterCount})` : "Filters"}
+            label={
+              filterCount
+                ? t("filtersWithCount", { n: filterCount })
+                : tKey("shop.common.filters")
+            }
             onClick={onOpenFilters}
             style={
               filterCount
@@ -227,7 +235,7 @@ export function ShopSearchRow({
         <IconButton
           icon={list ? "layout-grid" : "list"}
           variant="surface"
-          label="Toggle layout"
+          label={t("toggleLayout")}
           onClick={onToggleLayout}
           style={{ flexShrink: 0 }}
         />
@@ -252,7 +260,7 @@ export function ShopSearchRow({
             <motion.div
               id={listboxId}
               role="listbox"
-              aria-label="Search suggestions"
+              aria-label={t("suggestionsLabel")}
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
@@ -275,9 +283,9 @@ export function ShopSearchRow({
                 <>
                   {recent.length > 0 && (
                     <Section
-                      title="Recent"
+                      title={t("recent")}
                       action={{
-                        label: "Clear all",
+                        label: tKey("shop.common.clearAll"),
                         onClick: () => void clearRecentSearches().then(setRecent),
                       }}
                     >
@@ -296,7 +304,7 @@ export function ShopSearchRow({
                   {/* Both of these stay dark until the API exists — see the
                       note on the props. */}
                   {suggestions.length > 0 && (
-                    <Section title="Suggestions">
+                    <Section title={t("suggestions")}>
                       {suggestions.map((q) => (
                         <Row key={q} icon="search" label={q} onClick={() => pick(q)} />
                       ))}
@@ -304,7 +312,7 @@ export function ShopSearchRow({
                   )}
 
                   {recommended.length > 0 && (
-                    <Section title="Popular right now">
+                    <Section title={t("popular")}>
                       {recommended.map((q) => (
                         <Row key={q} icon="sparkles" label={q} onClick={() => pick(q)} />
                       ))}
@@ -316,7 +324,7 @@ export function ShopSearchRow({
                   className="muted"
                   style={{ padding: "14px 10px", fontSize: 13, textAlign: "center" }}
                 >
-                  Search matches whole words — try a complete one.
+                  {t("wholeWords")}
                 </p>
               )}
             </motion.div>
@@ -378,11 +386,15 @@ function Row({
   onClick,
   onRemove,
 }: {
-  icon: string;
+  icon: IconName;
   label: string;
   onClick: () => void;
   onRemove?: () => void;
 }) {
+  // `label` is what the shopper typed — their words, interpolated, never
+  // translated.
+  const t = useTranslations("shop.chrome.search");
+
   return (
     <div style={{ display: "flex", alignItems: "center" }}>
       <button
@@ -423,7 +435,7 @@ function Row({
       {onRemove && (
         <button
           type="button"
-          aria-label={`Remove ${label} from recent searches`}
+          aria-label={t("forget", { query: label })}
           onClick={onRemove}
           style={{
             flexShrink: 0,

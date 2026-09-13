@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { Link } from "@/i18n/navigation";
 import { usePathname } from "@/i18n/navigation";
 import { useCart, useFavorites, useNotifications } from "@/components/shop/providers";
@@ -66,6 +68,10 @@ function CountDot({ n }: { n: number }) {
  * scarce header width on something nobody presses twice.
  */
 export function ShopHeader() {
+  const t = useTranslations("shop.chrome");
+  // Root-scoped: for the lib modules’ absolute keys (`shop.nav.tabs.…`), and
+  // for the page names in `shop.nav`, which this bar shares with the routes.
+  const tKey = useTranslations();
   const pathname = usePathname();
   const { title, showBack, goBack } = useShopChrome();
   const { count: cartCount } = useCart();
@@ -104,7 +110,7 @@ export function ShopHeader() {
           <IconButton
             icon="arrow-left"
             variant="plain"
-            label="Back"
+            label={tKey("shop.common.back")}
             onClick={goBack}
             // Pulled into the page gutter so the glyph, rather than the edge of
             // its tap target, lines up with the content below it.
@@ -115,7 +121,7 @@ export function ShopHeader() {
         <Link
           href={homePath()}
           className="me-1 hidden items-center gap-2 md:flex"
-          aria-label="Wi-Mall shop"
+          aria-label={t("brandHome")}
         >
           <WiMallMark style={{ width: 22, height: 22 }} />
           <span
@@ -154,8 +160,8 @@ export function ShopHeader() {
         {onNotifications && (
           <Link
             href="/shop/account/notifications/settings"
-            aria-label="Notification settings"
-            title="Notification settings"
+            aria-label={tKey("shop.nav.titles.notificationSettings")}
+            title={tKey("shop.nav.titles.notificationSettings")}
             className="inline-flex items-center justify-center rounded-[12px]"
             style={{ width: 40, height: 40, color: "var(--text-body)" }}
           >
@@ -166,7 +172,11 @@ export function ShopHeader() {
         {!onNotifications && (
           <Link
             href="/shop/account/notifications"
-            aria-label={unread > 0 ? `Notifications (${unread} unread)` : "Notifications"}
+            aria-label={
+              unread > 0
+                ? t("notificationsUnread", { n: unread })
+                : tKey("shop.nav.titles.notifications")
+            }
             className="relative inline-flex items-center justify-center rounded-[12px] transition-colors"
             style={{ width: 40, height: 40, color: "var(--text-body)" }}
           >
@@ -187,8 +197,8 @@ export function ShopHeader() {
             <Link
               key={tab.href}
               href={tab.href}
-              aria-label={tab.label}
-              title={tab.label}
+              aria-label={tKey(tab.labelKey)}
+              title={tKey(tab.labelKey)}
               className="relative hidden items-center justify-center rounded-[12px] transition-colors md:inline-flex"
               style={{
                 width: 40,

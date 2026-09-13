@@ -8,7 +8,7 @@ import {
   AccountShell,
   ResourceView,
 } from "@/components/shop/account/AccountShell";
-import { Button, Chip, EmptyState, Icon } from "@/components/shop/ds";
+import { Button, Chip, EmptyState, Icon, type IconName } from "@/components/shop/ds";
 import { useNotifications, useToast } from "@/components/shop/providers";
 import { translateError } from "@/lib/auth/error-translator";
 import { listNotifications, markAllRead, markRead } from "@/lib/shop/notifications.api";
@@ -33,18 +33,20 @@ const FILTERS: { id: NotificationAggregate | "all"; label: string }[] = [
   { id: "shipment", label: "Delivery" },
   { id: "payment", label: "Payments" },
   { id: "booking", label: "Bookings" },
+  { id: "ticket", label: "Support" },
 ];
 
-const AGGREGATE_ICON: Record<NotificationAggregate, string> = {
+const AGGREGATE_ICON: Record<NotificationAggregate, IconName> = {
   order: "package",
   shipment: "truck",
   payment: "wallet",
   booking: "calendar-clock",
+  ticket: "life-buoy",
 };
 
 export default function NotificationsPage() {
   return (
-    <AccountShell title="Notifications" description="Orders, deliveries and payments.">
+    <AccountShell title="Notifications" description="Orders, deliveries, payments and support.">
       <Inbox />
     </AccountShell>
   );

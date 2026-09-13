@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Badge, Button, EmptyState, Skeleton, Tabs } from "@/components/shop/ds";
@@ -101,9 +103,9 @@ export default function SupportPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {shown.map((ticket) => (
             <TicketRow
-              key={ticket._id}
+              key={ticket.id}
               ticket={ticket}
-              onOpen={() => router.push(ticketPath(ticket._id))}
+              onOpen={() => router.push(ticketPath(ticket.id))}
             />
           ))}
         </div>
@@ -113,7 +115,15 @@ export default function SupportPage() {
 }
 
 function TicketRow({ ticket, onOpen }: { ticket: Ticket; onOpen: () => void }) {
-  const view = TICKET_STATUS_LABEL[ticket.status] ?? { label: ticket.status, tone: "neutral" };
+  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
+  const tKey = useTranslations();
+  // A status the map does not know is a backend addition. "Unknown" is a worse
+  // answer than the real one and a better one than a raw `waiting_on_x` enum —
+  // and unlike the enum it is a string every language has.
+  const view = TICKET_STATUS_LABEL[ticket.status] ?? {
+    labelKey: "shop.status.unknown",
+    tone: "neutral" as const,
+  };
 
   return (
     <button
@@ -131,11 +141,16 @@ function TicketRow({ ticket, onOpen }: { ticket: Ticket; onOpen: () => void }) {
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+        {/*
+            `ticket_number` was rendered here and does not exist — there is no
+            such path anywhere in the backend, so this printed "undefined" on
+            every row. The ticketing engine identifies a ticket by its id alone,
+            so the last six characters are the handle a customer can quote. */}
         <span className="muted" style={{ fontSize: 12, fontVariantNumeric: "tabular-nums" }}>
-          {ticket.ticket_number}
+          #{ticket.id.slice(-6)}
         </span>
         <Badge size="sm" tone={view.tone}>
-          {view.label}
+          {tKey(view.labelKey)}
         </Badge>
         <span className="muted" style={{ marginLeft: "auto", fontSize: 12 }}>
           {new Date(ticket.updatedAt).toLocaleDateString()}

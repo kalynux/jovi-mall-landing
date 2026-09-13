@@ -1,13 +1,13 @@
 "use client";
 
 import type { ButtonHTMLAttributes, CSSProperties } from "react";
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "./Icon";
 
 type Variant = "plain" | "surface" | "fav";
 type Size = "sm" | "md";
 
 export interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
-  icon: string;
+  icon: IconName;
   label: string;
   variant?: Variant;
   size?: Size;

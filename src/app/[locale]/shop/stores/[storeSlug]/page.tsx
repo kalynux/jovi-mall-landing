@@ -7,6 +7,7 @@ import JsonLd from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd, storeJsonLd } from "@/lib/seo/jsonld";
 import { localeAlternates } from "@/lib/seo/alternates";
 import { PAGE_SIZE, parseProductSearchParams } from "@/lib/shop/shop.query";
+import { publicUrl } from "@/lib/shop/shop.types";
 import { storePath } from "@/lib/shop/shop.routes";
 import { isLocale } from "@/i18n/routing";
 
@@ -35,8 +36,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: where ? `${store.name} — ${where}` : store.name,
       description: store.description,
       // `banner` and `logo` are both nullable; a store with neither gets no
-      // image rather than a broken one.
-      images: [store.banner?.url ?? store.logo?.url].filter((url): url is string => Boolean(url)),
+      // image rather than a broken one. Resolved through `publicUrl` so a file
+      // held back by its owner's storage plan is treated as absent — a scraper
+      // fetching a dead og:image is worse than a card with no picture.
+      images: [publicUrl(store.banner) ?? publicUrl(store.logo)].filter(
+        (url): url is string => Boolean(url),
+      ),
       url: path,
       type: "website",
     },

@@ -24,12 +24,17 @@ export const PAGE_SIZE = 24;
 
 const PRODUCT_TYPES: readonly ProductType[] = ["physical", "digital", "service"];
 
-/** Sort values are a wire contract; these are what a shopper reads instead. */
-export const SORT_OPTIONS: readonly { value: SortKey; label: string }[] = [
-  { value: "newest", label: "Newest" },
-  { value: "price_asc", label: "Price: low to high" },
-  { value: "price_desc", label: "Price: high to low" },
-  { value: "relevance", label: "Best match" },
+/**
+ * Sort values are a wire contract; these name what a shopper reads instead.
+ *
+ * `labelKey` is a full dotted message key, not a sentence — this module has no
+ * React context to translate in. See LOCALISATION.md.
+ */
+export const SORT_OPTIONS: readonly { value: SortKey; labelKey: string }[] = [
+  { value: "newest", labelKey: "shop.query.sort.newest" },
+  { value: "price_asc", labelKey: "shop.query.sort.price_asc" },
+  { value: "price_desc", labelKey: "shop.query.sort.price_desc" },
+  { value: "relevance", labelKey: "shop.query.sort.relevance" },
 ];
 
 type SearchParams = Record<string, string | string[] | undefined>;

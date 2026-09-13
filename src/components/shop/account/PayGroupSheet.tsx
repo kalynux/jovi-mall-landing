@@ -11,6 +11,7 @@ import {
   paymentReady,
 } from "@/components/shop/PaymentMethodPicker";
 import { useSavedPayment } from "@/components/shop/useSavedPayment";
+import { PayLinkShare } from "./PayLinkShare";
 import { translateError } from "@/lib/auth/error-translator";
 import { formatMoney } from "@/lib/shop/format";
 import { initiatePayment, isSettledFailure } from "@/lib/shop/payments.api";
@@ -45,14 +46,23 @@ import type { OrderGroup } from "@/lib/shop/customer.types";
  * So there is no "has a payment already started?" check here, deliberately. The
  * server answers that question better than the client could.
  *
- * ── Mobile money only, and that is a deliberate omission ─────────────────────
+ * ── Mobile money in the picker; cards through the pay link ───────────────────
  *
- * Checkout offers cards; this does not. `initiatePayment` returns a Stripe
- * `clientSecret` that the storefront has never consumed on any platform, so a
- * card tap here would create a transaction nothing can complete and leave the
- * order looking mid-payment. Offering it would be shipping a known-dead path
- * into a brand-new screen. Add `CARD` to the list below on the day that flow
- * exists — it is one array entry.
+ * The picker offers mobile money only, and that is still deliberate: a `CARD`
+ * entry here would take the shopper to a Stripe `clientSecret` that **this
+ * screen** cannot complete, leaving the order looking mid-payment.
+ *
+ * But the storefront does have a working card path now — the hosted page at
+ * `/pay/[token]`, which consumes exactly that `clientSecret` through Stripe's
+ * Payment Element. So `PayLinkShare` at the foot of this sheet is not only "ask
+ * somebody else": sending yourself the link is how you pay by card. That is why
+ * it lives here rather than on the order card — this sheet is where the shopper
+ * is answering "how do I pay for this", and it is one of the answers.
+ *
+ * ⚠ The two paths cannot both be live at once. `initiate` keys idempotency on
+ * `(orderId, userId, total)` **without the gateway**, so a mobile-money attempt
+ * left `PENDING` here makes the mint refuse with `PAYMENT_LINK_NOT_APPLICABLE`.
+ * `PayLinkShare` says so in the shopper's own terms rather than retrying.
  */
 export function PayGroupSheet({
   group,
@@ -218,6 +228,18 @@ export function PayGroupSheet({
       ) : (
         <Skeleton height={180} />
       )}
+
+      {/* The other way this order can be paid for, and it belongs here rather
+          than on the order card: the shopper is already answering "how do I pay
+          for this", and "somebody else will" is one of the answers. It is also
+          the only card path the storefront has — see the note in
+          `PayLinkShare`. */}
+      <PayLinkShare
+        cartId={group.cartId}
+        amount={amount}
+        currency={currency}
+        reference={orders[0]?.orderNumber}
+      />
     </BottomSheet>
   );
 }

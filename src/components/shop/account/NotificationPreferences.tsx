@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import { AccountCard, ResourceView } from "@/components/shop/account/AccountShell";
 import { ChatChannels } from "@/components/shop/account/ChatChannels";
-import { Badge, Icon } from "@/components/shop/ds";
+import { Badge, Icon, type IconName } from "@/components/shop/ds";
 import { useToast } from "@/components/shop/providers";
 import { translateError } from "@/lib/auth/error-translator";
 import { getPreferences, updatePreferences } from "@/lib/shop/notifications.api";
@@ -31,7 +31,7 @@ import type {
  * silent refund is indistinguishable from a stolen payment, and a balance nobody
  * was told about cannot fairly be chased.
  */
-const ALWAYS_ON = [
+const ALWAYS_ON: { icon: IconName; label: string; desc: string }[] = [
   { icon: "wallet", label: "Payments & refunds", desc: "Payment received, refunds, balance due." },
   { icon: "circle-x", label: "Cancellations", desc: "An order or appointment called off." },
 ];
@@ -47,7 +47,7 @@ const CHANNELS: {
   enabledKey: "emailEnabled" | "telegramEnabled" | "whatsappEnabled";
   verifiedKey: "emailVerified" | "telegramVerified" | "whatsappVerified";
   label: string;
-  icon: string;
+  icon: IconName;
 }[] = [
   { enabledKey: "emailEnabled", verifiedKey: "emailVerified", label: "Email", icon: "mail" },
   { enabledKey: "telegramEnabled", verifiedKey: "telegramVerified", label: "Telegram", icon: "send" },

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useCallback, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Badge, Button, ConfirmDialog, Skeleton } from "@/components/shop/ds";
@@ -98,6 +100,8 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
     );
   }
 
+  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
+  const tKey = useTranslations();
   const state = BOOKING_STATUS_LABEL[b.status];
   const pay = BOOKING_PAYMENT_LABEL[b.paymentStatus];
   const cancellable = b.status === "pending" || b.status === "confirmed";
@@ -110,12 +114,12 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
       <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
         {state && (
           <Badge size="sm" tone={state.tone}>
-            {state.label}
+            {tKey(state.labelKey)}
           </Badge>
         )}
         {pay && (
           <Badge size="sm" tone={pay.tone}>
-            {pay.label}
+            {tKey(pay.labelKey)}
           </Badge>
         )}
       </div>
@@ -124,6 +128,19 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
       {b.vendor?.name && (
         <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>
           with {b.vendor.name}
+        </div>
+      )}
+      {/*
+          The reference to quote. It is the vendor's handle for this booking too,
+          which is the whole reason it is on the detail screen rather than only
+          in a confirmation email. Omitted when null — bookings predate the
+          field, and "#" on its own tells nobody anything. */}
+      {b.bookingNumber && (
+        <div
+          className="muted"
+          style={{ fontSize: 12.5, marginTop: 4, fontVariantNumeric: "tabular-nums" }}
+        >
+          {b.bookingNumber}
         </div>
       )}
 

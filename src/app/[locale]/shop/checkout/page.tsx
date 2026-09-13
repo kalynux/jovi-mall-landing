@@ -14,6 +14,8 @@ import { useSavedPayment } from "@/components/shop/useSavedPayment";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import { ApiError } from "@/lib/auth/auth.types";
 import { isNetworkError } from "@/lib/errors/is-network-error";
+import { lookupMessage, translateError } from "@/lib/auth/error-translator";
+import { useTranslations } from "next-intl";
 import { quoteCart } from "@/lib/shop/cart.api";
 import { checkout } from "@/lib/shop/orders.api";
 import { getProfile } from "@/lib/shop/profile.api";
@@ -58,7 +60,19 @@ export default function CheckoutPage() {
   // Checkout is `requireRole(['customer'])` server-side and `/shop/checkout` is
   // in `PROTECTED_PREFIXES`, so this only re-checks and surfaces the WA gate.
   const { status } = useAuthGuard();
-  const { lines, productType, count, clear, refresh } = useCart();
+  const { lines, productType, count, hydrated, clear, refresh } = useCart();
+
+  /*
+     Two namespaces, and the order between them is the point.
+
+     `checkout.errors` holds this screen's own copy, every line of which carries
+     the one fact the shared catalogue cannot: checkout is atomic, so a refusal
+     means nothing was ordered and nothing was charged. `errors` is the shared
+     ladder every other screen uses, and it catches the codes this screen has no
+     special framing for -- including any the backend adds tomorrow, which is
+     what the hardcoded switch this replaced could never do. */
+  const tCheckout = useTranslations("checkout.errors");
+  const tErrors = useTranslations("errors");
 
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [addressId, setAddressId] = useState<string | null>(null);
@@ -143,20 +157,31 @@ export default function CheckoutPage() {
         // The one error worth reporting from a quote: the address cannot be
         // routed to. Everything else is a soft failure — checkout re-quotes.
         if (err instanceof ApiError && err.code === "ORDER_DELIVERY_ADDRESS_REQUIRED") {
-          setError(addressProblem(err));
+          setError(addressProblem(tCheckout, err));
         }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [status, addressId, count, needsAddress]);
+  }, [status, addressId, count, needsAddress, tCheckout]);
 
   /* ── Empty cart ────────────────────────────────────────────────────────── */
 
+  /**
+   * ⚠ `hydrated` is what makes this correct, and it is not optional.
+   *
+   * Without it the guard fired on every deep link into checkout: `status` flips
+   * to `"authenticated"` as soon as `/auth/me` answers, while the server cart is
+   * fetched in a later effect — so `count` was still 0 on that render and a
+   * shopper with a full basket was bounced to `/shop/cart`. Arriving from the
+   * cart's own button hid it, because the cart was already read by then; a push
+   * notification, a bookmark or the app resuming here did not.
+   */
   useEffect(() => {
+    if (!hydrated) return;
     if (status === "authenticated" && count === 0 && !placing) router.replace("/shop/cart");
-  }, [status, count, placing, router]);
+  }, [hydrated, status, count, placing, router]);
 
   /* ── Place the order ───────────────────────────────────────────────────── */
 
@@ -220,17 +245,37 @@ export default function CheckoutPage() {
       // they were. Either way the cart may have changed server-side, so re-read
       // it rather than leaving a stale view.
       void refresh();
-      setError(checkoutError(err));
+      setError(checkoutError(tCheckout, tErrors, err));
     }
-  }, [isCod, needsAddress, addressId, clear, option, phone, router, refresh]);
+  }, [
+    isCod,
+    needsAddress,
+    addressId,
+    clear,
+    option,
+    phone,
+    router,
+    refresh,
+    tCheckout,
+    tErrors,
+  ]);
 
   // `payForm.ready` joins the gate rather than getting a spinner of its own: the
   // picker must not mount before the saved wallet has landed in the field, or
   // the number arrives as an edit and the operator detection overrides the rail
   // the shopper themselves declared. See `useSavedPayment`.
-  if (status === "loading" || (status === "authenticated" && (loadingProfile || !payForm.ready))) {
+  // `!hydrated` joins this list because the redirect above now waits for it: the
+  // cart being unread is a loading state, and without it this screen fell
+  // through to the `return null` below and rendered a blank page until the cart
+  // arrived.
+  if (
+    status === "loading" ||
+    !hydrated ||
+    (status === "authenticated" && (loadingProfile || !payForm.ready))
+  ) {
     return (
       <div className="mx-auto max-w-[760px] px-4 py-8 sm:px-6">
+        <h1 className="sr-only">Checkout</h1>
         <Skeleton height={28} width="40%" />
         <div style={{ height: 16 }} />
         <Skeleton height={120} />
@@ -240,6 +285,8 @@ export default function CheckoutPage() {
     );
   }
 
+  // Reached only once the cart is known: signed out, or genuinely empty and
+  // about to be redirected by the effect above.
   if (status !== "authenticated" || count === 0) return null;
 
   const currency = quote?.currency ?? lines[0]?.currency ?? "XAF";
@@ -498,63 +545,70 @@ function SummaryRow({
   );
 }
 
+type Translator = (key: string, values?: Record<string, string>) => string;
+
 /**
- * `details.reason` distinguishes two situations that need different fixes, and
- * telling them apart is the whole reason the backend reports it.
+ * Why a delivery address was refused.
+ *
+ * `details.reason` separates "you have not chosen one" from "the one you chose
+ * has no coordinates", and the second needs a different instruction: a
+ * hand-typed address looks complete and cannot be delivered to, so telling the
+ * shopper to pick one is advice they have already followed.
  */
-function addressProblem(error: ApiError): string {
+function addressProblem(t: Translator, error: ApiError): string {
   const reason = (error.details as { reason?: string } | undefined)?.reason;
   return reason === "selected_address_not_geocoded"
-    ? "We cannot locate the address you chose. Open it in your addresses and re-pick it from the search results — a typed address has no coordinates to deliver to."
-    : "Choose a delivery address before paying.";
+    ? t("ADDRESS_NOT_GEOCODED")
+    : t("ORDER_DELIVERY_ADDRESS_REQUIRED");
 }
 
-function checkoutError(error: unknown): string {
-  /**
-   * Before the `ApiError` check, because a request that never arrived is not
-   * one — it has no status, no code and no body, so it fell through to the
-   * generic line below and told a shopper who had walked into a lift that
-   * something unexpected had happened. It is the likeliest failure on this
-   * page and the only one they can do anything about.
-   *
-   * Bespoke copy rather than `errors.NETWORK_ERROR`, for the same reason every
-   * other branch here is bespoke: on the pay button, "nothing was charged" is
-   * the half of the message that matters. Checkout is atomic — no orders are
-   * created unless all of them are — so this is a promise the API keeps.
-   */
-  if (isNetworkError(error)) {
-    return "We can't reach Wi-Mall right now. Nothing was charged — check your connection and try again.";
+/**
+ * Checkout's copy for a failed order, localised.
+ *
+ * This was a hardcoded English `switch` over seven codes -- the one screen on
+ * the shop outside the shared `translateError` ladder, so a French, Spanish,
+ * Portuguese or Arabic shopper met English at the pay button and nowhere else.
+ *
+ * The resolution order, and why it is not simply `translateError`:
+ *
+ *  1. **Network first**, before the `ApiError` check. A request that never
+ *     arrived has no status, no code and no body, so it would otherwise fall to
+ *     the generic line -- and it is both the likeliest failure here and the only
+ *     one the shopper can act on.
+ *  2. **`checkout.errors.<CODE>`**, this screen's own framing. Every line there
+ *     says nothing was charged, which the shared catalogue's wording cannot,
+ *     because it is only true of an atomic checkout.
+ *  3. **The shared ladder**, for everything else -- so a code the backend adds
+ *     tomorrow gets its ordinary translated copy instead of the raw envelope,
+ *     which is exactly what the switch's `default` could not do.
+ *
+ * The two interpolated branches are handled ahead of the lookup because they
+ * need `details`, which a plain code-to-string map has no way to reach.
+ */
+function checkoutError(tCheckout: Translator, tErrors: Translator, error: unknown): string {
+  if (isNetworkError(error)) return tCheckout("NETWORK");
+  if (!(error instanceof ApiError)) return tCheckout("GENERIC");
+
+  if (error.code === "CATALOG_INSUFFICIENT_STOCK") {
+    // `available` is what the shopper can actually buy -- stock minus what other
+    // in-flight checkouts are holding -- so it is a real, actionable number.
+    const details = error.details as
+      | { sku?: string; requested?: number; available?: number }
+      | undefined;
+    const item = details?.sku ? `\u201C${details.sku}\u201D` : tCheckout("ITEM_FALLBACK");
+    return typeof details?.available === "number"
+      ? tCheckout("CATALOG_INSUFFICIENT_STOCK", {
+          item,
+          available: String(details.available),
+          requested: String(details.requested ?? ""),
+        })
+      : tCheckout("CATALOG_INSUFFICIENT_STOCK_UNKNOWN", { item });
   }
 
-  if (!(error instanceof ApiError)) {
-    return "Something went wrong placing your order. Nothing was charged — please try again.";
-  }
+  if (error.code === "ORDER_DELIVERY_ADDRESS_REQUIRED") return addressProblem(tCheckout, error);
 
-  switch (error.code) {
-    case "CATALOG_INSUFFICIENT_STOCK": {
-      // `available` is what the shopper can actually buy — stock minus what other
-      // in-flight checkouts are holding — so it is a real, actionable number.
-      const details = error.details as
-        | { sku?: string; requested?: number; available?: number }
-        | undefined;
-      const item = details?.sku ? `“${details.sku}”` : "one of your items";
-      return typeof details?.available === "number"
-        ? `Not enough stock for ${item} — ${details.available} left, you asked for ${details.requested}. Lower the quantity and try again.`
-        : `${item} just went out of stock. Adjust your cart and try again.`;
-    }
-    case "ORDER_DELIVERY_ADDRESS_REQUIRED":
-      return addressProblem(error);
-    case "ORDER_CART_EMPTY":
-      return "Your cart is empty.";
-    case "COD_NOT_AVAILABLE_FOR_DIGITAL":
-      return "Cash on delivery is not available for digital products. Choose another payment method.";
-    case "COD_ORDER_AMOUNT_EXCEEDS_LIMIT":
-      return "This order is too large for cash on delivery. Please pay online instead.";
-    case "COD_AGENCY_NOT_SUPPORTED":
-      return "The courier for this order does not handle cash on delivery. Please pay online instead.";
-    case "ORDER_NO_DELIVERY_AGENCY":
-      return "One of these items has no delivery service available right now. Remove it and try again.";
-    default:
-      return error.message || "Something went wrong placing your order. Please try again.";
-  }
+  const scoped = lookupMessage(tCheckout, error.code);
+  if (scoped) return scoped;
+
+  return translateError(tErrors, error, tCheckout("GENERIC"));
 }

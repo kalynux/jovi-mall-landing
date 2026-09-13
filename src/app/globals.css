@@ -449,6 +449,14 @@ html.dark,
     padding: 11px 13px; outline: none;
   }
   .field:focus { border-color: var(--border-focus); box-shadow: var(--focus-ring); }
+  /* `.field` is shared by <input>, <select> and <textarea>, and a textarea needs
+     three things the others do not: a line height that makes a paragraph readable
+     (an input never wraps, so it does not care), a resize handle constrained to
+     the vertical axis — a horizontal drag widens the field past its card and
+     drags the layout with it — and `display: block`, since a textarea is
+     inline-block by default and sits on a text baseline, leaving a descender's
+     worth of gap under it that reads as a broken margin. */
+  textarea.field { display: block; line-height: 1.5; resize: vertical; }
 
   /* Responsive product grid: 2-col mobile → 3/4/5-col up */
   .pgrid {
@@ -745,6 +753,29 @@ html.dark,
 @media (prefers-reduced-motion: reduce) {
   .ds-btn, .ds-pop, .ds-media img { transition: none !important; transform: none !important; }
 }
+
+/* ── Vendor-written text, in a page whose direction it does not share ───────
+ *
+ * A product title, a store name or a variant name is typed by a seller and can
+ * be in any script. Rendered inside `<html dir="rtl">` on /ar, its neutral
+ * characters take the *paragraph's* direction, not the text's own — so a French
+ * title ending in a unit came out with the mark moved to the front:
+ *
+ *     Téléviseur LED 32"   →   "Téléviseur LED 32
+ *
+ * `plaintext` is the rule for exactly this: it resolves each element's direction
+ * from that element's own first strong character, the way a chat client decides
+ * per message. So an Arabic title stays RTL, a French one is LTR, and neither is
+ * bent to the page around it.
+ *
+ * ⚠ **Not the same tool as the isolate marks in `lib/bidi.ts`.** Those wrap
+ * strings we generate ourselves — prices, whose direction we know is LTR — so
+ * they keep working in a `<title>`, an aria-label or a share message where no
+ * CSS applies. This is for text we did not write and whose language we cannot
+ * know. Do not use `plaintext` on a price: a formatted amount starts with a
+ * digit, which is not a strong character, so the paragraph would decide again.
+ */
+.ds-ugc { unicode-bidi: plaintext; }
 
 /* Underline that draws from the origin — nav links, inline links. */
 .link-underline { position: relative; }

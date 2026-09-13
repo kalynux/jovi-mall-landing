@@ -1,5 +1,8 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+import type { CSSProperties } from "react";
+
 import { formatMoney } from "@/lib/shop/format";
 import type { PriceRange } from "@/lib/shop/shop.types";
 
@@ -30,37 +33,45 @@ export interface PriceDisplayProps {
 const sizeMap = { sm: 14, md: 18, lg: 26 };
 
 export function PriceDisplay({ amount, compareAt, currency = "XAF", range, size = "md" }: PriceDisplayProps) {
+  const t = useTranslations("shop.ds");
   const fs = sizeMap[size];
   // A range and a strikethrough together read as though the whole band is
   // discounted, which is not what the data says — the compare-at belongs to one
   // variant. The band wins and the strikethrough is dropped.
   const onSale = !range && Boolean(compareAt && compareAt > amount);
 
+  const amountStyle: CSSProperties = {
+    fontFamily: "var(--font-sans)",
+    fontWeight: 800,
+    fontSize: fs,
+    letterSpacing: "-0.01em",
+    fontVariantNumeric: "tabular-nums",
+    color: onSale ? "var(--price-sale)" : "var(--price)",
+  };
+
   return (
     <span style={{ display: "inline-flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-      {range && (
-        <span
-          style={{
-            fontSize: Math.max(11, fs - 5),
-            fontWeight: 600,
-            color: "var(--text-muted)",
-          }}
-        >
-          from
-        </span>
+      {/*
+          “from” and the amount are one message, not a word glued to a number:
+          the preposition is not always what precedes the figure, and the two
+          carry different type, so the message owns the order and the tags
+          carry the styling. The amount itself never goes through `t()` —
+          `formatMoney` has already placed the currency and the bidi isolates
+          that keep it intact in an Arabic line.
+      */}
+      {range ? (
+        t.rich("fromPrice", {
+          amount: formatMoney(range.min, currency),
+          from: (chunks) => (
+            <span style={{ fontSize: Math.max(11, fs - 5), fontWeight: 600, color: "var(--text-muted)" }}>
+              {chunks}
+            </span>
+          ),
+          price: (chunks) => <span style={amountStyle}>{chunks}</span>,
+        })
+      ) : (
+        <span style={amountStyle}>{formatMoney(amount, currency)}</span>
       )}
-      <span
-        style={{
-          fontFamily: "var(--font-sans)",
-          fontWeight: 800,
-          fontSize: fs,
-          letterSpacing: "-0.01em",
-          fontVariantNumeric: "tabular-nums",
-          color: onSale ? "var(--price-sale)" : "var(--price)",
-        }}
-      >
-        {formatMoney(range ? range.min : amount, currency)}
-      </span>
       {onSale && (
         <span
           style={{

@@ -98,7 +98,17 @@ export function normalizeRevocation(reason: unknown): RevocationReason {
 export interface TrackingHandlers {
   onPosition?: (position: AgentPosition) => void;
   onRevoked?: (reason: RevocationReason) => void;
-  onError?: (message: string) => void;
+  /**
+   * Two fields, one per source — the same split as `classifyCartAddFailure`.
+   *
+   *   - `messageKey` — a failure this file authored, named as a message KEY
+   *     because a non-React module cannot translate. See LOCALISATION.md.
+   *   - `message` — a sentence the geo-tracker service sent in an `error`
+   *     frame, already written for a person and passed through untouched.
+   *
+   * Exactly one of the two is set.
+   */
+  onError?: (failure: { messageKey: string | null; message: string | null }) => void;
   onOpen?: () => void;
   onClose?: () => void;
 }
@@ -194,7 +204,7 @@ export class DeliveryTracker {
       if (USES_BEARER_AUTH) {
         const pair = await tokens.read();
         if (!pair) {
-          this.handlers.onError?.("Not signed in");
+          this.handlers.onError?.({ messageKey: "shop.common.notSignedIn", message: null });
           return;
         }
         socket = new WebSocket(url, ["bearer", pair.accessToken]);
@@ -249,7 +259,11 @@ export class DeliveryTracker {
           break;
         }
         case "error":
-          this.handlers.onError?.(String(frame.payload?.message ?? "Tracking error"));
+          this.handlers.onError?.(
+            frame.payload?.message
+              ? { messageKey: null, message: String(frame.payload.message) }
+              : { messageKey: "shop.common.somethingWentWrong", message: null },
+          );
           break;
         case "ack":
         default:

@@ -136,7 +136,7 @@ export function BookingPanel({ product }: { product: Product }) {
       );
       // The lock is released by the booking itself, so nothing to give back.
       setHeld(null);
-      router.push(bookingPath(booking._id));
+      router.push(bookingPath(booking.id));
     } catch (err) {
       const code = (err as { code?: string })?.code;
       const message =
@@ -210,7 +210,7 @@ export function BookingPanel({ product }: { product: Product }) {
           {held && <HoldTimer expiresAt={held.expiresAt} />}
 
           <textarea
-            className="input"
+            className="field"
             rows={2}
             placeholder="Anything the seller should know? (optional)"
             value={notes}

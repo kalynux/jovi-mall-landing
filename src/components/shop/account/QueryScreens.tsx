@@ -2,7 +2,8 @@
 
 import { Suspense, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
-import { EmptyState } from "@/components/shop/ds";
+import { useTranslations } from "next-intl";
+import { EmptyState, type IconName } from "@/components/shop/ds";
 import { AccountSkeleton } from "./AccountShell";
 import { BookingBalance } from "./BookingBalance";
 import { BookingDetail } from "./BookingDetail";
@@ -36,6 +37,12 @@ import { TicketDetail } from "./TicketDetail";
  * deep link that lost its query — every in-app link comes from `shop.routes.ts`
  * and carries one. It still has to say something, because the alternative is a
  * screen that renders nothing at all.
+ *
+ * That copy is this file’s own, so it is translated here, from
+ * `shop.query.screens`. `QueryScreen` below still takes finished strings —
+ * eighteen call sites across the account tree pass `title` / `description` into
+ * the same shell components, and the caller is where a screen’s own name is
+ * known.
  */
 
 /** `useSearchParams()` suspends during prerender — see `ShopBrowserClient`. */
@@ -45,7 +52,7 @@ function QueryScreen({
   description,
   children,
 }: {
-  icon: string;
+  icon: IconName;
   title: string;
   description: string;
   children: (id: string) => ReactNode;
@@ -63,7 +70,7 @@ function Resolver({
   description,
   render,
 }: {
-  icon: string;
+  icon: IconName;
   title: string;
   description: string;
   render: (id: string) => ReactNode;
@@ -75,11 +82,12 @@ function Resolver({
 
 /** `/shop/account/order?id=<cartId>` */
 export function OrderGroupClient() {
+  const t = useTranslations("shop.query.screens");
   return (
     <QueryScreen
       icon="package-open"
-      title="No order to show"
-      description="Open an order from your order history to see its details."
+      title={t("orderTitle")}
+      description={t("orderDescription")}
     >
       {(id) => <OrderGroupDetail cartId={id} />}
     </QueryScreen>
@@ -95,11 +103,12 @@ export function OrderGroupClient() {
  * screen, which is why they are adjacent here rather than filed apart.
  */
 export function OrderDetailClient() {
+  const t = useTranslations("shop.query.screens");
   return (
     <QueryScreen
       icon="receipt-text"
-      title="No order to show"
-      description="Open an order from your order history to see its details."
+      title={t("orderTitle")}
+      description={t("orderDescription")}
     >
       {(id) => <OrderDetail orderId={id} />}
     </QueryScreen>
@@ -108,11 +117,12 @@ export function OrderDetailClient() {
 
 /** `/shop/account/order/tracking?id=<orderId>` — the same `orderId` as above. */
 export function OrderTrackingClient() {
+  const t = useTranslations("shop.query.screens");
   return (
     <QueryScreen
       icon="map-pin"
-      title="No delivery to follow"
-      description="Open an order from your order history to see where its parcels are."
+      title={t("trackingTitle")}
+      description={t("trackingDescription")}
     >
       {(id) => <OrderTracking orderId={id} />}
     </QueryScreen>
@@ -121,11 +131,12 @@ export function OrderTrackingClient() {
 
 /** `/shop/account/booking?id=<bookingId>` */
 export function BookingDetailClient() {
+  const t = useTranslations("shop.query.screens");
   return (
     <QueryScreen
       icon="calendar-clock"
-      title="No booking to show"
-      description="Open a booking from your bookings list to see its details."
+      title={t("bookingTitle")}
+      description={t("bookingDescription")}
     >
       {(id) => <BookingDetail bookingId={id} />}
     </QueryScreen>
@@ -134,11 +145,12 @@ export function BookingDetailClient() {
 
 /** `/shop/account/booking/pay?id=<bookingId>` */
 export function BookingPayClient() {
+  const t = useTranslations("shop.query.screens");
   return (
     <QueryScreen
       icon="calendar-clock"
-      title="No booking to pay for"
-      description="Open a booking from your bookings list to pay for it."
+      title={t("bookingPayTitle")}
+      description={t("bookingPayDescription")}
     >
       {(id) => <BookingPay bookingId={id} />}
     </QueryScreen>
@@ -147,11 +159,12 @@ export function BookingPayClient() {
 
 /** `/shop/account/booking/balance?id=<bookingId>` */
 export function BookingBalanceClient() {
+  const t = useTranslations("shop.query.screens");
   return (
     <QueryScreen
       icon="calendar-clock"
-      title="No balance to settle"
-      description="Open a booking from your bookings list to settle what is left to pay."
+      title={t("bookingBalanceTitle")}
+      description={t("bookingBalanceDescription")}
     >
       {(id) => <BookingBalance bookingId={id} />}
     </QueryScreen>
@@ -160,11 +173,12 @@ export function BookingBalanceClient() {
 
 /** `/shop/account/booking/reschedule?id=<bookingId>` */
 export function BookingRescheduleClient() {
+  const t = useTranslations("shop.query.screens");
   return (
     <QueryScreen
       icon="calendar-clock"
-      title="No booking to move"
-      description="Open a booking from your bookings list to move it to another time."
+      title={t("bookingRescheduleTitle")}
+      description={t("bookingRescheduleDescription")}
     >
       {(id) => <BookingReschedule bookingId={id} />}
     </QueryScreen>
@@ -173,11 +187,12 @@ export function BookingRescheduleClient() {
 
 /** `/shop/account/ticket?id=<ticketId>` */
 export function TicketDetailClient() {
+  const t = useTranslations("shop.query.screens");
   return (
     <QueryScreen
       icon="message-square"
-      title="No ticket to show"
-      description="Open a ticket from your support list to see the conversation."
+      title={t("ticketTitle")}
+      description={t("ticketDescription")}
     >
       {(id) => <TicketDetail ticketId={id} />}
     </QueryScreen>

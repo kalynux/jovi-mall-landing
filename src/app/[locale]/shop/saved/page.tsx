@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Button, ConfirmDialog, EmptyState, ProductCard, Skeleton, Tabs } from "@/components/shop/ds";
 import { useCart, useFavorites, useToast } from "@/components/shop/providers";
-import { CART_OFFLINE_MESSAGE } from "@/lib/shop/cart-errors";
-import { getProductById } from "@/lib/shop/catalog.api";
+import { CART_OFFLINE_MESSAGE_KEY } from "@/lib/shop/cart-errors";
+import { listProductsByIds } from "@/lib/shop/catalog.api";
 import {
   clearRecentlyViewed,
   listRecentlyViewed,
@@ -52,10 +54,21 @@ type Tab = "saved" | "viewed";
  * product that was merely suspended and is coming back.
  */
 export default function SavedPage() {
+  // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
+  const tKey = useTranslations();
   const router = useRouter();
   const { status } = useAuth();
   const signedIn = status === "authenticated";
   const { favorites, toggle } = useFavorites();
+
+  /*
+     `toggle` closes over the favourites set, so its identity changes whenever
+     that set does — including when a grid sync rebuilds it with the same
+     members. Depending on it directly would re-run the hydration effect for a
+     list that did not change. The ref gives the effect the current function
+     without making it a trigger. */
+  const toggleRef = useRef(toggle);
+  toggleRef.current = toggle;
   const { addItem } = useCart();
   const { flash } = useToast();
 
@@ -92,7 +105,7 @@ export default function SavedPage() {
         return;
       }
 
-      // Signed out: the local ids are all there is, and each needs resolving.
+      // Signed out: the local ids are all there is, and they need hydrating.
       const list = localIds ? localIds.split(",") : [];
       if (list.length === 0) {
         if (!cancelled) {
@@ -102,17 +115,50 @@ export default function SavedPage() {
         return;
       }
 
-      const resolved = await Promise.all(
-        list.map(async (id) => {
-          const product = await getProductById(id).catch(() => null);
-          return {
-            productId: id,
-            at: "",
-            // A full `Product` is a superset of the list row the card needs.
-            product: (product as unknown as ProductListItem) ?? null,
-          } satisfies CustomerCatalogEntry;
-        }),
-      );
+      /*
+         One request, not one per id.
+
+         This was `Promise.all(list.map(getProductById))` — a favourites list of
+         forty products opened forty connections and pulled forty full product
+         documents, variants and all, to render forty cards. `by-ids` answers the
+         browse-grid row, which is exactly what the card takes, and it preserves
+         the order the ids were sent in, so the shopper's own ordering survives
+         with no re-sorting here.
+
+         `missing` is the other half of why this route is better. An id the
+         shopper saved months ago may name a product that has since been
+         archived, suspended or deleted, and the per-id version could not tell
+         that apart from a failed request — so a withdrawn product sat in the
+         list forever as an empty card. Now it is named, and pruned. */
+      const { products, missing } = await listProductsByIds(list, { fresh: true });
+      if (cancelled) return;
+
+      const byId = new Map(products.map((product) => [product.id, product]));
+      const gone = new Set(missing);
+
+      /*
+         Prune what the server says is no longer publishable, through the
+         provider rather than behind its back — `toggle` is what keeps the heart
+         state and the stored ids in step.
+
+         Deliberately only `missing`: an id that merely failed to hydrate stays
+         saved, because a dropped connection must never silently empty somebody's
+         favourites. Removing an id changes `localIds` and so re-runs this
+         effect once more with a shorter list, which then finds nothing missing
+         and settles. One extra request, only when something was actually
+         withdrawn. */
+      for (const id of gone) toggleRef.current(id);
+
+      const resolved = list
+        .filter((id) => !gone.has(id))
+        .map(
+          (id) =>
+            ({
+              productId: id,
+              at: "",
+              product: byId.get(id) ?? null,
+            }) satisfies CustomerCatalogEntry,
+        );
 
       if (!cancelled) {
         setSaved(resolved);
@@ -168,14 +214,15 @@ export default function SavedPage() {
         // a choice. A dead connection is not a choice to make, and routing them
         // there would answer a connectivity failure with a page that cannot load
         // either.
-        else if (added.kind === "offline") flash(CART_OFFLINE_MESSAGE);
-        else if (added.kind === "error") flash(added.message);
+        else if (added.kind === "offline") flash(tKey(CART_OFFLINE_MESSAGE_KEY));
+        // The server's own sentence when it wrote one, our key when it did not.
+        else if (added.kind === "error") flash(added.message ?? tKey(added.messageKey));
         else router.push(productPathFor(outcome.product));
       } catch {
         flash("Could not add that to your cart. Please try again.");
       }
     },
-    [addItem, flash, router],
+    [addItem, flash, router, tKey],
   );
 
   const removeSaved = useCallback(

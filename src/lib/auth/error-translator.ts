@@ -6,6 +6,29 @@ import { isNetworkError } from "@/lib/errors/is-network-error";
 type Translator = (key: string, values?: Record<string, string>) => string;
 
 /**
+ * Resolve one key, or `null` if the namespace does not carry it.
+ *
+ * next-intl either throws on a missing key or echoes the key back, depending on
+ * configuration, so both have to be treated as a miss. That probe was written
+ * inline twice inside `translateCode`; it is exported because a caller with a
+ * *scoped* namespace - checkout's own error copy, say - needs to ask "do you
+ * have something better for this code?" without inheriting this module's
+ * fallback ladder, which would answer with that namespace's `UNKNOWN_ERROR`.
+ */
+export function lookupMessage(
+    t: Translator,
+    key: string,
+    values?: Record<string, string>
+): string | null {
+    try {
+        const translated = t(key, values);
+        return translated && translated !== key ? translated : null;
+    } catch {
+        return null;
+    }
+}
+
+/**
  * Translate a backend error code to a localised string.
  *
  * Contract:
@@ -35,19 +58,8 @@ export function translateCode(
     fallback?: string,
     category?: ErrorCategory
 ): string {
-    // next-intl throws (in strict mode) or returns the key when a key is missing.
-    // We use a try/catch to detect missing keys without needing to pre-enumerate
-    // the full translation map at runtime.
-    try {
-        const translated = t(code as string);
-        // next-intl returns the key itself when a message is not found in some
-        // configurations. Treat a returned key equal to the code as a miss.
-        if (translated && translated !== code) {
-            return translated;
-        }
-    } catch {
-        // Missing key — fall through
-    }
+    const direct = lookupMessage(t, code as string);
+    if (direct) return direct;
 
     // On `internal` and `external_service` the backend replaces `message` with
     // the code's generic registry default and omits `details` entirely, in
@@ -61,13 +73,8 @@ export function translateCode(
     if (!opaque && fallback) return fallback;
 
     if (category) {
-        try {
-            const key = `category.${category}`;
-            const translated = t(key);
-            if (translated && translated !== key) return translated;
-        } catch {
-            // Missing key — fall through
-        }
+        const byCategory = lookupMessage(t, `category.${category}`);
+        if (byCategory) return byCategory;
     }
 
     if (fallback) return fallback;

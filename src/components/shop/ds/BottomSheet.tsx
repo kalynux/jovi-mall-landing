@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
@@ -39,6 +40,10 @@ let openTopSheets = 0;
  * Adapts the design's mobile-only BottomSheet for the web.
  */
 export function BottomSheet({ open, onClose, title, footer, children, layer = "default" }: BottomSheetProps) {
+  // `title` stays a prop — the caller owns that sentence and hands it over
+  // already translated. Only the × this sheet draws itself is ours.
+  const tCommon = useTranslations("shop.common");
+
   /**
    * A stacked sheet is rendered from inside the sheet below it, whose panel is
    * a `motion.div`. While that panel is animating it carries a `transform`,
@@ -152,7 +157,7 @@ export function BottomSheet({ open, onClose, title, footer, children, layer = "d
               <span style={{ flex: 1, fontSize: 16, fontWeight: 800, color: "var(--text-strong)" }}>
                 {title}
               </span>
-              <IconButton icon="x" variant="plain" label="Close" onClick={onClose} />
+              <IconButton icon="x" variant="plain" label={tCommon("close")} onClick={onClose} />
             </div>
             <div style={{ padding: 18, overflowY: "auto", flex: 1 }}>{children}</div>
             {footer && (

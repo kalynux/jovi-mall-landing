@@ -1,9 +1,10 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { BottomSheet } from "./BottomSheet";
 import { Button } from "./Button";
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "./Icon";
 
 /**
  * A confirmation the shopper is asked *inside* the shop.
@@ -31,8 +32,10 @@ export interface ConfirmDialogProps {
   /** Colours the icon chip and, for `danger`, the confirm button. */
   tone?: Tone;
   /** Icon name for the chip beside the body. Omit for a plain dialog. */
-  icon?: string;
+  icon?: IconName;
+  /** Already translated by the caller — it names the action, so only they know it. */
   confirmLabel: string;
+  /** Defaults to the shared “Cancel”. */
   cancelLabel?: string;
   /** True while the confirmed action is in flight — both buttons lock. */
   busy?: boolean;
@@ -41,7 +44,7 @@ export interface ConfirmDialogProps {
   /** The body copy: what happens, and what is lost. */
   children: ReactNode;
   /** An optional third way out, rendered under the body as a quiet link. */
-  alternative?: { label: string; icon?: string; onClick: () => void };
+  alternative?: { label: string; icon?: IconName; onClick: () => void };
 }
 
 const CHIP: Record<Tone, { fg: string; bg: string; border: string }> = {
@@ -56,13 +59,17 @@ export function ConfirmDialog({
   tone = "warning",
   icon,
   confirmLabel,
-  cancelLabel = "Cancel",
+  cancelLabel,
   busy,
   onConfirm,
   onCancel,
   children,
   alternative,
 }: ConfirmDialogProps) {
+  // Resolved here rather than as a default parameter: a hook cannot run in one.
+  const t = useTranslations("shop.ds");
+  const tCommon = useTranslations("shop.common");
+
   const chip = CHIP[tone];
 
   return (
@@ -74,7 +81,7 @@ export function ConfirmDialog({
       footer={
         <div style={{ display: "flex", gap: 10 }}>
           <Button block variant="secondary" disabled={busy} onClick={onCancel}>
-            {cancelLabel}
+            {cancelLabel ?? tCommon("cancel")}
           </Button>
           <Button
             block
@@ -83,7 +90,7 @@ export function ConfirmDialog({
             disabled={busy}
             onClick={onConfirm}
           >
-            {busy ? "Working…" : confirmLabel}
+            {busy ? t("working") : confirmLabel}
           </Button>
         </div>
       }
