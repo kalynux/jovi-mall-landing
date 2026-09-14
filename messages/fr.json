@@ -688,6 +688,7 @@
         "STORAGE_DELETE_FAILED": "Le fichier n'a pas pu être supprimé.",
         "UPLOAD_POLICY_VIOLATION": "Ce fichier enfreint la politique de téléchargement.",
         "MAIL_TEMPLATE_NOT_FOUND": "Un modèle d'e-mail est introuvable. Veuillez contacter l'assistance.",
+        "MAIL_ALL_PROVIDERS_FAILED": "Nous n'avons pas pu envoyer cet e-mail pour le moment. Veuillez réessayer.",
         "VENDOR_UNSUPPORTED_FISCAL_CALENDAR": "Ce type de calendrier fiscal n'est pas pris en charge.",
         "VENDOR_FISCAL_CALENDAR_INVALID": "La configuration du calendrier fiscal est invalide.",
         "VENDOR_NOTIFICATION_NOT_FOUND": "La notification est introuvable.",

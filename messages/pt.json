@@ -688,6 +688,7 @@
         "STORAGE_DELETE_FAILED": "Não foi possível eliminar o ficheiro.",
         "UPLOAD_POLICY_VIOLATION": "Este ficheiro infringe a política de carregamento.",
         "MAIL_TEMPLATE_NOT_FOUND": "Não foi possível encontrar um modelo de e-mail. Contacte o apoio ao cliente.",
+        "MAIL_ALL_PROVIDERS_FAILED": "Não foi possível enviar esse e-mail neste momento. Tente novamente.",
         "VENDOR_UNSUPPORTED_FISCAL_CALENDAR": "Este tipo de calendário fiscal não é suportado.",
         "VENDOR_FISCAL_CALENDAR_INVALID": "A configuração do calendário fiscal é inválida.",
         "VENDOR_NOTIFICATION_NOT_FOUND": "A notificação não pôde ser encontrada.",

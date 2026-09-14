@@ -5,10 +5,10 @@
  * (`jovi-mall/src/core/error-codes.ts`), as documented in api-doc/errors/README.md.
  *
  * This union mirrors the codes documented in api-doc — **not** the registry in
- * full. The backend registry stood at **640** codes on 2026-09-08 (it has read
- * 541 → 621 → 623 → 625 → 640 across editions of the sync programme, so treat
- * any number written down here as stale and re-measure:
- * `grep -cE "^s+[A-Z0-9_]+:s*'" api-doc/error-codes.ts`). The ones absent
+ * full. The backend registry stood at **663** codes on 2026-09-14 (it has read
+ * 541 → 621 → 623 → 625 → 640 → 663 across editions of the sync programme, so
+ * treat any number written down here as stale and re-measure:
+ * `grep -cE "^\s+[A-Z0-9_]+:\s*'" api-doc/error-codes.ts`). The ones absent
  * here are on surfaces this app never calls — the bot surface, the vendor and
  * agency dashboards, the admin internal API.
  *
@@ -339,6 +339,31 @@ export type BackendErrorCode =
     | "GEO_SEARCH_FAILED"
     // ─── Mail ──────────────────────────────────────────────────────────────────
     | "MAIL_TEMPLATE_NOT_FOUND"
+    /**
+     * 502, `category: "external_service"`. Every provider in the backend's mail
+     * chain refused or failed, so the message was never sent.
+     *
+     * ⚠ **Retryable — it must not be presented as a crash.** Two routes this
+     * app calls await the send and deliberately do not catch it, so it reaches
+     * the client: `POST /api/auth/send-email-verification` and
+     * `PATCH /api/me/email`. Before the provider chain landed it surfaced as an
+     * unclassified `500`, so anything keying on that status is now wrong.
+     * Nothing about the account changed — keep the person on the form and let
+     * them press the button again.
+     *
+     * Not an edge case: customers registered through the bot always have
+     * `email_verified = false`, even when the bot captured the address, so the
+     * verification send is the normal path for every customer with an email.
+     *
+     * `details` is dropped at the boundary for `external_service`, so the
+     * per-provider `attempts` the backend attaches never arrive — there is
+     * nothing to parse, and `requestId` is the only handle it leaves.
+     *
+     * `POST /api/auth/forgot-password` never raises it. That route swallows
+     * mail failures on purpose, so that whether the send worked cannot be used
+     * to learn which addresses are registered.
+     */
+    | "MAIL_ALL_PROVIDERS_FAILED"
     // ─── Catalog / Inventory ───────────────────────────────────────────────────
     | "CATALOG_INSUFFICIENT_STOCK"
     | "CATALOG_OVERSALE_NOT_ALLOWED"

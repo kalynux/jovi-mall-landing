@@ -17,7 +17,7 @@ import {
 import { resolveQuickAdd } from "@/lib/shop/quick-add";
 import { productPathFor } from "@/lib/shop/shop.routes";
 import { useAuth } from "@/lib/auth/useAuth";
-import { publicUrl, type ProductListItem } from "@/lib/shop/shop.types";
+import { publicUrl } from "@/lib/shop/shop.types";
 
 type Tab = "saved" | "viewed";
 

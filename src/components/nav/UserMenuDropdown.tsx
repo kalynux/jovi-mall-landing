@@ -107,6 +107,10 @@ export default function UserMenuDropdown({
     }
   }
 
+  // Referenced only by the commented-out "Switch Role" menu item below, which
+  // was disabled in favour of the /auth-me link. Kept so re-enabling that item
+  // is a matter of uncommenting it.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function handleSwitchRole() {
     setOpen(false);
     onSwitchRole();

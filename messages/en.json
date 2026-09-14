@@ -688,6 +688,7 @@
         "STORAGE_DELETE_FAILED": "The file could not be deleted.",
         "UPLOAD_POLICY_VIOLATION": "This file violates the upload policy.",
         "MAIL_TEMPLATE_NOT_FOUND": "An email template could not be found. Please contact support.",
+        "MAIL_ALL_PROVIDERS_FAILED": "We couldn't send that email just now. Please try again.",
         "VENDOR_UNSUPPORTED_FISCAL_CALENDAR": "This fiscal calendar type is not supported.",
         "VENDOR_FISCAL_CALENDAR_INVALID": "The fiscal calendar configuration is invalid.",
         "VENDOR_NOTIFICATION_NOT_FOUND": "The notification could not be found.",

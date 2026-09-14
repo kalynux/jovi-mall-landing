@@ -123,6 +123,13 @@ function Pending({ change, note }: { change: PendingContactChange; note: string 
  * The six sentences are deliberately distinct from one another — EXPIRED says
  * "start again" where TOKEN_INVALID says "check the link", because those are
  * different instructions to a person holding a stale email.
+ *
+ * The seventh case is not a CONTACT_CHANGE code at all. `MAIL_ALL_PROVIDERS_FAILED`
+ * is the backend's 502 for "no configured mail provider accepted the message",
+ * so the change was never opened and the only instruction is to try again. It
+ * borrows the shared `errors.` sentence instead of getting one of this page's
+ * own, because the identical failure reaches the verification send — one string
+ * said one way beats two that drift apart.
  */
 function contactMessageKey(err: unknown): string {
   const code = err instanceof ApiError ? err.code : undefined;
@@ -134,6 +141,10 @@ function contactMessageKey(err: unknown): string {
     case "CONTACT_CHANGE_TOKEN_INVALID":
     case "CONTACT_CHANGE_PHONE_UNPROVEN":
       return `shop.security.errors.${code}`;
+    // Retryable, and deliberately not `somethingWentWrong`: the mail chain
+    // failed, nothing about the account moved, and the button works.
+    case "MAIL_ALL_PROVIDERS_FAILED":
+      return `errors.${code}`;
     default:
       return "shop.common.somethingWentWrong";
   }

@@ -40,6 +40,18 @@ export function lookupMessage(
  * Steps 2 and 3 swap when the category is `internal` or `external_service` —
  * see the comment at the swap for why.
  *
+ * ⚠ **Step 1 outranks that swap**, and for the two opaque categories it is the
+ * only way to say anything specific. There is no per-code table in this module:
+ * a code earns its own sentence purely by having an `errors.<CODE>` key in the
+ * message bundles, so adding one is a catalogue change, not a change here.
+ *
+ * `MAIL_ALL_PROVIDERS_FAILED` is the worked example. It arrives as a 502 with
+ * `category: "external_service"`, so without a key of its own it would resolve
+ * to `errors.category.external_service` — "a service we rely on isn't
+ * responding", which reads like a crash on a form the person can simply submit
+ * again. Its own key says the send failed and invites a retry, and because
+ * step 1 runs before the swap, that is what shows.
+ *
  * `t` is the bound translator from `useTranslations("errors")`.
  *
  * Why a plain function instead of a hook:

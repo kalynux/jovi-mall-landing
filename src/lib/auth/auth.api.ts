@@ -126,6 +126,18 @@ export async function browserRefresh(): Promise<BrowserRefreshResponse> {
  * POST /api/auth/send-email-verification
  * Sends a verification link to the email on the caller's current role entity.
  * userId + role are read from the JWT — no body required.
+ *
+ * ⚠ **Nothing in this app calls this yet — it is kept deliberately, not dead.**
+ * The flow it drives is the normal path rather than an edge case: a customer
+ * registered through the bot always has `email_verified = false`, even when the
+ * bot captured their address, so every customer with an email needs this send at
+ * least once. What is missing is a resend surface in the account UI, not this
+ * function — deleting it would only mean rewriting it when that screen lands.
+ *
+ * It is also one of the two routes that can answer `502 MAIL_ALL_PROVIDERS_FAILED`
+ * (the other is `PATCH /api/me/email`). Whoever wires it up must translate that
+ * code and leave the person on the page to press the button again — see the code's
+ * entry in `backend-error-codes.ts`.
  */
 export async function sendEmailVerification(): Promise<MessageResponse> {
     return apiFetch<MessageResponse>("/api/auth/send-email-verification", {

@@ -12,7 +12,6 @@ interface AnimatedSectionProps {
   stagger?: boolean;
   direction?: "up" | "left" | "right" | "none";
   threshold?: number;
-  as?: "div" | "section" | "article";
 }
 
 /**
@@ -38,7 +37,6 @@ export default function AnimatedSection({
   stagger = false,
   direction = "up",
   threshold = 0.15,
-  as: Tag = "div",
 }: AnimatedSectionProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, {

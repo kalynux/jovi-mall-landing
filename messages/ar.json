@@ -688,6 +688,7 @@
         "STORAGE_DELETE_FAILED": "تعذّر حذف الملف.",
         "UPLOAD_POLICY_VIOLATION": "هذا الملف يخالف سياسة الرفع.",
         "MAIL_TEMPLATE_NOT_FOUND": "لم يتم العثور على قالب البريد الإلكتروني. يرجى التواصل مع الدعم.",
+        "MAIL_ALL_PROVIDERS_FAILED": "تعذّر إرسال هذا البريد الإلكتروني في الوقت الحالي. يرجى المحاولة مرة أخرى.",
         "VENDOR_UNSUPPORTED_FISCAL_CALENDAR": "نوع السنة المالية هذا غير مدعوم.",
         "VENDOR_FISCAL_CALENDAR_INVALID": "إعدادات السنة المالية غير صالحة.",
         "VENDOR_NOTIFICATION_NOT_FOUND": "لم يتم العثور على الإشعار.",

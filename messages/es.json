@@ -688,6 +688,7 @@
         "STORAGE_DELETE_FAILED": "El archivo no pudo eliminarse.",
         "UPLOAD_POLICY_VIOLATION": "Este archivo viola la política de subida.",
         "MAIL_TEMPLATE_NOT_FOUND": "No se encontró una plantilla de correo. Contacta con soporte.",
+        "MAIL_ALL_PROVIDERS_FAILED": "No pudimos enviar ese correo en este momento. Inténtalo de nuevo.",
         "VENDOR_UNSUPPORTED_FISCAL_CALENDAR": "Este tipo de calendario fiscal no está soportado.",
         "VENDOR_FISCAL_CALENDAR_INVALID": "La configuración del calendario fiscal no es válida.",
         "VENDOR_NOTIFICATION_NOT_FOUND": "No se encontró la notificación.",
