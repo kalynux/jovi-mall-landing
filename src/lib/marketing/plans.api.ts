@@ -11,6 +11,7 @@
  * build time rather than at runtime in someone's browser.
  */
 import "server-only";
+import { describeFetchError, fetchWithRetry } from "@/lib/build-fetch";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8022";
 
@@ -127,9 +128,9 @@ async function getJson<T>(path: string): Promise<T> {
   let res: Response;
 
   try {
-    res = await fetch(url, { next: { revalidate: PLAN_REVALIDATE_SECONDS } });
+    res = await fetchWithRetry(url, { next: { revalidate: PLAN_REVALIDATE_SECONDS } });
   } catch (error) {
-    throw new PlanCatalogError(url, error instanceof Error ? error.message : "network error");
+    throw new PlanCatalogError(url, describeFetchError(error));
   }
 
   if (!res.ok) throw new PlanCatalogError(url, `HTTP ${res.status}`);
