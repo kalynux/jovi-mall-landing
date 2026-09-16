@@ -73,7 +73,7 @@ export default function ErrorScreen({
           {t(`${variant}.body`)}
         </p>
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+        <div className="cta-row cta-row-center mt-8">
           {reset && (
             <CTAButton onClick={reset} variant="primary">
               <RefreshCw className="h-4 w-4" aria-hidden="true" />

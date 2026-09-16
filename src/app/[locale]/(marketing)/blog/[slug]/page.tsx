@@ -213,7 +213,7 @@ export default async function ArticlePage({ params }: PageProps) {
           <div className="mt-6 max-w-3xl">
             <Link
               href={categoryPath(article.category.slug)}
-              className="inline-flex items-center rounded-pill border border-role-soft bg-role-soft px-3 py-1 font-display text-[11px] font-bold uppercase tracking-[0.12em] text-role transition-opacity hover:opacity-80"
+              className="tag transition-opacity hover:opacity-80"
             >
               {article.category.label}
             </Link>

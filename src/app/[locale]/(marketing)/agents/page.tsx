@@ -92,6 +92,9 @@ export default async function AgentsPage({ params }: PageProps) {
               t("agents.earnings.p3"),
             ]}
           />
+          <p className="mt-6 max-w-2xl rounded-2xl border border-[var(--border)] bg-[var(--surface-glass)] p-4 text-sm leading-relaxed text-[var(--text-muted)]">
+            {t("common.payoutCapNote")}
+          </p>
         </Section>
 
         <Section title={t("agents.capacity.title")} tone="subtle">

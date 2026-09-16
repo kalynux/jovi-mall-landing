@@ -6,7 +6,7 @@ import { phoneErrorMessage, toE164, validatePhone } from "@/lib/phone/phone";
 // ─── Role Schema ─────────────────────────────────────────────────────────────
 // Use z.enum() directly — avoids .transform() which widens the inferred type
 // from the literal union to `string`, breaking react-hook-form type inference.
-const UI_ROLE_VALUES = ["vendor", "agency", "agent", "customer"] as const;
+const UI_ROLE_VALUES = ["customer", "vendor", "agency", "agent"] as const;
 export const UiRoleSchema = z.enum(UI_ROLE_VALUES);
 
 // ─── Field-error keys ────────────────────────────────────────────────────────

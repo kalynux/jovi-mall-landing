@@ -83,6 +83,8 @@
         "pillNoStorefront": "Sin tienda virtual",
         "ctaPrimary": "Empezar",
         "ctaSecondary": "Ver cómo funciona",
+        "ctaWhatsapp": "Chatear por WhatsApp",
+        "ctaWhatsappPrefill": "¡Hola Wi-Mall! Me gustaría empezar a comprar.",
         "socialProof": "Sé uno de nuestros vendedores fundadores",
         "aiLabel": "IA activa",
         "orderConfirmed": "¡Pedido confirmado!",
@@ -106,11 +108,10 @@
         "title2": "Todos los roles.",
         "title3": "Conectados.",
         "subtitle": "De un mensaje de WhatsApp a un producto entregado — cada paso funciona automáticamente en Wi-Mall.",
-        "stats": {
-            "aiResponse": "Tiempo de respuesta IA",
-            "uptime": "Disponibilidad de la plataforma",
-            "payments": "Dinero móvil y tarjetas",
-            "cities": "Ciudades previstas"
+        "phases": {
+            "conversation": "Conversación",
+            "dispatch": "Pedido y despacho",
+            "payout": "Entrega y pago"
         },
         "flow": {
             "step1Title": "El cliente chatea en WhatsApp",
@@ -501,13 +502,14 @@
         "switching": "Cambiando…"
     },
     "agentApp": {
-        "title": "La app de Repartidor rinde más en la calle",
-        "body": "Avisos de pedidos en directo, navegación paso a paso y confirmación de entrega con un toque — hecha para la ruta.",
+        "title": "Instala la app de Repartidor",
+        "body": "Avisos de pedidos en directo, navegación paso a paso y confirmación de entrega con un toque — hecha para la ruta. La app de Repartidor es la única forma de trabajar: no hay versión web.",
+        "download": "Descargar la app",
         "android": "Consíguelo en Google Play",
         "ios": "Descárgalo en el App Store",
         "comingSoon": "Muy pronto",
-        "appHint": "Todo lo demás está en el panel web.",
-        "continueWeb": "Continuar en la web",
+        "appHint": "Se instala directamente desde Wi-Mall. Las fichas en las tiendas llegan pronto.",
+        "createAccount": "Crea tu cuenta de repartidor",
         "close": "Cerrar"
     },
     "addRole": {
@@ -920,7 +922,8 @@
             "allQuestions": "Ver todas las preguntas",
             "currencyNote": "Los precios están en FCFA (XAF), la moneda del mercado al que Wi-Mall sirve primero.",
             "faqShort": "FAQ",
-            "openFormNewTab": "Abrir el formulario en una pestaña nueva"
+            "openFormNewTab": "Abrir el formulario en una pestaña nueva",
+            "payoutCapNote": "Las cuentas no verificadas pueden retirar como máximo el 45 % de su saldo disponible al mes, y ese 45 % debe alcanzar por sí solo el pago mínimo de 10.000 FCFA — por debajo de eso no hay retiro posible hasta que el saldo crezca. Verificar la cuenta elimina el límite."
         },
         "plans": {
             "free": "Gratis",
@@ -993,8 +996,8 @@
             },
             "credits": {
                 "title": "Qué son los créditos",
-                "p1": "Dos cosas cuestan dinero de verdad cada vez que ocurren en Wi-Mall, así que se miden en lugar de incluirse: indexar uno de tus productos para que el asistente de IA pueda encontrarlo y recomendarlo, y enviar un mensaje de plantilla de WhatsApp facturable a un cliente. Cada una cuesta 1 crédito.",
-                "p2": "Activar un plan concede su asignación una sola vez — 50 créditos en el plan gratuito de vendedor, 4.500 en Business. Si la agotas, recarga por paquetes. Cuanto mayor el paquete, menos cuesta cada crédito.",
+                "p1": "Dos cosas cuestan dinero de verdad cada vez que ocurren en Wi-Mall, así que se miden en lugar de incluirse: indexar uno de tus productos para que el asistente de IA pueda encontrarlo y recomendarlo, que cuesta 5 créditos, y enviar un mensaje de plantilla de WhatsApp facturable a un cliente, que cuesta 2.",
+                "p2": "Activar un plan concede su asignación una sola vez — 50 créditos en el plan gratuito de vendedor, 1.500 en Business. Si la agotas, recarga por paquetes. Cuanto mayor el paquete, menos cuesta cada crédito.",
                 "packsTitle": "Paquetes de créditos",
                 "packsCaption": "Paquetes de recarga de créditos y sus precios",
                 "creditsHead": "Créditos",
@@ -1344,7 +1347,11 @@
                 },
                 "credits": {
                     "q": "¿Qué son los créditos, y tengo que comprarlos?",
-                    "a": "Los créditos miden dos cosas que cuestan dinero cada vez que ocurren: indexar un producto para que el asistente pueda recomendarlo, y enviar un mensaje de plantilla de WhatsApp facturable. Cada una cuesta un crédito. Todos los planes conceden una asignación al activarse, así que la mayoría de las cuentas nunca compra ninguno; si agotas la tuya, los paquetes empiezan en 600 FCFA por 100 créditos."
+                    "a": "Los créditos miden dos cosas que cuestan dinero cada vez que ocurren: indexar un producto para que el asistente pueda recomendarlo, por 5 créditos, y enviar un mensaje de plantilla de WhatsApp facturable, por 2. Todos los planes conceden una asignación al activarse, así que la mayoría de las cuentas nunca compra ninguno; si agotas la tuya, los paquetes empiezan en 600 FCFA por 100 créditos."
+                },
+                "payoutVerification": {
+                    "q": "¿Hay un límite de retiro antes de que se verifique mi cuenta?",
+                    "a": "Sí. Mientras una cuenta no está verificada, el retiro se limita al 45 % del saldo disponible en un mes dado. Ese 45 % también tiene que alcanzar por sí solo el pago mínimo de 10.000 FCFA — así que si el 45 % de tu saldo queda por debajo de 10.000 FCFA, no hay retiro posible hasta que el saldo crezca o se verifique la cuenta. Verificar la cuenta elimina el límite y todo el saldo disponible pasa a ser retirable."
                 },
                 "renewal": {
                     "q": "¿Los planes se renuevan automáticamente?",

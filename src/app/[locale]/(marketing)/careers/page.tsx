@@ -116,14 +116,7 @@ export default async function CareersPage({ params }: PageProps) {
               )}
             >
               <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className={cn(
-                    "inline-flex items-center rounded-pill px-2.5 py-1 font-display text-[10px] font-bold uppercase tracking-[0.12em]",
-                    HIRING_OPEN
-                      ? "border border-role-soft bg-role-soft text-role"
-                      : "border border-[var(--border-medium)] bg-[var(--bg-muted)] text-[var(--text-muted)]"
-                  )}
-                >
+                <span className={cn("tag", !HIRING_OPEN && "tag-muted")}>
                   {HIRING_OPEN ? t("careers.roles.openBadge") : t("careers.roles.closedBadge")}
                 </span>
                 <span className="text-[11px] uppercase tracking-wider text-[var(--text-muted)]">

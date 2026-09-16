@@ -227,6 +227,9 @@ export default async function PricingPage({ params }: PageProps) {
         <Prose
           paragraphs={[t("pricing.payment.p1"), t("pricing.payment.p2"), t("pricing.payment.p3")]}
         />
+        <p className="mt-6 max-w-2xl rounded-2xl border border-[var(--border)] bg-[var(--surface-glass)] p-4 text-sm leading-relaxed text-[var(--text-muted)]">
+          {t("common.payoutCapNote")}
+        </p>
       </Section>
 
       <Section title={t("pricing.faqTitle")}>

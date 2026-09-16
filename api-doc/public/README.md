@@ -13,7 +13,7 @@ routes, not seven.
 marketing site: it prints real prices and real articles, so it needs to *read* them rather than keep
 a hand-copy.
 
-**Four routers share this prefix**, documented separately:
+**Five routers share this prefix**, documented separately:
 
 | | Contract |
 |---|---|
@@ -21,6 +21,7 @@ a hand-copy.
 | The **catalog** (`/products`, `/variants`, `/categories`, `/stores`) | [catalog.md](./catalog.md) |
 | The **blog** (`/articles`) | [articles.md](./articles.md) |
 | Published **product reviews** (`/products/:productId/reviews`) | [../reviews.md](../reviews.md) |
+| The **agent app download** (`/app/:app/latest`, `/app/:app/download`) | [app-downloads.md](./app-downloads.md) |
 
 Everything else in this API is behind `requireAuth`. `/api/public` is the only exception, so the rule
 for anything added here is narrow: **read-only, no identity, and already published on a public page.**
@@ -168,8 +169,8 @@ env-overridable, which is exactly why they must be read rather than copied.
       { "code": "pack_2250", "credits": 2250, "price": 12000, "currency": "XAF" }
     ],
     "actionCosts": {
-      "vectorisation": 1,
-      "whatsappTemplate": 1
+      "vectorisation": 5,
+      "whatsappTemplate": 2
     }
   }
 }

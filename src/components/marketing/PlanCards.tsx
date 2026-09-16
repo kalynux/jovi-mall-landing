@@ -80,8 +80,13 @@ export function PlanCard({
         highlight
           ? "border-2 border-role-soft shadow-lg lg:scale-[1.03]"
           : "hover:-translate-y-1 hover:border-role-soft hover:shadow-md",
-        !plan.is_active && "opacity-90"
+        // A tier the catalog will not sell reads as struck out before the badge
+        // is: desaturated, with a hatched overlay. See .plan-unavailable in
+        // globals.css — it also explains why the filter there is safe only
+        // while these cards carry no CTA.
+        !plan.is_active && "plan-unavailable"
       )}
+      aria-disabled={!plan.is_active || undefined}
     >
       {highlight && (
         // The one tier that gets to shout: a brand-gradient crown strip over the
@@ -93,11 +98,7 @@ export function PlanCard({
       )}
       <div className="flex items-start justify-between gap-3">
         <h3 className="font-display text-lg font-bold text-[var(--text-primary)]">{plan.name}</h3>
-        {!plan.is_active && (
-          <span className="rounded-full border border-[var(--border)] bg-[var(--bg-subtle)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-            {copy.unavailable}
-          </span>
-        )}
+        {!plan.is_active && <span className="tag tag-muted shrink-0">{copy.unavailable}</span>}
       </div>
 
       <p

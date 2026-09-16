@@ -160,11 +160,12 @@ store pages carry rating rich results legitimately.
 
 ### 3d. WhatsApp entry point
 
-`BRAND.whatsappNumber` in `src/lib/constants.ts` is still the placeholder
-`+2340000000000`, and `WHATSAPP_CUSTOMER_LINK` is built from it. The marketing
-pages route their CTAs to `/register?role=…` rather than to WhatsApp precisely
-because of this — the customer CTA is the one path they do not push. Set the real
-number and the customer-side CTA becomes usable on every page.
+`BRAND.whatsappNumber` in `src/lib/constants.ts` is the real bot line,
+`+237652705926` — it is no longer a placeholder, and `NEXT_PUBLIC_WHATSAPP_NUMBER`
+only overrides it. (It was `+15557845447` until 2026-09-16; that line is dead.)
+The customer-side WhatsApp CTA is therefore live everywhere, including the third
+hero button and the contact page, both of which are built from it via
+`buildWhatsAppUrl()`.
 
 ---
 

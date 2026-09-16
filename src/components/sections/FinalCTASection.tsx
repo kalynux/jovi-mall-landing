@@ -51,10 +51,9 @@ export default function FinalCTASection({ onGetStarted }: FinalCTASectionProps) 
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="flex flex-col items-center gap-6 max-w-2xl"
         >
-          {/* Badge */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary-500/30 bg-primary-600/10 text-primary-300 text-xs font-display font-semibold">
-            {t("badge")}
-          </div>
+          {/* Badge. `tag-on-dark` inverts the ink fill — this band is dark in
+              BOTH themes, so a plain .tag would sink into it. */}
+          <div className="tag tag-on-dark">{t("badge")}</div>
 
           {/* Headline */}
           <h2

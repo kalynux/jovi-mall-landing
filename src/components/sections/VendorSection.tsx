@@ -60,7 +60,7 @@ export default function VendorSection() {
             ))}
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="cta-row">
             <RoleCtaButton role="vendor" fallbackLabel={t("ctaPrimary")} size="md" showArrow />
             {/* The section is a summary; the page is the answer. */}
             <LinkButton href="/vendors" variant="secondary" size="md" showArrow>

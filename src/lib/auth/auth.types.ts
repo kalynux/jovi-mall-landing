@@ -7,7 +7,12 @@ export type Role = "customer" | "vendor" | "agency" | "agent" | "admin";
 /** Roles surfaced in public-facing UI pickers. Admin is excluded. */
 export type UiRole = Exclude<Role, "admin">;
 
-export const UI_ROLES: UiRole[] = ["vendor", "agency", "agent", "customer"];
+/**
+ * Customer first: it is the role most visitors are, and the pickers now lead
+ * with it. Order here is documentation — `isUiRole` only reads membership — but
+ * the renderers below are expected to match it, so keep them in step.
+ */
+export const UI_ROLES: UiRole[] = ["customer", "vendor", "agency", "agent"];
 
 /**
  * Narrows an untrusted value (a `?role=` query param, most often) to a UiRole.

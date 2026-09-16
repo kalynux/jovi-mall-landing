@@ -4,21 +4,23 @@ export const BRAND = {
     tagline: "Commerce runs on conversation.",
     description:
         "AI-powered ecommerce infrastructure for WhatsApp-first businesses. No storefront needed — just upload products and let AI sell for you.",
-    whatsappNumber: "+2340000000000", // Placeholder
-    email: "hello@wi-mall.com",
+    whatsappNumber: "+237652705926",
+    email: "support@wi-mall.com",
 };
 
 // ─── Outward destinations ───────────────────────────────────────────────────
 /**
  * Everything this app links to that it does not host.
  *
- * All three are env-overridable so the real values can land without a code
- * change, and every consumer must treat an empty string as "not published yet"
- * and render the affected control disabled rather than shipping a dead link.
+ * All are env-overridable so the real values can land without a code change, and
+ * every consumer must treat an empty string as "not published yet" and render
+ * the affected control disabled rather than shipping a dead link.
  *
- * NOTE: `BRAND.whatsappNumber` is still a placeholder with a Nigerian prefix,
- * while the product runs on Cameroon/FCFA. Until NEXT_PUBLIC_WHATSAPP_NUMBER is
- * set to the real business line, every wa.me link reaches nobody.
+ * `BRAND.whatsappNumber` is the live bot line, so an unset
+ * NEXT_PUBLIC_WHATSAPP_NUMBER now degrades to the right number rather than to a
+ * dead one. Next inlines both the env value and this literal fallback into the
+ * client bundle, which is why the fallback must never be a number that reaches
+ * nobody.
  */
 export const EXTERNAL_LINKS = {
     /** WhatsApp bot number, E.164. */
@@ -37,6 +39,19 @@ export const EXTERNAL_LINKS = {
     agentAndroidUrl: process.env.NEXT_PUBLIC_AGENT_APP_ANDROID_URL ?? "",
     /** Agent app on the App Store. Empty until the listing is live. */
     agentIosUrl: process.env.NEXT_PUBLIC_AGENT_APP_IOS_URL ?? "",
+    /**
+     * Direct APK download, served by the API's public app-distribution route.
+     *
+     * Distinct from `agentAndroidUrl` on purpose: that one is the Play Store
+     * listing and is still unpublished, while this is the sideload the agent
+     * app actually ships through today. **There is no agent web app** — the
+     * agent role has a dashboard origin in `ROLE_SUBDOMAIN_MAP` for an already
+     * signed-in session, but a new agent has nothing to continue *to* on the
+     * web, which is why the dialog leads with this rather than a web link.
+     */
+    agentApkUrl:
+        process.env.NEXT_PUBLIC_AGENT_APP_APK_URL ??
+        "https://api.wi-mall.com/api/public/app/agent-android/download",
 };
 
 /** Builds a wa.me deep link to the bot with `text` prefilled. */

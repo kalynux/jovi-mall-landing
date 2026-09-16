@@ -11,7 +11,7 @@ import {
 } from "framer-motion";
 import { MessageCircle, Zap, Bot, CheckCheck } from "lucide-react";
 import CTAButton from "@/components/ui/CTAButton";
-import { BRAND } from "@/lib/constants";
+import { BRAND, buildWhatsAppUrl } from "@/lib/constants";
 import { useSignatureReducedMotion, useReducedMotionSafe } from "@/lib/reduced-motion";
 import { useTranslations } from "next-intl";
 
@@ -399,7 +399,7 @@ export default function HeroSection({ onGetStarted }: HeroSectionProps) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary-400/30 bg-[var(--accent-light)] text-primary-600 text-xs font-display font-semibold"
+            className="tag role-accent"
           >
             <Zap className="w-3 h-3" />
             {t("badge")}
@@ -441,23 +441,28 @@ export default function HeroSection({ onGetStarted }: HeroSectionProps) {
             transition={{ delay: 0.5, duration: 0.5 }}
           >
             {[
-              { icon: MessageCircle, tKey: "pillWhatsApp", color: "text-wa-dark dark:text-wa border-wa/20" },
-              { icon: Bot, tKey: "pillAI", color: "text-primary-600 bg-[var(--accent-light)] border-primary-400/20" },
-              { icon: Zap, tKey: "pillNoStorefront", color: "text-primary-600 bg-[var(--accent-light)] border-primary-400/20" },
-            ].map(({ icon: Icon, tKey, color }) => (
-              <span
-                key={tKey}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${color}`}
-              >
+              // WhatsApp keeps its green: it names the channel the whole product
+              // runs on, and it is the same green the rest of the page uses for
+              // that channel. The other two were only ever the brand accent —
+              // the same colour as the badge directly above them — so they go
+              // muted. One accent badge, one green and two neutrals reads as a
+              // hierarchy; four accent blocks stacked in a column does not.
+              { icon: MessageCircle, tKey: "pillWhatsApp", tone: "tag-wa" },
+              { icon: Bot, tKey: "pillAI", tone: "tag-muted" },
+              { icon: Zap, tKey: "pillNoStorefront", tone: "tag-muted" },
+            ].map(({ icon: Icon, tKey, tone }) => (
+              <span key={tKey} className={`tag ${tone}`}>
                 <Icon className="w-3 h-3" />
                 {t(tKey as Parameters<typeof t>[0])}
               </span>
             ))}
           </motion.div>
 
-          {/* CTAs */}
+          {/* CTAs. `w-full` is load-bearing: the column above is `items-start`,
+              so without it this row shrink-wraps and .cta-row's full-width
+              mobile stack has nothing to be full-width of. */}
           <motion.div
-            className="flex flex-wrap gap-3 mt-2"
+            className="cta-row mt-2 w-full"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.55, duration: 0.6 }}
@@ -468,6 +473,21 @@ export default function HeroSection({ onGetStarted }: HeroSectionProps) {
             <CTAButton variant="secondary" size="lg" href="#how-it-works" magnetic>
               {t("ctaSecondary")}
             </CTAButton>
+            {/* Third door: straight into the bot, no account needed. CTAButton
+                takes no target/rel and is not ours to change, so this is a plain
+                <a> wearing CTAButton's secondary/lg classes, tinted WhatsApp
+                green so it reads as a different path and not a third identical
+                button. The hover tint is `wa/10` rather than the solid wa-light,
+                which would put light green under light text in dark mode. */}
+            <a
+              href={buildWhatsAppUrl(t("ctaWhatsappPrefill"))}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative inline-flex items-center justify-center gap-2.5 rounded-2xl border border-wa/60 bg-[var(--surface-glass)] px-8 py-4 font-display text-lg font-semibold text-[var(--text-primary)] transition-[box-shadow,background-color,border-color] duration-200 hover:border-wa hover:bg-wa/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wa focus-visible:ring-offset-2"
+            >
+              <MessageCircle className="h-5 w-5 shrink-0 text-wa-dark dark:text-wa" aria-hidden="true" />
+              {t("ctaWhatsapp")}
+            </a>
           </motion.div>
 
           {/* Social proof */}

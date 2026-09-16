@@ -101,6 +101,9 @@ export default async function VendorsPage({ params }: PageProps) {
 
         <Section title={t("vendors.cost.title")} tone="subtle">
           <Prose paragraphs={[t("vendors.cost.p1"), t("vendors.cost.p2")]} />
+          <p className="mt-6 max-w-2xl rounded-2xl border border-[var(--border)] bg-[var(--surface-glass)] p-4 text-sm leading-relaxed text-[var(--text-muted)]">
+            {t("common.payoutCapNote")}
+          </p>
           <p className="mt-5 text-sm">
             <TextLink href="/pricing#vendors">{t("common.ctaPricing")}</TextLink>
           </p>

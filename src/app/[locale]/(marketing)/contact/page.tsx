@@ -53,11 +53,13 @@ export default async function ContactPage({ params }: PageProps) {
     { name: t("nav.contact"), path: PATH },
   ];
 
-  // The WhatsApp line is shown only once a real number is configured.
-  // `BRAND.whatsappNumber` is still the `+2340000000000` placeholder, and
-  // publishing a number that reaches nobody on the page whose entire job is
-  // being reachable is worse than publishing one fewer channel.
-  const whatsappConfigured = Boolean(process.env.NEXT_PUBLIC_WHATSAPP_NUMBER);
+  // This used to be `Boolean(process.env.NEXT_PUBLIC_WHATSAPP_NUMBER)`, because
+  // `BRAND.whatsappNumber` was the `+2340000000000` placeholder and publishing a
+  // number that reaches nobody, on the page whose entire job is being reachable,
+  // is worse than publishing one fewer channel. The fallback is now the real bot
+  // line, so the env var only overrides it and the gate had become a way to hide
+  // a working channel from any deploy that relied on the default.
+  const whatsappConfigured = Boolean(EXTERNAL_LINKS.whatsappNumber);
   const waUrl = buildWhatsAppUrl(t("contact.channels.whatsappMessage"));
 
   return (

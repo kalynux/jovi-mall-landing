@@ -57,9 +57,15 @@ export function CategoryChips({
   activeSlug?: string;
   allLabel: string;
 }) {
+  // Squared to the same 2px as `.tag` so the chips read as the same family,
+  // but deliberately not `.tag` itself: a tag is one solid ink block, and a
+  // filter needs two visibly different states plus a muted count riding
+  // inside it. Flattening both states into ink would leave the active chip
+  // indistinguishable from the rest of the row, which is the only thing a
+  // filter has to communicate.
   const chip = (active: boolean) =>
     cn(
-      "inline-flex items-center gap-1.5 rounded-pill border px-3.5 py-2 font-display text-xs font-semibold transition-colors sm:text-sm",
+      "inline-flex items-center gap-1.5 rounded-[2px] border px-3.5 py-2 font-display text-xs font-semibold transition-colors sm:text-sm",
       active
         ? "border-role-soft bg-role-soft text-role"
         : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-primary-400 hover:text-[var(--text-primary)]"

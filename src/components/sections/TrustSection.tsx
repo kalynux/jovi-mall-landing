@@ -97,9 +97,13 @@ export default function TrustSection() {
         </div>
         <div className="flex flex-wrap items-center justify-center gap-3">
           {GUARANTEES.map(({ icon: Icon, key }) => (
+            // Chips, not badges: they keep the glass surface and their own
+            // text colour, but take .tag's 2px corner and lose glass-strong's
+            // drop shadow (plain .glass is the same surface without it) so they
+            // sit in the same squared family as the badges.
             <div
               key={key}
-              className="flex items-center gap-2 px-4 py-2 rounded-full glass-strong text-xs font-display font-medium text-[var(--text-secondary)]"
+              className="flex items-center gap-2 rounded-[2px] glass px-4 py-2 text-xs font-display font-medium text-[var(--text-secondary)]"
             >
               <Icon className="w-3.5 h-3.5 text-primary-500 flex-shrink-0" />
               {t(key)}

@@ -359,6 +359,103 @@ html.dark,
     @apply -translate-y-0.5;
   }
 
+  /* ─── Tags ────────────────────────────────────────────────────────────────
+     The one badge style, replacing sixteen hand-rolled pills that disagreed on
+     radius, tracking, size and weight. Squared, solid, no glow — a printed
+     label rather than a glowing chip.
+
+     The fill is mixed toward --gray-900 rather than used raw: the role accents
+     are tuned for TEXT on a page background and are far too light to carry
+     white at 11px. The ratio differs per theme because the dark-theme accents
+     start lighter and need more ink to reach the same contrast (both land
+     around 5.7:1).
+
+     Letter-spacing is deliberate here and deliberately undone for Arabic — the
+     unlayered `:lang(ar) { letter-spacing: 0 }` near the top of this file
+     outranks any layered rule, which is what keeps Arabic letterforms joined.
+     Do not re-assert tracking on a .tag from a utility class. */
+  .tag {
+    --tag-fill: color-mix(in srgb, var(--role, var(--accent)) 80%, var(--gray-900));
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3125rem 0.625rem;
+    border-radius: 2px;
+    background: var(--tag-fill);
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    box-shadow: none;
+  }
+  html.dark .tag {
+    --tag-fill: color-mix(in srgb, var(--role, var(--accent)) 55%, var(--gray-900));
+  }
+  /* Variants set --role rather than --tag-fill, so they inherit the same
+     per-theme ink mix instead of each re-deriving one. */
+  .tag-wa { --role: var(--whatsapp); }
+  .tag-muted { --role: var(--gray-500); }
+  /* On an already-dark band the ink fill vanishes into the background, so the
+     tag inverts there. Two classes deep to outrank `html.dark .tag`. */
+  .tag.tag-on-dark {
+    --tag-fill: rgba(255, 255, 255, 0.92);
+    color: var(--gray-900);
+  }
+
+  /* ─── CTA rows ────────────────────────────────────────────────────────────
+     Every two-button group on the site. Previously each call site picked its
+     own `flex flex-wrap` string, so on a narrow phone the secondary wrapped to
+     its own line at its intrinsic width while the primary kept the 13.5rem
+     floor RoleCtaButton pins — two buttons, two widths, ragged left edge.
+
+     Below sm the children are full-width and stacked; from sm they are a
+     centred-or-leading wrapping row at intrinsic width. */
+  .cta-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .cta-row > * { width: 100%; }
+  .cta-row-center { justify-content: center; }
+  @media (min-width: 640px) {
+    .cta-row {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .cta-row > * { width: auto; }
+  }
+
+  /* ─── Unpurchasable plan tiers ────────────────────────────────────────────
+     A tier the catalog defines but will not sell. Greyed and hatched like a
+     zebra crossing, so "you cannot buy this yet" is legible before the badge
+     is read.
+
+     `filter` here is safe ONLY because an inactive card renders no CTA and
+     therefore hosts no dialog: a filtered ancestor re-bases `position: fixed`
+     onto itself. If a control is ever added to these cards, drop the filter
+     rather than portalling around it. */
+  .plan-unavailable {
+    position: relative;
+    overflow: hidden;
+    filter: grayscale(0.85);
+  }
+  .plan-unavailable::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--text-muted) 14%, transparent) 0 6px,
+      transparent 6px 16px
+    );
+  }
+
   /* Gradient text (recoloured to brand green) */
   .text-gradient {
     background: linear-gradient(135deg, #068554 0%, #0DA06B 50%, #22BD82 100%);
@@ -698,27 +795,12 @@ html.dark,
    element is offscreen (loops are opt-in via .is-live).
    ============================================================ */
 
-/* Focal handoff: the flow pipeline "energizes" once in view. A single travelling
-   current runs the connector from the first node to the last, then rests. */
-@keyframes flow-current {
-  0%   { background-position: 200% 0; opacity: 0; }
-  12%  { opacity: 1; }
-  88%  { opacity: 1; }
-  100% { background-position: -60% 0; opacity: 0.9; }
-}
-.flow-rail {
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--accent) 42%, transparent), transparent 60%),
-    color-mix(in srgb, var(--accent) 16%, transparent);
-  background-size: 55% 100%, 100% 100%;
-  background-repeat: no-repeat;
-  background-position: -60% 0, 0 0;
-}
-.flow-rail.is-live { animation: flow-current 2.4s var(--ease-out, cubic-bezier(0.22,1,0.36,1)) 0.15s both; }
-@media (prefers-reduced-motion: reduce) {
-  .flow-rail { background: color-mix(in srgb, var(--accent) 26%, transparent); }
-  .flow-rail.is-live { animation: none; }
-}
+/* `.flow-rail` / `@keyframes flow-current` lived here — one travelling current
+   that swept the whole six-node connector once and left nothing behind. The
+   rebuilt FlowDiagram draws its rail per segment instead, in step order, so the
+   path *stays* drawn; it was the only consumer, so both are gone rather than
+   kept as a style nothing selects. `.node-wake` below is still live (FlowDiagram
+   and DashboardMockup). */
 
 /* A node "wakes up": a one-shot ring pulse used as the automation reaches it. */
 @keyframes node-wake {

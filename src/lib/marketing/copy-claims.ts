@@ -46,7 +46,7 @@ const PLAN_CLAIMS: Claim[] = [
   { keys: ["pages.vendors.cost.p2", "pages.faq.q.vendorCost.a"], code: "business", field: "max_active_products", expected: null },
   { keys: ["pages.vendors.cost.p2", "pages.faq.q.vendorCost.a", "pages.pricing.howWeEarn.commission.body"], code: "business", field: "commission_percent", expected: 3 },
   { keys: ["pages.vendors.cost.p2"], code: "business", field: "max_storage_bytes", expected: 107374182400 },
-  { keys: ["pages.pricing.credits.p2"], code: "business", field: "credit_allowance", expected: 4500 },
+  { keys: ["pages.pricing.credits.p2"], code: "business", field: "credit_allowance", expected: 1500 },
 
   // Agency free tier — the "thousand open deliveries" line appears in four places.
   { keys: ["pages.agencies.capacity.p1", "pages.agencies.cta.finePrint", "pages.city.opportunityBody"], code: "agency_free", field: "max_unterminated_shipments", expected: 1000 },
@@ -58,7 +58,20 @@ const PLAN_CLAIMS: Claim[] = [
 
 /** The one credit-pack figure the prose quotes, plus the per-action costs. */
 const CHEAPEST_PACK_CLAIM = { keys: ["pages.faq.q.credits.a"], credits: 100, price: 600 };
-const ACTION_COST_CLAIM = { keys: ["pages.pricing.credits.p1", "pages.faq.q.credits.a"], cost: 1 };
+
+/**
+ * Per-action, not one shared number.
+ *
+ * These were both 1 credit, and the copy said so in a single clause ("each
+ * costs 1 credit") that a one-value claim could check. They now differ, the
+ * sentences name each price separately, and so does this. Keyed by the field
+ * name on `CreditCatalog["actionCosts"]` so a cost the backend starts serving
+ * without a claim here fails loudly rather than going unchecked.
+ */
+const ACTION_COST_CLAIMS: Record<string, { keys: string[]; cost: number }> = {
+  vectorisation: { keys: ["pages.pricing.credits.p1", "pages.faq.q.credits.a"], cost: 5 },
+  whatsappTemplate: { keys: ["pages.pricing.credits.p1", "pages.faq.q.credits.a"], cost: 2 },
+};
 
 function describe(value: number | null): string {
   return value === null ? "null (unlimited)" : String(value);
@@ -106,10 +119,18 @@ export function assertCopyMatchesCatalog(plans: PublicPlan[], credits: CreditCat
 
   // Env-overridable backend-side, so these drift more easily than the prices.
   for (const [action, cost] of Object.entries(credits.actionCosts)) {
-    if (cost !== ACTION_COST_CLAIM.cost) {
+    const claim = ACTION_COST_CLAIMS[action];
+    if (!claim) {
       problems.push(
-        `credit cost for ${action} is ${cost}, copy says ${ACTION_COST_CLAIM.cost} — ` +
-          `update ${ACTION_COST_CLAIM.keys.join(", ")}`
+        `the catalog now meters "${action}" at ${cost} credits and no sentence ` +
+          `claims it — add it to ACTION_COST_CLAIMS and to the credits prose`
+      );
+      continue;
+    }
+    if (cost !== claim.cost) {
+      problems.push(
+        `credit cost for ${action} is ${cost}, copy says ${claim.cost} — ` +
+          `update ${claim.keys.join(", ")}`
       );
     }
   }

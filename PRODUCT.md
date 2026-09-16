@@ -37,7 +37,8 @@ WhatsApp-native, AI-run commerce built from the ground up for mobile-dominant, W
 - **Stack (existing — do not swap frameworks):** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS, next-intl for i18n, framer-motion, react-hook-form + zod. Backend API base is configurable via `NEXT_PUBLIC_API_URL`.
 - **Terminology:** Vendor, Agency, Agent, Customer; "roles"; the AI assistant is "Wi-Mall AI".
 - **Constraints to honor:** low-data / low-bandwidth performance, entry-level device support, RTL for Arabic, and WhatsApp as the primary customer channel.
-- **Open / not yet settled:** the primary market is Cameroon / Francophone Central Africa, but current demo copy is English-led and prices in Naira (₦, Nigeria). Currency and default language for the real market are **not yet aligned** — treat Naira pricing and English-only demo copy as placeholder, not settled product truth (real market likely points to FCFA / XAF and French-first). The WhatsApp business number (`+2340000000000`) is a placeholder; `hello@wi-mall.com` is unconfirmed as a live contact.
+- **Settled since this was written:** the primary market is Cameroon / Francophone Central Africa and the currency is **FCFA (XAF)** throughout — the Naira (₦) / Lagos copy is gone. The WhatsApp business line is `+237652705926` (also the default in `src/lib/constants.ts`, not just an env value) and the bot presents as "Wi-Mall"; the contact address is `support@wi-mall.com`.
+- **Open / not yet settled:** default language. Copy is still English-led for a French-first market.
 
 ## Brand Commitments
 

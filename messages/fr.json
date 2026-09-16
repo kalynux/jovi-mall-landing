@@ -83,6 +83,8 @@
         "pillNoStorefront": "Sans boutique",
         "ctaPrimary": "Commencer",
         "ctaSecondary": "Voir comment ça marche",
+        "ctaWhatsapp": "Discuter sur WhatsApp",
+        "ctaWhatsappPrefill": "Bonjour Wi-Mall ! Je voudrais commencer mes achats.",
         "socialProof": "Devenez l'un de nos vendeurs fondateurs",
         "aiLabel": "IA active",
         "orderConfirmed": "Commande confirmée !",
@@ -106,11 +108,10 @@
         "title2": "Tous les rôles.",
         "title3": "Connectés.",
         "subtitle": "D'un message WhatsApp à un produit livré — chaque étape se déroule automatiquement sur Wi-Mall.",
-        "stats": {
-            "aiResponse": "Temps de réponse IA",
-            "uptime": "Disponibilité de la plateforme",
-            "payments": "Mobile money & cartes",
-            "cities": "Villes prévues"
+        "phases": {
+            "conversation": "Conversation",
+            "dispatch": "Commande et répartition",
+            "payout": "Livraison et versement"
         },
         "flow": {
             "step1Title": "Le client discute sur WhatsApp",
@@ -501,13 +502,14 @@
         "switching": "Changement…"
     },
     "agentApp": {
-        "title": "L'app Livreur, c'est mieux sur la route",
-        "body": "Alertes de commandes en direct, navigation guidée et confirmation de livraison en un geste — pensée pour le terrain.",
+        "title": "Installez l'app Livreur",
+        "body": "Alertes de commandes en direct, navigation guidée et confirmation de livraison en un geste — pensée pour le terrain. L'app Livreur est le seul moyen de travailler : il n'existe pas de version web.",
+        "download": "Télécharger l'app",
         "android": "Disponible sur Google Play",
         "ios": "Télécharger dans l'App Store",
         "comingSoon": "Bientôt disponible",
-        "appHint": "Tout le reste se trouve sur le tableau de bord web.",
-        "continueWeb": "Continuer sur le web",
+        "appHint": "Installation directe depuis Wi-Mall. Les fiches sur les stores arrivent.",
+        "createAccount": "Créer votre compte livreur",
         "close": "Fermer"
     },
     "addRole": {
@@ -920,7 +922,8 @@
             "allQuestions": "Voir toutes les questions",
             "currencyNote": "Les prix sont en FCFA (XAF), la monnaie du marché que Wi-Mall sert en premier.",
             "faqShort": "FAQ",
-            "openFormNewTab": "Ouvrir le formulaire dans un nouvel onglet"
+            "openFormNewTab": "Ouvrir le formulaire dans un nouvel onglet",
+            "payoutCapNote": "Les comptes non vérifiés peuvent retirer au maximum 45 % de leur solde disponible par mois, et ces 45 % doivent eux-mêmes atteindre le minimum de versement de 10 000 FCFA — en dessous, aucun retrait n'est possible tant que le solde n'augmente pas. La vérification du compte supprime ce plafond."
         },
         "plans": {
             "free": "Gratuit",
@@ -993,8 +996,8 @@
             },
             "credits": {
                 "title": "Ce que sont les crédits",
-                "p1": "Deux choses coûtent réellement de l'argent à chaque fois qu'elles se produisent sur Wi-Mall, donc elles sont mesurées plutôt qu'incluses : indexer un de vos produits pour que l'assistant IA puisse le trouver et le recommander, et envoyer un message modèle WhatsApp facturé à un client. Chacune coûte 1 crédit.",
-                "p2": "L'activation d'un forfait accorde sa dotation une seule fois — 50 crédits sur l'offre gratuite vendeur, 4 500 sur Business. Si vous l'épuisez, rechargez par packs. Plus le pack est grand, moins chaque crédit coûte cher.",
+                "p1": "Deux choses coûtent réellement de l'argent à chaque fois qu'elles se produisent sur Wi-Mall, donc elles sont mesurées plutôt qu'incluses : indexer un de vos produits pour que l'assistant IA puisse le trouver et le recommander, ce qui coûte 5 crédits, et envoyer un message modèle WhatsApp facturé à un client, ce qui en coûte 2.",
+                "p2": "L'activation d'un forfait accorde sa dotation une seule fois — 50 crédits sur l'offre gratuite vendeur, 1 500 sur Business. Si vous l'épuisez, rechargez par packs. Plus le pack est grand, moins chaque crédit coûte cher.",
                 "packsTitle": "Packs de crédits",
                 "packsCaption": "Packs de recharge de crédits et leurs prix",
                 "creditsHead": "Crédits",
@@ -1344,7 +1347,11 @@
                 },
                 "credits": {
                     "q": "Qu'est-ce que les crédits, et faut-il en acheter ?",
-                    "a": "Les crédits mesurent deux choses qui coûtent de l'argent à chaque occurrence : indexer un produit pour que l'assistant puisse le recommander, et envoyer un message modèle WhatsApp facturé. Chacune coûte un crédit. Chaque forfait accorde une dotation à son activation, donc la plupart des comptes n'en achètent jamais ; si vous épuisez la vôtre, les packs commencent à 600 FCFA pour 100 crédits."
+                    "a": "Les crédits mesurent deux choses qui coûtent de l'argent à chaque occurrence : indexer un produit pour que l'assistant puisse le recommander, à 5 crédits, et envoyer un message modèle WhatsApp facturé, à 2. Chaque forfait accorde une dotation à son activation, donc la plupart des comptes n'en achètent jamais ; si vous épuisez la vôtre, les packs commencent à 600 FCFA pour 100 crédits."
+                },
+                "payoutVerification": {
+                    "q": "Y a-t-il une limite de retrait avant la vérification de mon compte ?",
+                    "a": "Oui. Tant qu'un compte n'est pas vérifié, un retrait est plafonné à 45 % du solde disponible sur un mois donné. Ces 45 % doivent aussi atteindre à eux seuls le minimum de versement de 10 000 FCFA — donc si 45 % de votre solde représente moins de 10 000 FCFA, aucun retrait n'est possible tant que le solde n'augmente pas ou que le compte n'est pas vérifié. La vérification supprime le plafond et la totalité du solde disponible devient retirable."
                 },
                 "renewal": {
                     "q": "Les forfaits se renouvellent-ils automatiquement ?",

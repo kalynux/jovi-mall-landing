@@ -83,6 +83,8 @@
         "pillNoStorefront": "Sem loja virtual",
         "ctaPrimary": "Começar",
         "ctaSecondary": "Ver como funciona",
+        "ctaWhatsapp": "Conversar no WhatsApp",
+        "ctaWhatsappPrefill": "Olá Wi-Mall! Gostaria de começar a comprar.",
         "socialProof": "Seja um dos nossos vendedores fundadores",
         "aiLabel": "IA ativa",
         "orderConfirmed": "Pedido confirmado!",
@@ -106,11 +108,10 @@
         "title2": "Todos os papéis.",
         "title3": "Conectados.",
         "subtitle": "De uma mensagem no WhatsApp a um produto entregue — cada etapa funciona automaticamente no Wi-Mall.",
-        "stats": {
-            "aiResponse": "Tempo de resposta da IA",
-            "uptime": "Disponibilidade da plataforma",
-            "payments": "Dinheiro móvel e cartões",
-            "cities": "Cidades planejadas"
+        "phases": {
+            "conversation": "Conversa",
+            "dispatch": "Pedido e despacho",
+            "payout": "Entrega e pagamento"
         },
         "flow": {
             "step1Title": "Cliente conversa no WhatsApp",
@@ -501,13 +502,14 @@
         "switching": "A mudar…"
     },
     "agentApp": {
-        "title": "A app do Entregador é melhor na estrada",
-        "body": "Alertas de pedidos em tempo real, navegação passo a passo e confirmação de entrega num toque — feita para a rua.",
+        "title": "Instale a app do Entregador",
+        "body": "Alertas de pedidos em tempo real, navegação passo a passo e confirmação de entrega num toque — feita para a rua. A app do Entregador é a única forma de trabalhar: não existe versão web.",
+        "download": "Baixar a app",
         "android": "Disponível no Google Play",
         "ios": "Baixar na App Store",
         "comingSoon": "Em breve",
-        "appHint": "Tudo o resto está no painel web.",
-        "continueWeb": "Continuar na web",
+        "appHint": "Instala diretamente pela Wi-Mall. As fichas nas lojas estão a caminho.",
+        "createAccount": "Crie a sua conta de entregador",
         "close": "Fechar"
     },
     "addRole": {
@@ -920,7 +922,8 @@
             "allQuestions": "Ver todas as perguntas",
             "currencyNote": "Os preços estão em FCFA (XAF), a moeda do mercado que a Wi-Mall atende primeiro.",
             "faqShort": "FAQ",
-            "openFormNewTab": "Abrir o formulário num separador novo"
+            "openFormNewTab": "Abrir o formulário num separador novo",
+            "payoutCapNote": "Contas não verificadas podem sacar no máximo 45% do saldo disponível por mês, e esses 45% precisam alcançar sozinhos o pagamento mínimo de 10.000 FCFA — abaixo disso, nenhum saque é possível até o saldo crescer. Verificar a conta remove o limite."
         },
         "plans": {
             "free": "Grátis",
@@ -993,8 +996,8 @@
             },
             "credits": {
                 "title": "O que são créditos",
-                "p1": "Duas coisas custam dinheiro de verdade toda vez que acontecem na Wi-Mall, então são medidas em vez de embutidas: indexar um dos seus produtos para que o assistente de IA consiga encontrá-lo e recomendá-lo, e enviar uma mensagem modelo do WhatsApp cobrada a um cliente. Cada uma custa 1 crédito.",
-                "p2": "Ativar um plano concede sua cota uma única vez — 50 créditos no plano gratuito de vendedor, 4.500 no Business. Se você esgotá-la, recarregue em pacotes. Quanto maior o pacote, menos custa cada crédito.",
+                "p1": "Duas coisas custam dinheiro de verdade toda vez que acontecem na Wi-Mall, então são medidas em vez de embutidas: indexar um dos seus produtos para que o assistente de IA consiga encontrá-lo e recomendá-lo, que custa 5 créditos, e enviar uma mensagem modelo do WhatsApp cobrada a um cliente, que custa 2.",
+                "p2": "Ativar um plano concede sua cota uma única vez — 50 créditos no plano gratuito de vendedor, 1.500 no Business. Se você esgotá-la, recarregue em pacotes. Quanto maior o pacote, menos custa cada crédito.",
                 "packsTitle": "Pacotes de créditos",
                 "packsCaption": "Pacotes de recarga de créditos e seus preços",
                 "creditsHead": "Créditos",
@@ -1344,7 +1347,11 @@
                 },
                 "credits": {
                     "q": "O que são créditos, e preciso comprá-los?",
-                    "a": "Créditos medem duas coisas que custam dinheiro toda vez que acontecem: indexar um produto para que o assistente possa recomendá-lo, e enviar uma mensagem modelo do WhatsApp cobrada. Cada uma custa um crédito. Todo plano concede uma cota ao ser ativado, então a maioria das contas nunca compra nenhum; se você esgotar a sua, os pacotes começam em 600 FCFA por 100 créditos."
+                    "a": "Créditos medem duas coisas que custam dinheiro toda vez que acontecem: indexar um produto para que o assistente possa recomendá-lo, por 5 créditos, e enviar uma mensagem modelo do WhatsApp cobrada, por 2. Todo plano concede uma cota ao ser ativado, então a maioria das contas nunca compra nenhum; se você esgotar a sua, os pacotes começam em 600 FCFA por 100 créditos."
+                },
+                "payoutVerification": {
+                    "q": "Existe um limite de saque antes de a minha conta ser verificada?",
+                    "a": "Sim. Enquanto uma conta não é verificada, o saque fica limitado a 45% do saldo disponível em um dado mês. Esses 45% também precisam alcançar sozinhos o pagamento mínimo de 10.000 FCFA — então, se 45% do seu saldo ficar abaixo de 10.000 FCFA, nenhum saque é possível até o saldo crescer ou a conta ser verificada. Verificar a conta remove o limite e todo o saldo disponível passa a ser sacável."
                 },
                 "renewal": {
                     "q": "Os planos se renovam automaticamente?",

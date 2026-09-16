@@ -83,6 +83,8 @@
         "pillNoStorefront": "No storefront needed",
         "ctaPrimary": "Get Started",
         "ctaSecondary": "See How It Works",
+        "ctaWhatsapp": "Chat on WhatsApp",
+        "ctaWhatsappPrefill": "Hi Wi-Mall! I'd like to start shopping.",
         "socialProof": "Be one of our founding vendors",
         "aiLabel": "AI Active",
         "orderConfirmed": "Order Confirmed!",
@@ -106,11 +108,10 @@
         "title2": "Every role.",
         "title3": "Connected.",
         "subtitle": "From a WhatsApp message to a delivered product and payout — every step runs on Wi-Mall automatically.",
-        "stats": {
-            "aiResponse": "AI response time",
-            "uptime": "Platform uptime",
-            "payments": "Money & cards accepted",
-            "cities": "Cities on our roadmap"
+        "phases": {
+            "conversation": "Conversation",
+            "dispatch": "Order & dispatch",
+            "payout": "Delivery & payout"
         },
         "flow": {
             "step1Title": "Customer chats on WhatsApp",
@@ -501,13 +502,14 @@
         "switching": "Switching…"
     },
     "agentApp": {
-        "title": "The Agent app is the better ride",
-        "body": "Live order alerts, turn-by-turn navigation and one-tap delivery confirmation — built for the road.",
+        "title": "Get the Agent app",
+        "body": "Live order alerts, turn-by-turn navigation and one-tap delivery confirmation — built for the road. The Agent app is the only way to work: there is no web version.",
+        "download": "Download the app",
         "android": "Get it on Google Play",
         "ios": "Download on the App Store",
         "comingSoon": "Coming soon",
-        "appHint": "Everything else lives on the web dashboard.",
-        "continueWeb": "Continue on the web",
+        "appHint": "Installs straight from Wi-Mall. The store listings are on the way.",
+        "createAccount": "Create your agent account",
         "close": "Close"
     },
     "addRole": {
@@ -920,7 +922,8 @@
             "allQuestions": "See all the questions",
             "currencyNote": "Prices are in FCFA (XAF), the currency of the market Wi-Mall serves first.",
             "faqShort": "FAQ",
-            "openFormNewTab": "Open the form in a new tab"
+            "openFormNewTab": "Open the form in a new tab",
+            "payoutCapNote": "Unverified accounts can withdraw at most 45% of their available balance per month, and that 45% must itself reach the 10,000 FCFA minimum payout — below that, no withdrawal is possible until the balance grows. Verifying the account removes the cap."
         },
         "plans": {
             "free": "Free",
@@ -993,8 +996,8 @@
             },
             "credits": {
                 "title": "What credits are",
-                "p1": "Two things on Wi-Mall cost real money every time they happen, so they are metered rather than bundled: indexing one of your products so the AI assistant can find and recommend it, and sending one billable WhatsApp template message to a customer. Each costs 1 credit.",
-                "p2": "Activating a plan grants its allowance once — 50 credits on the vendor free tier, 4,500 on Business. If you use it all, top up in packs. The larger the pack, the less each credit costs.",
+                "p1": "Two things on Wi-Mall cost real money every time they happen, so they are metered rather than bundled: indexing one of your products so the AI assistant can find and recommend it, which costs 5 credits, and sending one billable WhatsApp template message to a customer, which costs 2.",
+                "p2": "Activating a plan grants its allowance once — 50 credits on the vendor free tier, 1,500 on Business. If you use it all, top up in packs. The larger the pack, the less each credit costs.",
                 "packsTitle": "Credit packs",
                 "packsCaption": "Credit top-up packs and their prices",
                 "creditsHead": "Credits",
@@ -1344,7 +1347,11 @@
                 },
                 "credits": {
                     "q": "What are credits, and do I have to buy them?",
-                    "a": "Credits meter two things that cost money every time they happen: indexing a product so the assistant can recommend it, and sending a billable WhatsApp template message. Each costs one credit. Every plan grants an allowance when it activates, so most accounts never buy any; if you use yours up, packs start at 600 FCFA for 100 credits."
+                    "a": "Credits meter two things that cost money every time they happen: indexing a product so the assistant can recommend it, at 5 credits, and sending a billable WhatsApp template message, at 2. Every plan grants an allowance when it activates, so most accounts never buy any; if you use yours up, packs start at 600 FCFA for 100 credits."
+                },
+                "payoutVerification": {
+                    "q": "Is there a limit on withdrawals before my account is verified?",
+                    "a": "Yes. While an account is unverified, a withdrawal is capped at 45% of the available balance in any given month. That 45% also has to reach the 10,000 FCFA minimum payout on its own — so if 45% of your balance comes to less than 10,000 FCFA, no withdrawal is possible until the balance grows or the account is verified. Verifying the account removes the cap and the whole available balance becomes withdrawable."
                 },
                 "renewal": {
                     "q": "Do plans renew automatically?",

@@ -55,11 +55,10 @@ function RegisterFormContent() {
    */
   const customerOnly = IS_NATIVE_BUILD || roleParam === "customer";
 
-  const initialRole: UiRole = isUiRole(roleParam)
-    ? roleParam
-    : customerOnly
-      ? "customer"
-      : "vendor";
+  // The fallback only pre-highlights a card while the picker is the current
+  // step; it never submits anything on its own. It tracks whichever role the
+  // picker leads with, which is now customer.
+  const initialRole: UiRole = isUiRole(roleParam) ? roleParam : "customer";
 
   const initialStep: Step = customerOnly
     ? "customer-wa"
