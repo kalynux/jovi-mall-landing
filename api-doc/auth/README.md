@@ -1314,7 +1314,7 @@ STOREFRONT_URL=https://shop.example.com  # Builds the password-reset link, the m
                                          #   back to the code alone
 
 WA_BOT_NUMBER=237600000000               # Bot deep links. Unset ⇒ the deep link is null;
-TELEGRAM_BOT_NAME=JoviMallBot            #   the flow still works for anyone who knows the bot
+TELEGRAM_BOT_NAME=WiMallBot              #   the flow still works for anyone who knows the bot
 ```
 
 ---

@@ -27,7 +27,7 @@ export type MessagingChannel = "whatsapp" | "telegram";
 export interface ConnectionHowTo {
     /** The command to send in the chat — `/connect`. */
     command: string;
-    /** `@JoviMallBot`, or similar. */
+    /** `@WiMallBot`, or similar. */
     botHandle: string;
     /**
      * Opens the chat, pre-filling the command on WhatsApp only — Telegram
