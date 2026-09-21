@@ -24,7 +24,51 @@
  * response, including a 5xx, is returned to the caller untouched: those mean the
  * API answered, and the callers already treat them as build-stopping. Retrying
  * them here would paper over a real outage.
+ *
+ * ── It is also the running server's read path, which behaves differently ──────
+ * The same three readers run inside the production container at request time
+ * (/shop is dynamic) and on every ISR revalidation. Two things change there:
+ *
+ * - **One attempt, not six.** The retry exists for the prerender burst. On a
+ *   visitor's request, six connect timeouts are a minute of blank page followed
+ *   by the same error, so a failure surfaces at once instead.
+ * - **The internal address, when one is configured** — see `serverUrl`.
  */
+
+/**
+ * Where a request made by the RUNNING SERVER actually goes.
+ *
+ * `NEXT_PUBLIC_API_URL` is the address a browser uses: https://api.wi-mall.com,
+ * baked in at build. The production container used it too, which sends a read
+ * out to the host's own public IP and back in through Traefik, for two
+ * containers on the same machine. 2026-09-21: that hop started timing out at
+ * connect (10s) while the API answered the outside world in under a second, and
+ * every /shop request became an 11s 500. The page was fine; the route was not.
+ *
+ * `API_INTERNAL_URL` (runtime env, set in deploy/docker-compose.prod.yml) names
+ * the API on the shared Docker network instead — http://jovi-mall:8022, the
+ * address n8n and wi-admin already use (backend docker-compose.prod.yml, the
+ * `n8n-internal` note). Only reads aimed at the public API base are rewritten,
+ * and never during `next build`: CI prerenders from a GitHub runner, where that
+ * hostname does not exist. Unset, everything behaves exactly as before.
+ *
+ * Safe because these reads are public and cookie-less, and because the API
+ * builds its absolute URLs from config rather than the request's Host — so a
+ * link in a response still reads https://api.wi-mall.com/….
+ */
+const PUBLIC_API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8022").replace(/\/+$/, "");
+
+/** `next build` sets this before it spawns the prerender workers, which inherit it. */
+function isBuildPhase(): boolean {
+  return process.env.NEXT_PHASE === "phase-production-build";
+}
+
+function serverUrl(url: string): string {
+  if (typeof window !== "undefined" || isBuildPhase()) return url;
+  const internal = process.env.API_INTERNAL_URL?.trim().replace(/\/+$/, "");
+  if (!internal || !url.startsWith(`${PUBLIC_API_BASE}/`)) return url;
+  return internal + url.slice(PUBLIC_API_BASE.length);
+}
 
 /**
  * The failure this is sized against is `UND_ERR_CONNECT_TIMEOUT` — undici's
@@ -46,15 +90,16 @@ const MAX_DELAY_MS = 6_000;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function fetchWithRetry(url: string, init?: RequestInit): Promise<Response> {
-  // One attempt in the browser — see the header. Prerender is the only place
+  // Six attempts only while prerendering — see the header. It is the only place
   // the eleven-worker handshake burst happens, and the only place a two-minute
-  // wait is better than an error.
-  const attempts = typeof window === "undefined" ? ATTEMPTS : 1;
+  // wait is better than an error. The browser and the running server get one.
+  const attempts = isBuildPhase() ? ATTEMPTS : 1;
+  const target = serverUrl(url);
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
-      return await fetch(url, init);
+      return await fetch(target, init);
     } catch (error) {
       lastError = error;
       if (attempt === attempts) break;
@@ -66,6 +111,11 @@ export async function fetchWithRetry(url: string, init?: RequestInit): Promise<R
     }
   }
 
+  // Every caller reports the PUBLIC url it asked for. When the request really
+  // went to the internal one, say so, or the log names the wrong host.
+  if (target !== url && lastError instanceof Error) {
+    lastError.message = `${lastError.message} [sent to ${target}]`;
+  }
   throw lastError;
 }
 

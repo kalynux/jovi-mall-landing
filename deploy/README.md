@@ -56,6 +56,13 @@ image is pulled and which hostname routes to it: `GHCR_OWNER`, `LANDING_TAG`,
 `SITE_HOST`. The app never reads them. ⚠ **Nothing secret belongs in either
 place** — one is committed and the other is public configuration.
 
+**One exception the app does read at runtime: `API_INTERNAL_URL`.** The compose
+file sets it to `http://jovi-mall:8022`, so the server's own API reads (`/shop`,
+ISR revalidation) stay on `dokploy-network` instead of leaving through the public
+IP and coming back in. That round trip is what made every `/shop` an 11 s 500 on
+2026-09-21. Browsers and the CI build still use `NEXT_PUBLIC_API_URL`. Set it
+blank in the Environment tab to go back to the public URL.
+
 ## Rolling back
 
 `LANDING_TAG` is `production`, a **moving** tag — it changes on every release, so on

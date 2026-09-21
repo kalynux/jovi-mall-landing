@@ -108,6 +108,18 @@ services:
     # mid-request.
     stop_grace_period: 30s
 
+    # ⚠ THE SERVER'S OWN API READS GO OVER dokploy-network, NOT THE PUBLIC URL.
+    #   Server components (/shop is dynamic, and every ISR revalidation) used
+    #   https://api.wi-mall.com, i.e. out to this host's public IP and back in.
+    #   2026-09-21 that hop timed out at connect for every request while the API
+    #   answered the outside world in under a second: every /shop was an 11s 500.
+    #   jovi-mall joins dokploy-network (backend docker-compose.prod.yml), so its
+    #   service name resolves here, the same address n8n and wi-admin use.
+    #   Read at RUNTIME only; the build and every browser keep the public URL.
+    #   See src/lib/build-fetch.ts → serverUrl. Blank it to fall back.
+    environment:
+      API_INTERNAL_URL: ${API_INTERNAL_URL-http://jovi-mall:8022}
+
     networks: [dokploy-network]
     logging: *logging
     restart: unless-stopped
