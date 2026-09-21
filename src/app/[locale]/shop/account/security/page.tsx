@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Badge, Button, Skeleton } from "@/components/shop/ds";
@@ -11,13 +11,18 @@ import { ApiError } from "@/lib/auth/auth.types";
 import {
   cancelEmailChange,
   cancelPhoneChange,
-  confirmPhoneChange,
   getContact,
   requestEmailChange,
   requestPhoneChange,
   type ContactState,
   type PendingContactChange,
 } from "@/lib/me/contact.api";
+import {
+  confirmPhoneCode,
+  getPhoneVerification,
+  requestPhoneCode,
+  RESEND_COOLDOWN_SECONDS,
+} from "@/lib/me/phone-verification.api";
 import { changePassword, PASSWORD_RULES, passwordMeetsPolicy } from "@/lib/me/password.api";
 import { IS_NATIVE_BUILD } from "@/lib/platform";
 
@@ -124,12 +129,18 @@ function Pending({ change, note }: { change: PendingContactChange; note: string 
  * "start again" where TOKEN_INVALID says "check the link", because those are
  * different instructions to a person holding a stale email.
  *
- * The seventh case is not a CONTACT_CHANGE code at all. `MAIL_ALL_PROVIDERS_FAILED`
- * is the backend's 502 for "no configured mail provider accepted the message",
- * so the change was never opened and the only instruction is to try again. It
- * borrows the shared `errors.` sentence instead of getting one of this page's
- * own, because the identical failure reaches the verification send — one string
- * said one way beats two that drift apart.
+ * The `PHONE_VERIFICATION_*` codes come from the WhatsApp code that proves a
+ * phone change. `CODE_INVALID` and `CODE_EXPIRED` stay distinct for the same
+ * reason — retype versus ask for a new code.
+ *
+ * Two cases borrow the shared `errors.` sentence instead of getting one of this
+ * page's own. `MAIL_ALL_PROVIDERS_FAILED` is the backend's 502 for "no
+ * configured mail provider accepted the message", so the change was never
+ * opened and the only instruction is to try again; the identical failure
+ * reaches the verification send, and one string said one way beats two that
+ * drift apart. `PHONE_VERIFICATION_DELIVERY_FAILED` is the WhatsApp twin: a
+ * 502 in the masked `external_service` category, whose fallback copy would say
+ * a service is down when WhatsApp simply refused one send.
  */
 function contactMessageKey(err: unknown): string {
   const code = err instanceof ApiError ? err.code : undefined;
@@ -140,14 +151,26 @@ function contactMessageKey(err: unknown): string {
     case "CONTACT_CHANGE_EXPIRED":
     case "CONTACT_CHANGE_TOKEN_INVALID":
     case "CONTACT_CHANGE_PHONE_UNPROVEN":
+    case "PHONE_VERIFICATION_NO_TARGET":
+    case "PHONE_VERIFICATION_CODE_INVALID":
+    case "PHONE_VERIFICATION_CODE_EXPIRED":
+    case "PHONE_VERIFICATION_TOO_MANY_ATTEMPTS":
+    case "PHONE_VERIFICATION_RESEND_TOO_SOON":
       return `shop.security.errors.${code}`;
-    // Retryable, and deliberately not `somethingWentWrong`: the mail chain
-    // failed, nothing about the account moved, and the button works.
+    // Retryable, and deliberately not `somethingWentWrong`: nothing about the
+    // account moved, and the button works.
     case "MAIL_ALL_PROVIDERS_FAILED":
+    case "PHONE_VERIFICATION_DELIVERY_FAILED":
       return `errors.${code}`;
     default:
       return "shop.common.somethingWentWrong";
   }
+}
+
+/** A numeric `details` field, or `undefined` when the error does not carry one. */
+function numericDetail(err: unknown, key: string): number | undefined {
+  const value = err instanceof ApiError ? err.details?.[key] : undefined;
+  return typeof value === "number" ? value : undefined;
 }
 
 function EmailSection({
@@ -235,6 +258,28 @@ function EmailSection({
   );
 }
 
+/**
+ * Where a pending phone change stands, read once per change.
+ *
+ * `expired` is checked here because nothing else will: `GET /api/me/contact`
+ * keeps reporting a change after its 24-hour window, and `verify/request`
+ * would still send a WhatsApp code to it — one the confirm then refuses with
+ * `CONTACT_CHANGE_EXPIRED`. `codeLive` is whether a code is already waiting to
+ * be typed, so a reload does not make the person ask for a second one.
+ */
+type PhoneProof = { expired: true } | { expired: false; codeLive: boolean };
+
+/**
+ * A phone change is proved with a six-digit code sent to the NEW number on
+ * WhatsApp, typed back here (api-doc/me/phone-verification.md).
+ *
+ * ⛔ Not by messaging the bot from the new number. That was this card's flow
+ * until 2026-09-21; the backend keeps the connection proof for the bot surface
+ * only, and asked every frontend to drop the "connect WhatsApp first" copy.
+ * The same goes for a failed send: every route was already tried by the time
+ * `PHONE_VERIFICATION_DELIVERY_FAILED` arrives, so the answer is Resend and a
+ * way to reach support — never "message the bot first".
+ */
 function PhoneSection({
   contact,
   onChanged,
@@ -249,14 +294,79 @@ function PhoneSection({
   const tKey = useTranslations();
   const format = useFormatter();
   const [value, setValue] = useState("");
+  const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
-  const [unproven, setUnproven] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  // Set by a successful send, so the code field shows at once rather than
+  // after the verification read comes back.
+  const [justSent, setJustSent] = useState(false);
+  // Inline rather than a toast: it is about the field beside it, and it has to
+  // stay put while the person reads the code off their phone.
+  const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
+  const [deliveryFailed, setDeliveryFailed] = useState(false);
+
+  const pending = contact.pendingPhone;
+  const proof = useApiResource<PhoneProof | null>(
+    async () => {
+      if (!pending) return null;
+      if (Date.parse(pending.expiresAt) <= Date.now()) return { expired: true };
+      const state = await getPhoneVerification();
+      return { expired: false, codeLive: state.pending && state.completesPendingChange };
+    },
+    [pending?.target, pending?.expiresAt],
+  );
+  const expired = proof.data?.expired === true;
+  const codeLive = justSent || (proof.data?.expired === false && proof.data.codeLive);
+
+  // Tick the resend cooldown down; nothing else re-renders this card.
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setTimeout(() => setCooldown((s) => Math.max(0, s - 1)), 1000);
+    return () => clearTimeout(id);
+  }, [cooldown]);
+
+  const reset = () => {
+    setCode("");
+    setJustSent(false);
+    setNotice(null);
+    setDeliveryFailed(false);
+  };
+
+  /** Never throws: every outcome lands in `notice`, beside the code field. */
+  const sendCode = async () => {
+    setNotice(null);
+    setDeliveryFailed(false);
+    try {
+      await requestPhoneCode();
+      setCode("");
+      setJustSent(true);
+      setCooldown(RESEND_COOLDOWN_SECONDS);
+      setNotice({ text: t("phone.codeSent"), error: false });
+    } catch (err) {
+      const errCode = err instanceof ApiError ? err.code : undefined;
+      if (errCode === "PHONE_VERIFICATION_RESEND_TOO_SOON") {
+        // The code already sent keeps working: the cooldown is checked before
+        // a new one is minted.
+        setCooldown(
+          numericDetail(err, "retryAfterSeconds") ??
+            (err as ApiError).retryAfterSeconds ??
+            RESEND_COOLDOWN_SECONDS,
+        );
+      }
+      if (errCode === "PHONE_VERIFICATION_DELIVERY_FAILED") setDeliveryFailed(true);
+      setNotice({ text: tKey(contactMessageKey(err)), error: true });
+    }
+  };
 
   const submit = async () => {
     setBusy(true);
+    reset();
     try {
       await requestPhoneChange(value.trim());
       setValue("");
+      // `PATCH /api/me/phone` does not send the code. Sent before the reload,
+      // so the reload's verification read finds it already in flight.
+      await sendCode();
       await onChanged();
     } catch (err) {
       flash(tKey(contactMessageKey(err)));
@@ -265,19 +375,38 @@ function PhoneSection({
     }
   };
 
+  const resend = async () => {
+    setBusy(true);
+    await sendCode();
+    setBusy(false);
+  };
+
   const confirm = async () => {
     setBusy(true);
-    setUnproven(false);
+    setNotice(null);
     try {
-      await confirmPhoneChange();
+      const { changed } = await confirmPhoneCode(code.trim());
+      reset();
       await onChanged();
-      flash(t("phone.confirmed"));
+      flash(changed ? t("phone.confirmed") : t("phone.verified"));
     } catch (err) {
-      const code = err instanceof ApiError ? err.code : undefined;
-      // The one refusal with somewhere to go: the fix is a WhatsApp connection,
-      // so route there rather than repeating the error.
-      if (code === "CONTACT_CHANGE_PHONE_UNPROVEN") setUnproven(true);
-      else flash(tKey(contactMessageKey(err)));
+      const errCode = err instanceof ApiError ? err.code : undefined;
+      const attemptsLeft = numericDetail(err, "attemptsLeft");
+      if (errCode === "PHONE_VERIFICATION_CODE_INVALID" && attemptsLeft !== undefined) {
+        setNotice({ text: t("phone.codeInvalid", { attemptsLeft }), error: true });
+      } else {
+        // Expired or spent: the code is gone server-side, so offer a new one
+        // instead of leaving a field that can only fail again.
+        if (
+          errCode === "PHONE_VERIFICATION_CODE_EXPIRED" ||
+          errCode === "PHONE_VERIFICATION_TOO_MANY_ATTEMPTS"
+        ) {
+          setCode("");
+          setJustSent(false);
+          proof.reload();
+        }
+        setNotice({ text: tKey(contactMessageKey(err)), error: true });
+      }
     } finally {
       setBusy(false);
     }
@@ -287,7 +416,7 @@ function PhoneSection({
     setBusy(true);
     try {
       await cancelPhoneChange();
-      setUnproven(false);
+      reset();
       await onChanged();
     } catch (err) {
       flash(tKey(contactMessageKey(err)));
@@ -296,47 +425,105 @@ function PhoneSection({
     }
   };
 
+  const cancelButton = (
+    <Button variant="ghost" size="sm" disabled={busy} onClick={() => void cancel()}>
+      {tCommon("cancel")}
+    </Button>
+  );
+
   return (
     <Card title={t("phone.title")}>
       <p style={{ margin: 0, fontSize: 14 }}>
         {contact.phone ?? <span className="muted">{t("phone.none")}</span>}
       </p>
 
-      {contact.pendingPhone ? (
+      {pending ? (
         <>
           <Pending
-            change={contact.pendingPhone}
+            change={pending}
             note={t("phone.pendingNote", {
-              date: format.dateTime(new Date(contact.pendingPhone.expiresAt), {
+              date: format.dateTime(new Date(pending.expiresAt), {
                 dateStyle: "medium",
                 timeStyle: "short",
               }),
             })}
           />
 
-          {unproven && (
-            <p style={{ fontSize: 13, margin: "8px 0 0", color: "var(--danger)" }}>
-              {t("phone.unproven")}
+          {expired ? (
+            <>
+              <p style={{ fontSize: 13, margin: "8px 0 0", color: "var(--danger)" }}>
+                {t("phone.expired")}
+              </p>
+              <div style={{ marginTop: 10 }}>{cancelButton}</div>
+            </>
+          ) : codeLive ? (
+            <>
+              <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                <input
+                  className="field"
+                  style={{ flex: "1 1 140px" }}
+                  aria-label={t("phone.codeLabel")}
+                  placeholder={t("phone.codePlaceholder")}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={12}
+                  dir="ltr"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                />
+                <Button size="sm" disabled={!code || busy} onClick={() => void confirm()}>
+                  {busy ? t("phone.checking") : tCommon("confirm")}
+                </Button>
+              </div>
+              <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={busy || cooldown > 0}
+                  onClick={() => void resend()}
+                >
+                  {cooldown > 0
+                    ? t("phone.resendIn", { seconds: cooldown })
+                    : t("phone.resendCode")}
+                </Button>
+                {cancelButton}
+              </div>
+            </>
+          ) : (
+            <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+              <Button size="sm" disabled={busy || cooldown > 0} onClick={() => void resend()}>
+                {cooldown > 0 ? t("phone.resendIn", { seconds: cooldown }) : t("phone.sendCode")}
+              </Button>
+              {cancelButton}
+            </div>
+          )}
+
+          {notice && (
+            <p
+              role={notice.error ? "alert" : "status"}
+              style={{
+                fontSize: 13,
+                margin: "8px 0 0",
+                color: notice.error ? "var(--danger)" : "var(--text-muted)",
+              }}
+            >
+              {notice.text}
             </p>
           )}
 
-          <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-            <Button size="sm" disabled={busy} onClick={() => void confirm()}>
-              {busy ? t("phone.checking") : tCommon("confirm")}
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              // Connections live on the notification settings screen, which is
-              // where ChatChannels is mounted.
-              onClick={() => router.push("/shop/account/notifications/settings")}
-            >
-              {t("phone.connectWhatsApp")}
-            </Button>
-            <Button variant="ghost" size="sm" disabled={busy} onClick={() => void cancel()}>
-              {tCommon("cancel")}
-            </Button>
-          </div>
+          {/* A refusal on every route is a platform or Meta-side fault, and
+              support can read the reason in the server log. */}
+          {deliveryFailed && (
+            <div style={{ marginTop: 6 }}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push("/shop/account/support/new")}
+              >
+                {t("phone.contactSupport")}
+              </Button>
+            </div>
+          )}
         </>
       ) : (
         <>
@@ -355,8 +542,6 @@ function PhoneSection({
               {busy ? tCommon("saving") : tCommon("change")}
             </Button>
           </div>
-          {/* Said up front, because it is the part people do not expect: the
-              proof is an inbound WhatsApp message, not a code we send. */}
           <p className="muted" style={{ fontSize: 12.5, margin: "8px 0 0" }}>
             {t("phone.howItWorks")}
           </p>
@@ -391,8 +576,10 @@ function PasswordSection() {
       );
     } catch (err) {
       const code = err instanceof ApiError ? err.code : undefined;
+      // `USER_INVALID_PASSWORD` (403) — not the sign-in's
+      // `AUTH_INVALID_CREDENTIALS`, which this route never sends.
       flash(
-        code === "AUTH_INVALID_CREDENTIALS"
+        code === "USER_INVALID_PASSWORD"
           ? t("password.wrongCurrent")
           : t("password.failed"),
       );

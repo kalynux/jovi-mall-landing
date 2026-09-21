@@ -190,16 +190,23 @@ export async function switchRoleAndGetRedirect(role: Role): Promise<string> {
 
 /**
  * Logs out the user by instructing the backend to expire both cookies,
- * then redirects to the landing home page.
+ * then redirects to the landing home page — or to `to`, when the caller knows
+ * where the visitor is headed next.
+ *
+ * `to` exists for one caller today: the shop's "you're signed in as a vendor"
+ * screen, whose whole point is that the next step is the CUSTOMER sign-in.
+ * Dropping that visitor on the marketing home would leave them to find the
+ * shop and its sign-in again. It must be a full, already-localised path
+ * (`localePath()`), because this is a page load and not a next-intl push.
  */
-export async function logoutAndRedirect(): Promise<void> {
+export async function logoutAndRedirect(to = "/"): Promise<void> {
     try {
         await api.logout();
     } catch {
         // Even if logout API fails, clear local state and redirect
     }
     /**
-     * `"/"` means two different things, and both are right.
+     * The default, `"/"`, means two different things, and both are right.
      *
      * On the web it is the marketing home. In the app it is `out/index.html` —
      * the locale bootstrap `build-native.mjs` writes — which reads the stored
@@ -211,5 +218,5 @@ export async function logoutAndRedirect(): Promise<void> {
      * land on a 404. Going through the bootstrap also re-resolves the language,
      * which is the correct behaviour for a session ending.
      */
-    window.location.href = "/";
+    window.location.href = to;
 }

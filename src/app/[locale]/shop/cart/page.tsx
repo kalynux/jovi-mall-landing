@@ -18,6 +18,7 @@ import { useCart, useToast } from "@/components/shop/providers";
 import { translateError } from "@/lib/auth/error-translator";
 import { useAuth } from "@/lib/auth/useAuth";
 import { quoteCart } from "@/lib/shop/cart.api";
+import { isCustomerSession } from "@/lib/shop/customer-session";
 import { formatMoney } from "@/lib/shop/format";
 import { productPath } from "@/lib/shop/shop.routes";
 import type { CartQuote, CartDropReason } from "@/lib/shop/customer.types";
@@ -62,7 +63,7 @@ const DROP_REASON_KEY: Record<CartDropReason, string> = {
 
 export default function CartPage() {
   const router = useRouter();
-  const { status } = useAuth();
+  const { status, role } = useAuth();
   const {
     lines,
     productType,
@@ -109,7 +110,10 @@ export default function CartPage() {
   const [pendingRemoval, setPendingRemoval] = useState<{ variantId: string; title: string } | null>(
     null,
   );
-  const signedIn = status === "authenticated";
+  // In step with `CartProvider`: a vendor's cart is the local one, so it must
+  // not be quoted server-side (a 403), and its button says "Sign in to checkout"
+  // — checkout then tells that session how to become a customer's.
+  const signedIn = isCustomerSession(status, role);
   const isDigital = productType === "digital";
 
   /* A digital cart is one product from one seller with nothing to deliver, so it

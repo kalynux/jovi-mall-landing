@@ -1,5 +1,6 @@
 import type { Role, UiRole } from "./auth.types";
 import { IS_NATIVE_BUILD } from "@/lib/platform";
+import { localePath, type Locale } from "@/i18n/routing";
 
 // ─── Subdomain Map ──────────────────────────────────────────────────────────
 /**
@@ -152,4 +153,27 @@ export function resolvePostLoginUrl(
  */
 export function resolveOnboardingUrl(role: UiRole): string {
     return getRoleUrl(role, "/onboarding");
+}
+
+/**
+ * `/add-role` with `role` already chosen, as a `?return=` value for `/login`.
+ *
+ * For the person whose phone or email already belongs to an account: the fix is
+ * to sign in to that account and add the role there, and this is where the
+ * sign-in hands them afterwards. The add-role page preselects `?role=` only when
+ * the account does not already hold it, so a person who had simply forgotten
+ * they were registered lands on a picker that shows the role as theirs.
+ *
+ * Locale-PREFIXED, unlike the paths handed to `Link`: `resolvePostLoginUrl` and
+ * the customer sign-in both assign a `return` to `window.location.href`
+ * verbatim, so nothing downstream would add the prefix back — the same reason
+ * `auth.guard.ts` reads the prefixed pathname.
+ *
+ * ⚠ Never pass the role the account ALREADY holds to anything built from this.
+ * The caller only ever knows the role the visitor asked for, and that is the
+ * point: naming the existing role would tell anyone holding a phone number what
+ * kind of account is behind it.
+ */
+export function addRoleReturnPath(locale: Locale, role: UiRole): string {
+    return `${localePath(locale, "/add-role")}?role=${role}`;
 }

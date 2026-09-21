@@ -17,8 +17,8 @@ import {
 import { breadcrumbJsonLd, contactPageJsonLd } from "@/lib/seo/jsonld";
 import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath } from "@/i18n/routing";
-import { CONTACT_FORM_URL } from "@/lib/marketing/forms";
-import { BRAND, EXTERNAL_LINKS, buildWhatsAppUrl } from "@/lib/constants";
+import { contactFormUrl } from "@/lib/marketing/forms";
+import { BRAND, EXTERNAL_LINKS, SOCIAL_LINKS, buildWhatsAppUrl } from "@/lib/constants";
 
 const PATH = "/contact";
 
@@ -88,7 +88,7 @@ export default async function ContactPage({ params }: PageProps) {
 
       <Section title={t("contact.form.title")} lead={t("contact.form.lead")} tone="subtle">
         <EmbeddedForm
-          src={CONTACT_FORM_URL}
+          src={contactFormUrl(locale)}
           title={t("contact.form.frameTitle")}
           note={t("contact.form.note")}
           fallbackLabel={t("common.openFormNewTab")}
@@ -129,6 +129,17 @@ export default async function ContactPage({ params }: PageProps) {
               {EXTERNAL_LINKS.whatsappNumber}
             </a>
           )}
+          {SOCIAL_LINKS.map(({ network, url }) => (
+            <a
+              key={network}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-role underline decoration-[color-mix(in_srgb,var(--role)_45%,transparent)] underline-offset-4 transition-colors hover:decoration-[var(--role)]"
+            >
+              {network}
+            </a>
+          ))}
         </div>
       </Section>
 

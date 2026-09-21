@@ -299,17 +299,61 @@ export type AddRoleFormValues = z.infer<typeof AddRoleSchema>;
 // ─── Password reset ──────────────────────────────────────────────────────────
 
 /**
- * `POST /api/auth/forgot-password` takes an email **or** an E.164 phone in one
- * field.
+ * The forgot-password form: a phone number by default, an email on request.
  *
- * Not validated into one shape or the other here on purpose: the backend accepts
- * both, and guessing which the user meant in order to reject the other is how a
- * legitimate identifier gets refused before it is ever sent. A non-empty string
- * is the real rule; the endpoint answers 200 either way.
+ * Two fields rather than `LoginSchema`'s single `identifier`, because the page
+ * swaps one input for the other and back — and coming back to the phone should
+ * find the number still typed. `method` says which one is live; the other is
+ * ignored whatever it holds. The page never asks the user which kind they are
+ * typing into one box, so nothing here has to guess.
+ *
+ * Each is validated exactly as `LoginSchema` validates its own kind: the phone
+ * against its country's numbering plan and emitted as strict E.164 — the form
+ * the bot matches a WhatsApp sender against — and the email as an address.
+ *
+ * ⚠ **Only the email reaches the API.** A phone reset is delivered by the bot
+ * (`/password` on WhatsApp or Telegram), so the phone path never calls
+ * `POST /api/auth/forgot-password`. See the page's header comment for why.
  */
-export const ForgotPasswordSchema = z.object({
-    identifier: z.string().trim().min(IDENTIFIER_MIN, fieldError("identifierRequired")),
-});
+export const ForgotPasswordSchema = z
+    .object({
+        method: IdentifierTypeSchema,
+        phone: z.string().trim(),
+        email: z.string().trim(),
+    })
+    .superRefine((data, ctx) => {
+        if (data.method === "phone") {
+            const error = validatePhone(data.phone, { required: true });
+            if (error) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: phoneErrorMessage(error),
+                    path: ["phone"],
+                });
+            }
+            return;
+        }
+
+        if (!data.email) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: fieldError("emailRequired"),
+                path: ["email"],
+            });
+            return;
+        }
+        if (!z.string().email().safeParse(data.email).success) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: fieldError("emailInvalid"),
+                path: ["email"],
+            });
+        }
+    })
+    .transform((data) => ({
+        ...data,
+        phone: data.method === "phone" ? (toE164(data.phone) ?? data.phone) : data.phone,
+    }));
 
 export type ForgotPasswordFormValues = z.infer<typeof ForgotPasswordSchema>;
 

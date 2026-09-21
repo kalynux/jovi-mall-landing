@@ -45,6 +45,11 @@ export interface ConfirmDialogProps {
   children: ReactNode;
   /** An optional third way out, rendered under the body as a quiet link. */
   alternative?: { label: string; icon?: IconName; onClick: () => void };
+  /**
+   * `"top"` when the dialog opens over another sheet — see `BottomSheet`'s
+   * `layer`. Without it both sheets answer the same Escape and close together.
+   */
+  layer?: "default" | "top";
 }
 
 const CHIP: Record<Tone, { fg: string; bg: string; border: string }> = {
@@ -65,6 +70,7 @@ export function ConfirmDialog({
   onCancel,
   children,
   alternative,
+  layer,
 }: ConfirmDialogProps) {
   // Resolved here rather than as a default parameter: a hook cannot run in one.
   const t = useTranslations("shop.ds");
@@ -75,6 +81,7 @@ export function ConfirmDialog({
   return (
     <BottomSheet
       open={open}
+      layer={layer}
       // Closing by scrim, Escape or the × is a "no" — the same answer as Cancel.
       onClose={busy ? () => undefined : onCancel}
       title={title}

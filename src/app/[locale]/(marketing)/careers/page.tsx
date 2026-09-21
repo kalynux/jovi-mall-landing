@@ -17,7 +17,7 @@ import {
 import { breadcrumbJsonLd, jobPostingJsonLd } from "@/lib/seo/jsonld";
 import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath } from "@/i18n/routing";
-import { CAREERS_FORM_URL } from "@/lib/marketing/forms";
+import { careersFormIsShared, careersFormUrl } from "@/lib/marketing/forms";
 import { EMPLOYMENT_TYPE, HIRING_OPEN, OPENINGS } from "@/lib/marketing/careers";
 import { cn } from "@/lib/utils";
 
@@ -143,10 +143,15 @@ export default async function CareersPage({ params }: PageProps) {
         lead={HIRING_OPEN ? t("careers.form.leadOpen") : t("careers.form.leadClosed")}
         tone="subtle"
       >
+        {/* `careers.form.note` tells the reader this form is shared with the
+            contact form and asks them to name the role. That stops being true
+            once this locale has a careers form of its own. What is left is the
+            cookie disclosure, which is `contact.form.note` word for word in all
+            five catalogues, so that key is reused rather than a sixth one added. */}
         <EmbeddedForm
-          src={CAREERS_FORM_URL}
+          src={careersFormUrl(locale)}
           title={t("careers.form.frameTitle")}
-          note={t("careers.form.note")}
+          note={careersFormIsShared(locale) ? t("careers.form.note") : t("contact.form.note")}
           fallbackLabel={t("common.openFormNewTab")}
         />
       </Section>

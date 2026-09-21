@@ -1,229 +1,366 @@
-# Changing the email or phone you sign in with — `/api/me/{contact,email,phone}`
+# Change Email / Phone API
 
 **Verified against source on 2026-09-08** — all six routes, all six `CONTACT_CHANGE_*` codes with
 their statuses and derived categories, the 1-hour email token TTL and 24-hour phone TTL, and the
 optional `app=` role key, against `jovi-mall/src/modules/users/services/contact-change.service.ts`
 and `src/modules/users/config/contact-change.config.ts`.
 
-**Six routes, and one rule above all others: the identifier does not move until it is proved.**
+Reference for changing the **email address or phone number an account signs in with**.
 
-`login_email` and `login_phone` are what `POST /api/auth/login` resolves an account by. A flow that
-writes the new value first and marks it unverified is the one that cannot be recovered from — a
-typo'd address becomes the only way in, the account cannot be signed into, and the correction form
-is behind the sign-in. So **a request writes a pending block and nothing else.** Exactly one write
-ever moves the identifier, and it clears the pending block in the same `$set`.
+> [!IMPORTANT]
+> Like [password.md](./password.md), this is a **shared, role-agnostic** surface mounted under
+> `/api/me`. The same endpoints work for every authenticated role — the login identifiers live on
+> the **User** record, not on any role entity, so there is one email and one phone per *account*
+> regardless of how many roles it holds. When a change is confirmed it is carried onto **every**
+> role profile the account has (customer, vendor, agency, agent), so the profile a notification
+> reads and the identifier the sign-in resolves can never disagree.
 
-> **Verified against source 2026-08-24.** Routes: `src/modules/users/user.routes.ts:41-47` and the
-> auth router. Handler: `contact-change.controller.ts`. Rules:
-> `services/contact-change.service.ts`. Windows: `config/contact-change.config.ts`.
+> [!NOTE]
+> **There is a SECOND door onto these five verbs, and it is not a proxy.** Since MCP parity
+> step 6 the bot surface serves them at `/api/internal/bot/contact*` for a customer resolved
+> from a messaging identity — same services, same rules, one addition and one absence:
 >
-> ⚠ **Deliberately extended from the backend's copy.** A drift check will report this file as
-> differing from `jovi-mall/api-doc/me/contact-change.md`. **Intentional, not staleness** —
-> see `README.md` § 9.
+> - it reports **`phoneChangeProved`**, which answers whether the pending phone change can be
+>   completed at all (see the phone proof below). The customer API does not, so a browser
+>   client finds out from the `422` after trying;
+> - there is **no bot equivalent of the email confirm**, because that endpoint is
+>   unauthenticated by design and its token arrives in a mail client.
+>
+> Contract: `api-doc/n8n/bot-surface.md` § 15.
 
 ---
 
-## 1 · The routes
+## The one rule that shapes everything below
 
-| Method | Path | Auth | What |
-|---|---|---|---|
-| `GET` | `/api/me/contact` | session | what you sign in with, and what is in flight |
-| `PATCH` | `/api/me/email` | session | open an email change |
-| `POST` | **`/api/auth/email-change/confirm`** | 🔴 **none** | spend the emailed token |
-| `DELETE` | `/api/me/email/pending` | session | abandon an email change |
-| `PATCH` | `/api/me/phone` | session | open a phone change |
-| `POST` | `/api/me/phone/confirm` | session | complete a phone change |
-| `DELETE` | `/api/me/phone/pending` | session | abandon a phone change |
+**The identifier does not move until the change is proved.**
 
-Shared across **all roles** — `/api/me` carries `requireAuth` and no `requireRole`. The account
-owner is resolved from the verified token, never from a body.
+`POST /api/auth/login` resolves an account by `login_email` / `login_phone`. A flow that wrote the
+new value immediately and flagged it unverified would be unrecoverable from a typo: the account
+could no longer be signed into, and the correction form is behind the sign-in.
 
-### 1.1 🔴 The email confirm is on a different router, and unauthenticated
+So a request writes a **pending** change and nothing else. Until it is confirmed:
 
-This is the single most likely thing to get wrong. `POST /api/auth/email-change/confirm` is **not**
-under `/api/me`, and it carries **no `requireAuth`**.
+- the **current** identifier still signs in, unchanged;
+- the **new** one does not;
+- `GET /api/me/contact` reports both, so a client can render "waiting on `new@example.com`".
 
-**Why:** the link is read in a mail client, which is routinely not the browser that started the
-change and often not on the same device. Requiring a session would make the flow fail for exactly
-the people it is for. The token *is* the credential and it names the account.
+Confirming swaps them in a single write. The old identifier stops working at exactly the moment
+the new one starts — there is no window in which both work, and none in which neither does.
 
-**The phone confirm is authenticated**, because its proof is a property of the account and needs the
-session to be looked up at all. **That asymmetry is the design, not an oversight.**
-
-Because it is mounted on the auth router it inherits the **credential rate-limit bucket**
-(20/min) rather than the general one — it spends a bearer secret, which is what that bucket is for.
+> [!NOTE]
+> A contact change is **not** a credential change: it does **not** sign your other devices out.
+> Only `PATCH /api/me/password` does that. If you believe an account is compromised, change the
+> password — that is the remedy that evicts sessions.
 
 ---
 
-## 2 · `GET /api/me/contact`
+## Authentication
 
-```jsonc
+Every endpoint here requires a valid access token **except**
+[`POST /api/auth/email-change/confirm`](#post-apiauthemail-changeconfirm), which is public by
+design — see that section.
+
+```
+Authorization: Bearer <access_token>
+```
+
+The token may also be supplied via the `access_token` httpOnly cookie (browser clients). Standard
+envelope throughout; see [errors/README.md](../errors/README.md).
+
+---
+
+## The two flows at a glance
+
+| | Email | Phone |
+|---|---|---|
+| Request | `PATCH /api/me/email` | `PATCH /api/me/phone` |
+| Proof of control | a token emailed to the **new address** | a **six-digit WhatsApp code** sent to the new number |
+| Confirm | `POST /api/auth/email-change/confirm` (**public**) | `POST /api/me/phone/verify/request`, then `POST /api/me/phone/verify/confirm` (**authenticated**) — [phone-verification.md](phone-verification.md) |
+| Cancel | `DELETE /api/me/email/pending` | `DELETE /api/me/phone/pending` |
+| Window | 1 hour (`CONTACT_CHANGE_EMAIL_TTL_SECONDS`) | 24 hours (`CONTACT_CHANGE_PHONE_TTL_SECONDS`) |
+
+### The phone proof is a WhatsApp code
+
+**Every client, the storefront included, confirms a phone change with a six-digit code sent to
+the new number on WhatsApp** (owner decision, 2026-09-21):
+
+```
+PATCH /api/me/phone               { "phone": "+237600000002" }   → pending, nothing moves yet
+POST  /api/me/phone/verify/request                               → code sent to the NEW number
+POST  /api/me/phone/verify/confirm  { "code": "123456" }         → login_phone swaps
+```
+
+The code goes out as free text inside Meta's 24-hour window and as the approved AUTHENTICATION
+template outside it, so the user never has to message the bot first. It is not billed to anyone.
+Refusals, limits and the "what to show on failure" contract are in
+[phone-verification.md](phone-verification.md).
+
+⚠ **The account's WhatsApp link moves with the number.** If the account was linked to the bot
+from the number being given up, confirming the code moves that link to the new number. Otherwise
+whoever holds the old number, a lost or recycled SIM, would still be this customer to the bot,
+and notifications would keep going there. If the new number is already linked to a different
+account, the link is removed instead of transferred.
+
+⛔ **This section used to say the platform had "deliberately no WhatsApp code"**, and that the
+only proof was a messaging connection: send `/connect` to the bot **from the new number**, redeem
+the code, then call `POST /api/me/phone/confirm`. That flow still works and the bot surface uses
+it (`contact_confirm_phone`), but **the storefront must not send customers through it**. Remove
+any "message the bot from your new number" copy that was built from the old text.
+
+---
+
+## GET /api/me/contact
+
+What the account signs in with, and what is waiting.
+
+**Response (200 OK)**
+
+```json
 {
-  "email": "old@example.com",           // string | null - what you sign in with today
-  "phone": "+237600000001",             // string | null
-  "pendingEmail": {
-    "target": "new@example.com",        // the value being proved
-    "requestedAt": "2026-08-24T09:12:00.000Z",
-    "expiresAt":   "2026-08-24T10:12:00.000Z"
-  } | null,
-  "pendingPhone": { /* same shape */ } | null
+  "success": true,
+  "data": {
+    "email": "old@example.com",
+    "phone": "+237600000001",
+    "pendingEmail": {
+      "target": "new@example.com",
+      "requestedAt": "2026-08-21T09:00:00.000Z",
+      "expiresAt": "2026-08-21T10:00:00.000Z"
+    },
+    "pendingPhone": null
+  }
 }
 ```
 
-**Never the token and never its hash.** `target` is echoed because the account holder typed it.
+`email` and `phone` are each `string | null` — an account may hold only one of the two.
+`pendingEmail` / `pendingPhone` are `null` when nothing is in flight. **No token is ever
+returned**, in this or any other response.
 
 ---
 
-## 3 · Email change
+## PATCH /api/me/email
 
-### `PATCH /api/me/email`
+Open a change of login email. Sends a confirmation link **to the new address**.
 
-```jsonc
-{ "email": "new@example.com" }     // .strict() - an unknown key is a 400
-// ->
-{ "pendingEmail": { "target": "...", "requestedAt": "...", "expiresAt": "..." } }
+**Request**
+
+```json
+{ "email": "new@example.com" }
 ```
 
-Nothing about the account changes yet. A confirmation link goes to **the new address**, pointing at
-the storefront:
+`email` (**required**, string) — validated against the platform's shared RFC-shaped rule and
+normalised (trimmed, lowercased). The schema is `.strict()`: an unknown key is a `400`, not a
+silently stripped field. `null` and `""` are refused — **clearing a login identifier is not a
+self-service operation** (an account must keep at least one, and only an administrator may edit
+them freely).
 
-```
-{STOREFRONT_URL}/account/confirm-email?token={token}&app={role}
-```
+**Response (200 OK)**
 
-⚠ **The storefront must POST that token, not GET it.** The link lands on a storefront page, which
-reads `?token=` and calls `POST /api/auth/email-change/confirm`. A `GET` that mutates is spent by
-whatever prefetches the mail — link scanners, corporate relays, the mail client's own preview.
-
-### 3.1 🔴 One page serves all four apps, and `app=` is the only role-aware part
-
-`STOREFRONT_URL` is a **single environment variable with no role branch**, so a vendor, an agency
-and an agent all land on the storefront's `/account/confirm-email`. That is correct rather than
-accidental: the confirm reads no `req.auth`, takes no actor, resolves the account from the hash of
-the token, and then syncs the new address onto **every** role profile the account holds. The
-confirmation is genuinely role-free — there is nothing for a per-dashboard copy of the page to do
-differently, and each copy would be a second place for the POST-not-GET rule to be got wrong.
-
-What the confirm response *cannot* answer is **where to send the person afterwards**: it carries
-`{ email }` and no role. So the request half — which is authenticated and does know the actor —
-stamps `app={role}` into the link, and the page uses it to offer one correct way back.
-
-⚠ **`app=` is a role key, never a URL.** The page maps it through a compile-time table; an
-unrecognised value falls back to the storefront's own links. A `?return=<url>` parameter would be an
-open redirect on a page that is reachable with no session.
-
-⚠ **Treat it as advisory.** Links minted before it existed carry no `app=`, and an account can hold
-several roles anyway, so the page must render something sensible when it is absent.
-
-**Window: 1 hour** (`CONTACT_CHANGE_EMAIL_TTL_SECONDS`). Deliberately shorter than the 24-hour
-registration verification window — that token proves an address somebody just typed into a signup
-form and costs nothing if it lapses. This one bounds a change to an identifier the account
-**already signs in with**.
-
-The token is stored **hashed** (SHA-256), because a pending change is durable and the collection
-must not hold a spendable credential.
-
-### `POST /api/auth/email-change/confirm`
-
-```jsonc
-{ "token": "..." }     // 1-512 chars, .strict(). The minted token is 64 hex characters
+```json
+{
+  "success": true,
+  "data": {
+    "pendingEmail": {
+      "target": "new@example.com",
+      "requestedAt": "2026-08-21T09:00:00.000Z",
+      "expiresAt": "2026-08-21T10:00:00.000Z"
+    }
+  },
+  "message": "Check the new address for a confirmation link. Until you confirm it, you still sign in with your current email."
+}
 ```
 
-The bound is generous on purpose: a mail client that wraps a URL is a real thing, and a near-miss
-should be told the token is *invalid*, not that it is *malformed*.
+**Errors**
 
-On success the identifier moves and the pending block clears in one write.
-
-### `DELETE /api/me/email/pending`
-
-Abandons the change. `404 CONTACT_CHANGE_NOT_PENDING` if nothing is in flight.
-
----
-
-## 4 · Phone change
-
-### `PATCH /api/me/phone`
-
-```jsonc
-{ "phone": "+237600000001" }      // E.164, .strict()
-// ->
-{ "pendingPhone": { "target": "...", "requestedAt": "...", "expiresAt": "..." } }
-```
-
-**Window: 24 hours** (`CONTACT_CHANGE_PHONE_TTL_SECONDS`) — longer than email, because the proof is
-not *delivered*: the person has to go and message the bot from the new number, possibly on a handset
-that is not in the room. Still bounded, because an unbounded pending request would be completed by
-the next WhatsApp connection made for any reason at all, months later.
-
-### 🔴 There is no OTP. The proof is a WhatsApp connection.
-
-There is **no SMS provider in this service**, and a WhatsApp message to a number that has not
-messaged us is outside the 24-hour service window — so it would have to be an approved paid
-**template** billed to a credit wallet, and a customer has no wallet.
-
-What the platform already has is the *inbound* direction. A `channel_connections` row binding an
-account to a WhatsApp identity exists only because a message arrived **from that number** and the
-account holder redeemed the resulting code while signed in. That is a stronger proof of control than
-an OTP, and it is already built.
-
-**So the phone confirm asks for exactly that:** the pending number must match a WhatsApp connection
-on the caller's own account.
-
-⚠ **Two consequences, stated rather than buried:**
-
-- **An account with no WhatsApp connection cannot change its phone here.**
-- **A Telegram connection does not count.** A `chat_id` bears no relation to any phone number.
-
-Both surface as `CONTACT_CHANGE_PHONE_UNPROVEN`, whose message says what to do. The UI should route
-that code to [`../connections/README.md`](../connections/README.md) — connect WhatsApp first, then
-come back and confirm.
-
-### `POST /api/me/phone/confirm`
-
-**Takes no body.** There is no token to present; the proof is looked up from the session.
-
-### `DELETE /api/me/phone/pending`
-
-Abandons the change.
-
----
-
-## 5 · What this deliberately does NOT do
-
-**It does not stamp `password_changed_at`.** That field is the session revocation list, and changing
-an identifier changes no credential — the password still authenticates. Signing every device out
-over an email edit would be a surprise with no security story behind it.
-
-**So a contact change does not sign anyone out.** A compromised account's remedy is still
-[the password change](./password.md).
-
----
-
-## 6 · Errors
-
-| Code | Status | When |
+| Status | Code | When |
 |---|---|---|
-| `CONTACT_CHANGE_SAME_IDENTIFIER` | 422 | the new value equals the current one |
-| `CONTACT_CHANGE_IDENTIFIER_TAKEN` | 409 | another account already signs in with it |
-| `CONTACT_CHANGE_NOT_PENDING` | 409 | confirming or cancelling with nothing in flight |
-| `CONTACT_CHANGE_EXPIRED` | 422 | the window lapsed — **start again** |
-| `CONTACT_CHANGE_TOKEN_INVALID` | 400 | the token does not resolve — **check the link** |
-| `CONTACT_CHANGE_PHONE_UNPROVEN` | 422 | no WhatsApp connection matching the pending number |
-| `VALIDATION_ERROR` | 400 | malformed email/phone, unknown body key, token over 512 chars |
+| 422 | `CONTACT_CHANGE_SAME_IDENTIFIER` | It is already the address on the account |
+| 409 | `CONTACT_CHANGE_IDENTIFIER_TAKEN` | Another account holds it |
+| 400 | `VALIDATION_ERROR` | Malformed, missing, or an unknown key |
 
-> **Statuses corrected 2026-08-24** against `contact-change.service.ts`, which passes each one to
-> `createAppError` explicitly. The previous table had four of them wrong (`SAME_IDENTIFIER` 400,
-> `NOT_PENDING` 404, `EXPIRED` 400, `PHONE_UNPROVEN` 400). **Branch on `code`, never on status** —
-> that is what makes this class of drift survivable, and three of these codes share a status anyway.
+> A second request **supersedes** the first: the earlier link stops working. That is the correct
+> behaviour for a mistyped address — retype it and the wrong link dies, rather than two links
+> racing.
 
-⚠ **`CONTACT_CHANGE_IDENTIFIER_TAKEN` reaches the confirm screen, not only the request form.** The
-address was free when the change was opened and somebody claimed it in the hour since. The service
-re-checks at confirm time deliberately: without it the swap hits the sparse unique index and answers
-500 instead of 409.
+---
 
-⚠ **`CONTACT_CHANGE_EXPIRED` and `CONTACT_CHANGE_TOKEN_INVALID` are separate codes on purpose** —
-*"start again"* and *"check the link you clicked"* are different instructions to a user. Do not
-collapse them into one message.
+## POST /api/auth/email-change/confirm
 
-Contact validation is strict E.164 for phones and RFC-shaped for email
-(`core/validation/{phone,email}.ts`).
+Spend the token from the email and complete the change.
+
+> [!IMPORTANT]
+> **Public — no access token.** The link is read in a mail client, which is routinely a different
+> browser and often a different device from the one that started the change. Requiring the session
+> would fail the flow for exactly the people it is for. The token is the credential and it names
+> the account.
+>
+> It is a **POST**, for the reason `POST /api/auth/verify-email` is one: mail clients and chat
+> apps *prefetch* URLs to build preview cards, and a `GET` that mutates is spent by a crawler
+> before the person taps it. The emailed link therefore points at a page you serve, which reads
+> the token out of the query string and POSTs it here:
+>
+> ```
+> <STOREFRONT_URL>/account/confirm-email?token=<64 hex>&app=<customer|vendor|agency|agent>
+> ```
+>
+> It sits under `/api/auth`, so it is bound by the **credential** rate-limit bucket
+> (20/min/IP) — see [rate-limits.md](../rate-limits.md).
+
+> [!NOTE]
+> **`app` names which app opened the change, and it is optional.**
+>
+> One page serves the storefront, both dashboards and the agent app, because this endpoint is
+> genuinely role-free: it reads no token of yours, resolves the account from the confirmation
+> token, and syncs the confirmed address onto **every** role profile the account holds. So the
+> response carries `{ email }` and no role — an account can hold several, and a `roles` array
+> would not identify one destination anyway.
+>
+> The only thing the page cannot work out for itself is **where to send the person afterwards**,
+> which is what `app` answers. It is stamped from the JWT by `PATCH /api/me/email` — the half of
+> the flow that has a session.
+>
+> **Treat it as a key, never a URL.** Map it through a compile-time table and ignore anything
+> else; this page is reachable with no session, so honouring a caller-supplied destination would
+> be an open redirect on the origin your sign-in pages live on. Links already in inboxes carry no
+> `app=`, so absence must be normal — fall back to your default destination.
+
+**Request**
+
+```json
+{ "token": "…64 hex characters…" }
+```
+
+**Response (200 OK)**
+
+```json
+{
+  "success": true,
+  "data": { "email": "new@example.com" },
+  "message": "Your email address has been changed. Use it to sign in from now on."
+}
+```
+
+**Errors**
+
+| Status | Code | When |
+|---|---|---|
+| 400 | `CONTACT_CHANGE_TOKEN_INVALID` | Unknown, already spent, or superseded by a newer request |
+| 422 | `CONTACT_CHANGE_EXPIRED` | Past the one-hour window — start again |
+| 409 | `CONTACT_CHANGE_IDENTIFIER_TAKEN` | Somebody claimed the address while the link sat in a mailbox |
+
+> The uniqueness check runs **again** here, and that is not redundant: the address is claimable in
+> the up-to-an-hour window between request and confirm.
+
+**This endpoint does not sign the user in.** After a success, a signed-out visitor should be sent
+to the login screen (with the new address prefilled); a signed-in one keeps their session, which
+is unaffected.
+
+---
+
+## DELETE /api/me/email/pending
+
+Abandon a pending email change. The current identifier is untouched.
+
+**Response (200 OK)** — `data: null`, with a message.
+
+| Status | Code | When |
+|---|---|---|
+| 409 | `CONTACT_CHANGE_NOT_PENDING` | Nothing in flight |
+
+---
+
+## PATCH /api/me/phone
+
+Open a change of login phone.
+
+**Request**
+
+```json
+{ "phone": "+237600000002" }
+```
+
+`phone` (**required**, string) — **strict E.164**, the same rule every other phone field on this
+platform uses: a leading `+`, country code, no spaces or punctuation. `.strict()`, and `null` /
+`""` are refused, exactly as for email.
+
+**Response (200 OK)**
+
+```json
+{
+  "success": true,
+  "data": {
+    "pendingPhone": {
+      "target": "+237600000002",
+      "requestedAt": "2026-08-21T09:00:00.000Z",
+      "expiresAt": "2026-08-22T09:00:00.000Z"
+    }
+  },
+  "message": "Confirm the change with the code we send to that number on WhatsApp. Until you do, you still sign in with your current number."
+}
+```
+
+**Errors** — the same three as `PATCH /api/me/email`.
+
+**What the client should do next**: call `POST /api/me/phone/verify/request` (no body). The
+server sends the code to the **pending** number, not the current one, and
+`POST /api/me/phone/verify/confirm` with that code completes the change
+(`data.changed: true`). See [phone-verification.md](phone-verification.md).
+
+⚠ This call does **not** send the code by itself. Request it explicitly: sending it here would
+start the 60-second resend cooldown, and the explicit request that every client already makes
+next would then be refused with `429`.
+
+---
+
+## POST /api/me/phone/confirm
+
+Complete a phone change, once the number is proved **by a WhatsApp connection**.
+
+⚠ **The storefront does not use this route.** It confirms with the code (above). This one stays
+for the bot surface (`contact_confirm_phone`), where the customer is already chatting from a
+WhatsApp number, and for an account whose link already is the new number.
+
+**Authenticated, and takes no body.** There is no token to present: the proof is a property of the
+account, so the session is what makes it lookupable at all.
+
+**Response (200 OK)**
+
+```json
+{
+  "success": true,
+  "data": { "phone": "+237600000002" },
+  "message": "Your phone number has been changed. Use it to sign in from now on."
+}
+```
+
+**Errors**
+
+| Status | Code | When |
+|---|---|---|
+| 422 | `CONTACT_CHANGE_PHONE_UNPROVEN` | No WhatsApp connection on this account matches the pending number. `details.channel` is `"whatsapp"` |
+| 409 | `CONTACT_CHANGE_NOT_PENDING` | Nothing in flight, or it was superseded |
+| 422 | `CONTACT_CHANGE_EXPIRED` | Past the 24-hour window |
+| 409 | `CONTACT_CHANGE_IDENTIFIER_TAKEN` | Another account claimed the number in the meantime |
+
+`CONTACT_CHANGE_PHONE_UNPROVEN` is the one to build a real screen for — it is not an error state
+so much as the next step, and its message says so.
+
+---
+
+## DELETE /api/me/phone/pending
+
+Abandon a pending phone change. Same shape and same single error as the email cancel.
+
+---
+
+## Error codes, in one list
+
+| Code | Status | Category |
+|---|---|---|
+| `CONTACT_CHANGE_SAME_IDENTIFIER` | 422 | `business_rule` |
+| `CONTACT_CHANGE_IDENTIFIER_TAKEN` | 409 | `conflict` |
+| `CONTACT_CHANGE_NOT_PENDING` | 409 | `conflict` |
+| `CONTACT_CHANGE_EXPIRED` | 422 | `business_rule` |
+| `CONTACT_CHANGE_TOKEN_INVALID` | 400 | `validation` |
+| `CONTACT_CHANGE_PHONE_UNPROVEN` | 422 | `business_rule` |
+
+Branch on `error.code`, never on `error.message`. See [errors/README.md](../errors/README.md).

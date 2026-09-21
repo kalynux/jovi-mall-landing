@@ -52,10 +52,16 @@ export function MenuSheet({
     if (!open) return;
     const onDown = (e: MouseEvent) => {
       const el = dropRef.current;
+      // Below `sm` the dropdown is mounted but `display: none` — the menu on
+      // screen is the sheet, and the sheet is portalled to <body>, outside the
+      // wrapper tested below. Every tap on one of its rows would count as an
+      // outside click and close the menu under the finger. A hidden dropdown
+      // has no offsetParent and nothing of its own to dismiss.
+      if (!el || el.offsetParent === null) return;
       // The trigger is outside this ref, so a click on it would close here and
       // reopen on its own handler. Its wrapper is the offset parent — walking
       // up to it covers the button and nothing else.
-      if (el && !el.parentElement?.contains(e.target as Node)) onClose();
+      if (!el.parentElement?.contains(e.target as Node)) onClose();
     };
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.addEventListener("mousedown", onDown);
@@ -133,13 +139,13 @@ export function MenuSheet({
   return (
     <>
       {/* ── Phone: bottom sheet ─────────────────────────────────────────── */}
-      <div className="sm:hidden">
-        <BottomSheet open={open} onClose={onClose} title={title}>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            {items.map((i) => row(i, "sheet"))}
-          </div>
-        </BottomSheet>
-      </div>
+      {/* `sm:hidden` goes to the sheet itself, not to a wrapper here: the sheet
+          is portalled to <body>, so a wrapper no longer contains it. */}
+      <BottomSheet open={open} onClose={onClose} title={title} className="sm:hidden">
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {items.map((i) => row(i, "sheet"))}
+        </div>
+      </BottomSheet>
 
       {/* ── Desktop: dropdown ───────────────────────────────────────────── */}
       <AnimatePresence>

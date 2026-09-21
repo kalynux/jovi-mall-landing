@@ -77,7 +77,8 @@ export function Button({
         fontFamily: "var(--font-sans)",
         fontSize: s.fontSize,
         fontWeight: 700,
-        letterSpacing: "-0.01em",
+        // letter-spacing lives on `.ds-btn` in globals.css, not here: an inline
+        // value cannot be switched off for Arabic, where it ran words together.
         borderRadius: "var(--radius-button)",
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.5 : 1,

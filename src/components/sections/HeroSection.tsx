@@ -11,7 +11,8 @@ import {
 } from "framer-motion";
 import { MessageCircle, Zap, Bot, CheckCheck } from "lucide-react";
 import CTAButton from "@/components/ui/CTAButton";
-import { BRAND, buildWhatsAppUrl } from "@/lib/constants";
+import ChatPill from "@/components/ui/ChatPill";
+import { BRAND, buildTelegramUrl, buildWhatsAppUrl } from "@/lib/constants";
 import { useSignatureReducedMotion, useReducedMotionSafe } from "@/lib/reduced-motion";
 import { useTranslations } from "next-intl";
 
@@ -470,24 +471,26 @@ export default function HeroSection({ onGetStarted }: HeroSectionProps) {
             <CTAButton variant="primary" size="lg" onClick={onGetStarted} showArrow magnetic>
               {t("ctaPrimary")}
             </CTAButton>
-            <CTAButton variant="secondary" size="lg" href="#how-it-works" magnetic>
-              {t("ctaSecondary")}
-            </CTAButton>
-            {/* Third door: straight into the bot, no account needed. CTAButton
-                takes no target/rel and is not ours to change, so this is a plain
-                <a> wearing CTAButton's secondary/lg classes, tinted WhatsApp
-                green so it reads as a different path and not a third identical
-                button. The hover tint is `wa/10` rather than the solid wa-light,
-                which would put light green under light text in dark mode. */}
-            <a
-              href={buildWhatsAppUrl(t("ctaWhatsappPrefill"))}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="relative inline-flex items-center justify-center gap-2.5 rounded-2xl border border-wa/60 bg-[var(--surface-glass)] px-8 py-4 font-display text-lg font-semibold text-[var(--text-primary)] transition-[box-shadow,background-color,border-color] duration-200 hover:border-wa hover:bg-wa/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wa focus-visible:ring-offset-2"
-            >
-              <MessageCircle className="h-5 w-5 shrink-0 text-wa-dark dark:text-wa" aria-hidden="true" />
-              {t("ctaWhatsapp")}
-            </a>
+            {/* Second door: straight into the bot, no account needed. It used
+                to be a third full-size button beside "See how it works"; that
+                one went (the next section is one scroll away), and WhatsApp and
+                Telegram share one pill so the row stays at two controls. */}
+            <ChatPill
+              channels={[
+                {
+                  app: "whatsapp",
+                  href: buildWhatsAppUrl(t("ctaWhatsappPrefill")),
+                  label: t("ctaWhatsappShort"),
+                  ariaLabel: t("ctaWhatsapp"),
+                },
+                {
+                  app: "telegram",
+                  href: buildTelegramUrl(),
+                  label: t("ctaTelegramShort"),
+                  ariaLabel: t("ctaTelegram"),
+                },
+              ]}
+            />
           </motion.div>
 
           {/* Social proof */}

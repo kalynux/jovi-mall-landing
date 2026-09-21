@@ -17,6 +17,8 @@ import {
 import { registerAndGetRedirect } from "@/lib/auth/auth.service";
 import { isUiRole, type UiRole } from "@/lib/auth/auth.types";
 import { mapApiErrors, parseRootType } from "@/lib/auth/form-errors";
+import { addRoleReturnPath } from "@/lib/auth/auth.redirect";
+import { useLocale } from "@/lib/i18n-provider";
 import { sanitizePayload } from "@/lib/form/sanitize-payload";
 import AuthSplitShell from "@/components/auth/AuthSplitShell";
 import AuthFormField from "@/components/auth/AuthFormField";
@@ -40,6 +42,7 @@ function RegisterFormContent() {
   const t = useTranslations("auth");
   const tModal = useTranslations("modal");
   const tErrors = useTranslations("errors");
+  const { locale } = useLocale();
   const searchParams = useSearchParams();
   const roleParam = searchParams.get("role");
 
@@ -372,12 +375,56 @@ function RegisterFormContent() {
               const { errorCode, requestId, category } = parseRootType(
                 errors.root?.type as string | undefined
               );
+
+              /**
+               * The phone or email already belongs to an account — any account,
+               * whatever its roles, since one person may hold all four. The shared
+               * `errors.AUTH_*_TAKEN` copy stops at "sign in instead", which is a
+               * dead end for someone who came here to become a vendor: signing in
+               * gets them the role they already have. The way through is to sign
+               * in to that account and ADD this role, so this screen says so.
+               *
+               * Page copy, not a change to `errors.*`: the backend sends the same
+               * two codes when an administrator edits someone's phone or email,
+               * where "add a role" would be nonsense.
+               *
+               * ⚠ The role named is the one being registered — the visitor chose
+               * it. The account's EXISTING role must never be named, hinted at or
+               * preselected: this answer goes to anyone who types a number, and
+               * "that number is an agent" is not theirs to learn. So the sign-in
+               * link carries no `?role=` of its own either; only its `return`
+               * does, and that is the role asked for.
+               *
+               * "The way you usually do" is doing real work: the account may be a
+               * customer's, and customers never had a password to sign in with.
+               */
+              const taken =
+                errorCode === "AUTH_PHONE_TAKEN"
+                  ? "phone"
+                  : errorCode === "AUTH_EMAIL_TAKEN"
+                    ? "email"
+                    : null;
+              const roleLabel = tModal(`roles.${selectedRole}.label` as Parameters<typeof tModal>[0]);
+
               return (
                 <GlobalError
-                  message={errors.root?.message}
+                  message={
+                    taken ? t(`identifierTaken.${taken}`, { role: roleLabel }) : errors.root?.message
+                  }
                   requestId={requestId}
                   errorCode={errorCode}
                   category={category}
+                  action={
+                    taken ? (
+                      <Link
+                        href={`/login?return=${encodeURIComponent(addRoleReturnPath(locale, selectedRole))}`}
+                        className="inline-flex items-center gap-1.5 font-semibold underline underline-offset-4 hover:text-red-700"
+                      >
+                        {t("identifierTaken.action", { role: roleLabel })}
+                        <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden="true" />
+                      </Link>
+                    ) : undefined
+                  }
                 />
               );
             })()}

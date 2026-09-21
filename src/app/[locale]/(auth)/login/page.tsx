@@ -14,7 +14,8 @@ import {
   type LoginFormValues,
 } from "@/lib/auth/auth.schemas";
 import { loginAndGetRedirect } from "@/lib/auth/auth.service";
-import { validateReturnUrl } from "@/lib/auth/auth.redirect";
+import { addRoleReturnPath, validateReturnUrl } from "@/lib/auth/auth.redirect";
+import { errorCodeOf } from "@/lib/auth/error-translator";
 import { useLocale } from "@/lib/i18n-provider";
 import { IS_NATIVE_BUILD } from "@/lib/platform";
 import { localePath } from "@/i18n/routing";
@@ -68,6 +69,27 @@ function LoginFormContent() {
     customerOnly ? "customer" : null
   );
   const [step, setStep] = useState<Step>(customerOnly ? "customer" : "role");
+
+  /**
+   * The role a correct password was just refused for — see the note in
+   * `onSubmit` — and, once the visitor accepts the way round it, the role to
+   * add after they sign in with one the account does hold.
+   *
+   * Two pieces of state rather than one because they mean different things: the
+   * first only words the banner, the second changes where signing in lands.
+   * Nothing sets the second without a click.
+   */
+  const [missingRole, setMissingRole] = useState<UiRole | null>(null);
+  const [addRoleAfterSignIn, setAddRoleAfterSignIn] = useState<UiRole | null>(null);
+
+  /**
+   * Where signing in goes. The `?return=` the page arrived with, unless the
+   * visitor has since asked to add a role — that request is newer and was made
+   * on this screen, so it wins.
+   */
+  const effectiveReturn = addRoleAfterSignIn
+    ? addRoleReturnPath(locale, addRoleAfterSignIn)
+    : returnParam;
 
   const {
     register,
@@ -138,7 +160,7 @@ function LoginFormContent() {
    */
   const handleCustomerSignedIn = () => {
     // A `return` from the middleware's gate already carries its locale prefix.
-    const safeReturn = validateReturnUrl(returnParam);
+    const safeReturn = validateReturnUrl(effectiveReturn);
     window.location.href = safeReturn ?? localePath(locale, "/shop");
   };
 
@@ -160,11 +182,43 @@ function LoginFormContent() {
 
       window.location.href = await loginAndGetRedirect(
         payload as typeof data & { role?: UiRole },
-        returnParam
+        effectiveReturn
       );
     } catch (err) {
       mapApiErrors(err, setError, tErrors);
+
+      /**
+       * `AUTH_ROLE_NOT_FOUND` here means the password was RIGHT and the account
+       * simply lacks the role picked — and only that. The backend answers it
+       * after `bcrypt.compare` and after the status checks (AuthService.login),
+       * so reaching it already proves the credential, and telling this visitor
+       * about their own account's roles gives nothing away. A wrong password
+       * never gets this far: it is `AUTH_INVALID_CREDENTIALS`, and must stay the
+       * one answer for every other failure.
+       *
+       * The shared `errors.AUTH_ROLE_NOT_FOUND` stays generic on purpose — it is
+       * also what `requireRole` answers for any 403 anywhere in the API.
+       *
+       * Remembered by value rather than read from `selectedRole` at render:
+       * going back to the picker changes `selectedRole`, and the banner must
+       * keep naming the role that was actually refused.
+       */
+      setMissingRole(errorCodeOf(err) === "AUTH_ROLE_NOT_FOUND" ? selectedRole : null);
     }
+  };
+
+  /**
+   * Back to the picker to sign in with a role the account does hold, carrying
+   * the refused one forward so signing in ends on `/add-role` with it chosen.
+   *
+   * The phone/email and password stay filled in — `handleBackToRole` only
+   * changes the step, and react-hook-form keeps values across the unmount —
+   * so the second attempt is one tap on the right role and one on "Sign in".
+   */
+  const handleAddMissingRole = () => {
+    setAddRoleAfterSignIn(missingRole);
+    clearErrors("root");
+    handleBackToRole();
   };
 
   // ── Title / subtitle per step ──────────────────────────────────────────────
@@ -194,9 +248,15 @@ function LoginFormContent() {
    * opens the phone's browser, not this WebView, so the app is only told about
    * the half that works there.
    */
+  // After "choose the role you already use", the picker's usual question is
+  // replaced by what happens next, so the detour reads as a step forward.
   const cardSubtitle =
     step === "role"
-      ? t("loginSubtitle")
+      ? addRoleAfterSignIn
+        ? t("roleMissing.pickerSubtitle", {
+            role: tModal(`roles.${addRoleAfterSignIn}.label` as Parameters<typeof tModal>[0]),
+          })
+        : t("loginSubtitle")
       : step === "customer"
         ? IS_NATIVE_BUILD
           ? t("customerSignInCodeIntroApp")
@@ -366,12 +426,32 @@ function LoginFormContent() {
               const { errorCode, requestId, category } = parseRootType(
                 errors.root?.type as string | undefined
               );
+              // See the note in `onSubmit` for why naming the role is safe here.
+              const refused = errorCode === "AUTH_ROLE_NOT_FOUND" ? missingRole : null;
               return (
                 <GlobalError
-                  message={errors.root?.message}
+                  message={
+                    refused
+                      ? t("roleMissing.body", {
+                          role: tModal(`roles.${refused}.label` as Parameters<typeof tModal>[0]),
+                        })
+                      : errors.root?.message
+                  }
                   requestId={requestId}
                   errorCode={errorCode}
                   category={category}
+                  action={
+                    refused ? (
+                      <button
+                        type="button"
+                        onClick={handleAddMissingRole}
+                        className="inline-flex items-center gap-1.5 font-semibold underline underline-offset-4 hover:text-red-700"
+                      >
+                        {t("roleMissing.action")}
+                        <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden="true" />
+                      </button>
+                    ) : undefined
+                  }
                 />
               );
             })()}

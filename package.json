@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "node --disable-warning=ExperimentalWarning --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./scripts/test-resolve.mjs --test \"src/**/*.test.ts\"",
     "check:i18n": "node scripts/check-i18n.mjs",
     "dev:native": "node scripts/build-native.mjs --dev",
     "build:native": "node scripts/build-native.mjs",

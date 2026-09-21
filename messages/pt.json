@@ -82,9 +82,11 @@
         "pillAI": "Com IA",
         "pillNoStorefront": "Sem loja virtual",
         "ctaPrimary": "Começar",
-        "ctaSecondary": "Ver como funciona",
         "ctaWhatsapp": "Conversar no WhatsApp",
         "ctaWhatsappPrefill": "Olá Wi-Mall! Gostaria de começar a comprar.",
+        "ctaTelegram": "Conversar no Telegram",
+        "ctaWhatsappShort": "WhatsApp",
+        "ctaTelegramShort": "Telegram",
         "socialProof": "Seja um dos nossos vendedores fundadores",
         "aiLabel": "IA ativa",
         "orderConfirmed": "Pedido confirmado!",
@@ -375,7 +377,7 @@
         "copyright": "Todos os direitos reservados.",
         "builtFor": "Feito para o comércio moderno. Impulsionado por Wi-Mall.",
         "logoAriaLabel": "Início Wi-Mall",
-        "socialAriaLabel": "Link social",
+        "socialAriaLabel": "Wi-Mall no {network}",
         "learn": "Recursos",
         "description": "Infraestrutura de comércio eletrónico com IA para negócios que vendem pelo WhatsApp. Não precisa de uma loja online: carregue os seus produtos e deixe a IA vender por si."
     },
@@ -470,6 +472,16 @@
             "identifierRequired": "Introduza o seu número de telefone ou e-mail",
             "codeRequired": "Introduza o código que o bot lhe enviou",
             "codeTooLong": "Esse não é um código de início de sessão"
+        },
+        "identifierTaken": {
+            "phone": "Este número de telefone já está associado a uma conta Wi-Mall. Entre nessa conta como de costume e depois adicione o papel de {role}.",
+            "email": "Este endereço de e-mail já está associado a uma conta Wi-Mall. Entre nessa conta como de costume e depois adicione o papel de {role}.",
+            "action": "Entrar para adicionar o papel de {role}"
+        },
+        "roleMissing": {
+            "body": "Sua conta ainda não tem o papel de {role}. Entre com seu papel habitual e depois adicione o papel de {role}.",
+            "action": "Escolher seu papel habitual",
+            "pickerSubtitle": "Escolha o papel com que você costuma entrar. Logo depois, poderá adicionar o papel de {role}."
         }
     },
     "authMe": {
@@ -824,7 +836,9 @@
         "CONNECTION_CODE_EXPIRED": "Esse código expirou. Envie o comando ao bot novamente para obter um novo.",
         "CONNECTION_CODE_ATTEMPTS_EXCEEDED": "Demasiadas tentativas. Aguarde alguns minutos antes de tentar novamente.",
         "MESSAGING_IDENTITY_ALREADY_LINKED": "Essa conta de mensagens já está ligada a outra conta Wi-Mall. Desligue-a aí primeiro, ou contacte o apoio ao cliente.",
-        "MESSAGING_CONNECTION_NOT_FOUND": "Esse canal não está ligado."
+        "MESSAGING_CONNECTION_NOT_FOUND": "Esse canal não está ligado.",
+        "PHONE_VERIFICATION_DELIVERY_FAILED": "Não foi possível enviar o seu código no WhatsApp neste momento. Tente novamente dentro de um minuto.",
+        "AUTH_ACCOUNT_CLOSED": "Esta conta foi fechada. Não pode ser reaberta nem usada para iniciar sessão."
     },
     "checkout": {
         "errors": {
@@ -1722,16 +1736,27 @@
     },
     "forgotPassword": {
         "title": "Redefinir a sua palavra-passe",
-        "subtitle": "Introduza o seu número ou e-mail e enviaremos um link.",
-        "identifierLabel": "Número de telefone ou e-mail",
-        "identifierPlaceholder": "+237 6 70 00 00 00",
-        "required": "Introduza o seu número de telefone ou e-mail.",
+        "subtitlePhone": "Introduza o número de telefone da sua conta. O bot da Wi-Mall envia-lhe o link de redefinição.",
+        "subtitleEmail": "Introduza o e-mail da sua conta e enviaremos um link de redefinição.",
+        "phoneLabel": "Número de telefone",
+        "emailLabel": "E-mail",
+        "emailPlaceholder": "voce@exemplo.com",
+        "continue": "Continuar",
         "submit": "Enviar link",
         "submitting": "A enviar…",
         "failed": "Não conseguimos enviar o link. Verifique a sua ligação e tente novamente.",
+        "useEmail": "Prefere redefinir com o seu e-mail?",
+        "usePhone": "Usar antes o seu número de telefone",
+        "chatTitle": "Continue na conversa",
+        "chatBody": "Envie <code>{command}</code> para o bot da Wi-Mall a partir do <phone>{number}</phone>. Ele responde com um link para escolher uma nova palavra-passe.",
+        "chatWaCta": "Abrir o WhatsApp",
+        "chatWaNote": "Envie-o a partir do WhatsApp deste número — é assim que o bot o reconhece.",
+        "chatTgCta": "Abrir o Telegram",
+        "chatTgNote": "Funciona se o seu Telegram usar este mesmo número, ou se já estiver ligado à sua conta. Se o bot pedir primeiro o seu número, partilhe-o e, se nenhum link chegar, envie <code>{command}</code> novamente.",
+        "editNumber": "Alterar o número",
         "sentTitle": "Verifique as suas mensagens",
-        "sentBody": "Se existir uma conta com esse número ou e-mail, enviámos-lhe um link de redefinição. Expira em breve e só pode ser usado uma vez.",
-        "sentHint": "Não recebeu nada? Confirme o que introduziu e tente novamente.",
+        "sentBody": "Se existir uma conta com esse e-mail, enviámos-lhe um link de redefinição. Expira em breve e só pode ser usado uma vez.",
+        "sentHint": "Não recebeu nada? Verifique a pasta de spam e o endereço que introduziu, e tente novamente.",
         "backToLogin": "Voltar ao início de sessão"
     },
     "resetPassword": {
@@ -2520,12 +2545,20 @@
             "phone": {
                 "title": "Telefone",
                 "none": "Não há telefone nesta conta",
-                "pendingNote": "Escreva ao nosso bot do WhatsApp a partir desse número e ligue-o, e depois confirme abaixo. Expira a {date}.",
-                "unproven": "Não encontrámos nenhuma ligação do WhatsApp para esse número na sua conta. Uma ligação do Telegram não conta — um id de conversa não diz nada sobre um número de telefone.",
+                "pendingNote": "Confirmamos um número novo com um código enviado para ele no WhatsApp. Até lá, continua a iniciar sessão com o seu número atual. Esta alteração expira a {date}.",
                 "checking": "A verificar…",
-                "connectWhatsApp": "Ligar o WhatsApp",
                 "confirmed": "É este o número com que inicia sessão agora.",
-                "howItWorks": "Confirmamos um número novo associando-o a uma ligação do WhatsApp na sua conta — não precisa de esperar por nenhum código."
+                "howItWorks": "Vamos enviar um código de 6 dígitos para o número novo no WhatsApp para confirmar que é seu.",
+                "codeLabel": "Código do WhatsApp",
+                "codePlaceholder": "Código de 6 dígitos",
+                "sendCode": "Enviar código",
+                "resendCode": "Enviar um código novo",
+                "resendIn": "Novo código dentro de {seconds} s",
+                "codeSent": "Enviámos um código para esse número no WhatsApp.",
+                "codeInvalid": "Esse código não está correto. {attemptsLeft, plural, =0 {Peça um novo.} one {Resta-lhe # tentativa.} other {Restam-lhe # tentativas.}}",
+                "verified": "O seu número de telefone está confirmado.",
+                "expired": "Esta alteração expirou. Cancele-a e introduza o número novamente.",
+                "contactSupport": "Contactar o apoio ao cliente"
             },
             "password": {
                 "title": "Palavra-passe",
@@ -2546,7 +2579,12 @@
                 "CONTACT_CHANGE_NOT_PENDING": "Não há nada a aguardar confirmação.",
                 "CONTACT_CHANGE_EXPIRED": "Esse pedido de alteração expirou. Comece de novo.",
                 "CONTACT_CHANGE_TOKEN_INVALID": "Esse link não é válido. Verifique se abriu o e-mail mais recente.",
-                "CONTACT_CHANGE_PHONE_UNPROVEN": "Ligue primeiro esse número no WhatsApp e depois volte e confirme."
+                "CONTACT_CHANGE_PHONE_UNPROVEN": "Esse número ainda não está confirmado. Introduza o código que lhe enviámos no WhatsApp.",
+                "PHONE_VERIFICATION_NO_TARGET": "Não há nenhum número de telefone para confirmar nesta conta.",
+                "PHONE_VERIFICATION_CODE_INVALID": "Esse código não está correto. Verifique-o e tente novamente.",
+                "PHONE_VERIFICATION_CODE_EXPIRED": "Esse código expirou. Peça um novo.",
+                "PHONE_VERIFICATION_TOO_MANY_ATTEMPTS": "Demasiados códigos errados. Peça um novo.",
+                "PHONE_VERIFICATION_RESEND_TOO_SOON": "Acabámos de enviar um código. Aguarde um pouco antes de pedir outro."
             }
         },
         "downloads": {
@@ -2576,7 +2614,14 @@
             "typeToConfirm": "Escreva <code>{phrase}</code> para confirmar",
             "submit": "Fechar a minha conta",
             "closing": "A fechar…",
-            "ordersInFlight": "Os pedidos ainda em curso têm de ser concluídos antes de ser possível fechar uma conta."
+            "ordersInFlight": "Os pedidos ainda em curso têm de ser concluídos antes de ser possível fechar uma conta.",
+            "refused": {
+                "ordersInFlight": "Ainda tem {count, plural, one {# pedido} other {# pedidos}} em curso. Poderá fechar a sua conta quando os seus pedidos estiverem concluídos.",
+                "seeOrders": "Ver os meus pedidos",
+                "roleNotEligible": "Esta conta também é usada como: {roles}. Isso tem de ser fechado primeiro e, por agora, só a nossa equipa de apoio o pode fazer.",
+                "contactSupport": "Contactar o apoio ao cliente",
+                "alreadyClosed": "Esta conta já foi fechada."
+            }
         },
         "addresses": {
             "description": "Onde os seus pedidos são entregues.",
@@ -2906,6 +2951,16 @@
             "paymentFailed": "Esse pagamento não foi concluído.",
             "ownBookingsOnly": "Só pode pagar as suas próprias reservas."
         },
-        "native": {}
+        "native": {},
+        "customerOnly": {
+            "title": "A loja é para clientes",
+            "bodySignOut": "Tem sessão iniciada como <b>{role}</b>. Termine a sessão e volte a entrar como cliente para fazer compras.",
+            "bodySwitch": "Tem sessão iniciada como <b>{role}</b>. A sua conta também é uma conta de cliente, por isso pode mudar para ela sem terminar a sessão.",
+            "botHint": "Para entrar como cliente, envie <code>{command}</code> ao nosso bot a partir do número de telefone desta conta. Ele responde com um link e um código de acesso.",
+            "switchAction": "Continuar como cliente",
+            "switching": "A mudar…",
+            "signingOut": "A terminar sessão…",
+            "switchFailed": "Não foi possível mudar para a sua conta de cliente. Termine a sessão e volte a entrar como cliente."
+        }
     }
 }

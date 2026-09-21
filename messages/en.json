@@ -82,9 +82,11 @@
         "pillAI": "AI-powered",
         "pillNoStorefront": "No storefront needed",
         "ctaPrimary": "Get Started",
-        "ctaSecondary": "See How It Works",
         "ctaWhatsapp": "Chat on WhatsApp",
         "ctaWhatsappPrefill": "Hi Wi-Mall! I'd like to start shopping.",
+        "ctaTelegram": "Chat on Telegram",
+        "ctaWhatsappShort": "WhatsApp",
+        "ctaTelegramShort": "Telegram",
         "socialProof": "Be one of our founding vendors",
         "aiLabel": "AI Active",
         "orderConfirmed": "Order Confirmed!",
@@ -375,7 +377,7 @@
         "copyright": "All rights reserved.",
         "builtFor": "Built for modern commerce. Powered by Wi-Mall.",
         "logoAriaLabel": "Wi-Mall Home",
-        "socialAriaLabel": "Social link",
+        "socialAriaLabel": "Wi-Mall on {network}",
         "learn": "Learn",
         "description": "AI-powered ecommerce infrastructure for WhatsApp-first businesses. No storefront needed — just upload products and let AI sell for you."
     },
@@ -470,6 +472,16 @@
             "identifierRequired": "Enter your phone number or email",
             "codeRequired": "Enter the code the bot sent you",
             "codeTooLong": "That is not a sign-in code"
+        },
+        "identifierTaken": {
+            "phone": "This phone number is already linked to a Wi-Mall account. Sign in to that account the way you usually do, then add the {role} role from there.",
+            "email": "This email address is already linked to a Wi-Mall account. Sign in to that account the way you usually do, then add the {role} role from there.",
+            "action": "Sign in to add the {role} role"
+        },
+        "roleMissing": {
+            "body": "Your account doesn't have the {role} role yet. Sign in with your usual role, then add the {role} role from there.",
+            "action": "Choose your usual role",
+            "pickerSubtitle": "Choose the role you usually sign in with. You can add the {role} role right after."
         }
     },
     "authMe": {
@@ -824,7 +836,9 @@
         "CONNECTION_CODE_EXPIRED": "That code has expired. Send the command to the bot again for a new one.",
         "CONNECTION_CODE_ATTEMPTS_EXCEEDED": "Too many attempts. Wait a few minutes before trying again.",
         "MESSAGING_IDENTITY_ALREADY_LINKED": "That chat account is already connected to a different Wi-Mall account. Disconnect it there first, or contact support.",
-        "MESSAGING_CONNECTION_NOT_FOUND": "That channel is not connected."
+        "MESSAGING_CONNECTION_NOT_FOUND": "That channel is not connected.",
+        "PHONE_VERIFICATION_DELIVERY_FAILED": "We couldn't send your code on WhatsApp right now. Please try again in a minute.",
+        "AUTH_ACCOUNT_CLOSED": "This account has been closed. It can't be reopened or signed in to."
     },
     "checkout": {
         "errors": {
@@ -1722,16 +1736,27 @@
     },
     "forgotPassword": {
         "title": "Reset your password",
-        "subtitle": "Enter your phone number or email and we'll send you a reset link.",
-        "identifierLabel": "Phone number or email",
-        "identifierPlaceholder": "+237 6 70 00 00 00",
-        "required": "Enter your phone number or email.",
+        "subtitlePhone": "Enter the phone number on your account. You'll get your reset link from the Wi-Mall bot.",
+        "subtitleEmail": "Enter the email address on your account and we'll send you a reset link.",
+        "phoneLabel": "Phone number",
+        "emailLabel": "Email",
+        "emailPlaceholder": "you@example.com",
+        "continue": "Continue",
         "submit": "Send reset link",
         "submitting": "Sending…",
         "failed": "We couldn't send the link. Please check your connection and try again.",
+        "useEmail": "Reset with your email instead?",
+        "usePhone": "Use your phone number instead",
+        "chatTitle": "Continue in the chat",
+        "chatBody": "Send <code>{command}</code> to the Wi-Mall bot from <phone>{number}</phone>. It replies with a link to choose a new password.",
+        "chatWaCta": "Open WhatsApp",
+        "chatWaNote": "Send it from WhatsApp on this number — that's how the bot knows it's you.",
+        "chatTgCta": "Open Telegram",
+        "chatTgNote": "Works if your Telegram is on this same number, or already connected to your account. If the bot asks for your phone number first, share it, then send <code>{command}</code> again if no link arrives.",
+        "editNumber": "Edit number",
         "sentTitle": "Check your messages",
-        "sentBody": "If an account exists for that phone number or email, we've sent it a reset link. It expires shortly and can only be used once.",
-        "sentHint": "Nothing arrived? Check what you entered, then try again.",
+        "sentBody": "If an account uses that email address, we've sent it a reset link. It expires shortly and can only be used once.",
+        "sentHint": "Nothing arrived? Check your spam folder and the address you entered, then try again.",
         "backToLogin": "Back to sign in"
     },
     "resetPassword": {
@@ -2520,12 +2545,20 @@
             "phone": {
                 "title": "Phone",
                 "none": "No phone on this account",
-                "pendingNote": "Message our WhatsApp bot from that number and connect it, then confirm below. Expires {date}.",
-                "unproven": "We could not find a WhatsApp connection for that number on your account. A Telegram connection does not count — a chat id says nothing about a phone number.",
+                "pendingNote": "We confirm a new number with a code sent to it on WhatsApp. Until then, your current number still signs you in. This change expires {date}.",
                 "checking": "Checking…",
-                "connectWhatsApp": "Connect WhatsApp",
                 "confirmed": "This is the number you sign in with now.",
-                "howItWorks": "We confirm a new number by matching it to a WhatsApp connection on your account — there is no code to wait for."
+                "howItWorks": "We'll send a 6-digit code to the new number on WhatsApp to confirm it's yours.",
+                "codeLabel": "Code from WhatsApp",
+                "codePlaceholder": "6-digit code",
+                "sendCode": "Send code",
+                "resendCode": "Send a new code",
+                "resendIn": "New code in {seconds}s",
+                "codeSent": "We sent a code to that number on WhatsApp.",
+                "codeInvalid": "That code is not right. {attemptsLeft, plural, =0 {Send yourself a new one.} one {# try left.} other {# tries left.}}",
+                "verified": "Your phone number is confirmed.",
+                "expired": "This change has expired. Cancel it and enter the number again.",
+                "contactSupport": "Contact support"
             },
             "password": {
                 "title": "Password",
@@ -2546,7 +2579,12 @@
                 "CONTACT_CHANGE_NOT_PENDING": "There is nothing waiting to be confirmed.",
                 "CONTACT_CHANGE_EXPIRED": "That request expired. Start again.",
                 "CONTACT_CHANGE_TOKEN_INVALID": "That link is not valid. Check you opened the most recent email.",
-                "CONTACT_CHANGE_PHONE_UNPROVEN": "Connect that number on WhatsApp first, then come back and confirm."
+                "CONTACT_CHANGE_PHONE_UNPROVEN": "That number isn't confirmed yet. Enter the code we sent to it on WhatsApp.",
+                "PHONE_VERIFICATION_NO_TARGET": "There is no phone number on this account to confirm.",
+                "PHONE_VERIFICATION_CODE_INVALID": "That code is not right. Check it and try again.",
+                "PHONE_VERIFICATION_CODE_EXPIRED": "That code has expired. Send yourself a new one.",
+                "PHONE_VERIFICATION_TOO_MANY_ATTEMPTS": "Too many wrong codes. Send yourself a new one.",
+                "PHONE_VERIFICATION_RESEND_TOO_SOON": "We sent a code a moment ago. Wait a little before asking for another."
             }
         },
         "downloads": {
@@ -2576,7 +2614,14 @@
             "typeToConfirm": "Type <code>{phrase}</code> to confirm",
             "submit": "Close my account",
             "closing": "Closing…",
-            "ordersInFlight": "Orders still in progress have to finish before an account can be closed."
+            "ordersInFlight": "Orders still in progress have to finish before an account can be closed.",
+            "refused": {
+                "ordersInFlight": "You still have {count, plural, one {# order} other {# orders}} in progress. You can close your account once your orders are finished.",
+                "seeOrders": "See my orders",
+                "roleNotEligible": "This account is also used as: {roles}. That has to be closed first, and for now only our support team can do it.",
+                "contactSupport": "Contact support",
+                "alreadyClosed": "This account has already been closed."
+            }
         },
         "addresses": {
             "description": "Where your orders are delivered.",
@@ -2906,6 +2951,16 @@
             "paymentFailed": "That payment did not go through.",
             "ownBookingsOnly": "You can only pay for your own bookings."
         },
-        "native": {}
+        "native": {},
+        "customerOnly": {
+            "title": "The shop is for customers",
+            "bodySignOut": "You're signed in as <b>{role}</b>. Sign out, then sign back in as a customer to shop.",
+            "bodySwitch": "You're signed in as <b>{role}</b>. Your account is also a customer account, so you can switch to it without signing out.",
+            "botHint": "To sign in as a customer, send <code>{command}</code> to our bot from this account's phone number. It replies with a sign-in link and code.",
+            "switchAction": "Continue as a customer",
+            "switching": "Switching…",
+            "signingOut": "Signing out…",
+            "switchFailed": "We couldn't switch you to your customer account. Sign out, then sign back in as a customer."
+        }
     }
 }

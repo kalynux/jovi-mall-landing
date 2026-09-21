@@ -18,8 +18,13 @@
  * about a company that is not hiring yet, which is a fine thing to have indexed.
  *
  * To open hiring: set `HIRING_OPEN = true`, give each opening a real
- * `datePosted`, and point `NEXT_PUBLIC_CAREERS_FORM_URL` at a real application
- * form so applications stop landing in the contact form's response sheet.
+ * `datePosted`, and set the five `NEXT_PUBLIC_CAREERS_FORM_URL_<LOCALE>`
+ * variables (see `lib/marketing/forms.ts`) to real application forms so
+ * applications stop landing in the contact form's response sheet.
+ *
+ * ⚠ The form is embedded while this is `false` too, under "Get on the list".
+ *   It is how people join the list, so an unset or private careers form is a
+ *   live problem today, not something that waits for hiring to open.
  */
 
 export const HIRING_OPEN = false;

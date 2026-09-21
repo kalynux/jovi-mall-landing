@@ -6,6 +6,7 @@ import { useRouter } from "@/i18n/navigation";
 import { Button, Chip, Skeleton } from "@/components/shop/ds";
 import { useToast } from "@/components/shop/providers";
 import { useAuth } from "@/lib/auth/useAuth";
+import { isCustomerSession } from "@/lib/shop/customer-session";
 import { openApp } from "@/lib/native/links";
 import { formatMoney } from "@/lib/shop/format";
 import { bookingPath } from "@/lib/shop/shop.routes";
@@ -53,8 +54,14 @@ export function BookingPanel({ product }: { product: Product }) {
   const format = useFormatter();
   const router = useRouter();
   const { flash } = useToast();
-  const { status } = useAuth();
-  const signedIn = status === "authenticated";
+  const { status, role } = useAuth();
+  /*
+     A customer session, not any session. Lock and book are only `requireAuth`
+     server-side, so a vendor could hold a slot and create a booking — then be
+     sent to a booking screen under `/shop/account`, which is customer-only and
+     would only tell them so. Sending that session to the customer sign-in
+     instead asks the right question before anything is created. */
+  const signedIn = isCustomerSession(status, role);
 
   const [slots, setSlots] = useState<Slot[] | null>(null);
   const [selected, setSelected] = useState<Slot | null>(null);

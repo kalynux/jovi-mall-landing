@@ -1,10 +1,13 @@
 "use client";
 import { Link } from "@/i18n/navigation";
-import { Twitter, Linkedin, Instagram } from "lucide-react";
+import { Facebook, Instagram } from "lucide-react";
 import WiMallMark from "@/components/brand/WiMallMark.generated";
-import { BRAND } from "@/lib/constants";
+import { BRAND, SOCIAL_LINKS } from "@/lib/constants";
 import { useTranslations } from "next-intl";
 import { useOptionalSectionNav } from "@/components/scroll/SectionNavProvider";
+
+/** Keyed by `SOCIAL_LINKS[].network`, so adding a profile without a glyph is a type error. */
+const SOCIAL_ICONS = { Instagram, Facebook } satisfies Record<(typeof SOCIAL_LINKS)[number]["network"], unknown>;
 
 export default function Footer() {
   const t = useTranslations("footer");
@@ -94,17 +97,25 @@ export default function Footer() {
             <p className="text-[var(--text-muted)] text-sm leading-relaxed max-w-xs">
               {t("description")}
             </p>
+            {/* These were three `href="#"` stubs (Twitter, LinkedIn, Instagram)
+                sharing one "Social link" label. Only profiles that exist are
+                listed now, each named for a screen reader. */}
             <div className="flex gap-3 mt-6">
-              {[Twitter, Linkedin, Instagram].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="w-8 h-8 rounded-lg border border-[var(--border-medium)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-primary-400/50 hover:bg-[var(--accent-light)] transition-all duration-200"
-                  aria-label={t("socialAriaLabel")}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                </a>
-              ))}
+              {SOCIAL_LINKS.map(({ network, url }) => {
+                const Icon = SOCIAL_ICONS[network];
+                return (
+                  <a
+                    key={network}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 rounded-lg border border-[var(--border-medium)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-primary-400/50 hover:bg-[var(--accent-light)] transition-all duration-200"
+                    aria-label={t("socialAriaLabel", { network })}
+                  >
+                    <Icon className="w-3.5 h-3.5" aria-hidden="true" />
+                  </a>
+                );
+              })}
             </div>
           </div>
 

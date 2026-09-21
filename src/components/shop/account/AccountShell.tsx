@@ -1,12 +1,15 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { Button, EmptyState, Skeleton, type IconName } from "@/components/shop/ds";
+import { CustomerOnlyNotice } from "@/components/shop/CustomerOnlyNotice";
 import { useShopPageTitle } from "@/components/shop/ShopChrome";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
+import { useAuth } from "@/lib/auth/useAuth";
 import { translateError } from "@/lib/auth/error-translator";
 import { isNetworkError } from "@/lib/errors/is-network-error";
+import { isBusinessSession, isWrongRoleError } from "@/lib/shop/customer-session";
 import type { ResourceStatus } from "@/lib/shop/useApiResource";
 
 /**
@@ -103,6 +106,40 @@ export function ResourceError({
   // Root-scoped: the heading and the action are shop vocabulary, the body is
   // an `errors.*` code — two namespaces, one screen.
   const tKey = useTranslations();
+  const { status, role, refresh } = useAuth();
+
+  /**
+   * ── `AUTH_ROLE_NOT_FOUND` is not a failure to retry ──────────────────────
+   *
+   * It is `requireRole(['customer'])` refusing a session scoped to a vendor,
+   * an agency or an agent, and "Try again" re-sends the same cookie to get the
+   * same answer. The two layouts that need an account never get this far for
+   * such a session (`CustomerOnlyGate`); this is the net for everything else.
+   *
+   * It only shows once the provider AGREES the session is a business one. The
+   * two can disagree for a moment when the role was switched in another tab:
+   * the cookie changed under this one, the server says "not a customer", and
+   * the provider — throttled to one check per 30 seconds — still says it is.
+   * So re-ask. If the answer comes back "vendor", the notice takes over; if it
+   * still says "customer", this was some other role's route refusing a real
+   * customer, and the ordinary error below is the honest thing to show.
+   */
+  const wrongRole = isWrongRoleError(error);
+  const providerSaysCustomer = status === "authenticated" && role === "customer";
+
+  useEffect(() => {
+    if (wrongRole && providerSaysCustomer) void refresh();
+  }, [wrongRole, providerSaysCustomer, refresh]);
+
+  if (wrongRole && isBusinessSession(status, role)) return <CustomerOnlyNotice />;
+
+  /*
+     The race on a cold load. `CustomerOnlyGate` renders its pages while
+     `/auth/me` is still in flight (holding them back would cost every customer
+     a round trip), so a page's own request can come back 403 before the
+     session does. Until we know whose session it is, the honest screen is
+     "loading" — not a "Try again" that flashes and is then replaced. */
+  if (wrongRole && status === "loading") return <AccountSkeleton />;
 
   /**
    * An unreachable server gets its own heading and icon.

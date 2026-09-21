@@ -527,6 +527,8 @@ html.dark,
      what this is, so the prefix is the smallest change that keeps the name.
   */
   .ds-overline { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text-subtle); margin: 0; }
+  /* Positive tracking disconnects joined Arabic letters (see `.ds-btn`). */
+  [dir="rtl"] .ds-overline { letter-spacing: normal; }
   .muted { color: var(--text-muted); font-size: 13px; }
   .divider { height: 1px; background: var(--border-subtle); }
   .row-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0; scrollbar-width: none; }
@@ -612,8 +614,27 @@ html.dark,
 
      Android only, and `NativeShell` is what sets the attribute. iOS reports its
      34px correctly, and an iPhone with no home indicator reports 0 and should
-     get no band at all — a global floor would give it one for nothing. */
-  html[data-platform="android"] .shop-tabbar { --tabbar-floor: 24px; }
+     get no band at all — a global floor would give it one for nothing.
+
+     A selector list, not `:is()`: an old WebView that does not know `:is()`
+     drops the whole rule, and an old WebView is exactly who the floor is for. */
+  html[data-platform="android"] .shop-tabbar,
+  html[data-platform="android"] .shop-sheet { --tabbar-floor: 24px; }
+
+  /* A bottom sheet (`BottomSheet`) is portalled above the tab bar and reaches
+     the bottom edge itself, so it has to clear the home indicator itself — the
+     bar that normally does that is underneath it. Same two sources as the bar:
+     `--sa-bottom`, and the Android floor above. Added under the panel's own
+     padding rather than `max()`-ed with it, because the footer's 16px is
+     spacing and the inset is a strip nothing may be tapped in.
+
+     Inert in a browser tab: both resolve to 0 there. From `sm` the sheet is a
+     centred modal with a margin all round and never meets the edge. While the
+     keyboard is up the panel sits on the keys, not on the indicator — Android
+     reports a 0 inset then, but the floor would still leave a 24px band. */
+  .shop-sheet { padding-bottom: max(var(--sa-bottom, 0px), var(--tabbar-floor, 0px)); }
+  @media (min-width: 640px) { .shop-sheet { padding-bottom: 0; } }
+  html[data-keyboard="open"] .shop-sheet { padding-bottom: 0; }
 
   .shop-shell { display: flex; flex-direction: column; min-height: 100svh; }
   .shop-shell-main { flex: 1 1 auto; display: flex; flex-direction: column; }
@@ -835,7 +856,11 @@ html.dark,
 
 /* Inline-styled shop DS hooks — these components set styles inline, so hover/
    active feedback lives here as class hooks (transform-only, reduced-motion safe). */
-.ds-btn { transition: background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out); }
+.ds-btn { letter-spacing: -0.01em; transition: background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out); }
+/* Tracking is a Latin adjustment. Arabic glyphs join, and any change to the
+   spacing breaks the joins or eats the gap between words: "المتابعة كعميل"
+   rendered as "المتابعةكعميل". Gated on direction, not removed. */
+[dir="rtl"] .ds-btn { letter-spacing: normal; }
 @media (hover: hover) { .ds-btn:not(:disabled):hover { transform: translateY(-1px); } }
 .ds-btn:not(:disabled):active { transform: scale(0.97); }
 

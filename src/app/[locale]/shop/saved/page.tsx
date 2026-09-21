@@ -17,6 +17,8 @@ import {
 import { resolveQuickAdd } from "@/lib/shop/quick-add";
 import { productPathFor } from "@/lib/shop/shop.routes";
 import { useAuth } from "@/lib/auth/useAuth";
+import { isBusinessSession, isCustomerSession } from "@/lib/shop/customer-session";
+import { CustomerOnlyNotice } from "@/components/shop/CustomerOnlyNotice";
 import { publicUrl } from "@/lib/shop/shop.types";
 
 type Tab = "saved" | "viewed";
@@ -59,8 +61,15 @@ export default function SavedPage() {
   // two tab labels are the frozen `shop.nav` ones the header bar already uses.
   const tKey = useTranslations();
   const router = useRouter();
-  const { status } = useAuth();
-  const signedIn = status === "authenticated";
+  const { status, role } = useAuth();
+  /*
+     Both wishlist and history are customer-only routes, so "signed in" means a
+     customer session here, as in `FavoritesProvider`. A vendor's saved tab is
+     the local list, the same as a signed-out visitor's; the history tab, which
+     has no local equivalent, tells them how to become a customer instead of
+     offering a sign-in they already did. */
+  const signedIn = isCustomerSession(status, role);
+  const businessSession = isBusinessSession(status, role);
   const { favorites, toggle } = useFavorites();
 
   /*
@@ -293,7 +302,9 @@ export default function SavedPage() {
 
       {/* Recently viewed is customer-only and has no anonymous equivalent, so
           this asks rather than pretending the list is empty. */}
-      {tab === "viewed" && !signedIn && status !== "loading" ? (
+      {tab === "viewed" && businessSession ? (
+        <CustomerOnlyNotice />
+      ) : tab === "viewed" && !signedIn && status !== "loading" ? (
         <EmptyState
           icon="clock"
           title={t("signInTitle")}
