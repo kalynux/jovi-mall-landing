@@ -24,16 +24,19 @@ const TONE: Record<ChatApp, string> = {
 };
 
 /**
- * One small gesture per app on hover, taken from what the app itself does: the
- * WhatsApp mark tips like a phone buzzing, the Telegram plane lifts toward its
- * nose as if sent. `motion-safe` only; focus gets it too, so a keyboard
- * visitor sees the same acknowledgement a pointer does.
+ * Hovering (or focusing) a half slides its mark inward, toward its own word —
+ * the door leaning open. Keyed on which EDGE the mark sits on, not on the app,
+ * and spelled per direction: in `/ar` the start edge is the right one, so
+ * "inward" is the other sign. `ltr:`/`rtl:` rather than a bare class plus an
+ * `rtl:` override, so the two never compete on cascade order. `motion-safe`
+ * only; focus gets it too, so a keyboard visitor sees what a pointer does.
  */
-const GESTURE: Record<ChatApp, string> = {
-  whatsapp: "motion-safe:group-hover:-rotate-12 motion-safe:group-focus-visible:-rotate-12",
-  telegram:
-    "motion-safe:group-hover:translate-x-0.5 motion-safe:group-hover:-translate-y-0.5 motion-safe:group-focus-visible:translate-x-0.5 motion-safe:group-focus-visible:-translate-y-0.5",
-};
+const SLIDE = {
+  start:
+    "motion-safe:ltr:group-hover:translate-x-1.5 motion-safe:rtl:group-hover:-translate-x-1.5 motion-safe:ltr:group-focus-visible:translate-x-1.5 motion-safe:rtl:group-focus-visible:-translate-x-1.5",
+  end:
+    "motion-safe:ltr:group-hover:-translate-x-1.5 motion-safe:rtl:group-hover:translate-x-1.5 motion-safe:ltr:group-focus-visible:-translate-x-1.5 motion-safe:rtl:group-focus-visible:translate-x-1.5",
+} as const;
 
 /**
  * The bot's doors as one pill: each half is its own link, with that app's mark
@@ -79,7 +82,10 @@ export default function ChatPill({ channels, className }: { channels: ChatPillCh
             >
               <ChatAppLogo
                 app={c.app}
-                className={cn("h-[46px] w-[46px] shrink-0 transition-transform duration-300 ease-out", GESTURE[c.app])}
+                className={cn(
+                  "h-[46px] w-[46px] shrink-0 transition-transform duration-300 ease-out",
+                  SLIDE[markAtEnd ? "end" : "start"]
+                )}
               />
               <span className="flex-1 text-center">{c.label}</span>
             </a>
