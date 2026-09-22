@@ -293,24 +293,17 @@ function RegisterFormContent() {
               />
 
               {/*
-                Required for a vendor, optional for agency and agent — see the
-                long note in RegisterSchema: api-doc says optional for all four,
-                the vendor model says otherwise, and the backend answers 500
-                rather than 400 when they disagree.
-
-                The label follows suit, so it never reads "(optional) *".
+                Optional for every role, vendor included since the backend fix
+                of 2026-09-21 — see the note on `email` in RegisterSchema.
                 sanitizePayload drops the field when left blank, so the backend
                 never receives an empty-string email.
               */}
               <AuthFormField
                 variant="floating"
-                label={
-                  selectedRole === "vendor" ? t("emailLabelLogin") : t("emailLabel")
-                }
+                label={t("emailLabel")}
                 type="email"
                 autoComplete="email"
                 placeholder={t("emailPlaceholder")}
-                required={selectedRole === "vendor"}
                 {...register("email", {
                   onChange: () => { clearErrors("email"); clearErrors("root"); },
                 })}

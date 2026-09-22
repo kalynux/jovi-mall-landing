@@ -194,6 +194,21 @@ export const RegisterSchema = z
         // (api-doc/auth/README.md); every number that satisfies its country's
         // plan and carries a calling code clears it.
         phone: PhoneSchema,
+        /**
+         * Optional for all four roles, vendor included (api-doc/auth/README.md).
+         *
+         * Vendor used to be the exception here: its role profile alone required
+         * an email, so a vendor registered without one answered a 500, and this
+         * schema demanded the field to spare people that. The backend made it
+         * optional on 2026-09-21 (jovi-mall vendor.model.ts), which also fixed
+         * add-role to vendor for an email-less account.
+         *
+         * ⚠ Deploy order: this relies on that backend release AND on
+         * `npm run migrate:vendor-email-index` having run. Before the migration
+         * the old unique index still counts every missing email as `null`, so
+         * the first email-less vendor registers and the second gets
+         * `409 DATABASE_UNIQUE_CONSTRAINT_VIOLATION`.
+         */
         email: z.string().email(fieldError("emailInvalid")).optional().or(z.literal("")),
         name: z.string().min(NAME_MIN, fieldError("nameTooShort")).trim(),
         password: z
@@ -207,33 +222,6 @@ export const RegisterSchema = z
         agency_name: z.string().optional(),
     })
     .superRefine((data, ctx) => {
-        /**
-         * ⚠️ **`email` is required for a vendor, and api-doc says otherwise.**
-         *
-         * api-doc/auth/README.md § POST /auth/register marks `email` "Optional
-         * for **every** role, including vendor". The vendor *model* disagrees:
-         * `email: { type: String, required: true, unique: true }`
-         * (jovi-mall/src/modules/vendors/vendor.model.ts:387). It is the only
-         * one of the four role models that does — agency, agent and customer all
-         * register without one.
-         *
-         * The disagreement is not academic: `POST /auth/register` with a vendor
-         * and no email answers **500 INTERNAL_SERVER_ERROR**, not a 400, because
-         * the Mongoose validation error escapes as an unhandled failure.
-         * Verified against the running backend, 2026-08-20.
-         *
-         * So this rule stays until the backend is fixed, and it is kept here
-         * rather than left to the server on purpose: a client-side "Email is
-         * required" is a field the user can fix, while the alternative is an
-         * opaque "Something went wrong" with a requestId.
-         */
-        if (data.role === "vendor" && !data.email?.trim()) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: fieldError("emailRequiredVendor"),
-                path: ["email"],
-            });
-        }
         if (data.role === "vendor") {
             refineBusinessName(
                 data.business_name,
