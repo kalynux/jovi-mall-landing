@@ -24,10 +24,10 @@
  *
  * 1. **No prices in an article body.** Not a plan price, not a credit pack
  *    price, not a commission percentage. Those numbers live in the admin
- *    catalog and are fetched at build time; the marketing prose that does quote
- *    them is held to the catalog by `lib/marketing/copy-claims.ts`, and article
- *    bodies are not covered by that guard. A number written into one goes stale
- *    silently. Say "your plan's rate" and link to /pricing, which is live.
+ *    catalog; the marketing prose that does quote them reads each one from it
+ *    through a placeholder (`lib/marketing/plan-facts.ts`), and article bodies
+ *    have no placeholders. A number written into one goes stale silently. Say
+ *    "your plan's rate" and link to /pricing, which is live.
  * 2. **No invented metrics.** No "vendors see a 40% lift". The product is
  *    early; there is no measurement behind a figure like that, and inventing
  *    one on a page carrying Article structured data is the same category of

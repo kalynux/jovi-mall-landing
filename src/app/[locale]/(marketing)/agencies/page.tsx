@@ -20,6 +20,7 @@ import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath } from "@/i18n/routing";
 import { AGENCY_FAQ } from "@/lib/marketing/faq";
+import { getPlanFacts } from "@/lib/marketing/plans.api";
 
 const PATH = "/agencies";
 
@@ -48,6 +49,8 @@ export default async function AgenciesPage({ params }: PageProps) {
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: "pages" });
+  // The free tier's shipment and storage figures come from the live catalogue — see plan-facts.ts.
+  const facts = await getPlanFacts(locale);
 
   const trail = [
     { name: t("common.home"), path: "/" },
@@ -64,7 +67,7 @@ export default async function AgenciesPage({ params }: PageProps) {
   const faqItems = AGENCY_FAQ.map((id) => ({
     id,
     question: t(`faq.q.${id}.q`),
-    answer: t(`faq.q.${id}.a`),
+    answer: t(`faq.q.${id}.a`, facts),
   }));
 
   return (
@@ -102,7 +105,7 @@ export default async function AgenciesPage({ params }: PageProps) {
         </Section>
 
         <Section title={t("agencies.capacity.title")}>
-          <Prose paragraphs={[t("agencies.capacity.p1"), t("agencies.capacity.p2")]} />
+          <Prose paragraphs={[t("agencies.capacity.p1", facts), t("agencies.capacity.p2")]} />
           <p className="mt-5 text-sm">
             <TextLink href="/pricing#agencies">{t("common.ctaPricing")}</TextLink>
           </p>
@@ -130,8 +133,8 @@ export default async function AgenciesPage({ params }: PageProps) {
 
         <CtaBand
           title={t("agencies.cta.title")}
-          body={t("agencies.cta.body")}
-          finePrint={t("agencies.cta.finePrint")}
+          body={t("agencies.cta.body", facts)}
+          finePrint={t("agencies.cta.finePrint", facts)}
           primary={{ href: "/register?role=agency", label: t("common.ctaAgency") }}
           primaryRole="agency"
           secondary={{ href: "/pricing", label: t("common.ctaPricing") }}

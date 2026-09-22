@@ -5,7 +5,7 @@ import JsonLd from "@/components/seo/JsonLd";
 import Breadcrumbs from "@/components/marketing/Breadcrumbs";
 import PricingIllustration from "@/components/illustrations/PricingIllustration.generated";
 import FaqList from "@/components/marketing/FaqList";
-import { PlanGrid, type PlanCopy } from "@/components/marketing/PlanCards";
+import { formatLimit, PlanGrid, type PlanCopy } from "@/components/marketing/PlanCards";
 import {
   CardGrid,
   CtaBand,
@@ -21,16 +21,18 @@ import { breadcrumbJsonLd, offerCatalogJsonLd } from "@/lib/seo/jsonld";
 import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath } from "@/i18n/routing";
 import {
+  carriesCodPool,
   fetchCreditCatalog,
   fetchPlansByRole,
+  getPlanFacts,
   highlightCodeFor,
   PLAN_LIMITS,
   type PlanRole,
   type PublicPlan,
 } from "@/lib/marketing/plans.api";
-import { assertCopyMatchesCatalog } from "@/lib/marketing/copy-claims";
 import { PRICING_FAQ } from "@/lib/marketing/faq";
 import { formatNumber, formatPrice, formatUnitPrice } from "@/lib/marketing/format";
+import { stripBidiIsolates } from "@/lib/bidi";
 
 const PATH = "/pricing";
 
@@ -43,14 +45,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const t = await getTranslations({ locale, namespace: "pages" });
+  const facts = await getPlanFacts(locale);
 
   return {
     title: t("pricing.metaTitle"),
-    description: t("pricing.metaDescription"),
+    description: t("pricing.metaDescription", facts),
     alternates: localeAlternates(locale, PATH),
     openGraph: {
       title: t("pricing.metaTitle"),
-      description: t("pricing.metaDescription"),
+      description: t("pricing.metaDescription", facts),
       url: localePath(locale, PATH),
     },
   };
@@ -79,12 +82,15 @@ export default async function PricingPage({ params }: PageProps) {
   // Both catalogs come off the public API — nothing on this page restates a
   // price the backend did not just give us. Revalidation is set per-fetch to
   // match the endpoint's own five-minute cache; see plans.api.ts.
-  const [plansByRole, credits] = await Promise.all([fetchPlansByRole(), fetchCreditCatalog()]);
+  const [plansByRole, credits, facts] = await Promise.all([
+    fetchPlansByRole(),
+    fetchCreditCatalog(),
+    // The sentences around the cards, filled from the same catalogue. They
+    // carry no numbers of their own, so an edit reaches them and the cards
+    // together. See plan-facts.ts.
+    getPlanFacts(locale),
+  ]);
   const allPlans = Object.values(plansByRole).flat();
-
-  // The cards are live; the surrounding sentences are not. This fails the build
-  // if a catalog edit has made one of them false. See copy-claims.ts.
-  assertCopyMatchesCatalog(allPlans, credits);
 
   const copy: PlanCopy = {
     free: t("plans.free"),
@@ -92,6 +98,8 @@ export default async function PricingPage({ params }: PageProps) {
     unavailable: t("plans.unavailable"),
     cta: t("plans.cta"),
     unlimited: t("plans.unlimited"),
+    codPool: (amount: string) => t("plans.codPool", { amount }),
+    noCodPool: t("plans.noCodPool"),
     limitLabels: {
       products: t("plans.limits.products"),
       storage: t("plans.limits.storage"),
@@ -117,7 +125,7 @@ export default async function PricingPage({ params }: PageProps) {
     .filter((plan) => plan.is_active)
     .map((plan) => ({
       name: plan.name,
-      description: describeLimits(plan, copy, num),
+      description: describeLimits(plan, copy, num, price),
       price: plan.price,
       currency: plan.currency,
       category: plan.code,
@@ -126,7 +134,7 @@ export default async function PricingPage({ params }: PageProps) {
   const faqItems = PRICING_FAQ.map((id) => ({
     id,
     question: t(`faq.q.${id}.q`),
-    answer: t(`faq.q.${id}.a`),
+    answer: t(`faq.q.${id}.a`, facts),
   }));
 
   return (
@@ -150,11 +158,11 @@ export default async function PricingPage({ params }: PageProps) {
         <CardGrid columns={4}>
           <InfoCard
             title={t("pricing.howWeEarn.commission.title")}
-            body={t("pricing.howWeEarn.commission.body")}
+            body={t("pricing.howWeEarn.commission.body", facts)}
           />
           <InfoCard
             title={t("pricing.howWeEarn.plans.title")}
-            body={t("pricing.howWeEarn.plans.body")}
+            body={t("pricing.howWeEarn.plans.body", facts)}
           />
           <InfoCard
             title={t("pricing.howWeEarn.credits.title")}
@@ -173,13 +181,14 @@ export default async function PricingPage({ params }: PageProps) {
       {ROLE_SECTIONS.map(({ role, anchor, accent }, i) => {
         const plans = plansByRole[role];
         const hasUnsoldTier = plans.some((plan) => !plan.is_active);
+        const hasCodPool = plans.some(carriesCodPool);
 
         return (
           <Section
             key={role}
             id={anchor}
             title={t(`pricing.${role}.title`)}
-            lead={t(`pricing.${role}.lead`)}
+            lead={t(`pricing.${role}.lead`, facts)}
             tone={i % 2 === 0 ? "subtle" : "plain"}
           >
             <div className={accent}>
@@ -193,6 +202,10 @@ export default async function PricingPage({ params }: PageProps) {
             </div>
             <div className="mt-6 max-w-2xl space-y-2 text-sm leading-relaxed text-[var(--text-muted)]">
               <p>{t(`pricing.${role}.note`)}</p>
+              {/* The footnote to the asterisked COD line on the agent cards.
+                  Gated like the cards are, so an API that does not send the
+                  pool yet leaves no orphan footnote. */}
+              {hasCodPool && <p>{t("pricing.agent.codPoolNote")}</p>}
               {/* Only claimed when the catalog actually withholds a tier — the
                   moment they go on sale, the sentence disappears on its own. */}
               {hasUnsoldTier && <p>{t("pricing.unsoldTierNote")}</p>}
@@ -202,7 +215,7 @@ export default async function PricingPage({ params }: PageProps) {
       })}
 
       <Section id="credits" title={t("pricing.credits.title")}>
-        <Prose paragraphs={[t("pricing.credits.p1"), t("pricing.credits.p2")]} />
+        <Prose paragraphs={[t("pricing.credits.p1", facts), t("pricing.credits.p2", facts)]} />
         <h3 className="mt-10 font-display text-lg font-semibold text-[var(--text-primary)]">
           {t("pricing.credits.packsTitle")}
         </h3>
@@ -225,7 +238,7 @@ export default async function PricingPage({ params }: PageProps) {
 
       <Section title={t("pricing.payment.title")} tone="subtle">
         <Prose
-          paragraphs={[t("pricing.payment.p1"), t("pricing.payment.p2"), t("pricing.payment.p3")]}
+          paragraphs={[t("pricing.payment.p1"), t("pricing.payment.p2", facts), t("pricing.payment.p3")]}
         />
         <p className="mt-6 max-w-2xl rounded-2xl border border-[var(--border)] bg-[var(--surface-glass)] p-4 text-sm leading-relaxed text-[var(--text-muted)]">
           {t("common.payoutCapNote")}
@@ -242,7 +255,7 @@ export default async function PricingPage({ params }: PageProps) {
       <RelatedLinks
         title={t("common.keepReading")}
         links={[
-          { href: "/vendors", label: t("nav.vendors"), body: t("pricing.vendor.lead") },
+          { href: "/vendors", label: t("nav.vendors"), body: t("pricing.vendor.lead", facts) },
           { href: "/agencies", label: t("nav.agencies"), body: t("pricing.agency.lead") },
           { href: "/agents", label: t("nav.agents"), body: t("pricing.agent.lead") },
         ]}
@@ -251,7 +264,7 @@ export default async function PricingPage({ params }: PageProps) {
       <CtaBand
         title={t("pricing.cta.title")}
         body={t("pricing.cta.body")}
-        finePrint={t("pricing.cta.finePrint")}
+        finePrint={t("pricing.cta.finePrint", facts)}
         primary={{ href: "/register?role=vendor", label: t("common.ctaVendor") }}
         primaryRole="vendor"
         secondary={{ href: "/faq", label: t("common.ctaFaq") }}
@@ -260,18 +273,22 @@ export default async function PricingPage({ params }: PageProps) {
   );
 }
 
-/** Flat description of a plan's limits, for the structured-data Offer node. */
+/**
+ * Flat description of a plan's limits, for the structured-data Offer node.
+ *
+ * Built from the card's own `formatLimit`, so the two cannot disagree. This used
+ * to be a second formatter, and it printed storage as a raw byte count and the
+ * commission without its percent sign.
+ */
 function describeLimits(
   plan: PublicPlan,
   copy: PlanCopy,
-  num: (value: number) => string
+  num: (value: number) => string,
+  price: (value: number, currency: string) => string
 ): string {
   return PLAN_LIMITS[plan.role]
-    .map((spec) => {
-      const raw = plan[spec.field];
-      const value = typeof raw === "number" ? raw : null;
-      const label = copy.limitLabels[spec.key] ?? spec.key;
-      return value === null ? `${copy.unlimited} ${label}` : `${num(value)} ${label}`;
-    })
+    .map((spec) => formatLimit(plan, spec, copy, num, price))
+    .filter((line): line is string => line !== null)
+    .map(stripBidiIsolates)
     .join(", ");
 }

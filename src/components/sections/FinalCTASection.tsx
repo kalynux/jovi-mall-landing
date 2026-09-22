@@ -3,12 +3,15 @@ import { motion } from "framer-motion";
 import { useReducedMotionSafe } from "@/lib/reduced-motion";
 import CTAButton from "@/components/ui/CTAButton";
 import { useTranslations } from "next-intl";
+import type { PlanFacts } from "@/lib/marketing/plan-facts";
 
 interface FinalCTASectionProps {
   onGetStarted: () => void;
+  /** Live catalogue phrases for the fine print, read by the server page. */
+  planFacts: PlanFacts;
 }
 
-export default function FinalCTASection({ onGetStarted }: FinalCTASectionProps) {
+export default function FinalCTASection({ onGetStarted, planFacts }: FinalCTASectionProps) {
   const shouldReduce = useReducedMotionSafe();
   const t = useTranslations("finalCta");
 
@@ -86,7 +89,7 @@ export default function FinalCTASection({ onGetStarted }: FinalCTASectionProps) 
           </CTAButton>
 
           <p className="text-xs text-white/30">
-            {t("finePrint")}
+            {t("finePrint", planFacts)}
           </p>
         </motion.div>
       </div>

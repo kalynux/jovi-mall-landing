@@ -19,6 +19,7 @@ import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath } from "@/i18n/routing";
 import { VENDOR_FAQ } from "@/lib/marketing/faq";
+import { getPlanFacts } from "@/lib/marketing/plans.api";
 
 const PATH = "/vendors";
 
@@ -28,14 +29,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const t = await getTranslations({ locale, namespace: "pages" });
+  const facts = await getPlanFacts(locale);
 
   return {
     title: t("vendors.metaTitle"),
-    description: t("vendors.metaDescription"),
+    description: t("vendors.metaDescription", facts),
     alternates: localeAlternates(locale, PATH),
     openGraph: {
       title: t("vendors.metaTitle"),
-      description: t("vendors.metaDescription"),
+      description: t("vendors.metaDescription", facts),
       url: localePath(locale, PATH),
     },
   };
@@ -47,6 +49,9 @@ export default async function VendorsPage({ params }: PageProps) {
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: "pages" });
+  // The Starter/Growth/Business figures in the cost section and the FAQ come
+  // from the live catalogue — see plan-facts.ts.
+  const facts = await getPlanFacts(locale);
 
   const trail = [
     { name: t("common.home"), path: "/" },
@@ -64,7 +69,7 @@ export default async function VendorsPage({ params }: PageProps) {
   const faqItems = VENDOR_FAQ.map((id) => ({
     id,
     question: t(`faq.q.${id}.q`),
-    answer: t(`faq.q.${id}.a`),
+    answer: t(`faq.q.${id}.a`, facts),
   }));
 
   return (
@@ -100,7 +105,7 @@ export default async function VendorsPage({ params }: PageProps) {
         </Section>
 
         <Section title={t("vendors.cost.title")} tone="subtle">
-          <Prose paragraphs={[t("vendors.cost.p1"), t("vendors.cost.p2")]} />
+          <Prose paragraphs={[t("vendors.cost.p1", facts), t("vendors.cost.p2", facts)]} />
           <p className="mt-6 max-w-2xl rounded-2xl border border-[var(--border)] bg-[var(--surface-glass)] p-4 text-sm leading-relaxed text-[var(--text-muted)]">
             {t("common.payoutCapNote")}
           </p>
@@ -123,7 +128,7 @@ export default async function VendorsPage({ params }: PageProps) {
         <RelatedLinks
           title={t("common.keepReading")}
           links={[
-            { href: "/pricing", label: t("nav.pricing"), body: t("pricing.vendor.lead") },
+            { href: "/pricing", label: t("nav.pricing"), body: t("pricing.vendor.lead", facts) },
             { href: "/agencies", label: t("nav.agencies"), body: t("pricing.agency.lead") },
             { href: "/cameroon", label: t("nav.cameroon"), body: t("country.lead") },
           ]}
@@ -132,7 +137,7 @@ export default async function VendorsPage({ params }: PageProps) {
         <CtaBand
           title={t("vendors.cta.title")}
           body={t("vendors.cta.body")}
-          finePrint={t("vendors.cta.finePrint")}
+          finePrint={t("vendors.cta.finePrint", facts)}
           primary={{ href: "/register?role=vendor", label: t("common.ctaVendor") }}
           primaryRole="vendor"
           secondary={{ href: "/pricing", label: t("common.ctaPricing") }}

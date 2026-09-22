@@ -328,9 +328,9 @@
         "badge": "✦ Seja uma empresa fundadora no Wi-Mall",
         "title1": "Seu negócio,",
         "title2": "impulsionado pela conversa.",
-        "subtitle": "Comece em minutos. Sem cartão de crédito. Sem equipe técnica. Seus primeiros 30 dias são completamente gratuitos.",
+        "subtitle": "Comece em minutos. Sem cartão de crédito. Sem equipe técnica. O plano gratuito nunca expira.",
         "ctaPrimary": "Começar grátis",
-        "finePrint": "Grátis para sempre nos primeiros 100 produtos · Sem taxas ocultas"
+        "finePrint": "Grátis para sempre, com espaço para {starterProducts} · Sem taxas ocultas"
     },
     "modal": {
         "title": "Como você está entrando?",
@@ -455,7 +455,6 @@
         "fieldErrors": {
             "emailRequired": "O e-mail é obrigatório",
             "emailInvalid": "E-mail inválido",
-            "emailRequiredVendor": "O e-mail é obrigatório para vendedores",
             "nameRequired": "O nome é obrigatório",
             "nameTooShort": "O nome deve ter pelo menos {nameMin} caracteres",
             "passwordTooShort": "A senha deve ter pelo menos {passwordMin} caracteres",
@@ -943,6 +942,8 @@
             "free": "Grátis",
             "perTerm": "/ {days} {days, plural, one {dia} other {dias}}",
             "unlimited": "Ilimitado",
+            "codPool": "Leve até {amount} em pagamentos na entrega",
+            "noCodPool": "Sem entregas com pagamento na entrega",
             "cta": "Começar",
             "limits": {
                 "products": "produtos ativos",
@@ -953,6 +954,22 @@
                 "concurrentDeliveries": "entregas por vez"
             },
             "unavailable": "Não está à venda"
+        },
+        "facts": {
+            "products": "{count, plural, one {{n} produto} other {{n} produtos}}",
+            "productsUnlimited": "produtos ilimitados",
+            "media": "{n} GB de mídia",
+            "mediaUnlimited": "mídia ilimitada",
+            "percent": "{n}%",
+            "credits": "{count, plural, one {{n} crédito} other {{n} créditos}}",
+            "openShipments": "{count, plural, one {{n} remessa aberta} other {{n} remessas abertas}}",
+            "openShipmentsUnlimited": "remessas abertas ilimitadas",
+            "deliveries": "{count, plural, one {{n} entrega} other {{n} entregas}}",
+            "deliveriesUnlimited": "entregas ilimitadas",
+            "days": "{count, plural, one {{n} dia} other {{n} dias}}",
+            "perTerm": "por {days}",
+            "noTerm": "sem data de término",
+            "termVaries": "a duração indicada em cada plano"
         },
         "regions": {
             "adamaoua": "Adamaoua",
@@ -968,7 +985,7 @@
         },
         "pricing": {
             "metaTitle": "Preços da Wi-Mall — comece do zero, pague quando compensar",
-            "metaDescription": "Quanto a Wi-Mall custa para vendedores, agências de entrega e entregadores. Planos gratuitos que nunca expiram, planos de vendedor a partir de 5.000 FCFA por 30 dias, comissão de 7% até 3%, e nada que se renove sozinho.",
+            "metaDescription": "Quanto a Wi-Mall custa para vendedores, agências de entrega e entregadores. Planos gratuitos que nunca expiram, planos de vendedor a partir de {vendorFromPrice} {vendorFromPer}, {vendorCommissionSpread, select, same {comissão de {vendorCommissionMin}} other {comissão de {vendorCommissionMax} até {vendorCommissionMin}}}, e nada que se renove sozinho.",
             "eyebrow": "Planos, comissão e créditos",
             "title": "Comece do zero. Pague quando compensar.",
             "lead": "Vendedores, agências de entrega e entregadores têm, cada um, um plano gratuito que nunca expira. Os planos pagos aumentam seus limites e, para vendedores, reduzem a comissão de cada pedido. Sem taxa de adesão, sem contrato, e nada se renova sozinho.",
@@ -977,11 +994,11 @@
                 "lead": "Vale dizer com clareza, porque é isso que decide se o arranjo funciona para você.",
                 "commission": {
                     "title": "Uma comissão em cada pedido pago",
-                    "body": "Uma porcentagem do total do pedido, cobrada no momento em que o cliente paga. Quem a define é o plano do vendedor: 7% no plano gratuito, 5% no Growth, 3% no Business."
+                    "body": "Uma porcentagem do total do pedido, cobrada no momento em que o cliente paga. Quem a define é o plano do vendedor: {starterCommission} no plano gratuito, {growthCommission} no {growthName}, {businessCommission} no {businessName}."
                 },
                 "plans": {
                     "title": "Planos opcionais",
-                    "body": "Um período de 30 dias que aumenta seus limites. Qualquer papel pode operar indefinidamente sem nunca comprar um."
+                    "body": "Um período pago que aumenta seus limites durante {paidTerm}. Qualquer papel pode operar indefinidamente sem nunca comprar um."
                 },
                 "credits": {
                     "title": "Créditos para o que é medido",
@@ -995,7 +1012,7 @@
             },
             "vendor": {
                 "title": "Planos para vendedores",
-                "lead": "A comissão é o número que vale comparar. Num mês com 400.000 FCFA em pedidos pagos, sair do Starter para o Growth economiza 8.000 FCFA de comissão e custa 5.000.",
+                "lead": "{growthSaves, select, yes {A comissão é o número que vale comparar. Num mês com {exampleSales} em pedidos pagos, sair do {starterName} para o {growthName} economiza {growthSaving} de comissão e custa {growthPrice}.} other {A comissão é o número que vale comparar, e a taxa de cada nível aparece junto ao seu plano.}}",
                 "note": "Os limites contam produtos publicados. No limite, criar outro é recusado até você desativar um ou subir de plano — nada do que já está publicado é retirado."
             },
             "agency": {
@@ -1006,12 +1023,13 @@
             "agent": {
                 "title": "Planos para entregadores",
                 "lead": "Mesma ideia das agências: o número é quantas entregas você pode segurar ao mesmo tempo, não uma cota mensal.",
-                "note": "Esse limite é rígido. Aceitar mais uma oferta acima do seu teto é recusado até que uma das entregas em mãos seja concluída."
+                "note": "Esse limite é rígido. Aceitar mais uma oferta acima do seu teto é recusado até que uma das entregas em mãos seja concluída.",
+                "codPoolNote": "* O máximo em pagamentos na entrega que você pode ter consigo ao mesmo tempo, somando todas as agências com que trabalha. Vale depois que a sua identidade for verificada; antes disso, você não leva pagamentos na entrega."
             },
             "credits": {
                 "title": "O que são créditos",
-                "p1": "Duas coisas custam dinheiro de verdade toda vez que acontecem na Wi-Mall, então são medidas em vez de embutidas: indexar um dos seus produtos para que o assistente de IA consiga encontrá-lo e recomendá-lo, que custa 5 créditos, e enviar uma mensagem modelo do WhatsApp cobrada a um cliente, que custa 2.",
-                "p2": "Ativar um plano concede sua cota uma única vez — 50 créditos no plano gratuito de vendedor, 1.500 no Business. Se você esgotá-la, recarregue em pacotes. Quanto maior o pacote, menos custa cada crédito.",
+                "p1": "Duas coisas custam dinheiro de verdade toda vez que acontecem na Wi-Mall, então são medidas em vez de embutidas: indexar um dos seus produtos para que o assistente de IA consiga encontrá-lo e recomendá-lo, que custa {vectorisationCost}, e enviar uma mensagem modelo do WhatsApp cobrada a um cliente, que custa {whatsappTemplateCost}.",
+                "p2": "Ativar um plano concede sua cota uma única vez — {starterCredits} no plano gratuito de vendedor, {businessCredits} no {businessName}. Se você esgotá-la, recarregue em pacotes.{packDiscount, select, yes { Quanto maior o pacote, menos custa cada crédito.} other {}}",
                 "packsTitle": "Pacotes de créditos",
                 "packsCaption": "Pacotes de recarga de créditos e seus preços",
                 "creditsHead": "Créditos",
@@ -1021,20 +1039,20 @@
             "payment": {
                 "title": "Como o pagamento funciona",
                 "p1": "Planos e pacotes de créditos são pagos por NotchPay ou MyCoolPay para dinheiro móvel, ou Stripe para cartão. Nada é guardado e cobrado de novo depois — não existe assinatura recorrente em lugar nenhum da Wi-Mall.",
-                "p2": "Um período pago simplesmente termina depois de 30 dias. Se você comprou outro plano enquanto um ainda corria, ele ficou na fila e assume nesse momento; se não comprou, você volta ao plano gratuito do seu papel e segue trabalhando. Você pode ter um plano ativo e um na fila ao mesmo tempo.",
+                "p2": "Um período pago ({paidTerm}) simplesmente chega ao fim. Se você comprou outro plano enquanto um ainda corria, ele ficou na fila e assume nesse momento; se não comprou, você volta ao plano gratuito do seu papel e segue trabalhando. Você pode ter um plano ativo e um na fila ao mesmo tempo.",
                 "p3": "Se um pagamento com cartão for estornado depois, o plano que ele comprou volta ao gratuito e os créditos concedidos são retirados junto — o que pode deixar o saldo negativo até a próxima recarga."
             },
             "faqTitle": "Perguntas sobre preços",
             "cta": {
                 "title": "O plano gratuito não pede meio de pagamento",
                 "body": "Monte seu catálogo, veja o que vende, e só suba de plano quando a conta da comissão disser que vale a pena.",
-                "finePrint": "Planos gratuitos nunca expiram. Períodos pagos duram 30 dias e não se renovam automaticamente."
+                "finePrint": "Planos gratuitos nunca expiram. Períodos pagos ({paidTerm}) não se renovam automaticamente."
             },
             "unsoldTierNote": "Os planos marcados como não estando à venda aparecem pelo preço de catálogo mas não podem ser comprados aqui hoje. O plano gratuito está sempre disponível."
         },
         "vendors": {
             "metaTitle": "Venda no WhatsApp sem site — Wi-Mall para vendedores",
-            "metaDescription": "Suba seus produtos uma vez e deixe o assistente de IA da Wi-Mall vendê-los dentro do WhatsApp. Sem loja, sem aplicativo, sem programador. Plano gratuito: 15 produtos, 7% de comissão, sem expiração.",
+            "metaDescription": "Suba seus produtos uma vez e deixe o assistente de IA da Wi-Mall vendê-los dentro do WhatsApp. Sem loja, sem aplicativo, sem programador. Plano gratuito: {starterProducts}, {starterCommission} de comissão, sem expiração.",
             "eyebrow": "Vender na Wi-Mall",
             "title": "Venda no WhatsApp sem site",
             "lead": "Você não precisa de loja virtual, domínio nem programador. Suba seus produtos uma vez, e o assistente de IA da Wi-Mall os vende dentro das conversas de WhatsApp que seus clientes já estão tendo.",
@@ -1073,8 +1091,8 @@
             },
             "cost": {
                 "title": "Quanto custa",
-                "p1": "O plano gratuito não é um teste. O Starter deixa você publicar 15 produtos com 1 GB de mídia, cobra 7% de cada pedido pago, e nunca expira.",
-                "p2": "O Growth custa 5.000 FCFA por 30 dias: 150 produtos, 10 GB, e a comissão cai para 5%. O Business custa 25.000 FCFA por 30 dias, com produtos ilimitados, 100 GB e 3%. Nada se renova sozinho — no fim de um período, ou você passa para o plano que deixou na fila, ou volta ao Starter e continua vendendo."
+                "p1": "O plano gratuito não é um teste. O {starterName} deixa você publicar {starterProducts} com {starterMedia}, cobra {starterCommission} de cada pedido pago, e nunca expira.",
+                "p2": "O {growthName} custa {growthPrice} {growthPer}: {growthProducts}, {growthMedia}, e uma comissão de {growthCommission}. O {businessName} custa {businessPrice} {businessPer}, com {businessProducts}, {businessMedia} e {businessCommission}. Nada se renova sozinho — no fim de um período, ou você passa para o plano que deixou na fila, ou volta ao {starterName} e continua vendendo."
             },
             "start": {
                 "title": "O que você precisa para começar",
@@ -1088,7 +1106,7 @@
             "cta": {
                 "title": "Ponha seu catálogo onde a conversa já acontece",
                 "body": "O Starter não custa nada, não pede meio de pagamento e não expira. Se funcionar, os planos pagos se pagam em comissão.",
-                "finePrint": "15 produtos, 1 GB e 7% de comissão no plano gratuito. Nenhum cartão exigido."
+                "finePrint": "No plano gratuito: {starterProducts}, {starterMedia} e {starterCommission} de comissão. Nenhum cartão exigido."
             }
         },
         "agencies": {
@@ -1121,7 +1139,7 @@
             },
             "capacity": {
                 "title": "Capacidade, e o que acontece no limite",
-                "p1": "O plano gratuito deixa você manter 1.000 remessas abertas ao mesmo tempo. É um teto de trabalho, não uma cota mensal — cada entrega concluída devolve a vaga.",
+                "p1": "O plano gratuito deixa você manter {agencyShipments} ao mesmo tempo. É um teto de trabalho, não uma cota mensal — cada entrega concluída devolve a vaga.",
                 "p2": "O limite é flexível de propósito. Se você o ultrapassar, recebe um alerta e a opção de subir de plano; nada do checkout, do despacho ou da entrega para de funcionar. Uma agência no limite está tendo uma boa semana, e a plataforma não deveria puni-la por isso."
             },
             "start": {
@@ -1134,8 +1152,8 @@
             "faqTitle": "Perguntas de agências",
             "cta": {
                 "title": "Leve os pedidos até a sua frota",
-                "body": "Registrar não custa nada e o plano gratuito carrega mil entregas abertas. A única coisa a decidir antes de começar é quanto você cobra.",
-                "finePrint": "Plano gratuito: 1.000 remessas abertas, 5 GB, rastreamento ao vivo incluído."
+                "body": "Registrar não custa nada e o plano gratuito deixa você manter {agencyShipments}. A única coisa a decidir antes de começar é quanto você cobra.",
+                "finePrint": "Plano gratuito: {agencyShipments}, {agencyMedia}, rastreamento ao vivo incluído."
             }
         },
         "agents": {
@@ -1167,7 +1185,7 @@
             },
             "capacity": {
                 "title": "Quantas ao mesmo tempo",
-                "p1": "O plano gratuito deixa você segurar 20 entregas ao mesmo tempo. Termine uma e a vaga volta.",
+                "p1": "O plano gratuito deixa você segurar {agentDeliveries} ao mesmo tempo. Termine uma e a vaga volta.",
                 "p2": "Diferente do limite das agências, este é firme: aceitar uma oferta acima do seu teto é recusado, não apenas sinalizado. A ideia é que um cliente esperando por uma entrega que você não consegue fazer é pior do que uma oferta que você não recebeu."
             },
             "start": {
@@ -1181,7 +1199,7 @@
             "cta": {
                 "title": "Comece com uma agência, ou cinco",
                 "body": "O cadastro é gratuito e independente. Nada te prende a uma única agência, e nenhuma oferta vale até você aceitar.",
-                "finePrint": "Plano gratuito: 20 entregas seguradas ao mesmo tempo. Sem cota mensal."
+                "finePrint": "Plano gratuito: {agentDeliveries} ao mesmo tempo. Sem cota mensal."
             }
         },
         "customers": {
@@ -1309,7 +1327,7 @@
                 },
                 "vendorCost": {
                     "q": "Quanto custa vender?",
-                    "a": "O plano Starter é gratuito e nunca expira: 15 produtos publicados, 1 GB de mídia e 7% de comissão em cada pedido pago. O Growth custa 5.000 FCFA por 30 dias para 150 produtos e 5% de comissão; o Business custa 25.000 FCFA por 30 dias para produtos ilimitados e 3%."
+                    "a": "O plano {starterName} é gratuito e nunca expira: {starterProducts}, {starterMedia} e {starterCommission} de comissão em cada pedido pago. O {growthName} custa {growthPrice} {growthPer} para {growthProducts} e {growthCommission} de comissão; o {businessName} custa {businessPrice} {businessPer} para {businessProducts} e {businessCommission}."
                 },
                 "vendorProductLimit": {
                     "q": "O que acontece quando eu chego ao limite de produtos?",
@@ -1349,7 +1367,7 @@
                 },
                 "agentCapacity": {
                     "q": "Quantas entregas posso segurar ao mesmo tempo?",
-                    "a": "Vinte no plano gratuito. Diferente do limite das agências, este é aplicado: aceitar uma oferta acima do seu teto é recusado até que uma das entregas que você já segura seja concluída."
+                    "a": "No plano gratuito, {agentDeliveries}. Diferente do limite das agências, este é aplicado: aceitar uma oferta acima do seu teto é recusado até que uma das entregas que você já segura seja concluída."
                 },
                 "paymentMethods": {
                     "q": "Como os clientes podem pagar?",
@@ -1361,7 +1379,7 @@
                 },
                 "credits": {
                     "q": "O que são créditos, e preciso comprá-los?",
-                    "a": "Créditos medem duas coisas que custam dinheiro toda vez que acontecem: indexar um produto para que o assistente possa recomendá-lo, por 5 créditos, e enviar uma mensagem modelo do WhatsApp cobrada, por 2. Todo plano concede uma cota ao ser ativado, então a maioria das contas nunca compra nenhum; se você esgotar a sua, os pacotes começam em 600 FCFA por 100 créditos."
+                    "a": "Créditos medem duas coisas que custam dinheiro toda vez que acontecem: indexar um produto para que o assistente possa recomendá-lo, por {vectorisationCost}, e enviar uma mensagem modelo do WhatsApp cobrada, por {whatsappTemplateCost}. Todo plano concede uma cota ao ser ativado, então a maioria das contas nunca compra nenhum; se você esgotar a sua, os pacotes começam em {cheapestPackPrice} por {cheapestPackCredits}."
                 },
                 "payoutVerification": {
                     "q": "Existe um limite de saque antes de a minha conta ser verificada?",
@@ -1369,7 +1387,7 @@
                 },
                 "renewal": {
                     "q": "Os planos se renovam automaticamente?",
-                    "a": "Não. Não há cartão guardado nem cobrança recorrente em lugar nenhum da Wi-Mall. Um plano pago corre seus 30 dias e depois, ou passa a vez a um plano que você deixou na fila enquanto ele corria, ou te devolve ao plano gratuito do seu papel."
+                    "a": "Não. Não há cartão guardado nem cobrança recorrente em lugar nenhum da Wi-Mall. Um plano pago corre o seu período ({paidTerm}) e depois, ou passa a vez a um plano que você deixou na fila enquanto ele corria, ou te devolve ao plano gratuito do seu papel."
                 },
                 "downgrade": {
                     "q": "O que acontece se eu parar de pagar?",
@@ -1431,12 +1449,12 @@
             "regionLabel": "Região",
             "sellingTitle": "Vender em {city}",
             "sellingP1": "O funcionamento é o mesmo em toda parte: você sobe um catálogo, e o assistente vende a partir dele dentro do WhatsApp. O que muda de cidade para cidade é quem está comprando e a distância que uma entrega precisa percorrer — e as duas coisas são decididas pelas agências que cobrem a região, não por nós.",
-            "sellingP2": "O Starter não custa nada, carrega 15 produtos publicados, e cobra 7% de cada pedido pago. Costuma ser o suficiente para descobrir se a demanda no seu pedaço da cidade é real antes de gastar qualquer coisa.",
+            "sellingP2": "O {starterName} não custa nada, carrega {starterProducts}, e cobra {starterCommission} de cada pedido pago. Costuma ser o suficiente para descobrir se a demanda no seu pedaço da cidade é real antes de gastar qualquer coisa.",
             "deliveryTitle": "Como a entrega funciona em {city}",
             "deliveryP1": "Uma agência de entrega registra a região {region} entre as suas áreas de cobertura. Pedidos com destino a {city} são encaminhados às agências que a cobrem, e cada uma despacha um entregador da própria rede.",
             "deliveryP2": "A agência define a taxa de entrega e a fatia do entregador está fixada no contrato dele — uma porcentagem da taxa, ou um valor fixo por corrida. O pagamento na entrega é recebido pelo entregador e conciliado com a agência, o que pesa num mercado onde muitos compradores ainda preferem pagar na porta.",
             "opportunityTitle": "Se você entrega em {city}",
-            "opportunityBody": "Uma agência que registra a região {region} recebe os pedidos destinados a ela. O plano gratuito carrega mil entregas abertas, mais do que a maioria das frotas locais mantém ao mesmo tempo, e a plataforma não fica com nada do que você cobra pela entrega.",
+            "opportunityBody": "Uma agência que registra a região {region} recebe os pedidos destinados a ela. O plano gratuito deixa você manter {agencyShipments}, e a plataforma não fica com nada do que você cobra pela entrega.",
             "relatedTitle": "Em outros pontos de Camarões",
             "ctaTitle": "Comece em {city}",
             "ctaBody": "Planos gratuitos para vendedores, agências e entregadores. Nada a pagar antes de saber se funciona.",
@@ -1594,7 +1612,7 @@
             "build": {
                 "title": "Como construímos",
                 "lead": "Algumas destas escolhas são invulgares o suficiente para valer a pena dizê-las com clareza.",
-                "i1": "A compilação falha se os nossos próprios textos de marketing contradisserem a tabela de preços em vigor. Os preços vivem num único catálogo, e uma página que cite um valor entretanto alterado trava a publicação seguinte e indica a linha a corrigir — em vez de publicar discretamente uma página que mente sobre o preço.",
+                "i1": "Nossas páginas nunca citam um preço de memória. Os preços vivem num único catálogo, e cada frase que menciona um lê-o de lá — mude um preço e o site inteiro mostra o novo em poucos minutos, em vez de guardar um número antigo que alguém esqueceu de atualizar.",
                 "i2": "Nenhum número inventado nos dados estruturados. Não há classificações nem contagens de avaliações na nossa marcação, porque ainda não existem dados de avaliações. Os números de escala deste site são objetivos do primeiro ano, e estão identificados como objetivos.",
                 "i3": "Cinco línguas, incluindo uma da direita para a esquerda, desde a primeira linha e não numa passagem posterior.",
                 "i4": "Escrito para a rede que as pessoas têm de facto. As palavras seguem dentro do HTML, a animação é opcional, e nada de importante fica à espera de JavaScript que pode nunca chegar.",

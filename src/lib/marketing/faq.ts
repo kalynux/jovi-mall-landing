@@ -7,6 +7,11 @@
  * the answers that matter there without us maintaining a second, drifting copy
  * of the same text.
  *
+ * ⚠ Four answers quote live plan figures (`vendorCost`, `agentCapacity`,
+ * `credits`, `renewal`), so a page that lists one must pass `getPlanFacts()`
+ * as the answer's values. The customer and country pages do not, and
+ * plan-facts.test.ts fails if one of those four is added to their lists.
+ *
  * The copy lives in the message catalog at `pages.faq.q.<id>.{q,a}`. Only /faq
  * emits FAQPage structured data — the same questions marked up on four
  * different URLs is a duplicate-entity signal, not four chances to rank.

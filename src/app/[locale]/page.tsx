@@ -6,6 +6,7 @@ import JsonLd from "@/components/seo/JsonLd";
 import { organizationJsonLd, webSiteJsonLd } from "@/lib/seo/jsonld";
 import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale } from "@/i18n/routing";
+import { getPlanFacts } from "@/lib/marketing/plans.api";
 
 type PageProps = { params: Promise<{ locale: string }> };
 
@@ -23,10 +24,14 @@ export default async function Home({ params }: PageProps) {
   if (!isLocale(locale)) notFound();
   setRequestLocale(locale);
 
+  // Read here because LandingPage is a client component: the closing section's
+  // fine print quotes the free tier's product allowance from the live catalogue.
+  const planFacts = await getPlanFacts(locale);
+
   return (
     <>
       <JsonLd data={[organizationJsonLd(), webSiteJsonLd()]} />
-      <LandingPage />
+      <LandingPage planFacts={planFacts} />
     </>
   );
 }
