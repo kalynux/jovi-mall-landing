@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useId } from "react";
+import { useState, useEffect, useRef, useId, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronDown } from "lucide-react";
 import type { ErrorCode } from "@/lib/auth/backend-error-codes";
@@ -33,6 +33,16 @@ export interface GlobalErrorProps {
      * authoritative half. Pass `parseRootType(...).category`.
      */
     category?: ErrorCategory;
+    /**
+     * The one thing that fixes this error, when there is one — a link or a
+     * button, rendered inside the banner under the message.
+     *
+     * Inside rather than below, because it answers this message and no other:
+     * a free-standing link under the banner reads as part of the form, and it
+     * sits right above the form's own submit button, which is the one action
+     * that will NOT help. Ignored when there is no message.
+     */
+    action?: ReactNode;
     /** Extra Tailwind classes for layout overrides. */
     className?: string;
 }
@@ -63,6 +73,7 @@ export function GlobalError({
     requestId,
     errorCode,
     category,
+    action,
     className = "",
 }: GlobalErrorProps) {
     const tErrors = useTranslations("errors");
@@ -145,6 +156,8 @@ export function GlobalError({
                     .join(" ")}
             >
                 <p className="leading-snug">{message}</p>
+
+                {action && <div className="mt-2.5">{action}</div>}
 
                 {/* Auto-show requestId — inline, no toggle required */}
                 {autoShow && requestId && (

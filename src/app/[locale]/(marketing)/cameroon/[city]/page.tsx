@@ -15,6 +15,7 @@ import { breadcrumbJsonLd, serviceAreaJsonLd } from "@/lib/seo/jsonld";
 import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath } from "@/i18n/routing";
 import { CITIES, cityPath, findCity, findRegion } from "@/lib/marketing/geo";
+import { getPlanFacts } from "@/lib/marketing/plans.api";
 
 type PageProps = { params: Promise<{ locale: string; city: string }> };
 
@@ -60,6 +61,9 @@ export default async function CityPage({ params }: PageProps) {
   const t = await getTranslations({ locale, namespace: "pages" });
   const region = t(`regions.${city.region}`);
   const path = cityPath(city.slug);
+  // Starter's and the agency free tier's figures come from the live catalogue —
+  // see plan-facts.ts.
+  const facts = await getPlanFacts(locale);
 
   const trail = [
     { name: t("common.home"), path: "/" },
@@ -111,7 +115,7 @@ export default async function CityPage({ params }: PageProps) {
       </Section>
 
       <Section title={t("city.sellingTitle", { city: city.name })} tone="subtle">
-        <Prose paragraphs={[t("city.sellingP1"), t("city.sellingP2")]} />
+        <Prose paragraphs={[t("city.sellingP1"), t("city.sellingP2", facts)]} />
         <p className="mt-5 text-sm">
           <TextLink href="/vendors">{t("nav.vendors")}</TextLink>
         </p>
@@ -127,7 +131,7 @@ export default async function CityPage({ params }: PageProps) {
       </Section>
 
       <Section title={t("city.opportunityTitle", { city: city.name })} tone="subtle">
-        <Prose paragraphs={[t("city.opportunityBody", { region })]} />
+        <Prose paragraphs={[t("city.opportunityBody", { ...facts, region })]} />
         {/* Coverage is registered per region, so the towns beside this city are
             part of the same registration — a real statement about reach rather
             than a keyword list. */}

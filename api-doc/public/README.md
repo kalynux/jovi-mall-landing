@@ -13,7 +13,7 @@ routes, not seven.
 marketing site: it prints real prices and real articles, so it needs to *read* them rather than keep
 a hand-copy.
 
-**Four routers share this prefix**, documented separately:
+**Five routers share this prefix**, documented separately:
 
 | | Contract |
 |---|---|
@@ -21,6 +21,7 @@ a hand-copy.
 | The **catalog** (`/products`, `/variants`, `/categories`, `/stores`) | [catalog.md](./catalog.md) |
 | The **blog** (`/articles`) | [articles.md](./articles.md) |
 | Published **product reviews** (`/products/:productId/reviews`) | [../reviews.md](../reviews.md) |
+| The **agent app download** (`/app/:app/latest`, `/app/:app/download`) | [app-downloads.md](./app-downloads.md) |
 
 Everything else in this API is behind `requireAuth`. `/api/public` is the only exception, so the rule
 for anything added here is narrow: **read-only, no identity, and already published on a public page.**
@@ -95,6 +96,7 @@ pre-split.
       "max_storage_bytes": 1073741824,
       "commission_percent": 7,
       "max_unterminated_shipments": null,
+      "max_cod_pool": null,
       "live_tracking_enabled": true,
       "is_active": true,
       "sort_order": 1
@@ -119,6 +121,7 @@ pre-split.
 | `max_storage_bytes` | number \| null | Media cap, all roles. Bytes. |
 | `commission_percent` | number \| null | Vendor only. % of order gross taken at payment. |
 | `max_unterminated_shipments` | number \| null | Agency (**soft** cap) and agent (**hard** cap). `null` = unlimited. |
+| `max_cod_pool` | number \| null | **Agent plans only** (since 2026-09-21): the cash-on-delivery money (XAF) an agent on this tier may carry once their identity is verified. Free 500 000 · Plus 1 000 000 · Pro 2 000 000. ⚠ `null` means **no COD**, never "unlimited". `null` on every vendor and agency plan. |
 | `live_tracking_enabled` | boolean | `true` on every tier today. Read it, don't build copy on it. |
 | `is_active` | boolean | Whether the tier is buyable today — see below. |
 | `sort_order` | number | Display order within the role. |
@@ -135,7 +138,7 @@ launch, and a tier withdrawn from sale. That ambiguity is why they are opt-in ra
 default — the API will not guess which story to tell.
 
 Today every inactive tier is the first kind (agency and agent paid tiers, defined but not yet
-purchasable — see billing-plans-across-roles.md (`backend/jovi-mall/api-doc/billing-plans-across-roles.md` — not mirrored in this repository)), so
+purchasable — see [billing-plans-across-roles.md](../billing-plans-across-roles.md)), so
 `includeInactive=true` is a safe source for a "coming soon" column *right now*. If a tier is ever
 retired, that stops being true silently. Either re-check before launch copy leans on it, or keep
 labelling inactive tiers neutrally ("not available") rather than "coming soon".
@@ -168,8 +171,8 @@ env-overridable, which is exactly why they must be read rather than copied.
       { "code": "pack_2250", "credits": 2250, "price": 12000, "currency": "XAF" }
     ],
     "actionCosts": {
-      "vectorisation": 1,
-      "whatsappTemplate": 1
+      "vectorisation": 5,
+      "whatsappTemplate": 2
     }
   }
 }

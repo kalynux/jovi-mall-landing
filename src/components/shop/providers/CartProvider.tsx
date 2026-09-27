@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useAuth } from "@/lib/auth/useAuth";
+import { isCustomerSession } from "@/lib/shop/customer-session";
 import { classifyCartAddFailure } from "@/lib/shop/cart-errors";
 import type { CartAddFailure } from "@/lib/shop/cart-errors";
 import {
@@ -229,8 +230,17 @@ function snapshotOf(product: Product, variant: Variant, qty: number): CartLine {
 /* ─── Provider ────────────────────────────────────────────────────────────── */
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { status } = useAuth();
-  const signedIn = status === "authenticated";
+  const { status, role } = useAuth();
+  /**
+   * "Signed in" here means signed in AS A CUSTOMER — the cart routes are
+   * `requireRole(['customer'])`. A vendor, agency or agent session used to take
+   * the server branch, so the read, the merge and every add answered
+   * `403 AUTH_ROLE_NOT_FOUND`, and every "Add to cart" toasted the server's
+   * English "Insufficient permissions". It gets the anonymous, localStorage
+   * cart instead, which a later customer sign-in merges exactly like any
+   * signed-out basket.
+   */
+  const signedIn = isCustomerSession(status, role);
 
   const [local, setLocal] = useState<LocalCart>(EMPTY);
   const [server, setServer] = useState<ServerCart | null>(null);

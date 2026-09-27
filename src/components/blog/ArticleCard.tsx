@@ -64,7 +64,10 @@ function Cover({
         />
       )}
 
-      <span className="absolute start-3 top-3 inline-flex items-center rounded-pill border border-role-soft bg-[var(--surface)] px-2.5 py-1 font-display text-[11px] font-bold uppercase tracking-[0.1em] text-role shadow-sm">
+      {/* A solid ink tag needs no drop shadow to survive a cover: the old
+          shadow-sm was 5% black under a translucent surface pill, and it is
+          the white-on-ink fill, not the shadow, that does the work here. */}
+      <span className="tag absolute start-3 top-3">
         {article.category.label}
       </span>
     </div>
@@ -97,7 +100,7 @@ export default async function ArticleCard({
           article.category.accent
         )}
       >
-        <span className="font-display text-[11px] font-bold uppercase tracking-[0.1em] text-role">
+        <span className="tag self-start">
           {article.category.label}
         </span>
         <Heading className="font-display text-sm font-semibold leading-snug text-[var(--text-primary)] transition-colors group-hover:text-role">

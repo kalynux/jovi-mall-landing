@@ -31,7 +31,8 @@ const ROLE_ICONS: Record<RoleId, React.ElementType> = {
   customer: MessageCircle,
 };
 
-const CARD_ORDER: RoleId[] = ["vendor", "agency", "agent", "customer"];
+// Customer leads — keep in step with UI_ROLES and RolePicker's ROLE_CONFIG.
+const CARD_ORDER: RoleId[] = ["customer", "vendor", "agency", "agent"];
 
 interface RoleSelectorModalProps {
   isOpen: boolean;

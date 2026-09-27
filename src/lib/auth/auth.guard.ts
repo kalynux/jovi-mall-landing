@@ -9,6 +9,7 @@ import { useRouter } from "@/i18n/navigation";
 import type { AuthUser, AuthStatus, Role, AuthRoleEntity } from "./auth.types";
 import { useAuth } from "./useAuth";
 import { isShopPath } from "@/lib/shop/shop.routes";
+import { IS_NATIVE_BUILD } from "@/lib/platform";
 
 interface GuardResult {
     user: AuthUser | null;
@@ -59,7 +60,14 @@ export function useAuthGuard(): GuardResult {
         if (status !== "unauthenticated") return;
 
         const from = pathname ?? "/";
-        const returnPath = encodeURIComponent(from);
+        // In the app a screen's subject is in its query string —
+        // `/shop/account/ticket?id=…` — because the static export cannot address
+        // it by path, and `usePathname()` carries no query. Without this, a
+        // shopper sent to sign in from a support or order link came back to the
+        // right screen with nothing on it. The web's paths already hold the id,
+        // so the web keeps exactly the `return` it always sent.
+        const query = IS_NATIVE_BUILD ? window.location.search : "";
+        const returnPath = encodeURIComponent(`${from}${query}`);
         // Bounced out of the storefront — so the visitor is a shopper, and
         // `/login` can open on customer sign-in instead of asking which of four
         // roles they are. Everywhere else still asks.

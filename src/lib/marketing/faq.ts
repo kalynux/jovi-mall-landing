@@ -7,6 +7,11 @@
  * the answers that matter there without us maintaining a second, drifting copy
  * of the same text.
  *
+ * ⚠ Four answers quote live plan figures (`vendorCost`, `agentCapacity`,
+ * `credits`, `renewal`), so a page that lists one must pass `getPlanFacts()`
+ * as the answer's values. The customer and country pages do not, and
+ * plan-facts.test.ts fails if one of those four is added to their lists.
+ *
  * The copy lives in the message catalog at `pages.faq.q.<id>.{q,a}`. Only /faq
  * emits FAQPage structured data — the same questions marked up on four
  * different URLs is a duplicate-entity signal, not four chances to rank.
@@ -39,6 +44,7 @@ export const FAQ_IDS = [
   "paymentMethods",
   "cashOnDelivery",
   "credits",
+  "payoutVerification",
   "renewal",
   "downgrade",
 ] as const;
@@ -69,11 +75,18 @@ export const FAQ_GROUPS: { key: string; items: readonly FaqId[] }[] = [
   },
   {
     key: "money",
-    items: ["paymentMethods", "cashOnDelivery", "credits", "renewal", "downgrade"],
+    items: ["paymentMethods", "cashOnDelivery", "credits", "payoutVerification", "renewal", "downgrade"],
   },
 ];
 
-/** The four questions each role page answers inline before linking to /faq. */
+/**
+ * The questions each role page answers inline before linking to /faq.
+ *
+ * These were four apiece by convention, not by rule. `payoutVerification` makes
+ * five on the three earning roles because the withdrawal cap is the kind of
+ * thing someone needs to meet before they have earned anything, not after they
+ * have gone looking for it.
+ */
 export const CUSTOMER_FAQ: readonly FaqId[] = [
   "howShopping",
   "needApp",
@@ -86,6 +99,7 @@ export const VENDOR_FAQ: readonly FaqId[] = [
   "vendorCost",
   "vendorDelivery",
   "vendorPayout",
+  "payoutVerification",
 ];
 
 export const AGENCY_FAQ: readonly FaqId[] = [
@@ -93,11 +107,24 @@ export const AGENCY_FAQ: readonly FaqId[] = [
   "agencyCoverage",
   "agencySoftCap",
   "cashOnDelivery",
+  "payoutVerification",
 ];
 
-export const AGENT_FAQ: readonly FaqId[] = ["agentEarn", "agentJoin", "agentCapacity", "vendorPayout"];
+export const AGENT_FAQ: readonly FaqId[] = [
+  "agentEarn",
+  "agentJoin",
+  "agentCapacity",
+  "vendorPayout",
+  "payoutVerification",
+];
 
-export const PRICING_FAQ: readonly FaqId[] = ["renewal", "downgrade", "credits", "vendorProductLimit"];
+export const PRICING_FAQ: readonly FaqId[] = [
+  "renewal",
+  "downgrade",
+  "credits",
+  "vendorProductLimit",
+  "payoutVerification",
+];
 
 export const COUNTRY_FAQ: readonly FaqId[] = [
   "whereAvailable",

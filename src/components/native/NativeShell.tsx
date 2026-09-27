@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "@/i18n/navigation";
 import { IS_NATIVE_BUILD, isNative, platform, withNative } from "@/lib/platform";
 import { useTheme } from "@/lib/theme";
 import { SHOP_ROOT, normalizePath } from "@/lib/shop/shop.routes";
+import { resolveDeepLink, toInAppPath } from "@/lib/shop/deep-link";
 import { installNavDepth, navDepth } from "@/lib/shop/nav-depth";
 import { startNetworkWatch } from "@/lib/native/network";
 import { startKeyboardWatch } from "@/lib/native/keyboard";
@@ -197,7 +198,15 @@ export function NativeShell() {
    * payment return uses. Either way only the path and query survive the hop —
    * the host is discarded, so a link to another site cannot steer the app.
    *
-   * The path is handed to the locale-aware router, which re-prefixes it for the
+   * The path is then re-shaped for this build before it is followed, because
+   * the links are the website's: `/shop/account/support/<id>` is a page on the
+   * web and a file the static export never wrote, so following it as it came
+   * opened "Webpage not available" in place of the app. `resolveDeepLink`
+   * translates it to the app's own shape (`/shop/account/ticket?id=<id>`)
+   * through the same table the notification inbox uses, and drops any locale
+   * the link carries.
+   *
+   * The result goes to the locale-aware router, which prefixes it for the
    * language in use. A magic link minted for a French customer therefore opens
    * `/fr/login/magic?t=…` even though the link itself carries no locale.
    */
@@ -209,8 +218,8 @@ export function NativeShell() {
     void (async () => {
       const { App } = await import("@capacitor/app");
       const handle = await App.addListener("appUrlOpen", ({ url }) => {
-        const target = toInAppPath(url);
-        if (target) router.replace(target);
+        const path = toInAppPath(url);
+        if (path) router.replace(resolveDeepLink(path));
       });
       remove = () => void handle.remove();
     })();
@@ -219,28 +228,4 @@ export function NativeShell() {
   }, [router]);
 
   return null;
-}
-
-/**
- * Reduce an incoming deep link to a path this app can route to, or `null`.
- *
- * Deliberately strict. A deep link is attacker-controllable — anything can fire
- * an intent at a registered scheme — so this keeps the path and query and
- * throws the rest away rather than trusting a host, and refuses anything that
- * is not an absolute in-app path. `//evil.com` is rejected for the same reason
- * `validateReturnUrl` rejects it: a browser reads it as a protocol-relative URL
- * pointing somewhere else entirely.
- */
-export function toInAppPath(rawUrl: string): string | null {
-  let parsed: URL;
-  try {
-    parsed = new URL(rawUrl);
-  } catch {
-    return null;
-  }
-
-  const path = `${parsed.pathname}${parsed.search}`;
-  if (!path.startsWith("/") || path.startsWith("//")) return null;
-
-  return path;
 }

@@ -2,20 +2,24 @@
 /**
  * AgentAppDialog / AgentAppPanel
  *
- * Agents get a web dashboard, but the job happens on a phone — live order
- * alerts, navigation, one-tap delivery confirmation — so the app is what we
- * recommend and the web is the third option rather than the default.
+ * **There is no agent web app.** This panel used to offer "Continue on the web"
+ * as a third option alongside the two stores; that led to `agent.wi-mall.com`,
+ * which is not a product. The app is now the only destination, and it ships as
+ * a direct APK (`EXTERNAL_LINKS.agentApkUrl`) because neither store listing
+ * exists yet.
  *
- * Which of the three reads as primary depends on the device: recommending a
- * phone download to somebody on a laptop that is already able to show them the
- * dashboard is bad advice, so on desktop the web button takes the lead.
+ * What survives of the old web path is account creation, and only that: a
+ * visitor who is not yet an agent still has to register, and registration is
+ * hosted *here*, not on the app. So `cta.href` — the `/register?role=agent` and
+ * `/add-role?role=agent` modes — is still offered, as a secondary link under
+ * the download. The dashboard and role-switch modes are deliberately dropped:
+ * both pointed at the web app that does not exist.
  *
- * Store URLs are env-backed (EXTERNAL_LINKS) and empty until the listings go
- * live. An empty URL renders a disabled button with a "coming soon" pill —
- * never a link that 404s.
+ * Store URLs stay env-backed and empty until the listings go live; an empty URL
+ * renders a disabled button with a "coming soon" pill, never a link that 404s.
  */
 import { useState } from "react";
-import { Bike, Loader2, Smartphone, X } from "lucide-react";
+import { Bike, Download, Loader2, Smartphone, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { EXTERNAL_LINKS } from "@/lib/constants";
@@ -43,35 +47,26 @@ const SECONDARY =
 const ROW =
     "flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 font-display text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2";
 
-/** Renders whichever element the resolved CTA calls for. */
-function ContinueOnWeb({
-    cta,
-    label,
-    className,
-}: {
-    cta: RoleCta;
-    label: string;
-    className: string;
-}) {
-    if (cta.href) {
-        return (
-            <Link href={cta.href} className={className}>
-                {label}
-            </Link>
-        );
-    }
-    if (cta.externalHref) {
-        return (
-            <a href={cta.externalHref} className={className}>
-                {label}
-            </a>
-        );
-    }
+/**
+ * The account-creation link, for a visitor who does not hold the agent role yet.
+ *
+ * Only the `cta.href` modes reach here (`register`, `add-role`). `externalHref`
+ * (the agent dashboard) and `activate` (role switch) are not rendered at all —
+ * see the file header.
+ */
+function CreateAccountLink({ cta, label }: { cta: RoleCta; label: string }) {
+    if (!cta.href) return null;
     return (
-        <button type="button" onClick={cta.activate} disabled={cta.pending} className={cn(className, "disabled:opacity-60")}>
+        <Link
+            href={cta.href}
+            className={cn(
+                ROW,
+                "text-[var(--text-secondary)] hover:bg-[var(--accent-light)] hover:text-[var(--text-primary)]"
+            )}
+        >
             {cta.pending && <Loader2 className="h-4 w-4 animate-spin" />}
             {label}
-        </button>
+        </Link>
     );
 }
 
@@ -121,11 +116,12 @@ export function AgentAppPanel({
         typeof navigator === "undefined" ? "other" : detectPlatform()
     );
 
-    const webLabel = cta.pending ? tRoleCta("switching") : t("continueWeb");
-    // On a phone the store that matches leads; on a desktop the web does.
-    const androidLead = platform === "android";
+    const accountLabel = cta.pending ? tRoleCta("switching") : t("createAccount");
+    // The APK is the lead everywhere except an iPhone, where it cannot be
+    // installed at all and the (unpublished) App Store button is the honest
+    // thing to point at.
+    const apkLead = platform !== "ios";
     const iosLead = platform === "ios";
-    const webLead = platform === "other";
 
     return (
         <div className="p-6">
@@ -149,11 +145,28 @@ export function AgentAppPanel({
             <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">{t("body")}</p>
 
             <div className="mt-6 flex flex-col gap-2.5">
+                {/* The direct APK — the only live way to get the app today. Not
+                    a StoreButton: its URL is a served endpoint rather than an
+                    unpublished listing, so it is never in the "coming soon"
+                    state those handle. */}
+                <a
+                    href={EXTERNAL_LINKS.agentApkUrl}
+                    // Same-origin-ish API download, but the response is an
+                    // attachment; a new tab keeps the dialog's page intact if
+                    // the browser decides to navigate instead of download.
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(ROW, apkLead ? PRIMARY : SECONDARY)}
+                >
+                    <Download className="h-4 w-4" />
+                    {t("download")}
+                </a>
+
                 <StoreButton
                     url={EXTERNAL_LINKS.agentAndroidUrl}
                     label={t("android")}
                     comingSoon={t("comingSoon")}
-                    className={cn(ROW, androidLead ? PRIMARY : SECONDARY)}
+                    className={cn(ROW, SECONDARY)}
                 />
                 <StoreButton
                     url={EXTERNAL_LINKS.agentIosUrl}
@@ -167,11 +180,7 @@ export function AgentAppPanel({
                     {t("appHint")}
                 </div>
 
-                <ContinueOnWeb
-                    cta={cta}
-                    label={webLabel}
-                    className={cn(ROW, webLead ? PRIMARY : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--accent-light)]")}
-                />
+                <CreateAccountLink cta={cta} label={accountLabel} />
 
                 {cta.error && (
                     <p role="alert" className="text-center text-xs font-medium text-red-600">

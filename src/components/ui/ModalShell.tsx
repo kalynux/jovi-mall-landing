@@ -17,7 +17,9 @@
  */
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import { useHydrated } from "@/lib/use-hydrated";
 
 /** Holds body scroll while `isOpen`, and restores it on close/unmount. */
 export function useBodyScrollLock(isOpen: boolean) {
@@ -59,6 +61,29 @@ export default function ModalShell({
 }: ModalShellProps) {
     const panelRef = useRef<HTMLDivElement | null>(null);
 
+    /**
+     * Rendered into `document.body`, for the reason ResponsiveDialog already
+     * documents: a transformed ancestor re-bases `position: fixed` onto itself,
+     * so `inset-0` stops meaning "the viewport" and starts meaning "that
+     * element". Every consumer of this shell sits inside one —
+     *
+     *   • the pricing plan card carries `hover:-translate-y-1` (live at the
+     *     moment of the click, because the pointer is still on the card) and
+     *     `lg:scale-[1.03]` on the highlighted tier, which never goes away;
+     *   • AgentSection's AnimatedSection is a motion.div that animates `x` and
+     *     leaves an inline transform at rest;
+     *   • CtaBand additionally clips with `overflow-hidden`.
+     *
+     * which is why the agent dialog opened *inside* a 320px card instead of
+     * over the page. Portalling is the only fix that covers all three; chasing
+     * the transforms individually would leave the next one to re-break it.
+     *
+     * `useHydrated` rather than an effect that sets state: there is no
+     * `document` during SSR, and both the server and hydrating renders return
+     * false, so the passes agree without a cascading re-render.
+     */
+    const hydrated = useHydrated();
+
     // Escape — only for dismissible modals. Bound to the document so it works
     // whether or not focus made it inside the dialog.
     useEffect(() => {
@@ -79,7 +104,7 @@ export default function ModalShell({
     const backdropZ = layer === "top" ? "z-[110]" : "z-[100]";
     const panelZ = layer === "top" ? "z-[111]" : "z-[101]";
 
-    return (
+    const dialog = (
         <AnimatePresence>
             {isOpen && (
                 <>
@@ -131,4 +156,6 @@ export default function ModalShell({
             )}
         </AnimatePresence>
     );
+
+    return hydrated ? createPortal(dialog, document.body) : null;
 }

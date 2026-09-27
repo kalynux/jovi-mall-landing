@@ -101,17 +101,16 @@ export function PageHeader({
             at z-index -1 inside this container, can never wash over it. */}
         <div className="relative z-10 mt-7 grid gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div className="max-w-3xl">
-            <p className="inline-flex items-center gap-2 rounded-pill border border-role-soft bg-role-soft px-3.5 py-1.5 font-display text-[11px] font-bold uppercase tracking-[0.16em] text-role">
-              <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-role" />
-              {eyebrow}
-            </p>
+            {/* The dot went with the pill: a squared ink tag does not need a
+                bullet to read as a label. See .tag in globals.css. */}
+            <p className="tag">{eyebrow}</p>
             <h1 className="mt-5 font-display text-hero-lg lg:text-hero-xl text-[var(--text-primary)]">
               {title}
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)] sm:text-xl">
               {lead}
             </p>
-            {actions && <div className="mt-8 flex flex-wrap gap-3">{actions}</div>}
+            {actions && <div className="cta-row mt-8">{actions}</div>}
           </div>
           {aside && <div className="lg:max-w-xs">{aside}</div>}
         </div>
@@ -231,9 +230,7 @@ export function InfoCard({
   return (
     <div className="card group p-6 transition-all duration-300 hover:-translate-y-1 hover:border-role-soft hover:shadow-lg">
       {meta && (
-        <p className="inline-flex items-center rounded-pill border border-role-soft bg-role-soft px-2.5 py-1 font-display text-[10px] font-bold uppercase tracking-[0.12em] text-role">
-          {meta}
-        </p>
+        <p className="tag">{meta}</p>
       )}
       <h3
         className={cn(
@@ -519,7 +516,7 @@ export function CtaBand({
             <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/70 sm:text-lg">
               {body}
             </p>
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+            <div className="cta-row cta-row-center mt-9">
               {primaryRole ? (
                 <RoleCtaButton role={primaryRole} fallbackLabel={primary.label} variant="primary" size="md" />
               ) : (

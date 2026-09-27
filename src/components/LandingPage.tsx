@@ -16,13 +16,14 @@ import SectionProgressIndicator from "@/components/ui/SectionProgressIndicator";
 import AmbientBackground from "@/components/layout/AmbientBackground";
 import { SectionNavProvider } from "@/components/scroll/SectionNavProvider";
 import { SECTION_IDS } from "@/lib/constants";
+import type { PlanFacts } from "@/lib/marketing/plan-facts";
 
 /**
  * The landing page body. Split out of app/page.tsx so that route can stay a
  * server component: it owns the page metadata (canonical) and the JSON-LD,
  * neither of which a "use client" module can export.
  */
-export default function LandingPage() {
+export default function LandingPage({ planFacts }: { planFacts: PlanFacts }) {
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
@@ -50,7 +51,7 @@ export default function LandingPage() {
         <AgentSection />
         <AfricaFirstSection />
         <TrustSection />
-        <FinalCTASection onGetStarted={() => setModalOpen(true)} />
+        <FinalCTASection onGetStarted={() => setModalOpen(true)} planFacts={planFacts} />
       </main>
 
       {/* Footer */}

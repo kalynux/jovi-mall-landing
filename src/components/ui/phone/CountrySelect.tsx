@@ -244,6 +244,15 @@ export default function CountrySelect({
             event.preventDefault();
             openPanel();
         }
+        // Focus is still HERE while the list is open more often than not: the
+        // effect that moves it into the search box runs before the portalled
+        // panel has a position, so the box does not exist yet. Escape must close
+        // the list from here too — and preventDefault is what tells an enclosing
+        // BottomSheet the key is spent, or it closes the whole sheet with it.
+        if (event.key === "Escape" && open) {
+            event.preventDefault();
+            closePanel();
+        }
     };
 
     const triggerLabel = selected
@@ -266,8 +275,16 @@ export default function CountrySelect({
                           width: position.width,
                           maxHeight: position.maxHeight,
                       }}
+                      // Above every surface a phone field can sit in, because
+                      // it is portalled out of that surface and its z-index is
+                      // compared with it directly: the shop's bottom sheets
+                      // (400/420 — the wallet number in "Add a payment method"
+                      // and in the pay sheet), `ResponsiveDialog` (300) and
+                      // `ModalShell` (≤111). At 100 it opened *behind* the
+                      // shop sheets — a chevron flipped and nothing appeared.
+                      // Below the shop toast (500).
                       className={cn(
-                          "z-[100] flex flex-col overflow-hidden rounded-2xl",
+                          "z-[450] flex flex-col overflow-hidden rounded-2xl",
                           "border border-[var(--border)] bg-[var(--surface)]",
                           "shadow-[var(--shadow-xl,0_20px_50px_rgba(0,0,0,0.25))]"
                       )}

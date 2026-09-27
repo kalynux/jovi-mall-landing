@@ -15,6 +15,9 @@
  * Shared across every role — `/api/me` carries `requireAuth` and no
  * `requireRole`. The owner is resolved from the token, never from a body.
  *
+ * A contact change is not a credential change: it signs no device out. Only
+ * `PATCH /api/me/password` does that.
+ *
  * See api-doc/me/contact-change.md.
  */
 import { apiFetch } from "@/lib/api/client";
@@ -89,9 +92,8 @@ export async function requestEmailChange(email: string): Promise<PendingContactC
  * the mail client's own preview — so the landing page reads `?token=` and calls
  * this.
  *
- * The phone confirm *is* authenticated, because its proof is a property of the
- * account and needs the session to be looked up at all. That asymmetry is the
- * design, not an oversight.
+ * The phone confirm *is* authenticated, because it spends a code sent to the
+ * account's pending number. That asymmetry is the design, not an oversight.
  *
  * Being on the auth router, this inherits the **credential rate-limit bucket**
  * (20/min) rather than the general one — it spends a bearer secret, which is
@@ -113,7 +115,7 @@ export async function confirmEmailChange(token: string): Promise<{ email: string
   });
 }
 
-/** DELETE /api/me/email/pending — `404 CONTACT_CHANGE_NOT_PENDING` if nothing is in flight. */
+/** DELETE /api/me/email/pending — `409 CONTACT_CHANGE_NOT_PENDING` if nothing is in flight. */
 export async function cancelEmailChange(): Promise<void> {
   await apiFetch<unknown>("/api/me/email/pending", { method: "DELETE" });
 }
@@ -123,11 +125,17 @@ export async function cancelEmailChange(): Promise<void> {
 /**
  * PATCH /api/me/phone — open a phone change. E.164 only.
  *
- * **Window: 24 hours**, longer than email, because the proof is not *delivered*:
- * the person has to go and message the bot from the new number, possibly on a
- * handset that is not in the room. Still bounded, because an unbounded pending
- * request would be completed by the next WhatsApp connection made for any reason
- * at all, months later.
+ * **Window: 24 hours** for the change itself; each code it is confirmed with
+ * lives 10 minutes, and a new one can be requested inside the window.
+ *
+ * ⚠ **This does not send the code.** Follow it with `requestPhoneCode()` from
+ * `phone-verification.api.ts`, then `confirmPhoneCode()` — the storefront's only
+ * way to complete a phone change (owner decision, 2026-09-21).
+ *
+ * `POST /api/me/phone/confirm` — the connection proof, "message the bot from
+ * your new number, then confirm" — is deliberately not wrapped here. It stays on
+ * the backend for the bot surface only, and the storefront must not send
+ * customers through it.
  */
 export async function requestPhoneChange(phone: string): Promise<PendingContactChange> {
   const data = await apiFetch<{ pendingPhone: PendingContactChange }>("/api/me/phone", {
@@ -135,33 +143,6 @@ export async function requestPhoneChange(phone: string): Promise<PendingContactC
     body: JSON.stringify({ phone }),
   });
   return data.pendingPhone;
-}
-
-/**
- * POST /api/me/phone/confirm — **takes no body.**
- *
- * 🔴 **There is no OTP. The proof is a WhatsApp connection.**
- *
- * There is no SMS provider in this service, and a WhatsApp message to a number
- * that has not messaged us falls outside the 24-hour service window — so it
- * would have to be an approved paid template billed to a credit wallet, and a
- * customer has no wallet. What the platform already has is the *inbound*
- * direction: a `channel_connections` row exists only because a message arrived
- * **from that number** and the account holder redeemed the resulting code while
- * signed in. That is a stronger proof of control than an OTP.
- *
- * So the pending number must match a WhatsApp connection on the caller's own
- * account. Two consequences worth stating rather than burying:
- *
- *  - **An account with no WhatsApp connection cannot change its phone here.**
- *  - **A Telegram connection does not count** — a `chat_id` bears no relation to
- *    any phone number.
- *
- * Both surface as `CONTACT_CHANGE_PHONE_UNPROVEN`, which the UI routes to the
- * connections screen: connect WhatsApp first, then come back and confirm.
- */
-export async function confirmPhoneChange(): Promise<void> {
-  await apiFetch<unknown>("/api/me/phone/confirm", { method: "POST" });
 }
 
 /** DELETE /api/me/phone/pending */

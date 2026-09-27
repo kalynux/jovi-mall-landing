@@ -17,8 +17,8 @@ import {
 import { breadcrumbJsonLd, contactPageJsonLd } from "@/lib/seo/jsonld";
 import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath } from "@/i18n/routing";
-import { CONTACT_FORM_URL } from "@/lib/marketing/forms";
-import { BRAND, EXTERNAL_LINKS, buildWhatsAppUrl } from "@/lib/constants";
+import { contactFormUrl } from "@/lib/marketing/forms";
+import { BRAND, EXTERNAL_LINKS, SOCIAL_LINKS, buildWhatsAppUrl } from "@/lib/constants";
 
 const PATH = "/contact";
 
@@ -53,11 +53,13 @@ export default async function ContactPage({ params }: PageProps) {
     { name: t("nav.contact"), path: PATH },
   ];
 
-  // The WhatsApp line is shown only once a real number is configured.
-  // `BRAND.whatsappNumber` is still the `+2340000000000` placeholder, and
-  // publishing a number that reaches nobody on the page whose entire job is
-  // being reachable is worse than publishing one fewer channel.
-  const whatsappConfigured = Boolean(process.env.NEXT_PUBLIC_WHATSAPP_NUMBER);
+  // This used to be `Boolean(process.env.NEXT_PUBLIC_WHATSAPP_NUMBER)`, because
+  // `BRAND.whatsappNumber` was the `+2340000000000` placeholder and publishing a
+  // number that reaches nobody, on the page whose entire job is being reachable,
+  // is worse than publishing one fewer channel. The fallback is now the real bot
+  // line, so the env var only overrides it and the gate had become a way to hide
+  // a working channel from any deploy that relied on the default.
+  const whatsappConfigured = Boolean(EXTERNAL_LINKS.whatsappNumber);
   const waUrl = buildWhatsAppUrl(t("contact.channels.whatsappMessage"));
 
   return (
@@ -86,7 +88,7 @@ export default async function ContactPage({ params }: PageProps) {
 
       <Section title={t("contact.form.title")} lead={t("contact.form.lead")} tone="subtle">
         <EmbeddedForm
-          src={CONTACT_FORM_URL}
+          src={contactFormUrl(locale)}
           title={t("contact.form.frameTitle")}
           note={t("contact.form.note")}
           fallbackLabel={t("common.openFormNewTab")}
@@ -127,6 +129,17 @@ export default async function ContactPage({ params }: PageProps) {
               {EXTERNAL_LINKS.whatsappNumber}
             </a>
           )}
+          {SOCIAL_LINKS.map(({ network, url }) => (
+            <a
+              key={network}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-role underline decoration-[color-mix(in_srgb,var(--role)_45%,transparent)] underline-offset-4 transition-colors hover:decoration-[var(--role)]"
+            >
+              {network}
+            </a>
+          ))}
         </div>
       </Section>
 

@@ -17,11 +17,16 @@ import { useTranslations } from "next-intl";
  * `t("roles.<role>.label")` are two lookups on one key, and a second copy of the
  * key would only add a way for them to disagree.
  */
+/**
+ * ⚠ Key order IS render order — the picker maps `Object.keys(ROLE_CONFIG)`.
+ * Customer leads deliberately; keep it in step with `UI_ROLES` and with
+ * `CARD_ORDER` in RoleSelectorModal.
+ */
 const ROLE_CONFIG: Record<UiRole, { icon: React.ElementType; isWa?: boolean }> = {
+  customer: { icon: MessageCircle, isWa: true },
   vendor: { icon: Store },
   agency: { icon: Building2 },
   agent: { icon: Bike },
-  customer: { icon: MessageCircle, isWa: true },
 };
 
 // ─── Props ───────────────────────────────────────────────────────────────────

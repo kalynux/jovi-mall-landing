@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { AccountShell } from "@/components/shop/account/AccountShell";
 import { Button, Icon, type IconName } from "@/components/shop/ds";
 import { useAuth } from "@/lib/auth/useAuth";
+import { ApiError } from "@/lib/auth/auth.types";
 import { translateError } from "@/lib/auth/error-translator";
 import {
   ACCOUNT_CLOSURE_CONFIRMATION,
@@ -51,16 +53,69 @@ const CONSEQUENCES: { icon: IconName; textKey: string }[] = [
   { icon: "download", textKey: "consequences.downloads" },
 ];
 
+/** A refusal, and where the person can go to do something about it. */
+interface Refusal {
+  text: string;
+  next?: { href: string; labelKey: "refused.seeOrders" | "refused.contactSupport" };
+}
+
 export default function CloseAccountPage() {
   const t = useTranslations("shop.close");
   const tError = useTranslations("errors");
   // The screen title is route vocabulary and already lives in `shop.nav`.
   const tKey = useTranslations();
+  const tAuthMe = useTranslations("authMe");
+  const format = useFormatter();
+  const router = useRouter();
   const { logout } = useAuth();
 
   const [typed, setTyped] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Refusal | null>(null);
+
+  /**
+   * The three refusals the contract asks a client to explain in its own words
+   * (api-doc/me/account-closure.md). Both 422s carry the fact that makes the
+   * sentence useful — how many orders, which roles — and a way onward, so they
+   * never collapse into "cannot close account". Anything else takes the shared
+   * error ladder.
+   */
+  function refusalOf(err: unknown): Refusal {
+    if (err instanceof ApiError) {
+      if (err.code === "ACCOUNT_CLOSURE_ORDERS_IN_FLIGHT") {
+        const count = err.details?.activeOrderCount;
+        return {
+          text:
+            typeof count === "number"
+              ? t("refused.ordersInFlight", { count })
+              : t("ordersInFlight"),
+          next: { href: "/shop/account/orders", labelKey: "refused.seeOrders" },
+        };
+      }
+
+      if (err.code === "ACCOUNT_CLOSURE_ROLE_NOT_ELIGIBLE") {
+        // A vendor, agency or agent role hangs a shop, stock or a COD balance
+        // off this identity. There is no self-service way to close one yet, so
+        // the way onward is support.
+        const blocking = err.details?.blockingRoles;
+        const names = tAuthMe.raw("roleNames") as Record<string, string>;
+        const roles = Array.isArray(blocking)
+          ? blocking.filter((r): r is string => typeof r === "string").map((r) => names[r] ?? r)
+          : [];
+        if (roles.length > 0) {
+          return {
+            text: t("refused.roleNotEligible", { roles: format.list(roles) }),
+            next: { href: "/shop/account/support/new", labelKey: "refused.contactSupport" },
+          };
+        }
+      }
+
+      // The account is not `active` — in practice a second request that lost
+      // the race to the first. Retrying can only fail again.
+      if (err.code === "USER_STATUS_CONFLICT") return { text: t("refused.alreadyClosed") };
+    }
+    return { text: translateError(tError, err) };
+  }
 
   // Compared against the constant rather than matched loosely: the backend
   // takes it as a `z.literal`, so a lowercase attempt is a round trip that can
@@ -87,7 +142,7 @@ export default function CloseAccountPage() {
        */
       await logout();
     } catch (err) {
-      setError(translateError(tError, err));
+      setError(refusalOf(err));
       // Deliberately not cleared on success: the page is navigating away, and
       // re-enabling the button would offer a second attempt at a closed account.
       setBusy(false);
@@ -199,8 +254,18 @@ export default function CloseAccountPage() {
             role="alert"
             style={{ color: "var(--danger)", fontSize: 13, marginTop: 9, lineHeight: 1.45 }}
           >
-            {error}
+            {error.text}
           </p>
+        )}
+        {error?.next && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => router.push(error.next!.href)}
+            style={{ marginTop: 8 }}
+          >
+            {t(error.next.labelKey)}
+          </Button>
         )}
 
         <Button

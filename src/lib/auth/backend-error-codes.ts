@@ -540,6 +540,11 @@ export type BackendErrorCode =
     // ─── User ──────────────────────────────────────────────────────────────────
     | "USER_NOT_FOUND"
     | "USER_INVALID_PASSWORD"
+    /**
+     * 409 from `POST /api/me/close` when the account is not `active` — in
+     * practice, a second closure request that lost the race to the first.
+     */
+    | "USER_STATUS_CONFLICT"
     | "ACCOUNT_CLOSURE_ROLE_NOT_ELIGIBLE"
     | "ACCOUNT_CLOSURE_ORDERS_IN_FLIGHT"
     /**
@@ -555,10 +560,10 @@ export type BackendErrorCode =
      * somebody claimed it in the hour since, which the service re-checks so the
      * swap answers 409 rather than hitting the unique index and answering 500.
      *
-     * `CONTACT_CHANGE_PHONE_UNPROVEN` means there is no WhatsApp connection
-     * matching the pending number. There is no OTP in this flow — a Telegram
-     * connection does not count, because a `chat_id` bears no relation to any
-     * phone number. Route it to the connections screen.
+     * `CONTACT_CHANGE_PHONE_UNPROVEN` belongs to `POST /api/me/phone/confirm`,
+     * the connection proof the bot surface uses. The storefront confirms a phone
+     * change with a WhatsApp code instead (`PHONE_VERIFICATION_*` below), so it
+     * should never see this one.
      */
     | "CONTACT_CHANGE_SAME_IDENTIFIER"
     | "CONTACT_CHANGE_IDENTIFIER_TAKEN"
@@ -566,6 +571,24 @@ export type BackendErrorCode =
     | "CONTACT_CHANGE_EXPIRED"
     | "CONTACT_CHANGE_TOKEN_INVALID"
     | "CONTACT_CHANGE_PHONE_UNPROVEN"
+    /**
+     * ─── Phone verification (`/api/me/phone/verify/*`, WhatsApp code) ─────────
+     *
+     * `CODE_INVALID` and `CODE_EXPIRED` are distinct on purpose — retype versus
+     * request a new code. `CODE_INVALID` carries `details.attemptsLeft`;
+     * `RESEND_TOO_SOON` carries `details.retryAfterSeconds`.
+     *
+     * `DELIVERY_FAILED` is a 502 in the masked `external_service` category, so
+     * its message is the registry default and it has no `details`. Every route
+     * — free text and template — was already tried: show a Resend button and a
+     * way to reach support, never "message the bot first", never "we are down".
+     */
+    | "PHONE_VERIFICATION_NO_TARGET"
+    | "PHONE_VERIFICATION_CODE_INVALID"
+    | "PHONE_VERIFICATION_CODE_EXPIRED"
+    | "PHONE_VERIFICATION_TOO_MANY_ATTEMPTS"
+    | "PHONE_VERIFICATION_RESEND_TOO_SOON"
+    | "PHONE_VERIFICATION_DELIVERY_FAILED"
     // ─── Store ─────────────────────────────────────────────────────────────────
     | "STORE_NOT_FOUND"
     | "STORE_SLUG_TAKEN"

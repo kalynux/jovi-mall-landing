@@ -1,6 +1,13 @@
 import RoleCtaButton from "@/components/ui/RoleCtaButton";
 import { cn } from "@/lib/utils";
-import { bytesToGb, PLAN_LIMITS, type PublicPlan, type PlanRole } from "@/lib/marketing/plans.api";
+import { bytesToGb } from "@/lib/marketing/format";
+import {
+  carriesCodPool,
+  COD_POOL_CURRENCY,
+  PLAN_LIMITS,
+  type LimitSpec,
+  type PublicPlan,
+} from "@/lib/marketing/plans.api";
 
 /**
  * One role's tier cards, rendered straight from the public catalog.
@@ -31,16 +38,32 @@ export type PlanCopy = {
   unavailable: string;
   cta: string;
   unlimited: string;
+  /** The agent COD-pool line. A sentence around the amount, not a label after it. */
+  codPool: (amount: string) => string;
+  noCodPool: string;
 };
 
-function formatLimit(
+/**
+ * One limit line, or `null` when there is nothing true to say.
+ *
+ * Exported for the pricing page's structured data, which must describe a plan
+ * exactly as its card does. A second formatter there is how a `null` COD pool
+ * would come out as "unlimited".
+ */
+export function formatLimit(
   plan: PublicPlan,
-  spec: (typeof PLAN_LIMITS)[PlanRole][number],
+  spec: LimitSpec,
   copy: PlanCopy,
-  formatNumber: (value: number) => string
-): string {
-  const label = copy.limitLabels[spec.key] ?? spec.key;
+  formatNumber: (value: number) => string,
+  formatPrice: (value: number, currency: string) => string
+): string | null {
   const raw = plan[spec.field];
+
+  // Before the generic null check, never after it: this is the one limit where
+  // `null` means none rather than unbounded.
+  if (spec.format === "codPool") return formatCodPool(raw, copy, formatPrice);
+
+  const label = copy.limitLabels[spec.key] ?? spec.key;
   const value = typeof raw === "number" ? raw : null;
 
   // Safe here, and only here: this field is on its own role's list, so an absent
@@ -49,12 +72,29 @@ function formatLimit(
 
   switch (spec.format) {
     case "bytes":
-      return `${bytesToGb(value)} GB ${label}`;
+      return `${formatNumber(bytesToGb(value))} GB ${label}`;
     case "percent":
       return `${value}% ${label}`;
     default:
       return `${formatNumber(value)} ${label}`;
   }
+}
+
+/**
+ * Deliberately not `formatLimit`'s null handling — api-doc/public/FRONTEND-
+ * CHANGELOG-cod-pool.md says not to share one. `null` is no cash on delivery,
+ * and so is `0`: the backend reads an unset pool as a zero ceiling.
+ */
+function formatCodPool(
+  raw: PublicPlan[keyof PublicPlan] | undefined,
+  copy: PlanCopy,
+  formatPrice: (value: number, currency: string) => string
+): string | null {
+  // An API from before 2026-09-21 does not send the key. Saying nothing is
+  // true there; "no cash on delivery" would not be.
+  if (raw === undefined) return null;
+  if (typeof raw !== "number" || raw <= 0) return copy.noCodPool;
+  return copy.codPool(formatPrice(raw, COD_POOL_CURRENCY));
 }
 
 export function PlanCard({
@@ -71,7 +111,13 @@ export function PlanCard({
   highlight?: boolean;
 }) {
   const isFree = plan.price === 0;
-  const limits = PLAN_LIMITS[plan.role];
+  const limits = PLAN_LIMITS[plan.role].flatMap((spec) => {
+    const text = formatLimit(plan, spec, copy, formatNumber, formatPrice);
+    return text === null ? [] : [{ spec, text }];
+  });
+  // The footnote under the agent grid ("once your identity is verified")
+  // qualifies the amount, so only a stated amount carries its marker.
+  const codPoolMarked = carriesCodPool(plan);
 
   return (
     <div
@@ -80,8 +126,13 @@ export function PlanCard({
         highlight
           ? "border-2 border-role-soft shadow-lg lg:scale-[1.03]"
           : "hover:-translate-y-1 hover:border-role-soft hover:shadow-md",
-        !plan.is_active && "opacity-90"
+        // A tier the catalog will not sell reads as struck out before the badge
+        // is: desaturated, with a hatched overlay. See .plan-unavailable in
+        // globals.css — it also explains why the filter there is safe only
+        // while these cards carry no CTA.
+        !plan.is_active && "plan-unavailable"
       )}
+      aria-disabled={!plan.is_active || undefined}
     >
       {highlight && (
         // The one tier that gets to shout: a brand-gradient crown strip over the
@@ -93,11 +144,7 @@ export function PlanCard({
       )}
       <div className="flex items-start justify-between gap-3">
         <h3 className="font-display text-lg font-bold text-[var(--text-primary)]">{plan.name}</h3>
-        {!plan.is_active && (
-          <span className="rounded-full border border-[var(--border)] bg-[var(--bg-subtle)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-            {copy.unavailable}
-          </span>
-        )}
+        {!plan.is_active && <span className="tag tag-muted shrink-0">{copy.unavailable}</span>}
       </div>
 
       <p
@@ -133,7 +180,7 @@ export function PlanCard({
       </p>
 
       <ul className="mt-6 flex-1 space-y-2.5">
-        {limits.map((spec) => (
+        {limits.map(({ spec, text }) => (
           <li
             key={spec.key}
             className="flex items-start gap-2.5 text-sm leading-relaxed text-[var(--text-secondary)]"
@@ -142,7 +189,10 @@ export function PlanCard({
               aria-hidden="true"
               className="mt-[7px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-role"
             />
-            {formatLimit(plan, spec, copy, formatNumber)}
+            <span>
+              {text}
+              {spec.format === "codPool" && codPoolMarked && <span aria-hidden="true">*</span>}
+            </span>
           </li>
         ))}
       </ul>

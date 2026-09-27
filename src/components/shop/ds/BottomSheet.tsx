@@ -17,12 +17,20 @@ export interface BottomSheetProps {
   /**
    * Stacks this sheet above another one.
    *
-   * The filter sheet opens a second sheet for the category list, and DOM order
-   * alone is not enough to keep it on top — both are `position: fixed` at the
-   * same z-index, and the inner one is a descendant of a motion element that
-   * creates its own stacking context.
+   * The filter sheet opens a second sheet for the category list. Both are
+   * portalled to `<body>` as siblings, so only portal order would decide which
+   * paints on top at an equal z-index — and that is an accident of which one
+   * mounted last, not a statement about the stack. The higher z-index is.
    */
   layer?: "default" | "top";
+  /**
+   * Extra classes for the overlay — the full-screen scrim the panel sits in.
+   *
+   * For hiding the whole sheet at a breakpoint, which a wrapper element around
+   * `<BottomSheet>` can no longer do now that the sheet is portalled out of
+   * it. `MenuSheet` passes `sm:hidden`: above `sm` the same menu is a dropdown.
+   */
+  className?: string;
 }
 
 /**
@@ -39,20 +47,40 @@ let openTopSheets = 0;
  * Responsive dialog: a bottom sheet on mobile, a centered modal on `sm+`.
  * Adapts the design's mobile-only BottomSheet for the web.
  */
-export function BottomSheet({ open, onClose, title, footer, children, layer = "default" }: BottomSheetProps) {
+export function BottomSheet({
+  open,
+  onClose,
+  title,
+  footer,
+  children,
+  layer = "default",
+  className,
+}: BottomSheetProps) {
   // `title` stays a prop — the caller owns that sentence and hands it over
   // already translated. Only the × this sheet draws itself is ours.
   const tCommon = useTranslations("shop.common");
 
   /**
-   * A stacked sheet is rendered from inside the sheet below it, whose panel is
-   * a `motion.div`. While that panel is animating it carries a `transform`,
-   * and a transformed ancestor makes `position: fixed` resolve against *it*
-   * rather than the viewport — so the inner sheet would land inside the outer
-   * one instead of over the screen. A portal takes it out of that subtree.
+   * Every sheet is portalled to `<body>`, because a `z-index` only ranks an
+   * element inside its nearest stacking context — and the caller decides which
+   * one that is, not us.
    *
-   * Only the stacked case: portalling the ordinary sheet would change where
-   * every existing caller's markup ends up for no benefit.
+   * It used to be only the stacked case, and the account screen is what that
+   * cost. Its overflow menu and the "Sign out?" confirmation are rendered from
+   * the header bar, which is `sticky` with `z-index: 200` — a stacking context.
+   * So the sheet's 400 meant "400 inside the header", the whole header ranked
+   * 200, and the tab bar (also 200, and later in the DOM) painted over both
+   * sheets: undimmed, and squarely on top of their buttons. Nobody could
+   * confirm a sign-out on a phone, and the menu's last row, Close account, was
+   * under the tabs as well.
+   *
+   * The stacked case is the same problem in another shape: a sheet rendered
+   * from inside another sheet's `motion.div` panel sits under a `transform`
+   * while that panel animates, and a transformed ancestor makes
+   * `position: fixed` resolve against *it* rather than the viewport. Sticky,
+   * transform, filter, opacity — anything a caller wraps us in can do one or
+   * the other, so the sheet does not stay where it was written. Same rule as
+   * `ModalShell` and `ResponsiveDialog`.
    *
    * `useHydrated` rather than an effect that sets state: there is no
    * `document` during SSR, and this is the project's `useSyncExternalStore`
@@ -66,9 +94,20 @@ export function BottomSheet({ open, onClose, title, footer, children, layer = "d
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
+      // Something inside the sheet already used this Escape — the country
+      // picker closes its own list with it and calls preventDefault. Closing the
+      // whole sheet as well threw away a half-filled payment form.
+      if (e.defaultPrevented) return;
       // A sheet underneath a stacked one stays put: the key closed the sheet
       // the visitor is actually looking at.
       if (layer !== "top" && openTopSheets > 0) return;
+      // Spend the key. The count above only works while the outer sheet's
+      // listener runs FIRST, and a sheet re-binds whenever its `onClose`
+      // identity changes, so the order drifts. When the inner one ran first it
+      // closed, its unmount dropped the count to 0 before the outer listener
+      // looked, and one Escape took the pay sheet down with the "Replace the
+      // link?" confirm. `defaultPrevented` above makes it order-independent.
+      e.preventDefault();
       onClose();
     };
     document.addEventListener("keydown", onKey);
@@ -97,12 +136,15 @@ export function BottomSheet({ open, onClose, title, footer, children, layer = "d
           style={{
             position: "fixed",
             inset: 0,
+            // Above the header and the tab bar (both 200), below the toast
+            // (500) — a sheet's own save can fail, and that message has to
+            // land on top of the form that caused it.
             zIndex: layer === "top" ? 420 : 400,
             background: "var(--scrim)",
-            display: "flex",
-            justifyContent: "center",
           }}
-          className="items-end sm:items-center p-0 sm:p-4"
+          // `flex` is a class, not inline style, so a caller's `sm:hidden`
+          // can outrank it; an inline `display` would beat any class.
+          className={`flex justify-center items-end sm:items-center p-0 sm:p-4${className ? ` ${className}` : ""}`}
         >
           <motion.div
             initial={{ y: 40, opacity: 0.6, scale: 0.98 }}
@@ -116,7 +158,9 @@ export function BottomSheet({ open, onClose, title, footer, children, layer = "d
             role="dialog"
             aria-modal="true"
             aria-label={title}
-            className="w-full sm:max-w-[480px] rounded-t-[28px] sm:rounded-[20px]"
+            // `shop-sheet` clears the home indicator / gesture pill below `sm`,
+            // where the panel meets the bottom edge — see globals.css.
+            className="shop-sheet w-full sm:max-w-[480px] rounded-t-[28px] sm:rounded-[20px]"
             style={{
               background: "var(--surface)",
               boxShadow: "var(--shadow-sheet)",
@@ -177,10 +221,7 @@ export function BottomSheet({ open, onClose, title, footer, children, layer = "d
     </AnimatePresence>
   );
 
-  if (layer === "top") {
-    // Nothing until hydration — one frame of no sheet, which is the frame
-    // before the open animation would have started anyway.
-    return hydrated ? createPortal(sheet, document.body) : null;
-  }
-  return sheet;
+  // Nothing until hydration — one frame of no sheet, which is the frame before
+  // the open animation would have started anyway.
+  return hydrated ? createPortal(sheet, document.body) : null;
 }

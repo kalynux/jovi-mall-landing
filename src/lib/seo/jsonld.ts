@@ -11,7 +11,7 @@
  * identity, and a `Review` without an `author` is not worth emitting.
  * `sales` on Product/Vendor is still a fixture and stays out.
  */
-import { BRAND } from "@/lib/constants";
+import { BRAND, SOCIAL_LINKS } from "@/lib/constants";
 import { absoluteUrl, SITE_URL } from "@/lib/site";
 import { localePath, type Locale } from "@/i18n/routing";
 import type { Product, Store } from "@/lib/shop/shop.types";
@@ -47,6 +47,9 @@ export function organizationJsonLd(): JsonLdNode {
     description: BRAND.description,
     email: BRAND.email,
     areaServed: "Africa",
+    // Ties the brand's social profiles to this entity, so a search for the name
+    // can show them beside the site rather than as unrelated results.
+    sameAs: SOCIAL_LINKS.map((s) => s.url),
   };
 }
 
@@ -132,9 +135,9 @@ export function aboutPageJsonLd(locale: Locale, path: string, description: strin
  * ContactPage for /contact.
  *
  * The email is the one already published on the Organization node, so the two
- * agree. No `telephone`: `BRAND.whatsappNumber` is still a placeholder, and a
- * phone number in structured data is a number Google will happily show to
- * someone who then reaches nobody.
+ * agree. No `telephone`: `BRAND.whatsappNumber` is a WhatsApp bot, not a line
+ * anyone answers, and a phone number in structured data is one Google will
+ * happily show to someone who then calls it.
  */
 export function contactPageJsonLd(locale: Locale, path: string, description: string): JsonLdNode {
   return {

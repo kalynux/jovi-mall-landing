@@ -3,12 +3,15 @@ import { motion } from "framer-motion";
 import { useReducedMotionSafe } from "@/lib/reduced-motion";
 import CTAButton from "@/components/ui/CTAButton";
 import { useTranslations } from "next-intl";
+import type { PlanFacts } from "@/lib/marketing/plan-facts";
 
 interface FinalCTASectionProps {
   onGetStarted: () => void;
+  /** Live catalogue phrases for the fine print, read by the server page. */
+  planFacts: PlanFacts;
 }
 
-export default function FinalCTASection({ onGetStarted }: FinalCTASectionProps) {
+export default function FinalCTASection({ onGetStarted, planFacts }: FinalCTASectionProps) {
   const shouldReduce = useReducedMotionSafe();
   const t = useTranslations("finalCta");
 
@@ -51,10 +54,9 @@ export default function FinalCTASection({ onGetStarted }: FinalCTASectionProps) 
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="flex flex-col items-center gap-6 max-w-2xl"
         >
-          {/* Badge */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary-500/30 bg-primary-600/10 text-primary-300 text-xs font-display font-semibold">
-            {t("badge")}
-          </div>
+          {/* Badge. `tag-on-dark` inverts the ink fill — this band is dark in
+              BOTH themes, so a plain .tag would sink into it. */}
+          <div className="tag tag-on-dark">{t("badge")}</div>
 
           {/* Headline */}
           <h2
@@ -87,7 +89,7 @@ export default function FinalCTASection({ onGetStarted }: FinalCTASectionProps) 
           </CTAButton>
 
           <p className="text-xs text-white/30">
-            {t("finePrint")}
+            {t("finePrint", planFacts)}
           </p>
         </motion.div>
       </div>

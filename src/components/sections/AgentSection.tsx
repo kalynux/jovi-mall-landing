@@ -66,7 +66,7 @@ export default function AgentSection() {
             })}
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="cta-row">
             <RoleCtaButton role="agent" fallbackLabel={t("ctaPrimary")} size="md" showArrow />
             {/* The section is a summary; the page is the answer. */}
             <LinkButton href="/agents" variant="secondary" size="md" showArrow>

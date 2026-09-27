@@ -82,7 +82,11 @@
         "pillAI": "Propulsé par l'IA",
         "pillNoStorefront": "Sans boutique",
         "ctaPrimary": "Commencer",
-        "ctaSecondary": "Voir comment ça marche",
+        "ctaWhatsapp": "Discuter sur WhatsApp",
+        "ctaWhatsappPrefill": "Bonjour Wi-Mall ! Je voudrais commencer mes achats.",
+        "ctaTelegram": "Discuter sur Telegram",
+        "ctaWhatsappShort": "WhatsApp",
+        "ctaTelegramShort": "Telegram",
         "socialProof": "Devenez l'un de nos vendeurs fondateurs",
         "aiLabel": "IA active",
         "orderConfirmed": "Commande confirmée !",
@@ -106,11 +110,10 @@
         "title2": "Tous les rôles.",
         "title3": "Connectés.",
         "subtitle": "D'un message WhatsApp à un produit livré — chaque étape se déroule automatiquement sur Wi-Mall.",
-        "stats": {
-            "aiResponse": "Temps de réponse IA",
-            "uptime": "Disponibilité de la plateforme",
-            "payments": "Mobile money & cartes",
-            "cities": "Villes prévues"
+        "phases": {
+            "conversation": "Conversation",
+            "dispatch": "Commande et répartition",
+            "payout": "Livraison et versement"
         },
         "flow": {
             "step1Title": "Le client discute sur WhatsApp",
@@ -325,9 +328,9 @@
         "badge": "✦ Devenez une entreprise fondatrice sur Wi-Mall",
         "title1": "Votre entreprise,",
         "title2": "propulsée par la conversation.",
-        "subtitle": "Démarrez en quelques minutes. Aucune carte de crédit requise. Aucune équipe technique nécessaire. Vos 30 premiers jours sont entièrement gratuits.",
+        "subtitle": "Démarrez en quelques minutes. Aucune carte de crédit requise. Aucune équipe technique nécessaire. L'offre gratuite n'expire jamais.",
         "ctaPrimary": "Commencer gratuitement",
-        "finePrint": "Gratuit à vie pour les 100 premiers produits · Sans frais cachés"
+        "finePrint": "Gratuit à vie, avec de la place pour {starterProducts} · Sans frais cachés"
     },
     "modal": {
         "title": "Comment vous rejoignez-nous ?",
@@ -374,7 +377,7 @@
         "copyright": "Tous droits réservés.",
         "builtFor": "Conçu pour le commerce moderne. Propulsé par Wi-Mall.",
         "logoAriaLabel": "Accueil Wi-Mall",
-        "socialAriaLabel": "Lien réseau social",
+        "socialAriaLabel": "Wi-Mall sur {network}",
         "learn": "Ressources",
         "description": "Une infrastructure e-commerce propulsée par l'IA, pensée pour les entreprises qui vendent sur WhatsApp. Pas de boutique en ligne à créer : importez vos produits et laissez l'IA vendre pour vous."
     },
@@ -452,7 +455,6 @@
         "fieldErrors": {
             "emailRequired": "L'e-mail est obligatoire",
             "emailInvalid": "E-mail invalide",
-            "emailRequiredVendor": "L'e-mail est obligatoire pour les vendeurs",
             "nameRequired": "Le nom est obligatoire",
             "nameTooShort": "Le nom doit contenir au moins {nameMin} caractères",
             "passwordTooShort": "Le mot de passe doit contenir au moins {passwordMin} caractères",
@@ -469,6 +471,16 @@
             "identifierRequired": "Saisissez votre numéro de téléphone ou votre e-mail",
             "codeRequired": "Saisissez le code que le bot vous a envoyé",
             "codeTooLong": "Ce n'est pas un code de connexion"
+        },
+        "identifierTaken": {
+            "phone": "Ce numéro de téléphone est déjà associé à un compte Wi-Mall. Connectez-vous à ce compte comme d'habitude, puis ajoutez-y le rôle {role}.",
+            "email": "Cette adresse e-mail est déjà associée à un compte Wi-Mall. Connectez-vous à ce compte comme d'habitude, puis ajoutez-y le rôle {role}.",
+            "action": "Se connecter pour ajouter le rôle {role}"
+        },
+        "roleMissing": {
+            "body": "Votre compte n'a pas encore le rôle {role}. Connectez-vous avec votre rôle habituel, puis ajoutez-y le rôle {role}.",
+            "action": "Choisir votre rôle habituel",
+            "pickerSubtitle": "Choisissez le rôle avec lequel vous vous connectez d'habitude. Vous pourrez ensuite ajouter le rôle {role}."
         }
     },
     "authMe": {
@@ -501,13 +513,14 @@
         "switching": "Changement…"
     },
     "agentApp": {
-        "title": "L'app Livreur, c'est mieux sur la route",
-        "body": "Alertes de commandes en direct, navigation guidée et confirmation de livraison en un geste — pensée pour le terrain.",
+        "title": "Installez l'app Livreur",
+        "body": "Alertes de commandes en direct, navigation guidée et confirmation de livraison en un geste — pensée pour le terrain. L'app Livreur est le seul moyen de travailler : il n'existe pas de version web.",
+        "download": "Télécharger l'app",
         "android": "Disponible sur Google Play",
         "ios": "Télécharger dans l'App Store",
         "comingSoon": "Bientôt disponible",
-        "appHint": "Tout le reste se trouve sur le tableau de bord web.",
-        "continueWeb": "Continuer sur le web",
+        "appHint": "Installation directe depuis Wi-Mall. Les fiches sur les stores arrivent.",
+        "createAccount": "Créer votre compte livreur",
         "close": "Fermer"
     },
     "addRole": {
@@ -822,7 +835,9 @@
         "CONNECTION_CODE_EXPIRED": "Ce code a expiré. Renvoyez la commande au bot pour en obtenir un nouveau.",
         "CONNECTION_CODE_ATTEMPTS_EXCEEDED": "Trop de tentatives. Attendez quelques minutes avant de réessayer.",
         "MESSAGING_IDENTITY_ALREADY_LINKED": "Ce compte de messagerie est déjà relié à un autre compte Wi-Mall. Déconnectez-le là-bas d’abord, ou contactez l’assistance.",
-        "MESSAGING_CONNECTION_NOT_FOUND": "Ce canal n’est pas connecté."
+        "MESSAGING_CONNECTION_NOT_FOUND": "Ce canal n’est pas connecté.",
+        "PHONE_VERIFICATION_DELIVERY_FAILED": "Nous n'avons pas pu envoyer votre code sur WhatsApp pour le moment. Veuillez réessayer dans une minute.",
+        "AUTH_ACCOUNT_CLOSED": "Ce compte a été fermé. Il ne peut pas être rouvert, et il n'est plus possible de s'y connecter."
     },
     "checkout": {
         "errors": {
@@ -920,12 +935,15 @@
             "allQuestions": "Voir toutes les questions",
             "currencyNote": "Les prix sont en FCFA (XAF), la monnaie du marché que Wi-Mall sert en premier.",
             "faqShort": "FAQ",
-            "openFormNewTab": "Ouvrir le formulaire dans un nouvel onglet"
+            "openFormNewTab": "Ouvrir le formulaire dans un nouvel onglet",
+            "payoutCapNote": "Les comptes non vérifiés peuvent retirer au maximum 45 % de leur solde disponible par mois, et ces 45 % doivent eux-mêmes atteindre le minimum de versement de 10 000 FCFA — en dessous, aucun retrait n'est possible tant que le solde n'augmente pas. La vérification du compte supprime ce plafond."
         },
         "plans": {
             "free": "Gratuit",
             "perTerm": "/ {days} {days, plural, one {jour} other {jours}}",
             "unlimited": "Illimité",
+            "codPool": "Transportez jusqu'à {amount} de paiements à la livraison",
+            "noCodPool": "Aucune course en paiement à la livraison",
             "cta": "Commencer",
             "limits": {
                 "products": "produits actifs",
@@ -936,6 +954,22 @@
                 "concurrentDeliveries": "livraisons à la fois"
             },
             "unavailable": "Pas en vente"
+        },
+        "facts": {
+            "products": "{count, plural, one {{n} produit} other {{n} produits}}",
+            "productsUnlimited": "des produits illimités",
+            "media": "{n} Go de médias",
+            "mediaUnlimited": "des médias illimités",
+            "percent": "{n} %",
+            "credits": "{count, plural, one {{n} crédit} other {{n} crédits}}",
+            "openShipments": "{count, plural, one {{n} expédition ouverte} other {{n} expéditions ouvertes}}",
+            "openShipmentsUnlimited": "un nombre illimité d'expéditions ouvertes",
+            "deliveries": "{count, plural, one {{n} livraison} other {{n} livraisons}}",
+            "deliveriesUnlimited": "un nombre illimité de livraisons",
+            "days": "{count, plural, one {{n} jour} other {{n} jours}}",
+            "perTerm": "par {days}",
+            "noTerm": "sans date de fin",
+            "termVaries": "la durée indiquée sur chaque forfait"
         },
         "regions": {
             "adamaoua": "Adamaoua",
@@ -951,7 +985,7 @@
         },
         "pricing": {
             "metaTitle": "Tarifs Wi-Mall — commencez à zéro, payez quand ça rapporte",
-            "metaDescription": "Ce que coûte Wi-Mall aux vendeurs, aux agences de livraison et aux livreurs. Offres gratuites sans expiration, forfaits vendeur à partir de 5 000 FCFA par 30 jours, commission de 7 % jusqu'à 3 %, et rien qui se renouvelle tout seul.",
+            "metaDescription": "Ce que coûte Wi-Mall aux vendeurs, aux agences de livraison et aux livreurs. Offres gratuites sans expiration, forfaits vendeur à partir de {vendorFromPrice} {vendorFromPer}, {vendorCommissionSpread, select, same {commission de {vendorCommissionMin}} other {commission de {vendorCommissionMax} jusqu'à {vendorCommissionMin}}}, et rien qui se renouvelle tout seul.",
             "eyebrow": "Forfaits, commission et crédits",
             "title": "Commencez à zéro. Payez quand ça rapporte.",
             "lead": "Vendeurs, agences de livraison et livreurs disposent chacun d'une offre gratuite qui n'expire jamais. Les forfaits payants relèvent vos plafonds et, pour les vendeurs, réduisent la commission sur chaque commande. Pas de frais d'installation, pas d'engagement, et rien ne se renouvelle tout seul.",
@@ -960,11 +994,11 @@
                 "lead": "Autant le dire clairement, puisque c'est ce qui décide si l'arrangement vous convient.",
                 "commission": {
                     "title": "Une commission sur chaque commande payée",
-                    "body": "Un pourcentage du total de la commande, prélevé au moment où le client paie. C'est le forfait du vendeur qui le fixe : 7 % sur l'offre gratuite, 5 % sur Growth, 3 % sur Business."
+                    "body": "Un pourcentage du total de la commande, prélevé au moment où le client paie. C'est le forfait du vendeur qui le fixe : {starterCommission} sur l'offre gratuite, {growthCommission} sur {growthName}, {businessCommission} sur {businessName}."
                 },
                 "plans": {
                     "title": "Des forfaits facultatifs",
-                    "body": "Une durée de 30 jours qui relève vos plafonds. Chaque rôle peut travailler indéfiniment sans jamais en acheter un."
+                    "body": "Une période payante qui relève vos plafonds pendant {paidTerm}. Chaque rôle peut travailler indéfiniment sans jamais en acheter un."
                 },
                 "credits": {
                     "title": "Des crédits pour ce qui se mesure",
@@ -978,7 +1012,7 @@
             },
             "vendor": {
                 "title": "Forfaits vendeur",
-                "lead": "La commission est le chiffre à comparer. Sur un mois à 400 000 FCFA de commandes payées, passer de Starter à Growth économise 8 000 FCFA de commission et coûte 5 000.",
+                "lead": "{growthSaves, select, yes {La commission est le chiffre à comparer. Sur un mois à {exampleSales} de commandes payées, passer de {starterName} à {growthName} économise {growthSaving} de commission et coûte {growthPrice}.} other {La commission est le chiffre à comparer, et le taux de chaque palier figure avec son forfait.}}",
                 "note": "Les plafonds comptent les produits publiés. Au plafond, la création d'un produit supplémentaire est refusée jusqu'à ce que vous en désactiviez un ou changiez de palier — rien de déjà publié n'est retiré."
             },
             "agency": {
@@ -989,12 +1023,13 @@
             "agent": {
                 "title": "Forfaits livreur",
                 "lead": "Même logique que pour les agences : le chiffre correspond au nombre de livraisons que vous pouvez tenir en même temps, pas à un quota mensuel.",
-                "note": "Ce plafond est strict. Accepter une offre de plus au-delà de votre limite est refusé tant qu'une des livraisons en cours n'est pas terminée."
+                "note": "Ce plafond est strict. Accepter une offre de plus au-delà de votre limite est refusé tant qu'une des livraisons en cours n'est pas terminée.",
+                "codPoolNote": "* Le montant maximal de paiements à la livraison que vous pouvez avoir sur vous en même temps, toutes agences confondues. Il s'applique une fois votre identité vérifiée ; avant cela, vous ne transportez aucun paiement à la livraison."
             },
             "credits": {
                 "title": "Ce que sont les crédits",
-                "p1": "Deux choses coûtent réellement de l'argent à chaque fois qu'elles se produisent sur Wi-Mall, donc elles sont mesurées plutôt qu'incluses : indexer un de vos produits pour que l'assistant IA puisse le trouver et le recommander, et envoyer un message modèle WhatsApp facturé à un client. Chacune coûte 1 crédit.",
-                "p2": "L'activation d'un forfait accorde sa dotation une seule fois — 50 crédits sur l'offre gratuite vendeur, 4 500 sur Business. Si vous l'épuisez, rechargez par packs. Plus le pack est grand, moins chaque crédit coûte cher.",
+                "p1": "Deux choses coûtent réellement de l'argent à chaque fois qu'elles se produisent sur Wi-Mall, donc elles sont mesurées plutôt qu'incluses : indexer un de vos produits pour que l'assistant IA puisse le trouver et le recommander, ce qui coûte {vectorisationCost}, et envoyer un message modèle WhatsApp facturé à un client, ce qui coûte {whatsappTemplateCost}.",
+                "p2": "L'activation d'un forfait accorde sa dotation une seule fois — {starterCredits} sur l'offre gratuite vendeur, {businessCredits} sur {businessName}. Si vous l'épuisez, rechargez par packs.{packDiscount, select, yes { Plus le pack est grand, moins chaque crédit coûte cher.} other {}}",
                 "packsTitle": "Packs de crédits",
                 "packsCaption": "Packs de recharge de crédits et leurs prix",
                 "creditsHead": "Crédits",
@@ -1004,20 +1039,20 @@
             "payment": {
                 "title": "Comment le paiement fonctionne",
                 "p1": "Les forfaits et les packs de crédits se paient via NotchPay ou MyCoolPay pour le mobile money, ou Stripe pour la carte. Rien n'est enregistré puis débité plus tard — il n'existe aucun abonnement récurrent sur Wi-Mall.",
-                "p2": "Une période payée arrive simplement à son terme au bout de 30 jours. Si vous avez acheté un autre forfait pendant qu'un premier tournait, il était en file d'attente et prend le relais à ce moment-là ; sinon, vous revenez à l'offre gratuite de votre rôle et continuez à travailler. Vous pouvez détenir un forfait actif et un forfait en attente à la fois.",
+                "p2": "Une période payée arrive simplement à son terme au bout de {paidTerm}. Si vous avez acheté un autre forfait pendant qu'un premier tournait, il était en file d'attente et prend le relais à ce moment-là ; sinon, vous revenez à l'offre gratuite de votre rôle et continuez à travailler. Vous pouvez détenir un forfait actif et un forfait en attente à la fois.",
                 "p3": "Si un paiement par carte est annulé après coup, le forfait qu'il a acheté revient à l'offre gratuite et les crédits accordés sont repris — ce qui peut laisser un solde négatif jusqu'à la prochaine recharge."
             },
             "faqTitle": "Questions sur les tarifs",
             "cta": {
                 "title": "L'offre gratuite ne demande aucun moyen de paiement",
                 "body": "Installez votre catalogue, voyez ce qui se vend, et ne montez de palier que lorsque le calcul de la commission vous y invite.",
-                "finePrint": "Les offres gratuites n'expirent jamais. Les périodes payées durent 30 jours et ne se renouvellent pas automatiquement."
+                "finePrint": "Les offres gratuites n'expirent jamais. Les périodes payées ({paidTerm}) ne se renouvellent pas automatiquement."
             },
             "unsoldTierNote": "Les paliers indiqués comme non en vente sont affichés à leur prix catalogue mais ne peuvent pas être achetés ici aujourd'hui. L'offre gratuite reste toujours disponible."
         },
         "vendors": {
             "metaTitle": "Vendre sur WhatsApp sans site web — Wi-Mall pour les vendeurs",
-            "metaDescription": "Ajoutez vos produits une fois et laissez l'assistant IA de Wi-Mall les vendre dans WhatsApp. Pas de boutique, pas d'application, pas de développeur. Offre gratuite : 15 produits, 7 % de commission, sans expiration.",
+            "metaDescription": "Ajoutez vos produits une fois et laissez l'assistant IA de Wi-Mall les vendre dans WhatsApp. Pas de boutique, pas d'application, pas de développeur. Offre gratuite : {starterProducts}, {starterCommission} de commission, sans expiration.",
             "eyebrow": "Vendre sur Wi-Mall",
             "title": "Vendre sur WhatsApp sans site web",
             "lead": "Vous n'avez besoin ni de boutique en ligne, ni de nom de domaine, ni de développeur. Ajoutez vos produits une fois, et l'assistant IA de Wi-Mall les vend dans les conversations WhatsApp que vos clients ont déjà.",
@@ -1056,8 +1091,8 @@
             },
             "cost": {
                 "title": "Ce que ça coûte",
-                "p1": "L'offre gratuite n'est pas un essai. Starter vous laisse publier 15 produits avec 1 Go de médias, prélève 7 % de chaque commande payée, et n'expire jamais.",
-                "p2": "Growth coûte 5 000 FCFA par 30 jours : 150 produits, 10 Go, et la commission tombe à 5 %. Business coûte 25 000 FCFA par 30 jours pour des produits illimités, 100 Go et 3 %. Rien ne se renouvelle tout seul — à la fin d'une période, soit vous passez au forfait mis en attente, soit vous revenez à Starter et continuez à vendre."
+                "p1": "L'offre gratuite n'est pas un essai. {starterName} vous laisse publier {starterProducts} avec {starterMedia}, prélève {starterCommission} de chaque commande payée, et n'expire jamais.",
+                "p2": "{growthName} coûte {growthPrice} {growthPer} : {growthProducts}, {growthMedia}, et une commission de {growthCommission}. {businessName} coûte {businessPrice} {businessPer} pour {businessProducts}, {businessMedia} et {businessCommission}. Rien ne se renouvelle tout seul — à la fin d'une période, soit vous passez au forfait mis en attente, soit vous revenez à {starterName} et continuez à vendre."
             },
             "start": {
                 "title": "Ce qu'il faut pour démarrer",
@@ -1071,7 +1106,7 @@
             "cta": {
                 "title": "Mettez votre catalogue là où la conversation a déjà lieu",
                 "body": "Starter ne coûte rien, ne demande aucun moyen de paiement et n'expire pas. Si ça marche, les forfaits payants se remboursent en commission.",
-                "finePrint": "15 produits, 1 Go et 7 % de commission sur l'offre gratuite. Aucune carte requise."
+                "finePrint": "Sur l'offre gratuite : {starterProducts}, {starterMedia} et {starterCommission} de commission. Aucune carte requise."
             }
         },
         "agencies": {
@@ -1104,7 +1139,7 @@
             },
             "capacity": {
                 "title": "La capacité, et ce qui se passe à la limite",
-                "p1": "L'offre gratuite vous laisse tenir 1 000 expéditions ouvertes en même temps. C'est un plafond de travail, pas un quota mensuel — chaque livraison terminée libère sa place.",
+                "p1": "L'offre gratuite vous laisse tenir {agencyShipments} en même temps. C'est un plafond de travail, pas un quota mensuel — chaque livraison terminée libère sa place.",
                 "p2": "Ce plafond est volontairement souple. Si vous le dépassez, vous recevez une alerte et la possibilité de monter de palier ; rien du paiement, de la répartition ni de la livraison ne s'arrête. Une agence à pleine capacité vit une bonne semaine, et la plateforme n'a pas à l'en punir."
             },
             "start": {
@@ -1117,8 +1152,8 @@
             "faqTitle": "Questions des agences",
             "cta": {
                 "title": "Apportez les commandes à votre flotte",
-                "body": "L'enregistrement ne coûte rien et l'offre gratuite porte mille livraisons ouvertes. La seule chose à trancher avant de commencer, c'est votre tarif.",
-                "finePrint": "Offre gratuite : 1 000 expéditions ouvertes, 5 Go, suivi en direct inclus."
+                "body": "L'enregistrement ne coûte rien et l'offre gratuite vous laisse tenir {agencyShipments}. La seule chose à trancher avant de commencer, c'est votre tarif.",
+                "finePrint": "Offre gratuite : {agencyShipments}, {agencyMedia}, suivi en direct inclus."
             }
         },
         "agents": {
@@ -1150,7 +1185,7 @@
             },
             "capacity": {
                 "title": "Combien en même temps",
-                "p1": "L'offre gratuite vous laisse tenir 20 livraisons à la fois. Terminez-en une et la place revient.",
+                "p1": "L'offre gratuite vous laisse tenir {agentDeliveries} à la fois. Terminez-en une et la place revient.",
                 "p2": "Contrairement au plafond des agences, celui-ci est ferme : accepter une offre au-delà de votre limite est refusé, pas simplement signalé. L'idée est qu'un client qui attend une livraison que vous ne pouvez pas faire est pire qu'une offre que vous n'avez pas reçue."
             },
             "start": {
@@ -1164,7 +1199,7 @@
             "cta": {
                 "title": "Commencez avec une agence, ou cinq",
                 "body": "L'inscription est gratuite et indépendante. Rien ne vous lie à une seule agence, et aucune offre ne vous engage tant que vous ne l'avez pas acceptée.",
-                "finePrint": "Offre gratuite : 20 livraisons tenues en même temps. Aucun quota mensuel."
+                "finePrint": "Offre gratuite : {agentDeliveries} en même temps. Aucun quota mensuel."
             }
         },
         "customers": {
@@ -1292,7 +1327,7 @@
                 },
                 "vendorCost": {
                     "q": "Combien coûte la vente ?",
-                    "a": "L'offre Starter est gratuite et n'expire jamais : 15 produits publiés, 1 Go de médias et 7 % de commission sur chaque commande payée. Growth coûte 5 000 FCFA par 30 jours pour 150 produits et 5 % de commission ; Business coûte 25 000 FCFA par 30 jours pour des produits illimités et 3 %."
+                    "a": "L'offre {starterName} est gratuite et n'expire jamais : {starterProducts}, {starterMedia} et {starterCommission} de commission sur chaque commande payée. {growthName} coûte {growthPrice} {growthPer} pour {growthProducts} et {growthCommission} de commission ; {businessName} coûte {businessPrice} {businessPer} pour {businessProducts} et {businessCommission}."
                 },
                 "vendorProductLimit": {
                     "q": "Que se passe-t-il quand j'atteins ma limite de produits ?",
@@ -1332,7 +1367,7 @@
                 },
                 "agentCapacity": {
                     "q": "Combien de livraisons puis-je tenir en même temps ?",
-                    "a": "Vingt sur l'offre gratuite. Contrairement à la limite des agences, celle-ci est appliquée : accepter une offre au-delà de votre plafond est refusé tant qu'une des livraisons déjà en cours n'est pas terminée."
+                    "a": "Sur l'offre gratuite, {agentDeliveries}. Contrairement à la limite des agences, celle-ci est appliquée : accepter une offre au-delà de votre plafond est refusé tant qu'une des livraisons déjà en cours n'est pas terminée."
                 },
                 "paymentMethods": {
                     "q": "Comment les clients peuvent-ils payer ?",
@@ -1344,11 +1379,15 @@
                 },
                 "credits": {
                     "q": "Qu'est-ce que les crédits, et faut-il en acheter ?",
-                    "a": "Les crédits mesurent deux choses qui coûtent de l'argent à chaque occurrence : indexer un produit pour que l'assistant puisse le recommander, et envoyer un message modèle WhatsApp facturé. Chacune coûte un crédit. Chaque forfait accorde une dotation à son activation, donc la plupart des comptes n'en achètent jamais ; si vous épuisez la vôtre, les packs commencent à 600 FCFA pour 100 crédits."
+                    "a": "Les crédits mesurent deux choses qui coûtent de l'argent à chaque occurrence : indexer un produit pour que l'assistant puisse le recommander, à {vectorisationCost}, et envoyer un message modèle WhatsApp facturé, à {whatsappTemplateCost}. Chaque forfait accorde une dotation à son activation, donc la plupart des comptes n'en achètent jamais ; si vous épuisez la vôtre, les packs commencent à {cheapestPackPrice} pour {cheapestPackCredits}."
+                },
+                "payoutVerification": {
+                    "q": "Y a-t-il une limite de retrait avant la vérification de mon compte ?",
+                    "a": "Oui. Tant qu'un compte n'est pas vérifié, un retrait est plafonné à 45 % du solde disponible sur un mois donné. Ces 45 % doivent aussi atteindre à eux seuls le minimum de versement de 10 000 FCFA — donc si 45 % de votre solde représente moins de 10 000 FCFA, aucun retrait n'est possible tant que le solde n'augmente pas ou que le compte n'est pas vérifié. La vérification supprime le plafond et la totalité du solde disponible devient retirable."
                 },
                 "renewal": {
                     "q": "Les forfaits se renouvellent-ils automatiquement ?",
-                    "a": "Non. Il n'y a ni carte enregistrée ni prélèvement récurrent nulle part sur Wi-Mall. Un forfait payant court ses 30 jours puis, soit passe la main à un forfait mis en attente pendant qu'il tournait, soit vous ramène à l'offre gratuite de votre rôle."
+                    "a": "Non. Il n'y a ni carte enregistrée ni prélèvement récurrent nulle part sur Wi-Mall. Un forfait payant court pendant {paidTerm} puis, soit passe la main à un forfait mis en attente pendant qu'il tournait, soit vous ramène à l'offre gratuite de votre rôle."
                 },
                 "downgrade": {
                     "q": "Que se passe-t-il si j'arrête de payer ?",
@@ -1410,12 +1449,12 @@
             "regionLabel": "Région",
             "sellingTitle": "Vendre à {city}",
             "sellingP1": "Le fonctionnement est le même partout : vous ajoutez un catalogue, et l'assistant vend à partir de celui-ci dans WhatsApp. Ce qui change d'une ville à l'autre, c'est qui achète et la distance que doit parcourir une livraison — et ces deux points sont décidés par les agences couvrant la région, pas par nous.",
-            "sellingP2": "Starter ne coûte rien, porte 15 produits publiés et prélève 7 % de chaque commande payée. C'est généralement assez pour savoir si la demande dans votre quartier est réelle avant de dépenser quoi que ce soit.",
+            "sellingP2": "{starterName} ne coûte rien, porte {starterProducts} et prélève {starterCommission} de chaque commande payée. C'est généralement assez pour savoir si la demande dans votre quartier est réelle avant de dépenser quoi que ce soit.",
             "deliveryTitle": "Comment la livraison fonctionne à {city}",
             "deliveryP1": "Une agence de livraison enregistre la région {region} parmi ses zones de couverture. Les commandes à destination de {city} sont transmises aux agences qui la couvrent, et chacune envoie un livreur de son propre réseau.",
             "deliveryP2": "L'agence fixe les frais de livraison et la part du livreur est arrêtée dans son contrat — un pourcentage des frais, ou un tarif fixe par course. Le paiement à la livraison est encaissé par le livreur puis rapproché avec l'agence, ce qui compte sur un marché où beaucoup d'acheteurs préfèrent encore payer à la porte.",
             "opportunityTitle": "Si vous livrez à {city}",
-            "opportunityBody": "Une agence qui enregistre la région {region} reçoit les commandes qui y sont destinées. L'offre gratuite porte mille livraisons ouvertes, soit plus que ce que la plupart des flottes locales gèrent en même temps, et la plateforme ne prend aucune part de ce que vous facturez pour la livraison.",
+            "opportunityBody": "Une agence qui enregistre la région {region} reçoit les commandes qui y sont destinées. L'offre gratuite vous laisse tenir {agencyShipments}, et la plateforme ne prend aucune part de ce que vous facturez pour la livraison.",
             "relatedTitle": "Ailleurs au Cameroun",
             "ctaTitle": "Commencer à {city}",
             "ctaBody": "Offres gratuites pour les vendeurs, les agences et les livreurs. Rien à payer avant de savoir si ça marche.",
@@ -1573,7 +1612,7 @@
             "build": {
                 "title": "Comment nous construisons",
                 "lead": "Certains de ces choix sont assez inhabituels pour être dits clairement.",
-                "i1": "La compilation échoue si nos propres textes marketing contredisent la grille tarifaire en vigueur. Les prix vivent dans un seul catalogue, et une page qui cite un montant modifié depuis bloque le déploiement suivant en nommant la ligne à corriger — plutôt que de publier discrètement une page qui ment sur le prix.",
+                "i1": "Nos pages ne citent jamais un prix de mémoire. Les prix vivent dans un seul catalogue, et chaque phrase qui en mentionne un le lit à la source — modifiez un prix et tout le site affiche le nouveau en quelques minutes, au lieu de garder un ancien chiffre que quelqu'un aurait oublié de mettre à jour.",
                 "i2": "Aucun chiffre inventé dans les données structurées. Pas de note ni de nombre d'avis dans notre balisage, parce qu'il n'existe pas encore de données d'avis. Les chiffres d'échelle de ce site sont des objectifs de première année, et ils sont présentés comme tels.",
                 "i3": "Cinq langues, dont une de droite à gauche, dès la première ligne plutôt qu'en rattrapage.",
                 "i4": "Écrit pour le réseau que les gens ont vraiment. Les mots sont livrés dans le HTML, l'animation est optionnelle, et rien d'important n'attend un JavaScript qui n'arrivera peut-être jamais.",
@@ -1715,16 +1754,27 @@
     },
     "forgotPassword": {
         "title": "Réinitialiser votre mot de passe",
-        "subtitle": "Saisissez votre numéro ou votre e-mail et nous vous enverrons un lien.",
-        "identifierLabel": "Numéro de téléphone ou e-mail",
-        "identifierPlaceholder": "+237 6 70 00 00 00",
-        "required": "Saisissez votre numéro de téléphone ou votre e-mail.",
+        "subtitlePhone": "Saisissez le numéro de téléphone de votre compte. Le bot Wi-Mall vous enverra votre lien de réinitialisation.",
+        "subtitleEmail": "Saisissez l'adresse e-mail de votre compte et nous vous enverrons un lien de réinitialisation.",
+        "phoneLabel": "Numéro de téléphone",
+        "emailLabel": "E-mail",
+        "emailPlaceholder": "vous@exemple.com",
+        "continue": "Continuer",
         "submit": "Envoyer le lien",
         "submitting": "Envoi…",
         "failed": "Nous n'avons pas pu envoyer le lien. Vérifiez votre connexion et réessayez.",
+        "useEmail": "Réinitialiser plutôt avec votre e-mail ?",
+        "usePhone": "Utiliser plutôt votre numéro de téléphone",
+        "chatTitle": "Continuez dans le chat",
+        "chatBody": "Envoyez <code>{command}</code> au bot Wi-Mall depuis le <phone>{number}</phone>. Il vous répondra avec un lien pour choisir un nouveau mot de passe.",
+        "chatWaCta": "Ouvrir WhatsApp",
+        "chatWaNote": "Envoyez-le depuis le WhatsApp de ce numéro : c'est ainsi que le bot vous reconnaît.",
+        "chatTgCta": "Ouvrir Telegram",
+        "chatTgNote": "Fonctionne si votre Telegram utilise ce même numéro, ou s'il est déjà connecté à votre compte. Si le bot vous demande d'abord votre numéro, partagez-le, puis renvoyez <code>{command}</code> si aucun lien n'arrive.",
+        "editNumber": "Modifier le numéro",
         "sentTitle": "Consultez vos messages",
-        "sentBody": "Si un compte existe pour ce numéro ou cet e-mail, nous lui avons envoyé un lien de réinitialisation. Il expire rapidement et ne peut servir qu'une fois.",
-        "sentHint": "Rien reçu ? Vérifiez ce que vous avez saisi, puis réessayez.",
+        "sentBody": "Si un compte utilise cette adresse e-mail, nous lui avons envoyé un lien de réinitialisation. Il expire rapidement et ne peut servir qu'une fois.",
+        "sentHint": "Rien reçu ? Vérifiez vos spams et l'adresse saisie, puis réessayez.",
         "backToLogin": "Retour à la connexion"
     },
     "resetPassword": {
@@ -2518,12 +2568,20 @@
             "phone": {
                 "title": "Téléphone",
                 "none": "Aucun numéro de téléphone sur ce compte",
-                "pendingNote": "Écrivez à notre bot WhatsApp depuis ce numéro et connectez-le, puis confirmez ci-dessous. Expire le {date}.",
-                "unproven": "Nous n'avons trouvé aucune connexion WhatsApp pour ce numéro sur votre compte. Une connexion Telegram ne compte pas — un identifiant de discussion ne dit rien d'un numéro de téléphone.",
+                "pendingNote": "Nous confirmons un nouveau numéro avec un code envoyé sur WhatsApp. En attendant, votre numéro actuel vous permet toujours de vous connecter. Cette modification expire le {date}.",
                 "checking": "Vérification…",
-                "connectWhatsApp": "Connecter WhatsApp",
                 "confirmed": "C'est désormais le numéro avec lequel vous vous connectez.",
-                "howItWorks": "Nous confirmons un nouveau numéro en le rapprochant d'une connexion WhatsApp sur votre compte — il n'y a pas de code à attendre."
+                "howItWorks": "Nous enverrons un code à 6 chiffres au nouveau numéro sur WhatsApp pour confirmer qu'il est bien à vous.",
+                "codeLabel": "Code reçu sur WhatsApp",
+                "codePlaceholder": "Code à 6 chiffres",
+                "sendCode": "Envoyer le code",
+                "resendCode": "Envoyer un nouveau code",
+                "resendIn": "Nouveau code dans {seconds} s",
+                "codeSent": "Nous avons envoyé un code à ce numéro sur WhatsApp.",
+                "codeInvalid": "Ce code n'est pas correct. {attemptsLeft, plural, =0 {Demandez-en un nouveau.} one {Il vous reste # essai.} other {Il vous reste # essais.}}",
+                "verified": "Votre numéro de téléphone est confirmé.",
+                "expired": "Cette modification a expiré. Annulez-la et saisissez à nouveau le numéro.",
+                "contactSupport": "Contacter l'assistance"
             },
             "password": {
                 "title": "Mot de passe",
@@ -2544,7 +2602,12 @@
                 "CONTACT_CHANGE_NOT_PENDING": "Il n'y a rien en attente de confirmation.",
                 "CONTACT_CHANGE_EXPIRED": "Cette demande a expiré. Recommencez.",
                 "CONTACT_CHANGE_TOKEN_INVALID": "Ce lien n'est pas valide. Vérifiez que vous avez ouvert l'e-mail le plus récent.",
-                "CONTACT_CHANGE_PHONE_UNPROVEN": "Connectez d'abord ce numéro sur WhatsApp, puis revenez confirmer."
+                "CONTACT_CHANGE_PHONE_UNPROVEN": "Ce numéro n'est pas encore confirmé. Saisissez le code que nous lui avons envoyé sur WhatsApp.",
+                "PHONE_VERIFICATION_NO_TARGET": "Il n'y a aucun numéro de téléphone à confirmer sur ce compte.",
+                "PHONE_VERIFICATION_CODE_INVALID": "Ce code n'est pas correct. Vérifiez-le et réessayez.",
+                "PHONE_VERIFICATION_CODE_EXPIRED": "Ce code a expiré. Demandez-en un nouveau.",
+                "PHONE_VERIFICATION_TOO_MANY_ATTEMPTS": "Trop de codes incorrects. Demandez-en un nouveau.",
+                "PHONE_VERIFICATION_RESEND_TOO_SOON": "Un code vient d'être envoyé. Patientez un peu avant d'en demander un autre."
             }
         },
         "downloads": {
@@ -2574,7 +2637,14 @@
             "typeToConfirm": "Tapez <code>{phrase}</code> pour confirmer",
             "submit": "Fermer mon compte",
             "closing": "Fermeture…",
-            "ordersInFlight": "Les commandes encore en cours doivent être terminées avant qu'un compte puisse être fermé."
+            "ordersInFlight": "Les commandes encore en cours doivent être terminées avant qu'un compte puisse être fermé.",
+            "refused": {
+                "ordersInFlight": "Vous avez encore {count, plural, one {# commande} other {# commandes}} en cours. Vous pourrez fermer votre compte une fois vos commandes terminées.",
+                "seeOrders": "Voir mes commandes",
+                "roleNotEligible": "Ce compte est aussi utilisé en tant que : {roles}. Cela doit être fermé d'abord, et pour l'instant seule notre équipe d'assistance peut le faire.",
+                "contactSupport": "Contacter l'assistance",
+                "alreadyClosed": "Ce compte a déjà été fermé."
+            }
         },
         "addresses": {
             "description": "Là où vos commandes sont livrées.",
@@ -2904,6 +2974,16 @@
             "paymentFailed": "Ce paiement n'a pas abouti.",
             "ownBookingsOnly": "Vous ne pouvez payer que vos propres réservations."
         },
-        "native": {}
+        "native": {},
+        "customerOnly": {
+            "title": "La boutique est réservée aux clients",
+            "bodySignOut": "Vous êtes connecté en tant que <b>{role}</b>. Déconnectez-vous, puis reconnectez-vous en tant que client pour faire vos achats.",
+            "bodySwitch": "Vous êtes connecté en tant que <b>{role}</b>. Votre compte est aussi un compte client : vous pouvez y passer sans vous déconnecter.",
+            "botHint": "Pour vous connecter en tant que client, envoyez <code>{command}</code> à notre bot depuis le numéro de téléphone de ce compte. Il vous répond avec un lien et un code de connexion.",
+            "switchAction": "Continuer en tant que client",
+            "switching": "Changement en cours…",
+            "signingOut": "Déconnexion…",
+            "switchFailed": "Impossible de passer à votre compte client. Déconnectez-vous, puis reconnectez-vous en tant que client."
+        }
     }
 }

@@ -223,14 +223,16 @@ export default function AuthShowcase({ mode, role = null, className }: AuthShowc
           transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
           className="relative z-10 max-w-[22rem]"
         >
-          <div
-            className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 font-display text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors duration-500"
-            style={{
-              borderColor: `${visuals.accent}4D`,
-              backgroundColor: `${visuals.accent}1A`,
-              color: visuals.accent,
-            }}
-          >
+          {/* The one badge style. This panel is dark in both themes, so the
+              ink fill would sink into it and the tag takes the tag-on-dark
+              inversion instead. That drops the role tint from the badge —
+              white on #FBBF24 is ~1.9:1, so a tinted fill could not have
+              kept .tag's white text anyway — and leaves the accent to the
+              backdrop, the ornament and the bullet icons, none of which
+              have to carry 11px text. The cross-fade is untouched: it is
+              AnimatePresence re-keying this whole subtree, never a CSS
+              colour interpolation, so there was nothing here to preserve. */}
+          <div className="tag tag-on-dark">
             <Sparkles className="h-3 w-3" aria-hidden="true" />
             {content.eyebrow}
           </div>

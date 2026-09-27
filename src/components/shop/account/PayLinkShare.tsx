@@ -210,6 +210,8 @@ export function PayLinkShare({
 
       <ConfirmDialog
         open={confirming}
+        // Always opened over the pay sheet (PayGroupSheet is our only host).
+        layer="top"
         tone="warning"
         icon="link-2-off"
         title={t("replaceTitle")}

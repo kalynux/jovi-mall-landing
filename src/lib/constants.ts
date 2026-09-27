@@ -4,21 +4,23 @@ export const BRAND = {
     tagline: "Commerce runs on conversation.",
     description:
         "AI-powered ecommerce infrastructure for WhatsApp-first businesses. No storefront needed — just upload products and let AI sell for you.",
-    whatsappNumber: "+2340000000000", // Placeholder
-    email: "hello@wi-mall.com",
+    whatsappNumber: "+237652705926",
+    email: "support@wi-mall.com",
 };
 
 // ─── Outward destinations ───────────────────────────────────────────────────
 /**
  * Everything this app links to that it does not host.
  *
- * All three are env-overridable so the real values can land without a code
- * change, and every consumer must treat an empty string as "not published yet"
- * and render the affected control disabled rather than shipping a dead link.
+ * All are env-overridable so the real values can land without a code change, and
+ * every consumer must treat an empty string as "not published yet" and render
+ * the affected control disabled rather than shipping a dead link.
  *
- * NOTE: `BRAND.whatsappNumber` is still a placeholder with a Nigerian prefix,
- * while the product runs on Cameroon/FCFA. Until NEXT_PUBLIC_WHATSAPP_NUMBER is
- * set to the real business line, every wa.me link reaches nobody.
+ * `BRAND.whatsappNumber` is the live bot line, so an unset
+ * NEXT_PUBLIC_WHATSAPP_NUMBER now degrades to the right number rather than to a
+ * dead one. Next inlines both the env value and this literal fallback into the
+ * client bundle, which is why the fallback must never be a number that reaches
+ * nobody.
  */
 export const EXTERNAL_LINKS = {
     /** WhatsApp bot number, E.164. */
@@ -37,7 +39,34 @@ export const EXTERNAL_LINKS = {
     agentAndroidUrl: process.env.NEXT_PUBLIC_AGENT_APP_ANDROID_URL ?? "",
     /** Agent app on the App Store. Empty until the listing is live. */
     agentIosUrl: process.env.NEXT_PUBLIC_AGENT_APP_IOS_URL ?? "",
+    /**
+     * Direct APK download, served by the API's public app-distribution route.
+     *
+     * Distinct from `agentAndroidUrl` on purpose: that one is the Play Store
+     * listing and is still unpublished, while this is the sideload the agent
+     * app actually ships through today. **There is no agent web app** — the
+     * agent role has a dashboard origin in `ROLE_SUBDOMAIN_MAP` for an already
+     * signed-in session, but a new agent has nothing to continue *to* on the
+     * web, which is why the dialog leads with this rather than a web link.
+     */
+    agentApkUrl:
+        process.env.NEXT_PUBLIC_AGENT_APP_APK_URL ??
+        "https://api.wi-mall.com/api/public/app/agent-android/download",
 };
+
+/**
+ * The brand's social profiles, in display order. Not env-overridable: they are
+ * facts about the company rather than per-deploy config, and they also feed the
+ * Organization's `sameAs` in lib/seo/jsonld.ts.
+ *
+ * The Instagram URL is the profile without the `?stkn=` share token the app
+ * appends when a link is copied — that token identifies the person who shared
+ * it, and has no business in a link printed on every page.
+ */
+export const SOCIAL_LINKS = [
+    { network: "Instagram", url: "https://www.instagram.com/wimallshop/" },
+    { network: "Facebook", url: "https://www.facebook.com/wimallshop" },
+] as const;
 
 /** Builds a wa.me deep link to the bot with `text` prefilled. */
 export function buildWhatsAppUrl(text: string): string {
@@ -59,17 +88,24 @@ export function buildTelegramUrl(): string | null {
 
 // ─── Bot commands ────────────────────────────────────────────────────────────
 /**
- * The two commands a visitor is ever told to send, and they are **not
- * localised**. The bot's own replies are English-only until the sender is a
- * known account with a language on file (the platform will not guess one from a
- * phone prefix), and the command strings themselves are matched literally
- * server-side — a translated `/connexion` reaches no handler.
+ * The commands a visitor is ever told to send, and they are **not localised**.
+ * The bot's own replies are English-only until the sender is a known account
+ * with a language on file (the platform will not guess one from a phone prefix).
+ * The backend's registry does accept a few aliases (`/connexion`, `/motdepasse`
+ * — jovi-mall `bot-commands/domain/command-registry.ts`), but only the canonical
+ * names are guaranteed, so they are the only ones this app ever prints.
  */
 export const BOT_COMMANDS = {
     /** Mints a customer's magic link + 8-character sign-in code. */
     login: "/login",
     /** Mints a 6-character code that connects the chat to an account. */
     connect: "/connect",
+    /**
+     * Replies with a password-reset link, for any role. Renamed from
+     * `/reset-password`, which Telegram cannot register (a hyphen ends a
+     * `bot_command`) and which no longer reaches any handler.
+     */
+    password: "/password",
 } as const;
 
 // NOTE: `NAV_LINKS` used to live here — a third nav declaration with hardcoded

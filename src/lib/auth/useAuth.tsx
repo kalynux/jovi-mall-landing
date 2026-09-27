@@ -45,8 +45,11 @@ interface AuthContextValue {
    * In the current flow this is rarely needed since auth actions redirect.
    */
   refresh: () => Promise<void>;
-  /** Fires logoutAndRedirect() and clears local state immediately. */
-  logout: () => Promise<void>;
+  /**
+   * Fires logoutAndRedirect() and clears local state immediately. `to` is where
+   * the page goes afterwards — a full, localised path; the home page if omitted.
+   */
+  logout: (to?: string) => Promise<void>;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -211,7 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => remove?.();
   }, [revalidate]);
 
-  const logout = useCallback(async () => {
+  const logout = useCallback(async (to?: string) => {
     // Optimistically clear state so Navbar reverts immediately
     setUser(null);
     setRole(null);
@@ -240,7 +243,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    await logoutAndRedirect();
+    await logoutAndRedirect(to);
   }, []);
 
   return (

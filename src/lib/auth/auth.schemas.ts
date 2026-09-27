@@ -6,7 +6,7 @@ import { phoneErrorMessage, toE164, validatePhone } from "@/lib/phone/phone";
 // ─── Role Schema ─────────────────────────────────────────────────────────────
 // Use z.enum() directly — avoids .transform() which widens the inferred type
 // from the literal union to `string`, breaking react-hook-form type inference.
-const UI_ROLE_VALUES = ["vendor", "agency", "agent", "customer"] as const;
+const UI_ROLE_VALUES = ["customer", "vendor", "agency", "agent"] as const;
 export const UiRoleSchema = z.enum(UI_ROLE_VALUES);
 
 // ─── Field-error keys ────────────────────────────────────────────────────────
@@ -194,6 +194,21 @@ export const RegisterSchema = z
         // (api-doc/auth/README.md); every number that satisfies its country's
         // plan and carries a calling code clears it.
         phone: PhoneSchema,
+        /**
+         * Optional for all four roles, vendor included (api-doc/auth/README.md).
+         *
+         * Vendor used to be the exception here: its role profile alone required
+         * an email, so a vendor registered without one answered a 500, and this
+         * schema demanded the field to spare people that. The backend made it
+         * optional on 2026-09-21 (jovi-mall vendor.model.ts), which also fixed
+         * add-role to vendor for an email-less account.
+         *
+         * ⚠ Deploy order: this relies on that backend release AND on
+         * `npm run migrate:vendor-email-index` having run. Before the migration
+         * the old unique index still counts every missing email as `null`, so
+         * the first email-less vendor registers and the second gets
+         * `409 DATABASE_UNIQUE_CONSTRAINT_VIOLATION`.
+         */
         email: z.string().email(fieldError("emailInvalid")).optional().or(z.literal("")),
         name: z.string().min(NAME_MIN, fieldError("nameTooShort")).trim(),
         password: z
@@ -207,33 +222,6 @@ export const RegisterSchema = z
         agency_name: z.string().optional(),
     })
     .superRefine((data, ctx) => {
-        /**
-         * ⚠️ **`email` is required for a vendor, and api-doc says otherwise.**
-         *
-         * api-doc/auth/README.md § POST /auth/register marks `email` "Optional
-         * for **every** role, including vendor". The vendor *model* disagrees:
-         * `email: { type: String, required: true, unique: true }`
-         * (jovi-mall/src/modules/vendors/vendor.model.ts:387). It is the only
-         * one of the four role models that does — agency, agent and customer all
-         * register without one.
-         *
-         * The disagreement is not academic: `POST /auth/register` with a vendor
-         * and no email answers **500 INTERNAL_SERVER_ERROR**, not a 400, because
-         * the Mongoose validation error escapes as an unhandled failure.
-         * Verified against the running backend, 2026-08-20.
-         *
-         * So this rule stays until the backend is fixed, and it is kept here
-         * rather than left to the server on purpose: a client-side "Email is
-         * required" is a field the user can fix, while the alternative is an
-         * opaque "Something went wrong" with a requestId.
-         */
-        if (data.role === "vendor" && !data.email?.trim()) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: fieldError("emailRequiredVendor"),
-                path: ["email"],
-            });
-        }
         if (data.role === "vendor") {
             refineBusinessName(
                 data.business_name,
@@ -299,17 +287,61 @@ export type AddRoleFormValues = z.infer<typeof AddRoleSchema>;
 // ─── Password reset ──────────────────────────────────────────────────────────
 
 /**
- * `POST /api/auth/forgot-password` takes an email **or** an E.164 phone in one
- * field.
+ * The forgot-password form: a phone number by default, an email on request.
  *
- * Not validated into one shape or the other here on purpose: the backend accepts
- * both, and guessing which the user meant in order to reject the other is how a
- * legitimate identifier gets refused before it is ever sent. A non-empty string
- * is the real rule; the endpoint answers 200 either way.
+ * Two fields rather than `LoginSchema`'s single `identifier`, because the page
+ * swaps one input for the other and back — and coming back to the phone should
+ * find the number still typed. `method` says which one is live; the other is
+ * ignored whatever it holds. The page never asks the user which kind they are
+ * typing into one box, so nothing here has to guess.
+ *
+ * Each is validated exactly as `LoginSchema` validates its own kind: the phone
+ * against its country's numbering plan and emitted as strict E.164 — the form
+ * the bot matches a WhatsApp sender against — and the email as an address.
+ *
+ * ⚠ **Only the email reaches the API.** A phone reset is delivered by the bot
+ * (`/password` on WhatsApp or Telegram), so the phone path never calls
+ * `POST /api/auth/forgot-password`. See the page's header comment for why.
  */
-export const ForgotPasswordSchema = z.object({
-    identifier: z.string().trim().min(IDENTIFIER_MIN, fieldError("identifierRequired")),
-});
+export const ForgotPasswordSchema = z
+    .object({
+        method: IdentifierTypeSchema,
+        phone: z.string().trim(),
+        email: z.string().trim(),
+    })
+    .superRefine((data, ctx) => {
+        if (data.method === "phone") {
+            const error = validatePhone(data.phone, { required: true });
+            if (error) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: phoneErrorMessage(error),
+                    path: ["phone"],
+                });
+            }
+            return;
+        }
+
+        if (!data.email) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: fieldError("emailRequired"),
+                path: ["email"],
+            });
+            return;
+        }
+        if (!z.string().email().safeParse(data.email).success) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: fieldError("emailInvalid"),
+                path: ["email"],
+            });
+        }
+    })
+    .transform((data) => ({
+        ...data,
+        phone: data.method === "phone" ? (toE164(data.phone) ?? data.phone) : data.phone,
+    }));
 
 export type ForgotPasswordFormValues = z.infer<typeof ForgotPasswordSchema>;
 

@@ -359,6 +359,103 @@ html.dark,
     @apply -translate-y-0.5;
   }
 
+  /* ─── Tags ────────────────────────────────────────────────────────────────
+     The one badge style, replacing sixteen hand-rolled pills that disagreed on
+     radius, tracking, size and weight. Squared, solid, no glow — a printed
+     label rather than a glowing chip.
+
+     The fill is mixed toward --gray-900 rather than used raw: the role accents
+     are tuned for TEXT on a page background and are far too light to carry
+     white at 11px. The ratio differs per theme because the dark-theme accents
+     start lighter and need more ink to reach the same contrast (both land
+     around 5.7:1).
+
+     Letter-spacing is deliberate here and deliberately undone for Arabic — the
+     unlayered `:lang(ar) { letter-spacing: 0 }` near the top of this file
+     outranks any layered rule, which is what keeps Arabic letterforms joined.
+     Do not re-assert tracking on a .tag from a utility class. */
+  .tag {
+    --tag-fill: color-mix(in srgb, var(--role, var(--accent)) 80%, var(--gray-900));
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3125rem 0.625rem;
+    border-radius: 2px;
+    background: var(--tag-fill);
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    box-shadow: none;
+  }
+  html.dark .tag {
+    --tag-fill: color-mix(in srgb, var(--role, var(--accent)) 55%, var(--gray-900));
+  }
+  /* Variants set --role rather than --tag-fill, so they inherit the same
+     per-theme ink mix instead of each re-deriving one. */
+  .tag-wa { --role: var(--whatsapp); }
+  .tag-muted { --role: var(--gray-500); }
+  /* On an already-dark band the ink fill vanishes into the background, so the
+     tag inverts there. Two classes deep to outrank `html.dark .tag`. */
+  .tag.tag-on-dark {
+    --tag-fill: rgba(255, 255, 255, 0.92);
+    color: var(--gray-900);
+  }
+
+  /* ─── CTA rows ────────────────────────────────────────────────────────────
+     Every two-button group on the site. Previously each call site picked its
+     own `flex flex-wrap` string, so on a narrow phone the secondary wrapped to
+     its own line at its intrinsic width while the primary kept the 13.5rem
+     floor RoleCtaButton pins — two buttons, two widths, ragged left edge.
+
+     Below sm the children are full-width and stacked; from sm they are a
+     centred-or-leading wrapping row at intrinsic width. */
+  .cta-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .cta-row > * { width: 100%; }
+  .cta-row-center { justify-content: center; }
+  @media (min-width: 640px) {
+    .cta-row {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .cta-row > * { width: auto; }
+  }
+
+  /* ─── Unpurchasable plan tiers ────────────────────────────────────────────
+     A tier the catalog defines but will not sell. Greyed and hatched like a
+     zebra crossing, so "you cannot buy this yet" is legible before the badge
+     is read.
+
+     `filter` here is safe ONLY because an inactive card renders no CTA and
+     therefore hosts no dialog: a filtered ancestor re-bases `position: fixed`
+     onto itself. If a control is ever added to these cards, drop the filter
+     rather than portalling around it. */
+  .plan-unavailable {
+    position: relative;
+    overflow: hidden;
+    filter: grayscale(0.85);
+  }
+  .plan-unavailable::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--text-muted) 14%, transparent) 0 6px,
+      transparent 6px 16px
+    );
+  }
+
   /* Gradient text (recoloured to brand green) */
   .text-gradient {
     background: linear-gradient(135deg, #068554 0%, #0DA06B 50%, #22BD82 100%);
@@ -430,6 +527,8 @@ html.dark,
      what this is, so the prefix is the smallest change that keeps the name.
   */
   .ds-overline { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text-subtle); margin: 0; }
+  /* Positive tracking disconnects joined Arabic letters (see `.ds-btn`). */
+  [dir="rtl"] .ds-overline { letter-spacing: normal; }
   .muted { color: var(--text-muted); font-size: 13px; }
   .divider { height: 1px; background: var(--border-subtle); }
   .row-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0; scrollbar-width: none; }
@@ -515,8 +614,27 @@ html.dark,
 
      Android only, and `NativeShell` is what sets the attribute. iOS reports its
      34px correctly, and an iPhone with no home indicator reports 0 and should
-     get no band at all — a global floor would give it one for nothing. */
-  html[data-platform="android"] .shop-tabbar { --tabbar-floor: 24px; }
+     get no band at all — a global floor would give it one for nothing.
+
+     A selector list, not `:is()`: an old WebView that does not know `:is()`
+     drops the whole rule, and an old WebView is exactly who the floor is for. */
+  html[data-platform="android"] .shop-tabbar,
+  html[data-platform="android"] .shop-sheet { --tabbar-floor: 24px; }
+
+  /* A bottom sheet (`BottomSheet`) is portalled above the tab bar and reaches
+     the bottom edge itself, so it has to clear the home indicator itself — the
+     bar that normally does that is underneath it. Same two sources as the bar:
+     `--sa-bottom`, and the Android floor above. Added under the panel's own
+     padding rather than `max()`-ed with it, because the footer's 16px is
+     spacing and the inset is a strip nothing may be tapped in.
+
+     Inert in a browser tab: both resolve to 0 there. From `sm` the sheet is a
+     centred modal with a margin all round and never meets the edge. While the
+     keyboard is up the panel sits on the keys, not on the indicator — Android
+     reports a 0 inset then, but the floor would still leave a 24px band. */
+  .shop-sheet { padding-bottom: max(var(--sa-bottom, 0px), var(--tabbar-floor, 0px)); }
+  @media (min-width: 640px) { .shop-sheet { padding-bottom: 0; } }
+  html[data-keyboard="open"] .shop-sheet { padding-bottom: 0; }
 
   .shop-shell { display: flex; flex-direction: column; min-height: 100svh; }
   .shop-shell-main { flex: 1 1 auto; display: flex; flex-direction: column; }
@@ -698,27 +816,12 @@ html.dark,
    element is offscreen (loops are opt-in via .is-live).
    ============================================================ */
 
-/* Focal handoff: the flow pipeline "energizes" once in view. A single travelling
-   current runs the connector from the first node to the last, then rests. */
-@keyframes flow-current {
-  0%   { background-position: 200% 0; opacity: 0; }
-  12%  { opacity: 1; }
-  88%  { opacity: 1; }
-  100% { background-position: -60% 0; opacity: 0.9; }
-}
-.flow-rail {
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--accent) 42%, transparent), transparent 60%),
-    color-mix(in srgb, var(--accent) 16%, transparent);
-  background-size: 55% 100%, 100% 100%;
-  background-repeat: no-repeat;
-  background-position: -60% 0, 0 0;
-}
-.flow-rail.is-live { animation: flow-current 2.4s var(--ease-out, cubic-bezier(0.22,1,0.36,1)) 0.15s both; }
-@media (prefers-reduced-motion: reduce) {
-  .flow-rail { background: color-mix(in srgb, var(--accent) 26%, transparent); }
-  .flow-rail.is-live { animation: none; }
-}
+/* `.flow-rail` / `@keyframes flow-current` lived here — one travelling current
+   that swept the whole six-node connector once and left nothing behind. The
+   rebuilt FlowDiagram draws its rail per segment instead, in step order, so the
+   path *stays* drawn; it was the only consumer, so both are gone rather than
+   kept as a style nothing selects. `.node-wake` below is still live (FlowDiagram
+   and DashboardMockup). */
 
 /* A node "wakes up": a one-shot ring pulse used as the automation reaches it. */
 @keyframes node-wake {
@@ -753,7 +856,11 @@ html.dark,
 
 /* Inline-styled shop DS hooks — these components set styles inline, so hover/
    active feedback lives here as class hooks (transform-only, reduced-motion safe). */
-.ds-btn { transition: background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out); }
+.ds-btn { letter-spacing: -0.01em; transition: background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out); }
+/* Tracking is a Latin adjustment. Arabic glyphs join, and any change to the
+   spacing breaks the joins or eats the gap between words: "المتابعة كعميل"
+   rendered as "المتابعةكعميل". Gated on direction, not removed. */
+[dir="rtl"] .ds-btn { letter-spacing: normal; }
 @media (hover: hover) { .ds-btn:not(:disabled):hover { transform: translateY(-1px); } }
 .ds-btn:not(:disabled):active { transform: scale(0.97); }
 

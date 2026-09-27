@@ -31,6 +31,17 @@ export function currencyLabel(currency: string): string {
   return CURRENCY_LABELS[currency] ?? currency;
 }
 
+const GB = 1024 * 1024 * 1024;
+
+/**
+ * Gigabytes to one decimal, so an admin-set 1.5 GB reads as 1.5 rather than
+ * rounding to 2. Seeded caps are whole GiB and come out whole. Format the result
+ * with `formatNumber`, which gives French its decimal comma.
+ */
+export function bytesToGb(bytes: number): number {
+  return Math.round((bytes / GB) * 10) / 10;
+}
+
 export function formatNumber(locale: Locale, value: number): string {
   return new Intl.NumberFormat(locale, { numberingSystem: "latn" }).format(value);
 }

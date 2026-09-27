@@ -10,6 +10,7 @@ import { breadcrumbJsonLd, faqPageJsonLd } from "@/lib/seo/jsonld";
 import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath } from "@/i18n/routing";
 import { FAQ_GROUPS } from "@/lib/marketing/faq";
+import { getPlanFacts } from "@/lib/marketing/plans.api";
 
 const PATH = "/faq";
 
@@ -38,6 +39,8 @@ export default async function FaqPage({ params }: PageProps) {
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: "pages" });
+  // Four answers quote plan figures, and they come from the live catalogue — see plan-facts.ts.
+  const facts = await getPlanFacts(locale);
 
   const trail = [
     { name: t("common.home"), path: "/" },
@@ -50,7 +53,7 @@ export default async function FaqPage({ params }: PageProps) {
     items: group.items.map((id) => ({
       id,
       question: t(`faq.q.${id}.q`),
-      answer: t(`faq.q.${id}.a`),
+      answer: t(`faq.q.${id}.a`, facts),
     })),
   }));
 

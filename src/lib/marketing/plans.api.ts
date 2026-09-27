@@ -11,6 +11,11 @@
  * build time rather than at runtime in someone's browser.
  */
 import "server-only";
+import { cache } from "react";
+import { getTranslations } from "next-intl/server";
+import type { Locale } from "@/i18n/routing";
+import { describeFetchError, fetchWithRetry } from "@/lib/build-fetch";
+import { buildPlanFacts, type PlanFacts } from "./plan-facts";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8022";
 
@@ -47,6 +52,15 @@ export type PublicPlan = {
   max_storage_bytes: number | null;
   commission_percent: number | null;
   max_unterminated_shipments: number | null;
+  /**
+   * Agent plans only: the cash-on-delivery money, in XAF, an agent on this tier
+   * may carry once their identity is verified. ⚠ `null` means **no** COD, the
+   * opposite of every other limit here. See `PLAN_LIMITS`.
+   *
+   * Optional because it was published on 2026-09-21, and an API older than that
+   * omits the key entirely. Absent means "not told", never "none".
+   */
+  max_cod_pool?: number | null;
   live_tracking_enabled: boolean;
   is_active: boolean;
   sort_order: number;
@@ -78,15 +92,21 @@ export type CreditCatalog = {
  *
  * Reading `null` as "unlimited" everywhere would print "unlimited commission" on
  * every agency card. So a role renders only the fields listed here, and within
- * that list `null` always means unlimited. A field a role does not use is simply
- * absent from its list and never reaches the formatter.
+ * that list `null` means unlimited. A field a role does not use is simply absent
+ * from its list and never reaches the formatter.
  *
- * `key` resolves to `pages.plans.limits.<key>` for the label.
+ * ⚠ **Except the COD pool, which fails closed.** An agent plan with
+ * `max_cod_pool: null` carries no cash at all, because it is cash. So it has
+ * its own `format`, and the card formats it without ever reaching the
+ * "unlimited" branch.
+ *
+ * `key` resolves to `pages.plans.limits.<key>` for the label, except `codPool`,
+ * whose line is a whole sentence (`pages.plans.codPool`).
  */
 export type LimitSpec = {
   key: string;
   field: keyof PublicPlan;
-  format: "count" | "bytes" | "percent";
+  format: "count" | "bytes" | "percent" | "codPool";
 };
 
 export const PLAN_LIMITS: Record<PlanRole, LimitSpec[]> = {
@@ -103,10 +123,31 @@ export const PLAN_LIMITS: Record<PlanRole, LimitSpec[]> = {
   ],
   agent: [
     { key: "concurrentDeliveries", field: "max_unterminated_shipments", format: "count" },
+    // Beside the delivery cap, as api-doc/public/FRONTEND-CHANGELOG-cod-pool.md asks.
+    { key: "codPool", field: "max_cod_pool", format: "codPool" },
     { key: "storage", field: "max_storage_bytes", format: "bytes" },
     { key: "credits", field: "credit_allowance", format: "count" },
   ],
 };
+
+/**
+ * The pool is XAF by contract, not in the plan's `currency`. That field prices
+ * the plan; a plan priced in another currency would still cap cash in XAF.
+ */
+export const COD_POOL_CURRENCY = "XAF";
+
+/**
+ * Whether a card states a COD amount, and so whether the identity-verification
+ * footnote has anything to qualify. Gated on the role's own list, so a stray
+ * number on a vendor plan cannot put the footnote under the vendor cards.
+ */
+export function carriesCodPool(plan: PublicPlan): boolean {
+  return (
+    PLAN_LIMITS[plan.role].some((spec) => spec.format === "codPool") &&
+    typeof plan.max_cod_pool === "number" &&
+    plan.max_cod_pool > 0
+  );
+}
 
 /* ─── Fetching ────────────────────────────────────────────────────────────── */
 
@@ -127,9 +168,9 @@ async function getJson<T>(path: string): Promise<T> {
   let res: Response;
 
   try {
-    res = await fetch(url, { next: { revalidate: PLAN_REVALIDATE_SECONDS } });
+    res = await fetchWithRetry(url, { next: { revalidate: PLAN_REVALIDATE_SECONDS } });
   } catch (error) {
-    throw new PlanCatalogError(url, error instanceof Error ? error.message : "network error");
+    throw new PlanCatalogError(url, describeFetchError(error));
   }
 
   if (!res.ok) throw new PlanCatalogError(url, `HTTP ${res.status}`);
@@ -176,13 +217,40 @@ export async function fetchCreditCatalog(): Promise<CreditCatalog> {
   return getJson<CreditCatalog>("/api/public/credit-packs");
 }
 
+/**
+ * Every catalogue figure the marketing sentences quote, as ready-to-print
+ * phrases in `locale` ("75 products", "5,000 FCFA per 30 days").
+ *
+ * Pass the result as the values of any `t()` whose message carries one of its
+ * placeholders. Those sentences hold no numbers of their own, so an admin edit
+ * reaches them on the same five-minute revalidation as the cards. See
+ * plan-facts.ts for what each placeholder means and what can still fail.
+ *
+ * `cache` so a page and its `generateMetadata` share one build per request.
+ */
+export const getPlanFacts = cache(async (locale: Locale): Promise<PlanFacts> => {
+  const [plansByRole, credits, phrase] = await Promise.all([
+    fetchPlansByRole(),
+    fetchCreditCatalog(),
+    getTranslations({ locale, namespace: "pages.facts" }),
+  ]);
+
+  const quoted = new Set(["vectorisation", "whatsappTemplate"]);
+  for (const action of Object.keys(credits.actionCosts)) {
+    // The credits prose names two metered actions. A third is not a wrong
+    // number, so it must not stop the page; it is a sentence to write.
+    if (!quoted.has(action)) console.warn(`[plan-facts] "${action}" is metered but no sentence describes it`);
+  }
+
+  return buildPlanFacts({
+    plans: Object.values(plansByRole).flat(),
+    credits,
+    locale,
+    phrase: (key, values) => phrase(key, values),
+  });
+});
+
 /* ─── Small helpers the pages need ────────────────────────────────────────── */
-
-const GB = 1024 * 1024 * 1024;
-
-export function bytesToGb(bytes: number): number {
-  return Math.round(bytes / GB);
-}
 
 /** The tier a role's card grid should visually lead with. */
 export function highlightCodeFor(plans: PublicPlan[]): string | undefined {

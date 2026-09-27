@@ -28,6 +28,7 @@
  * ignored client-side.
  */
 import { API_BASE, type ListMeta } from "@/lib/api/client";
+import { describeFetchError, fetchWithRetry } from "@/lib/build-fetch";
 import type {
   CategoryCount,
   Product,
@@ -128,7 +129,7 @@ async function request<T>(path: string, options: CatalogReadOptions = {}): Promi
   let res: Response;
 
   try {
-    res = await fetch(url, {
+    res = await fetchWithRetry(url, {
       // `cache` and `next.revalidate` are mutually exclusive — passing both is a
       // Next build error, so this picks one.
       ...(options.fresh
@@ -137,7 +138,7 @@ async function request<T>(path: string, options: CatalogReadOptions = {}): Promi
       headers: { accept: "application/json" },
     });
   } catch (error) {
-    throw new CatalogApiError(url, error instanceof Error ? error.message : "network error");
+    throw new CatalogApiError(url, describeFetchError(error));
   }
 
   let body: Envelope<T>;

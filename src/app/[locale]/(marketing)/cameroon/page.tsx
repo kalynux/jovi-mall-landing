@@ -123,7 +123,7 @@ export default async function CameroonPage({ params }: PageProps) {
               href={cityPath(city.slug)}
               className="card p-5 transition-colors hover:border-role-soft"
             >
-              <p className="font-display text-[11px] font-bold uppercase tracking-[0.12em] text-role">
+              <p className="tag">
                 {t(`regions.${city.region}`)}
               </p>
               <h3 className="mt-2 font-display text-base font-semibold text-[var(--text-primary)]">

@@ -13,6 +13,7 @@
  */
 import "server-only";
 import { getTranslations } from "next-intl/server";
+import { describeFetchError, fetchWithRetry } from "@/lib/build-fetch";
 import { LOCALE_CODES, localePath, type Locale } from "@/i18n/routing";
 import { articlePath, categoryPath } from "./blog.routes";
 import { readingMinutes } from "./blog.format";
@@ -124,14 +125,14 @@ async function request<T>(path: string): Promise<{ ok: true; data: T } | { ok: f
   let res: Response;
 
   try {
-    res = await fetch(url, {
+    res = await fetchWithRetry(url, {
       next: { revalidate: BLOG_REVALIDATE_SECONDS },
       // The 404 that says "this slug moved" carries the new slug in its body,
       // so an error response is data here, not just a status to react to.
       headers: { accept: "application/json" },
     });
   } catch (error) {
-    throw new BlogApiError(url, error instanceof Error ? error.message : "network error");
+    throw new BlogApiError(url, describeFetchError(error));
   }
 
   let body: Envelope<T>;

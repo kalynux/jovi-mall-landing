@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useAuth } from "@/lib/auth/useAuth";
+import { isCustomerSession } from "@/lib/shop/customer-session";
 import {
   listWishlist,
   saveProduct,
@@ -97,8 +98,11 @@ function readLocal(): Set<string> {
  * represent.
  */
 export function FavoritesProvider({ children }: { children: ReactNode }) {
-  const { status } = useAuth();
-  const signedIn = status === "authenticated";
+  const { status, role } = useAuth();
+  // A customer session, not any session: the wishlist routes are customer-only,
+  // so a vendor's hearts would otherwise fill and then silently roll back. For
+  // that session this is the signed-out store; see `isCustomerSession`.
+  const signedIn = isCustomerSession(status, role);
 
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);

@@ -19,6 +19,7 @@ import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath } from "@/i18n/routing";
 import { AGENT_FAQ } from "@/lib/marketing/faq";
+import { getPlanFacts } from "@/lib/marketing/plans.api";
 
 const PATH = "/agents";
 
@@ -47,6 +48,8 @@ export default async function AgentsPage({ params }: PageProps) {
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: "pages" });
+  // The free tier's delivery cap comes from the live catalogue — see plan-facts.ts.
+  const facts = await getPlanFacts(locale);
 
   const trail = [
     { name: t("common.home"), path: "/" },
@@ -63,7 +66,7 @@ export default async function AgentsPage({ params }: PageProps) {
   const faqItems = AGENT_FAQ.map((id) => ({
     id,
     question: t(`faq.q.${id}.q`),
-    answer: t(`faq.q.${id}.a`),
+    answer: t(`faq.q.${id}.a`, facts),
   }));
 
   return (
@@ -92,10 +95,13 @@ export default async function AgentsPage({ params }: PageProps) {
               t("agents.earnings.p3"),
             ]}
           />
+          <p className="mt-6 max-w-2xl rounded-2xl border border-[var(--border)] bg-[var(--surface-glass)] p-4 text-sm leading-relaxed text-[var(--text-muted)]">
+            {t("common.payoutCapNote")}
+          </p>
         </Section>
 
         <Section title={t("agents.capacity.title")} tone="subtle">
-          <Prose paragraphs={[t("agents.capacity.p1"), t("agents.capacity.p2")]} />
+          <Prose paragraphs={[t("agents.capacity.p1", facts), t("agents.capacity.p2")]} />
           <p className="mt-5 text-sm">
             <TextLink href="/pricing#agents">{t("common.ctaPricing")}</TextLink>
           </p>
@@ -124,7 +130,7 @@ export default async function AgentsPage({ params }: PageProps) {
         <CtaBand
           title={t("agents.cta.title")}
           body={t("agents.cta.body")}
-          finePrint={t("agents.cta.finePrint")}
+          finePrint={t("agents.cta.finePrint", facts)}
           primary={{ href: "/register?role=agent", label: t("common.ctaAgent") }}
           primaryRole="agent"
           secondary={{ href: "/agencies", label: t("nav.agencies") }}
