@@ -31,6 +31,8 @@ import { productPathFor, storePath } from "@/lib/shop/shop.routes";
 import { recordView } from "@/lib/shop/saved.api";
 import { ProductReviews } from "@/components/shop/ProductReviews";
 import { BookingPanel } from "@/components/shop/BookingPanel";
+import { BargainButton } from "@/components/shop/BargainButton";
+import { BARGAIN_ENABLED } from "@/lib/shop/bargain";
 import type {
   CancellationPolicy,
   Product,
@@ -211,6 +213,10 @@ export function ProductDetail({
   const currency = variant?.currency ?? "XAF";
   const pct = discountPct(unitPrice, variant?.compareAtPrice);
   const lineQty = p.type === "physical" ? qty : 1;
+  // Per variant: the window is configured per variant, so switching "Red" to
+  // "Blue" can take the button away. Hidden when the variant cannot be bought
+  // at all — the bot would only answer that it is sold out.
+  const bargainable = BARGAIN_ENABLED && buyable && Boolean(variant?.negotiable);
 
   /** Digital skips the cart entirely — see the note at the top of this file. */
   const buyNow = isDigital;
@@ -607,6 +613,16 @@ export function ProductDetail({
             </div>
           </div>
 
+          {bargainable && variant && (
+            <div style={{ marginTop: 10 }}>
+              <BargainButton
+                productId={p.id}
+                variantId={variant.id}
+                itemLabel={p.variants.length > 1 ? `${p.title} — ${variant.name}` : p.title}
+              />
+            </div>
+          )}
+
           {conflictNote && (
             <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>
               {conflictNote}
@@ -748,6 +764,7 @@ export function ProductDetail({
                   favorite={isFavorite(item.id)}
                   onToggleFavorite={() => toggle(item.id)}
                   inStock={item.inStock}
+                  negotiable={item.negotiable}
                   href={productPathFor(item)}
                 />
               </div>
@@ -777,6 +794,7 @@ export function ProductDetail({
                   favorite={isFavorite(item.id)}
                   onToggleFavorite={() => toggle(item.id)}
                   inStock={item.inStock}
+                  negotiable={item.negotiable}
                   href={productPathFor(item)}
                 />
               </div>

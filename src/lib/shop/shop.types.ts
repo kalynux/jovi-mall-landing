@@ -209,6 +209,12 @@ export interface ProductListItem {
   /** **Omitted** when every sellable variant costs the same. */
   priceRange?: PriceRange;
   inStock: boolean;
+  /**
+   * The **default variant's** bargain window is live. It says a window exists,
+   * never its bounds — the vendor's floor is not published anywhere public.
+   * Optional only so a response from before the field reads as "no".
+   */
+  negotiable?: boolean;
 
   /** Thumbnail only. `null` when the product has no usable image. */
   image: FileDetail | null;
@@ -279,6 +285,12 @@ export interface Variant {
   compareAtPrice: number | null;
   currency: string;
   inStock: boolean;
+  /**
+   * This variant's price is open to haggling in the bot — the fact the Bargain
+   * button reads. Per variant, because the window is configured per variant;
+   * on a negotiable variant `price` is the vendor's ask. Absent reads as "no".
+   */
+  negotiable?: boolean;
 
   /**
    * ⚠️ **The selection key.** Match a variant on this set — never on a signature
@@ -499,6 +511,11 @@ export interface CartLine {
   productSlug: string;
   storeSlug: string;
   storeName: string;
+  /**
+   * The seller, from the server line — how the quote's `perVendor` is matched
+   * back to rows. Absent on an anonymous cart, which is never quoted.
+   */
+  vendorId?: string;
   /**
    * True when `price` is a number the customer **agreed in chat**, not the shelf
    * price. Purely a label: the amount is already in `price`.

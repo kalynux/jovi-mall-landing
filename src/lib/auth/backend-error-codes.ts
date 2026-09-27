@@ -302,6 +302,14 @@ export type BackendErrorCode =
      * before the pay button.
      */
     | "ORDER_DELIVERY_ADDRESS_REQUIRED"
+    /**
+     * 422 — one shop's items are too small to carry the delivery fee the vendor
+     * pays (ADR-A07). Online is checked per shop, cash on delivery per agency.
+     * `details`: `{ vendorId, scope, agencyId, subtotal, minimumSubtotal,
+     * shortfall, maxDeliveryPercent, reason, currency }`. Predicted by the cart
+     * quote's `perVendor[].deliveryMinimum`; checkout names the shop from it.
+     */
+    | "ORDER_BELOW_DELIVERY_MINIMUM"
     | "CANCELLATION_NOT_ALLOWED"
     // ─── Shipment ──────────────────────────────────────────────────────────────
     | "SHIPMENT_NOT_FOUND"

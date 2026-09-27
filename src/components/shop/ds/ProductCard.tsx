@@ -7,6 +7,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
 import type { PriceRange, ProductType } from "@/lib/shop/shop.types";
 import { unavailableLabelKey } from "@/lib/shop/availability";
+import { BARGAIN_ENABLED } from "@/lib/shop/bargain";
 import { discountPct } from "@/lib/shop/format";
 import { Badge } from "./Badge";
 import { Icon, type IconName } from "./Icon";
@@ -48,6 +49,13 @@ export interface ProductCardProps {
   onToggleFavorite?: () => void;
   /** Boolean by design — the API publishes no stock count. */
   inStock?: boolean;
+  /**
+   * The default variant's price is open to haggling. A marker only — the card
+   * is a link, and the Bargain button itself lives on the product page, where
+   * the shopper picks the variant the haggle is about. Drawn only while the
+   * web bargain feature is switched on (`lib/shop/bargain.ts`).
+   */
+  negotiable?: boolean;
   onQuickAdd?: () => void;
   /**
    * The product's URL.
@@ -130,6 +138,7 @@ export function ProductCard(props: ProductCardProps) {
     favorite,
     onToggleFavorite,
     inStock = true,
+    negotiable,
     onQuickAdd,
     href,
     onClick,
@@ -259,6 +268,29 @@ export function ProductCard(props: ProductCardProps) {
             {tKey(unavailableLabelKey(type))}
           </span>
         </div>
+      )}
+      {inStock && negotiable && BARGAIN_ENABLED && (
+        <span
+          role="img"
+          aria-label={t("negotiable")}
+          title={t("negotiable")}
+          style={{
+            position: "absolute",
+            bottom: 8,
+            left: 8,
+            width: 30,
+            height: 30,
+            borderRadius: "50%",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#FFFFFF",
+            color: "var(--brand)",
+            boxShadow: "var(--shadow-sm)",
+          }}
+        >
+          <Icon name="handshake" size={16} />
+        </span>
       )}
       {inStock && onQuickAdd && (
         <button

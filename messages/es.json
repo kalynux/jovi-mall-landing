@@ -858,7 +858,11 @@
             "NEGOTIATION_LOCK_EXPIRED": "Un precio acordado por chat ha caducado, así que no se ha realizado ningún pedido. Escribe al vendedor para acordar uno nuevo, o añade el artículo a su precio normal.",
             "NEGOTIATION_LOCK_CONSUMED": "Un precio acordado por chat ya se ha usado en otro pedido, así que no se ha realizado ningún pedido. Añade el artículo a su precio normal, o acuerda uno nuevo con el vendedor.",
             "NEGOTIATION_LOCK_VARIANT_MISMATCH": "Un precio acordado por chat era para otro artículo u otra cantidad, así que no se ha realizado ningún pedido. Restablece lo que acordaste, o añade el artículo a su precio normal.",
-            "NEGOTIATION_LOCK_WINDOW_MOVED": "El vendedor ha cambiado un precio acordado por chat, así que no se ha realizado ningún pedido. Escríbele para acordar uno nuevo, o añade el artículo a su precio normal."
+            "NEGOTIATION_LOCK_WINDOW_MOVED": "El vendedor ha cambiado un precio acordado por chat, así que no se ha realizado ningún pedido. Escríbele para acordar uno nuevo, o añade el artículo a su precio normal.",
+            "ORDER_BELOW_DELIVERY_MINIMUM": "Tus artículos {from} no alcanzan el mínimo para el envío. Añade {amount} más de ese vendedor e inténtalo de nuevo — no se ha cobrado nada.",
+            "ORDER_BELOW_DELIVERY_MINIMUM_UNKNOWN": "Tus artículos {from} no alcanzan el mínimo para el envío. Añade más artículos de ese vendedor e inténtalo de nuevo — no se ha cobrado nada.",
+            "ORDER_BELOW_DELIVERY_MINIMUM_UNREACHABLE": "Tus artículos {from} no se pueden enviar por ahora. Quítalos e inténtalo de nuevo — no se ha cobrado nada.",
+            "ORDER_BELOW_DELIVERY_MINIMUM_COD_UNREACHABLE": "Tus artículos {from} no se pueden pagar contra entrega. Paga en línea o quítalos — no se ha cobrado nada."
         }
     },
     "errorPage": {
@@ -935,8 +939,7 @@
             "allQuestions": "Ver todas las preguntas",
             "currencyNote": "Los precios están en FCFA (XAF), la moneda del mercado al que Wi-Mall sirve primero.",
             "faqShort": "FAQ",
-            "openFormNewTab": "Abrir el formulario en una pestaña nueva",
-            "payoutCapNote": "Las cuentas no verificadas pueden retirar como máximo el 45 % de su saldo disponible al mes, y ese 45 % debe alcanzar por sí solo el pago mínimo de 10.000 FCFA — por debajo de eso no hay retiro posible hasta que el saldo crezca. Verificar la cuenta elimina el límite."
+            "openFormNewTab": "Abrir el formulario en una pestaña nueva"
         },
         "plans": {
             "free": "Gratis",
@@ -1380,10 +1383,6 @@
                 "credits": {
                     "q": "¿Qué son los créditos, y tengo que comprarlos?",
                     "a": "Los créditos miden dos cosas que cuestan dinero cada vez que ocurren: indexar un producto para que el asistente pueda recomendarlo, por {vectorisationCost}, y enviar un mensaje de plantilla de WhatsApp facturable, por {whatsappTemplateCost}. Todos los planes conceden una asignación al activarse, así que la mayoría de las cuentas nunca compra ninguno; si agotas la tuya, los paquetes empiezan en {cheapestPackPrice} por {cheapestPackCredits}."
-                },
-                "payoutVerification": {
-                    "q": "¿Hay un límite de retiro antes de que se verifique mi cuenta?",
-                    "a": "Sí. Mientras una cuenta no está verificada, el retiro se limita al 45 % del saldo disponible en un mes dado. Ese 45 % también tiene que alcanzar por sí solo el pago mínimo de 10.000 FCFA — así que si el 45 % de tu saldo queda por debajo de 10.000 FCFA, no hay retiro posible hasta que el saldo crezca o se verifique la cuenta. Verificar la cuenta elimina el límite y todo el saldo disponible pasa a ser retirable."
                 },
                 "renewal": {
                     "q": "¿Los planes se renuevan automáticamente?",
@@ -2041,7 +2040,8 @@
                 "vendor": "Vendedor verificado",
                 "agency": "Empresa de reparto verificada",
                 "agent": "Repartidor verificado"
-            }
+            },
+            "negotiable": "Precio negociable"
         },
         "chrome": {
             "brandHome": "Tienda Wi-Mall",
@@ -2207,6 +2207,16 @@
                 "noTimesButton": "No hay horarios disponibles",
                 "noTimesNote": "Ahora mismo no hay ningún horario abierto.",
                 "askStore": "Escribir a {store}"
+            },
+            "bargain": {
+                "cta": "Negociar el precio",
+                "sheetTitle": "Negociar en el chat",
+                "sheetBody": "Nuestro asistente negocia el precio contigo en el chat. ¿Dónde quieres continuar?",
+                "whatsapp": "Continuar en WhatsApp",
+                "whatsappNote": "El mensaje ya está escrito: solo tienes que enviarlo.",
+                "telegram": "Continuar en Telegram",
+                "telegramNote": "Toca Iniciar en Telegram y el asistente retoma este artículo.",
+                "message": "Me gustaría negociar el precio de {item}."
             }
         },
         "store": {
@@ -2310,6 +2320,17 @@
                 "SERVER_CART_KEPT": "ya sustituido por el carrito de tu cuenta",
                 "unknown": "no disponible"
             }
+        },
+        "deliveryMinimum": {
+            "title": "{n, plural, one {El envío aún no está cubierto para un vendedor} other {El envío aún no está cubierto para # vendedores}}",
+            "addMore": "Añade {amount} más {from} para hacer el pedido — el envío de estos artículos aún no está cubierto.",
+            "unreachable": "Los artículos {from} no se pueden enviar por ahora. Quítalos para continuar.",
+            "codUnreachable": "Los artículos {from} no se pueden pagar contra entrega. Paga en línea o quítalos.",
+            "codHint": "El pago contra entrega se comprueba por separado para cada repartidor, así que puede requerir una cesta mayor que el pago en línea.",
+            "from": "de {name}",
+            "fromSellerOf": "del vendedor de {item}",
+            "fromThisSeller": "de este vendedor",
+            "buttonHint": "Añade más artículos del vendedor indicado arriba para continuar"
         },
         "checkout": {
             "deliveryAddress": "Dirección de entrega",

@@ -224,6 +224,9 @@ export default function DeliveryMap({
         scrollWheelZoom: false,
       });
       programmatic(() => map?.setView([at.latitude, at.longitude], LONE_COURIER_ZOOM));
+      // Leaflet's own "Leaflet" credit is optional (BSD-2, no attribution
+      // clause). The tile provider's credit below is not, so only the prefix goes.
+      map.attributionControl.setPrefix(false);
 
       tilesRef.current = L.tileLayer(activeTileUrl(), {
         maxZoom: MAP_MAX_ZOOM,

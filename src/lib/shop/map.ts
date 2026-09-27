@@ -51,7 +51,7 @@ export const MAP_TILE_URL_DARK = process.env.NEXT_PUBLIC_MAP_TILE_URL_DARK ?? ""
  * 🔴 **Practically every provider requires this, including OSM.** It is a
  * separate variable because it belongs to the same decision as the URL and is
  * wrong to guess: the correct string for Carto is not the correct string for
- * MapTiler. Leaflet still shows its own "Leaflet" credit either way.
+ * MapTiler. Leaflet's own "Leaflet" prefix is switched off in DeliveryMap.
  */
 export const MAP_TILE_ATTRIBUTION = process.env.NEXT_PUBLIC_MAP_TILE_ATTRIBUTION ?? "";
 

@@ -24,6 +24,7 @@ import type {
   CartQuote,
   CartDroppedLine,
   MergeCartResult,
+  QuotePaymentMethod,
   ServerCart,
 } from "./customer.types";
 
@@ -134,10 +135,20 @@ export async function mergeCart(
  * `GET /api/geo/search` fails here (`422 ORDER_DELIVERY_ADDRESS_REQUIRED`,
  * `details.reason: "selected_address_not_geocoded"`) instead of at the pay
  * button. That is the main reason the parameter exists.
+ *
+ * Send `paymentMethod` too once the shopper has picked one (default `online`):
+ * the delivery minimum is stricter for cash on delivery, and a basket can pass
+ * online and fail as COD.
  */
-export async function quoteCart(deliveryAddressId?: string): Promise<CartQuote> {
+export async function quoteCart(
+  deliveryAddressId?: string,
+  paymentMethod?: QuotePaymentMethod
+): Promise<CartQuote> {
   return apiFetch<CartQuote>("/api/customer/cart/quote", {
     method: "POST",
-    body: JSON.stringify(deliveryAddressId ? { deliveryAddressId } : {}),
+    body: JSON.stringify({
+      ...(deliveryAddressId ? { deliveryAddressId } : {}),
+      ...(paymentMethod ? { paymentMethod } : {}),
+    }),
   });
 }

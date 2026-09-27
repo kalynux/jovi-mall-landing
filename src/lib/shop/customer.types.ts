@@ -728,6 +728,63 @@ export interface CartQuoteVendorLine {
   subtotal: number;
   delivery: number;
   absorbedByVendor: number;
+  /**
+   * Whether this shop's part of the basket can carry its delivery cost
+   * (ADR-A07). `met: false` means checkout will refuse with
+   * `ORDER_BELOW_DELIVERY_MINIMUM`. `null` means NOT EVALUATED — a digital-only
+   * shop, or an estimate the server could not make; checkout still decides.
+   */
+  deliveryMinimum: DeliveryMinimumQuote | null;
+}
+
+/** The payment method a quote's delivery minimum is evaluated for. */
+export type QuotePaymentMethod = "online" | "cash_on_delivery";
+
+/** Why a delivery-minimum unit failed. `null` on a unit that passed. */
+export type DeliveryMinimumReason = "delivery_cost_ratio" | "vendor_net_not_positive";
+
+/**
+ * One unit the minimum was checked over: the whole shop online
+ * (`agencyId: null`), one delivery agency's items for cash on delivery.
+ */
+export interface DeliveryMinimumUnit {
+  agencyId: string | null;
+  subtotal: number;
+  met: boolean;
+  reason: DeliveryMinimumReason | null;
+  /**
+   * ⚠ `null` when NO basket size passes (the agency's COD fee alone is too
+   * high) — and then `shortfall` is `0` although `met` is false. Test `met`,
+   * never `shortfall > 0`.
+   */
+  minimumSubtotal: number | null;
+  shortfall: number;
+}
+
+export interface DeliveryMinimumQuote {
+  met: boolean;
+  /** `order` for an online payment, `shipment` for cash on delivery. */
+  checkedPer: "order" | "shipment";
+  maxDeliveryPercent: number;
+  /** How much more is needed from THIS shop in total; 0 when met. */
+  shortfall: number;
+  units: DeliveryMinimumUnit[];
+}
+
+/**
+ * `details` of `422 ORDER_BELOW_DELIVERY_MINIMUM` — the first failing unit.
+ * Deliberately no commission, fee or vendor net: those are the vendor's terms.
+ */
+export interface DeliveryMinimumErrorDetails {
+  vendorId: string;
+  scope: "order" | "shipment";
+  agencyId: string | null;
+  subtotal: number;
+  minimumSubtotal: number | null;
+  shortfall: number;
+  maxDeliveryPercent: number;
+  reason: DeliveryMinimumReason;
+  currency: string;
 }
 
 /**
@@ -746,6 +803,11 @@ export interface CartQuoteVendorLine {
  * `tax` and `discount` are pinned zeros: there is no tax engine and no coupon
  * model. They are present so the receipt does not change shape the day either
  * arrives.
+ *
+ * `meetsDeliveryMinimum: false` means checkout will refuse — one shop's items
+ * are too small to carry the delivery fee the vendor pays. It depends on
+ * `paymentMethod`: cash on delivery is checked per agency and adds the COD fee,
+ * so re-quote when the shopper switches method.
  */
 export interface CartQuote {
   currency: string;
@@ -755,5 +817,7 @@ export interface CartQuote {
   tax: number;
   discount: number;
   total: number;
+  paymentMethod: QuotePaymentMethod;
+  meetsDeliveryMinimum: boolean;
   perVendor: CartQuoteVendorLine[];
 }

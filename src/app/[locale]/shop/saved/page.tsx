@@ -355,6 +355,8 @@ export default function SavedPage() {
                 showVendor
                 freeDelivery={entry.product.freeDelivery}
                 inStock={entry.product.inStock}
+
+                negotiable={entry.product.negotiable}
                 favorite={tab === "saved" || favorites.has(entry.productId)}
                 onToggleFavorite={
                   tab === "saved" ? () => removeSaved(entry.productId) : () => toggle(entry.productId)

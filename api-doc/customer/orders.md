@@ -112,6 +112,7 @@ transaction. A **cash_on_delivery** checkout requires no payment call — see
 | 422 | `COD_ORDER_AMOUNT_EXCEEDS_LIMIT` | One vendor-order's total exceeds an agency's COD cap. `details: { agencyId, agencyName, maxOrderAmount, orderTotal }`. |
 | 422 | `ORDER_DELIVERY_ADDRESS_REQUIRED` | **New.** A physical checkout resolved no geocoded drop-off. `details.reason` is `no_delivery_address` or `selected_address_not_geocoded`. |
 | 422 | `CATALOG_INSUFFICIENT_STOCK` | **New.** A line cannot be satisfied. `details: { variantId, sku, requested, available }`. |
+| 422 | `ORDER_BELOW_DELIVERY_MINIMUM` | **New 2026-09-27** ([ADR-A07](../../docs/ADR-A07-DELIVERY-COST-CAP.md)). One shop's items are too small to carry their delivery cost, which the vendor pays. Online is checked per shop, cash on delivery per delivery agency. `details: { vendorId, scope, agencyId, subtotal, minimumSubtotal, shortfall, maxDeliveryPercent, reason, currency }` — tell the customer to add `shortfall` more **from that shop**. `minimumSubtotal: null` means no basket size passes (for COD, suggest paying online). Predict it with the cart quote's `perVendor[].deliveryMinimum`. Nothing is created and no stock is held. |
 | 404/409/422 | `NEGOTIATION_LOCK_*` | **New.** A line carrying a price agreed in chat could not spend its lock. Five codes — see [Negotiated lines at checkout](#negotiated-lines-at-checkout). |
 
 ⚠ **`details.agencyName` on the two COD refusals can be `null`.** The business name lives on
@@ -443,7 +444,7 @@ agency surfaces serve. There is one answer to "who is this agency", not a custom
 ### Who is carrying it — `agent`
 
 The person on the parcel, **while they are on the parcel**. Design record:
-`docs/ADR-A06-AGENT-IDENTITY-DISCLOSURE.md` (`backend/jovi-mall/docs/ADR-A06-AGENT-IDENTITY-DISCLOSURE.md` — not mirrored in this repository).
+[`docs/ADR-A06-AGENT-IDENTITY-DISCLOSURE.md`](../../docs/ADR-A06-AGENT-IDENTITY-DISCLOSURE.md).
 
 | Field | Notes |
 |---|---|
@@ -765,5 +766,5 @@ timeline event is appended, and an `order.cancelled` event is emitted (drives ve
 > **Auto-cancellation.** Independently of this endpoint, a daily background sweep cancels
 > orders left unpaid past the vendor's configured window
 > (`auto_cancel_unpaid_days`, default 3). See
-> vendor/profile.md (`backend/jovi-mall/api-doc/vendor/profile.md #put-apivendorprofileauto-cancel-unpaid-days` — not mirrored in this repository).
+> [vendor/profile.md](../vendor/profile.md#put-apivendorprofileauto-cancel-unpaid-days).
 > **Cash-on-delivery orders are exempt** — they are unpaid until handoff by design.

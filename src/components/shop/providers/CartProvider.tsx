@@ -205,6 +205,7 @@ function toLine(item: ServerCart["items"][number], snapshot?: CartLine): CartLin
     productSlug: snapshot?.productSlug ?? "",
     storeSlug: snapshot?.storeSlug ?? "",
     storeName: snapshot?.storeName ?? "",
+    vendorId: item.vendorId,
   };
 }
 

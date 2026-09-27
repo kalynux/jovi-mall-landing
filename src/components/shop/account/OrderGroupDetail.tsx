@@ -655,6 +655,7 @@ export function VendorOrderCard({
         <div
           style={{
             display: "flex",
+            flexWrap: "wrap",
             gap: 8,
             marginTop: 12,
             paddingTop: 10,
@@ -662,7 +663,14 @@ export function VendorOrderCard({
           }}
         >
           {canConfirmDelivery(order) && (
-            <Button size="sm" leadingIcon="circle-check-big" disabled={busy} onClick={onConfirm}>
+            <Button
+              block
+              elevated
+              size="lg"
+              leadingIcon="circle-check-big"
+              disabled={busy}
+              onClick={onConfirm}
+            >
               {tOrders("confirmDelivery")}
             </Button>
           )}
@@ -931,10 +939,11 @@ export function Shipments({
             )}
 
             {!cod && shipment.status === "out_for_delivery" && (
-              <div style={{ display: "flex", marginTop: 8 }}>
-                <div style={{ flex: 1 }} />
+              <div style={{ marginTop: 12 }}>
                 <Button
-                  size="sm"
+                  block
+                  elevated
+                  size="lg"
                   leadingIcon="circle-check-big"
                   disabled={busy === shipment.id}
                   onClick={() => void confirm(shipment.id)}

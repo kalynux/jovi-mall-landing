@@ -11,6 +11,7 @@ import {
   paymentReady,
 } from "@/components/shop/PaymentMethodPicker";
 import { useSavedPayment } from "@/components/shop/useSavedPayment";
+import { DeliveryMinimumNotice, fromShop } from "@/components/shop/DeliveryMinimumNotice";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import { ApiError } from "@/lib/auth/auth.types";
 import { isNetworkError } from "@/lib/errors/is-network-error";
@@ -22,7 +23,12 @@ import { getProfile } from "@/lib/shop/profile.api";
 import { initiatePayment, isSettledFailure } from "@/lib/shop/payments.api";
 import { rememberPaymentAttempt } from "@/lib/shop/payment-attempts";
 import { formatMoney } from "@/lib/shop/format";
-import type { CartQuote, SavedAddress } from "@/lib/shop/customer.types";
+import type { CartLine } from "@/lib/shop/shop.types";
+import type {
+  CartQuote,
+  DeliveryMinimumErrorDetails,
+  SavedAddress,
+} from "@/lib/shop/customer.types";
 
 /**
  * Checkout — real orders, real money.
@@ -47,6 +53,14 @@ import type { CartQuote, SavedAddress } from "@/lib/shop/customer.types";
  * And `CATALOG_INSUFFICIENT_STOCK` names the line in `details`, so it is
  * surfaced as "that size just went" with the number that is actually available,
  * not as a generic failure.
+ *
+ * ── The delivery minimum (ADR-A07) ───────────────────────────────────────────
+ *
+ * The vendor pays the delivery fee, so checkout refuses a shop's items that are
+ * too small to carry it (`ORDER_BELOW_DELIVERY_MINIMUM`). The quote predicts it
+ * for the payment method passed — and cash on delivery is stricter (checked per
+ * agency, with the COD fee), so the quote re-runs when the method changes and
+ * the pay button waits while `meetsDeliveryMinimum` is false.
  */
 
 function addressLine(address: SavedAddress): string {
@@ -76,6 +90,7 @@ export default function CheckoutPage() {
   /* This screen's own copy, and the frozen shared vocabulary. */
   const t = useTranslations("shop.checkout");
   const tKey = useTranslations();
+  const tMinimum = useTranslations("shop.deliveryMinimum");
 
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [addressId, setAddressId] = useState<string | null>(null);
@@ -139,7 +154,7 @@ export default function CheckoutPage() {
     };
   }, [status]);
 
-  /* ── Quote, re-run whenever the address changes ────────────────────────── */
+  /* ── Quote, re-run whenever the address or the payment method changes ──── */
 
   useEffect(() => {
     if (status !== "authenticated" || count === 0) return;
@@ -148,7 +163,10 @@ export default function CheckoutPage() {
     // Cleared in the handlers rather than here: a synchronous setState in an
     // effect body is a cascading render, and the previous error is still true
     // until the new quote answers.
-    quoteCart(needsAddress && addressId ? addressId : undefined)
+    quoteCart(
+      needsAddress && addressId ? addressId : undefined,
+      isCod ? "cash_on_delivery" : "online"
+    )
       .then((result) => {
         if (cancelled) return;
         setQuote(result);
@@ -167,7 +185,7 @@ export default function CheckoutPage() {
     return () => {
       cancelled = true;
     };
-  }, [status, addressId, count, needsAddress, tCheckout]);
+  }, [status, addressId, count, needsAddress, isCod, tCheckout]);
 
   /* ── Empty cart ────────────────────────────────────────────────────────── */
 
@@ -248,12 +266,14 @@ export default function CheckoutPage() {
       // they were. Either way the cart may have changed server-side, so re-read
       // it rather than leaving a stale view.
       void refresh();
-      setError(checkoutError(tCheckout, tErrors, err));
+      setError(checkoutError(tCheckout, tErrors, err, tMinimum, lines));
     }
   }, [
     isCod,
     needsAddress,
     addressId,
+    lines,
+    tMinimum,
     clear,
     option,
     phone,
@@ -296,7 +316,13 @@ export default function CheckoutPage() {
   const total = quote?.total ?? lines.reduce((sum, l) => sum + l.price * l.qty, 0);
   const phoneOk = paymentReady(option, phone);
   const addressOk = !needsAddress || Boolean(addressId);
-  const canPay = phoneOk && addressOk && !placing;
+  // Only a quote for the method on screen counts: a switch to COD re-quotes,
+  // and until it answers the online verdict must not unblock the button.
+  const shortOfMinimum =
+    quote !== null &&
+    quote.paymentMethod === (isCod ? "cash_on_delivery" : "online") &&
+    quote.meetsDeliveryMinimum === false;
+  const canPay = phoneOk && addressOk && !shortOfMinimum && !placing;
 
   return (
     <div className="mx-auto max-w-[760px] px-4 py-6 sm:px-6">
@@ -494,6 +520,8 @@ export default function CheckoutPage() {
         </div>
       )}
 
+      {shortOfMinimum && <DeliveryMinimumNotice quote={quote} lines={lines} />}
+
       <div
         style={{ display: "flex", alignItems: "center", gap: 12, position: "sticky", bottom: 0 }}
         className="stickybar rounded-t-2xl"
@@ -516,7 +544,9 @@ export default function CheckoutPage() {
               ? t("chooseAddress")
               : !phoneOk
                 ? t("enterValidNumber")
-                : undefined
+                : shortOfMinimum
+                  ? tMinimum("buttonHint")
+                  : undefined
           }
           onClick={() => void placeOrder()}
         >
@@ -597,7 +627,13 @@ function addressProblem(tCheckout: Translator, error: ApiError): string {
  * The two interpolated branches are handled ahead of the lookup because they
  * need `details`, which a plain code-to-string map has no way to reach.
  */
-function checkoutError(tCheckout: Translator, tErrors: Translator, error: unknown): string {
+function checkoutError(
+  tCheckout: Translator,
+  tErrors: Translator,
+  error: unknown,
+  tMinimum: Translator,
+  lines: CartLine[]
+): string {
   if (isNetworkError(error)) return tCheckout("NETWORK");
   if (!(error instanceof ApiError)) return tCheckout("GENERIC");
 
@@ -619,8 +655,43 @@ function checkoutError(tCheckout: Translator, tErrors: Translator, error: unknow
 
   if (error.code === "ORDER_DELIVERY_ADDRESS_REQUIRED") return addressProblem(tCheckout, error);
 
+  if (error.code === "ORDER_BELOW_DELIVERY_MINIMUM") {
+    return deliveryMinimumProblem(tCheckout, tMinimum, error, lines);
+  }
+
   const scoped = lookupMessage(tCheckout, error.code);
   if (scoped) return scoped;
 
   return translateError(tErrors, error, tCheckout("GENERIC"));
+}
+
+/**
+ * Checkout refused one shop's items as too small to carry their delivery.
+ *
+ * `details` is the first failing unit. It names the shop by `vendorId`, so the
+ * sentence can say WHICH shop to add to — items from another shop become a
+ * separate order and do not help. `minimumSubtotal: null` means no basket size
+ * passes; for cash on delivery that is "pay online", not "add more".
+ */
+function deliveryMinimumProblem(
+  tCheckout: Translator,
+  tMinimum: Translator,
+  error: ApiError,
+  lines: CartLine[]
+): string {
+  const details = error.details as Partial<DeliveryMinimumErrorDetails> | undefined;
+  const from = details?.vendorId ? fromShop(tMinimum, details.vendorId, lines) : tMinimum("fromThisSeller");
+
+  if (details?.minimumSubtotal === null) {
+    return details.scope === "shipment"
+      ? tCheckout("ORDER_BELOW_DELIVERY_MINIMUM_COD_UNREACHABLE", { from })
+      : tCheckout("ORDER_BELOW_DELIVERY_MINIMUM_UNREACHABLE", { from });
+  }
+  if (typeof details?.shortfall === "number" && details.shortfall > 0) {
+    return tCheckout("ORDER_BELOW_DELIVERY_MINIMUM", {
+      from,
+      amount: formatMoney(details.shortfall, details.currency ?? "XAF"),
+    });
+  }
+  return tCheckout("ORDER_BELOW_DELIVERY_MINIMUM_UNKNOWN", { from });
 }

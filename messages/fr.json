@@ -858,7 +858,11 @@
             "NEGOTIATION_LOCK_EXPIRED": "Un prix convenu par chat a expiré, donc rien n'a été commandé. Écrivez au vendeur pour en convenir d'un nouveau, ou ajoutez l'article à son prix normal.",
             "NEGOTIATION_LOCK_CONSUMED": "Un prix convenu par chat a déjà été utilisé sur une autre commande, donc rien n'a été commandé. Ajoutez l'article à son prix normal, ou convenez d'un nouveau prix avec le vendeur.",
             "NEGOTIATION_LOCK_VARIANT_MISMATCH": "Un prix convenu par chat portait sur un autre article ou une autre quantité, donc rien n'a été commandé. Rétablissez ce que vous aviez convenu, ou ajoutez l'article à son prix normal.",
-            "NEGOTIATION_LOCK_WINDOW_MOVED": "Le vendeur a modifié un prix convenu par chat, donc rien n'a été commandé. Écrivez-lui pour en convenir d'un nouveau, ou ajoutez l'article à son prix normal."
+            "NEGOTIATION_LOCK_WINDOW_MOVED": "Le vendeur a modifié un prix convenu par chat, donc rien n'a été commandé. Écrivez-lui pour en convenir d'un nouveau, ou ajoutez l'article à son prix normal.",
+            "ORDER_BELOW_DELIVERY_MINIMUM": "Vos articles pris {from} n'atteignent pas le minimum pour la livraison. Ajoutez {amount} de plus chez ce vendeur et réessayez — rien n'a été débité.",
+            "ORDER_BELOW_DELIVERY_MINIMUM_UNKNOWN": "Vos articles pris {from} n'atteignent pas le minimum pour la livraison. Ajoutez d'autres articles de ce vendeur et réessayez — rien n'a été débité.",
+            "ORDER_BELOW_DELIVERY_MINIMUM_UNREACHABLE": "Vos articles pris {from} ne peuvent pas être livrés pour le moment. Retirez-les et réessayez — rien n'a été débité.",
+            "ORDER_BELOW_DELIVERY_MINIMUM_COD_UNREACHABLE": "Vos articles pris {from} ne peuvent pas être payés à la livraison. Payez en ligne, ou retirez-les — rien n'a été débité."
         }
     },
     "errorPage": {
@@ -935,8 +939,7 @@
             "allQuestions": "Voir toutes les questions",
             "currencyNote": "Les prix sont en FCFA (XAF), la monnaie du marché que Wi-Mall sert en premier.",
             "faqShort": "FAQ",
-            "openFormNewTab": "Ouvrir le formulaire dans un nouvel onglet",
-            "payoutCapNote": "Les comptes non vérifiés peuvent retirer au maximum 45 % de leur solde disponible par mois, et ces 45 % doivent eux-mêmes atteindre le minimum de versement de 10 000 FCFA — en dessous, aucun retrait n'est possible tant que le solde n'augmente pas. La vérification du compte supprime ce plafond."
+            "openFormNewTab": "Ouvrir le formulaire dans un nouvel onglet"
         },
         "plans": {
             "free": "Gratuit",
@@ -1380,10 +1383,6 @@
                 "credits": {
                     "q": "Qu'est-ce que les crédits, et faut-il en acheter ?",
                     "a": "Les crédits mesurent deux choses qui coûtent de l'argent à chaque occurrence : indexer un produit pour que l'assistant puisse le recommander, à {vectorisationCost}, et envoyer un message modèle WhatsApp facturé, à {whatsappTemplateCost}. Chaque forfait accorde une dotation à son activation, donc la plupart des comptes n'en achètent jamais ; si vous épuisez la vôtre, les packs commencent à {cheapestPackPrice} pour {cheapestPackCredits}."
-                },
-                "payoutVerification": {
-                    "q": "Y a-t-il une limite de retrait avant la vérification de mon compte ?",
-                    "a": "Oui. Tant qu'un compte n'est pas vérifié, un retrait est plafonné à 45 % du solde disponible sur un mois donné. Ces 45 % doivent aussi atteindre à eux seuls le minimum de versement de 10 000 FCFA — donc si 45 % de votre solde représente moins de 10 000 FCFA, aucun retrait n'est possible tant que le solde n'augmente pas ou que le compte n'est pas vérifié. La vérification supprime le plafond et la totalité du solde disponible devient retirable."
                 },
                 "renewal": {
                     "q": "Les forfaits se renouvellent-ils automatiquement ?",
@@ -2041,7 +2040,8 @@
                 "vendor": "Vendeur vérifié",
                 "agency": "Société de livraison vérifiée",
                 "agent": "Livreur vérifié"
-            }
+            },
+            "negotiable": "Prix négociable"
         },
         "chrome": {
             "brandHome": "Boutique Wi-Mall",
@@ -2207,6 +2207,16 @@
                 "noTimesButton": "Aucun créneau disponible",
                 "noTimesNote": "Aucun créneau n’est ouvert pour le moment.",
                 "askStore": "Écrire à {store}"
+            },
+            "bargain": {
+                "cta": "Négocier le prix",
+                "sheetTitle": "Négocier dans le chat",
+                "sheetBody": "Notre assistant négocie le prix avec vous dans le chat. Où voulez-vous continuer ?",
+                "whatsapp": "Continuer sur WhatsApp",
+                "whatsappNote": "Le message est déjà rédigé — il suffit de l’envoyer.",
+                "telegram": "Continuer sur Telegram",
+                "telegramNote": "Appuyez sur Démarrer dans Telegram et l’assistant reprend cet article.",
+                "message": "Je voudrais négocier le prix de {item}."
             }
         },
         "store": {
@@ -2310,6 +2320,17 @@
                 "SERVER_CART_KEPT": "déjà remplacé par le panier de votre compte",
                 "unknown": "indisponible"
             }
+        },
+        "deliveryMinimum": {
+            "title": "{n, plural, one {La livraison n'est pas encore couverte pour un vendeur} other {La livraison n'est pas encore couverte pour # vendeurs}}",
+            "addMore": "Ajoutez {amount} de plus {from} pour commander — la livraison de ces articles n'est pas encore couverte.",
+            "unreachable": "Les articles pris {from} ne peuvent pas être livrés pour le moment. Retirez-les pour continuer.",
+            "codUnreachable": "Les articles pris {from} ne peuvent pas être payés à la livraison. Payez en ligne, ou retirez-les.",
+            "codHint": "Le paiement à la livraison est vérifié séparément pour chaque livreur : il peut demander un panier plus important que le paiement en ligne.",
+            "from": "chez {name}",
+            "fromSellerOf": "chez le vendeur de {item}",
+            "fromThisSeller": "chez ce vendeur",
+            "buttonHint": "Ajoutez des articles du vendeur indiqué ci-dessus pour continuer"
         },
         "checkout": {
             "deliveryAddress": "Adresse de livraison",

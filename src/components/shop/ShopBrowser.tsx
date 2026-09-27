@@ -278,6 +278,7 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
       favorite={isFavorite(product.id)}
       onToggleFavorite={() => toggle(product.id)}
       inStock={product.inStock}
+      negotiable={product.negotiable}
       onQuickAdd={() => void quickAdd(product)}
       href={productPathFor(product)}
     />

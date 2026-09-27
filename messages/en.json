@@ -858,7 +858,11 @@
             "NEGOTIATION_LOCK_EXPIRED": "A price you agreed in chat has expired, so nothing was ordered. Message the seller to agree a new one, or add the item at its normal price.",
             "NEGOTIATION_LOCK_CONSUMED": "A price you agreed in chat has already been used on another order, so nothing was ordered. Add the item at its normal price, or agree a new price with the seller.",
             "NEGOTIATION_LOCK_VARIANT_MISMATCH": "A price you agreed in chat was for a different item or quantity, so nothing was ordered. Restore what you agreed, or add the item at its normal price.",
-            "NEGOTIATION_LOCK_WINDOW_MOVED": "The seller has changed a price you agreed in chat, so nothing was ordered. Message them to agree a new one, or add the item at its normal price."
+            "NEGOTIATION_LOCK_WINDOW_MOVED": "The seller has changed a price you agreed in chat, so nothing was ordered. Message them to agree a new one, or add the item at its normal price.",
+            "ORDER_BELOW_DELIVERY_MINIMUM": "Your items {from} are below the minimum for delivery. Add {amount} more from that seller and try again — nothing was charged.",
+            "ORDER_BELOW_DELIVERY_MINIMUM_UNKNOWN": "Your items {from} are below the minimum for delivery. Add more from that seller and try again — nothing was charged.",
+            "ORDER_BELOW_DELIVERY_MINIMUM_UNREACHABLE": "Your items {from} can't be delivered right now. Remove them and try again — nothing was charged.",
+            "ORDER_BELOW_DELIVERY_MINIMUM_COD_UNREACHABLE": "Your items {from} can't be paid cash on delivery. Pay online instead, or remove them — nothing was charged."
         }
     },
     "errorPage": {
@@ -935,8 +939,7 @@
             "allQuestions": "See all the questions",
             "currencyNote": "Prices are in FCFA (XAF), the currency of the market Wi-Mall serves first.",
             "faqShort": "FAQ",
-            "openFormNewTab": "Open the form in a new tab",
-            "payoutCapNote": "Unverified accounts can withdraw at most 45% of their available balance per month, and that 45% must itself reach the 10,000 FCFA minimum payout — below that, no withdrawal is possible until the balance grows. Verifying the account removes the cap."
+            "openFormNewTab": "Open the form in a new tab"
         },
         "plans": {
             "free": "Free",
@@ -1380,10 +1383,6 @@
                 "credits": {
                     "q": "What are credits, and do I have to buy them?",
                     "a": "Credits meter two things that cost money every time they happen: indexing a product so the assistant can recommend it, at {vectorisationCost}, and sending a billable WhatsApp template message, at {whatsappTemplateCost}. Every plan grants an allowance when it activates, so most accounts never buy any; if you use yours up, packs start at {cheapestPackPrice} for {cheapestPackCredits}."
-                },
-                "payoutVerification": {
-                    "q": "Is there a limit on withdrawals before my account is verified?",
-                    "a": "Yes. While an account is unverified, a withdrawal is capped at 45% of the available balance in any given month. That 45% also has to reach the 10,000 FCFA minimum payout on its own — so if 45% of your balance comes to less than 10,000 FCFA, no withdrawal is possible until the balance grows or the account is verified. Verifying the account removes the cap and the whole available balance becomes withdrawable."
                 },
                 "renewal": {
                     "q": "Do plans renew automatically?",
@@ -2041,7 +2040,8 @@
                 "vendor": "Verified seller",
                 "agency": "Verified delivery company",
                 "agent": "Verified courier"
-            }
+            },
+            "negotiable": "Price negotiable"
         },
         "chrome": {
             "brandHome": "Wi-Mall shop",
@@ -2207,6 +2207,16 @@
                 "noTimesButton": "No times available",
                 "noTimesNote": "No times are open at the moment.",
                 "askStore": "Ask {store}"
+            },
+            "bargain": {
+                "cta": "Bargain the price",
+                "sheetTitle": "Bargain in the chat",
+                "sheetBody": "Our assistant will negotiate the price with you in the chat. Where would you like to continue?",
+                "whatsapp": "Continue on WhatsApp",
+                "whatsappNote": "The message is written for you — just press send.",
+                "telegram": "Continue on Telegram",
+                "telegramNote": "Tap Start in Telegram and the assistant picks up this item.",
+                "message": "I’d like to negotiate the price of {item}."
             }
         },
         "store": {
@@ -2310,6 +2320,17 @@
                 "SERVER_CART_KEPT": "already replaced by the cart on your account",
                 "unknown": "unavailable"
             }
+        },
+        "deliveryMinimum": {
+            "title": "{n, plural, one {Delivery isn't covered for one seller yet} other {Delivery isn't covered for # sellers yet}}",
+            "addMore": "Add {amount} more {from} to order — delivery for these items isn't covered yet.",
+            "unreachable": "Items {from} can't be delivered right now. Remove them to continue.",
+            "codUnreachable": "Items {from} can't be paid cash on delivery. Pay online instead, or remove them.",
+            "codHint": "Cash on delivery is checked separately for each courier, so it can need a bigger basket than paying online.",
+            "from": "from {name}",
+            "fromSellerOf": "from the seller of {item}",
+            "fromThisSeller": "from this seller",
+            "buttonHint": "Add more from the seller named above to continue"
         },
         "checkout": {
             "deliveryAddress": "Delivery address",

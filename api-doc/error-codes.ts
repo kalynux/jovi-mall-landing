@@ -1544,6 +1544,19 @@ export const ERROR_CODES = Object.freeze({
      * choose, typed by hand rather than picked from `GET /api/geo/search`).
      */
     ORDER_DELIVERY_ADDRESS_REQUIRED: 'ORDER_DELIVERY_ADDRESS_REQUIRED',
+    /**
+     * 422 — a vendor's part of the basket is too small to carry its delivery cost
+     * (ADR-A07). The vendor absorbs the agency's delivery fee (+ COD handling fee), so
+     * checkout refuses when that cost is above `ORDER_MAX_DELIVERY_COST_PERCENT` of the
+     * subtotal, or would leave the vendor nothing after commission.
+     *
+     * Raised by checkout (authoritative, inside the order transaction) and by the chat
+     * checkout's pre-spend check (`details.spent: false`). `details`: `vendorId`, `scope`
+     * (`order` online / `shipment` COD), `agencyId`, `subtotal`, `minimumSubtotal`,
+     * `shortfall`, `maxDeliveryPercent`, `reason`, `currency`. Never the commission or the
+     * vendor's net.
+     */
+    ORDER_BELOW_DELIVERY_MINIMUM: 'ORDER_BELOW_DELIVERY_MINIMUM',
 
     // ── CART ──────────────────────────────────────────────────────────────────
     CART_VARIANT_REQUIRED: 'CART_VARIANT_REQUIRED',

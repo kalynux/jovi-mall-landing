@@ -204,9 +204,14 @@ does not.)
 
 Three consequences worth knowing:
 
-- **There is no `bargainable` flag on this surface, and no "make an offer" control.**
-  Negotiation happens in chat only. If you want one, ask — it is a deliberate omission rather
-  than an oversight, and publishing it is a decision about this file.
+- ⚠ **Superseded (landing note, 2026-09-27): the flag IS published now, as `negotiable`.**
+  `negotiable: boolean` is on every list row (the DEFAULT variant's window is live) and on
+  every detail variant (`isBargainEffective`, jovi-mall `dto/public-product.dto.ts`, commit
+  `af10570`). It says a window exists, never its bounds. The backend's own copy of this page
+  had not caught up when this was written. Negotiation itself is still chat-only: the
+  storefront's Bargain button hands the shopper to the bot with `/bargain <productId>
+  <variantId>` (WhatsApp) or `?start=bargain_<productId>_<variantId>` (Telegram) — see
+  `src/lib/shop/bargain.ts`.
 - **`compareAtPrice` is suppressed on a bargainable variant unless it is strictly above the
   ask.** A vendor may legitimately hold a "was" price that sits above their floor and below
   their ask; publishing that pair would render a strikethrough *beneath* the live price.
@@ -711,7 +716,9 @@ See [rate-limits.md](../rate-limits.md).
   [A bargainable variant is quoted at its ASK](#-a-bargainable-variant-is-quoted-at-its-ask)
   above; the migration note written for this app is
   [Storefront price semantics](../FRONTEND-CHANGELOG-storefront-price-semantics.md).
-- **A `bargainable` flag** — not published, and unlike the entry above **this one is still
+- ~~**A `bargainable` flag**~~ — **published since `af10570` as `negotiable`**; see the note
+  in [A bargainable variant is quoted at its ASK](#-a-bargainable-variant-is-quoted-at-its-ask).
+  The original entry follows. Not published, and unlike the entry above **this one is still
   open**. Negotiation is chat-only, so the storefront has nothing to *do* with the flag today;
   the accepted cost is that a shopper cannot tell a negotiable price from a fixed one. That is
   a product decision rather than a technical gap — if you want the badge, ask.

@@ -148,6 +148,7 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
       priceRange={item.priceRange}
       freeDelivery={item.freeDelivery}
       inStock={item.inStock}
+      negotiable={item.negotiable}
       favorite={isFavorite(item.id)}
       onToggleFavorite={() => toggle(item.id)}
       onQuickAdd={() => void quickAdd(item)}

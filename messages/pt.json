@@ -858,7 +858,11 @@
             "NEGOTIATION_LOCK_EXPIRED": "Um preço acordado por chat expirou, por isso nada foi encomendado. Escreva ao vendedor para acordar um novo, ou adicione o artigo ao preço normal.",
             "NEGOTIATION_LOCK_CONSUMED": "Um preço acordado por chat já foi usado noutro pedido, por isso nada foi encomendado. Adicione o artigo ao preço normal, ou acorde um novo com o vendedor.",
             "NEGOTIATION_LOCK_VARIANT_MISMATCH": "Um preço acordado por chat era para outro artigo ou outra quantidade, por isso nada foi encomendado. Reponha o que acordou, ou adicione o artigo ao preço normal.",
-            "NEGOTIATION_LOCK_WINDOW_MOVED": "O vendedor alterou um preço acordado por chat, por isso nada foi encomendado. Escreva-lhe para acordar um novo, ou adicione o artigo ao preço normal."
+            "NEGOTIATION_LOCK_WINDOW_MOVED": "O vendedor alterou um preço acordado por chat, por isso nada foi encomendado. Escreva-lhe para acordar um novo, ou adicione o artigo ao preço normal.",
+            "ORDER_BELOW_DELIVERY_MINIMUM": "Os seus artigos {from} estão abaixo do mínimo para entrega. Adicione mais {amount} desse vendedor e tente novamente — nada foi cobrado.",
+            "ORDER_BELOW_DELIVERY_MINIMUM_UNKNOWN": "Os seus artigos {from} estão abaixo do mínimo para entrega. Adicione mais artigos desse vendedor e tente novamente — nada foi cobrado.",
+            "ORDER_BELOW_DELIVERY_MINIMUM_UNREACHABLE": "Os seus artigos {from} não podem ser entregues por agora. Remova-os e tente novamente — nada foi cobrado.",
+            "ORDER_BELOW_DELIVERY_MINIMUM_COD_UNREACHABLE": "Os seus artigos {from} não podem ser pagos na entrega. Pague online ou remova-os — nada foi cobrado."
         }
     },
     "errorPage": {
@@ -935,8 +939,7 @@
             "allQuestions": "Ver todas as perguntas",
             "currencyNote": "Os preços estão em FCFA (XAF), a moeda do mercado que a Wi-Mall atende primeiro.",
             "faqShort": "FAQ",
-            "openFormNewTab": "Abrir o formulário num separador novo",
-            "payoutCapNote": "Contas não verificadas podem sacar no máximo 45% do saldo disponível por mês, e esses 45% precisam alcançar sozinhos o pagamento mínimo de 10.000 FCFA — abaixo disso, nenhum saque é possível até o saldo crescer. Verificar a conta remove o limite."
+            "openFormNewTab": "Abrir o formulário num separador novo"
         },
         "plans": {
             "free": "Grátis",
@@ -1380,10 +1383,6 @@
                 "credits": {
                     "q": "O que são créditos, e preciso comprá-los?",
                     "a": "Créditos medem duas coisas que custam dinheiro toda vez que acontecem: indexar um produto para que o assistente possa recomendá-lo, por {vectorisationCost}, e enviar uma mensagem modelo do WhatsApp cobrada, por {whatsappTemplateCost}. Todo plano concede uma cota ao ser ativado, então a maioria das contas nunca compra nenhum; se você esgotar a sua, os pacotes começam em {cheapestPackPrice} por {cheapestPackCredits}."
-                },
-                "payoutVerification": {
-                    "q": "Existe um limite de saque antes de a minha conta ser verificada?",
-                    "a": "Sim. Enquanto uma conta não é verificada, o saque fica limitado a 45% do saldo disponível em um dado mês. Esses 45% também precisam alcançar sozinhos o pagamento mínimo de 10.000 FCFA — então, se 45% do seu saldo ficar abaixo de 10.000 FCFA, nenhum saque é possível até o saldo crescer ou a conta ser verificada. Verificar a conta remove o limite e todo o saldo disponível passa a ser sacável."
                 },
                 "renewal": {
                     "q": "Os planos se renovam automaticamente?",
@@ -2041,7 +2040,8 @@
                 "vendor": "Vendedor verificado",
                 "agency": "Empresa de entregas verificada",
                 "agent": "Estafeta verificado"
-            }
+            },
+            "negotiable": "Preço negociável"
         },
         "chrome": {
             "brandHome": "Loja Wi-Mall",
@@ -2207,6 +2207,16 @@
                 "noTimesButton": "Sem horários disponíveis",
                 "noTimesNote": "Não há horários abertos de momento.",
                 "askStore": "Escrever a {store}"
+            },
+            "bargain": {
+                "cta": "Negociar o preço",
+                "sheetTitle": "Negociar no chat",
+                "sheetBody": "O nosso assistente negoceia o preço consigo no chat. Onde quer continuar?",
+                "whatsapp": "Continuar no WhatsApp",
+                "whatsappNote": "A mensagem já está escrita — basta enviá-la.",
+                "telegram": "Continuar no Telegram",
+                "telegramNote": "Toque em Iniciar no Telegram e o assistente retoma este artigo.",
+                "message": "Gostaria de negociar o preço de {item}."
             }
         },
         "store": {
@@ -2310,6 +2320,17 @@
                 "SERVER_CART_KEPT": "já substituído pelo carrinho da sua conta",
                 "unknown": "indisponível"
             }
+        },
+        "deliveryMinimum": {
+            "title": "{n, plural, one {A entrega ainda não está coberta para um vendedor} other {A entrega ainda não está coberta para # vendedores}}",
+            "addMore": "Adicione mais {amount} {from} para encomendar — a entrega destes artigos ainda não está coberta.",
+            "unreachable": "Os artigos {from} não podem ser entregues por agora. Remova-os para continuar.",
+            "codUnreachable": "Os artigos {from} não podem ser pagos na entrega. Pague online ou remova-os.",
+            "codHint": "O pagamento na entrega é verificado separadamente para cada estafeta, por isso pode exigir um cesto maior do que o pagamento online.",
+            "from": "de {name}",
+            "fromSellerOf": "do vendedor de {item}",
+            "fromThisSeller": "deste vendedor",
+            "buttonHint": "Adicione mais artigos do vendedor indicado acima para continuar"
         },
         "checkout": {
             "deliveryAddress": "Endereço de entrega",

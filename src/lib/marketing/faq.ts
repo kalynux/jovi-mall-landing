@@ -44,7 +44,6 @@ export const FAQ_IDS = [
   "paymentMethods",
   "cashOnDelivery",
   "credits",
-  "payoutVerification",
   "renewal",
   "downgrade",
 ] as const;
@@ -75,17 +74,20 @@ export const FAQ_GROUPS: { key: string; items: readonly FaqId[] }[] = [
   },
   {
     key: "money",
-    items: ["paymentMethods", "cashOnDelivery", "credits", "payoutVerification", "renewal", "downgrade"],
+    items: ["paymentMethods", "cashOnDelivery", "credits", "renewal", "downgrade"],
   },
 ];
 
 /**
  * The questions each role page answers inline before linking to /faq.
  *
- * These were four apiece by convention, not by rule. `payoutVerification` makes
- * five on the three earning roles because the withdrawal cap is the kind of
- * thing someone needs to meet before they have earned anything, not after they
- * have gone looking for it.
+ * Four apiece by convention, not by rule.
+ *
+ * ⚠ There is deliberately NO question about a withdrawal limit before
+ * verification. `payoutVerification` used to say unverified accounts could
+ * withdraw at most 45% a month; that was never what the backend did, and the
+ * owner ruled on 2026-09-27 that nobody's money is held back for being
+ * unverified. Do not reintroduce it.
  */
 export const CUSTOMER_FAQ: readonly FaqId[] = [
   "howShopping",
@@ -99,7 +101,6 @@ export const VENDOR_FAQ: readonly FaqId[] = [
   "vendorCost",
   "vendorDelivery",
   "vendorPayout",
-  "payoutVerification",
 ];
 
 export const AGENCY_FAQ: readonly FaqId[] = [
@@ -107,7 +108,6 @@ export const AGENCY_FAQ: readonly FaqId[] = [
   "agencyCoverage",
   "agencySoftCap",
   "cashOnDelivery",
-  "payoutVerification",
 ];
 
 export const AGENT_FAQ: readonly FaqId[] = [
@@ -115,7 +115,6 @@ export const AGENT_FAQ: readonly FaqId[] = [
   "agentJoin",
   "agentCapacity",
   "vendorPayout",
-  "payoutVerification",
 ];
 
 export const PRICING_FAQ: readonly FaqId[] = [
@@ -123,7 +122,6 @@ export const PRICING_FAQ: readonly FaqId[] = [
   "downgrade",
   "credits",
   "vendorProductLimit",
-  "payoutVerification",
 ];
 
 export const COUNTRY_FAQ: readonly FaqId[] = [

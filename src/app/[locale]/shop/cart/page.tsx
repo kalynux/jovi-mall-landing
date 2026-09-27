@@ -14,6 +14,7 @@ import {
   Skeleton,
 } from "@/components/shop/ds";
 import { useShopPageTitle } from "@/components/shop/ShopChrome";
+import { DeliveryMinimumNotice } from "@/components/shop/DeliveryMinimumNotice";
 import { useCart, useToast } from "@/components/shop/providers";
 import { translateError } from "@/lib/auth/error-translator";
 import { useAuth } from "@/lib/auth/useAuth";
@@ -154,6 +155,12 @@ export default function CartPage() {
   const currency = quote?.currency ?? lines[0]?.currency ?? "XAF";
   const subtotal = quote?.subtotal ?? localSubtotal;
   const total = quote?.total ?? localSubtotal;
+  /**
+   * Checkout would refuse one shop's items as too small to deliver (ADR-A07).
+   * `=== false`, not `!`: an API from before the rule sends no field at all,
+   * and that must not read as "every cart is short".
+   */
+  const shortOfMinimum = quote?.meetsDeliveryMinimum === false;
 
   const open = useCallback(
     (line: (typeof lines)[number]) => {
@@ -432,12 +439,22 @@ export default function CartPage() {
               </span>
             </div>
 
-            <div style={{ marginTop: 14 }}>
+            {/* Quoted for an online payment: the method is picked at checkout,
+                and online is the lenient case, so a shop short here is short
+                whatever the shopper picks. Nothing on the next screen can fix
+                it, so the button waits here rather than there. */}
+            {shortOfMinimum && (
+              <div style={{ marginTop: 12 }}>
+                <DeliveryMinimumNotice quote={quote} lines={lines} />
+              </div>
+            )}
+
+            <div style={{ marginTop: shortOfMinimum ? 0 : 14 }}>
               <Button
                 block
                 size="lg"
                 elevated
-                disabled={busy}
+                disabled={busy || shortOfMinimum}
                 trailingIcon="arrow-right"
                 onClick={() => router.push("/shop/checkout")}
               >
