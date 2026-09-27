@@ -11,6 +11,7 @@ import { discountPct } from "@/lib/shop/format";
 import { Badge } from "./Badge";
 import { Icon, type IconName } from "./Icon";
 import { PriceDisplay } from "./PriceDisplay";
+import { VerifiedBadge } from "./VerifiedBadge";
 
 /** Shipped in `public/`, for products the vendor listed without a usable image. */
 const NO_IMAGE = "/no_product_image.png";
@@ -27,6 +28,8 @@ export interface ProductCardProps {
   /** Present only when the product's variants differ in price. */
   priceRange?: PriceRange;
   vendorName?: string;
+  /** The store's `verified` flag. Drawn only beside a shown vendor name. */
+  vendorVerified?: boolean;
   showVendor?: boolean;
   /**
    * The published-review aggregate, or `null` when nobody has reviewed it.
@@ -120,6 +123,7 @@ export function ProductCard(props: ProductCardProps) {
     currency = "XAF",
     priceRange,
     vendorName,
+    vendorVerified,
     showVendor,
     rating,
     freeDelivery,
@@ -160,8 +164,23 @@ export function ProductCard(props: ProductCardProps) {
   const meta = (
     <>
       {showVendor && vendorName && (
-        <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600, marginBottom: 3 }}>
-          {vendorName}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            fontSize: 12,
+            color: "var(--text-muted)",
+            fontWeight: 600,
+            marginBottom: 3,
+          }}
+        >
+          {/* The name truncates and the badge does not — a long store name
+              must never push the verification mark off the card. */}
+          <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {vendorName}
+          </span>
+          {vendorVerified && <VerifiedBadge kind="vendor" size={13} />}
         </div>
       )}
 

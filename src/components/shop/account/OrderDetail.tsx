@@ -6,7 +6,7 @@ import {
   AccountShell,
   ResourceView,
 } from "@/components/shop/account/AccountShell";
-import { Badge, Button, EmptyState, Icon } from "@/components/shop/ds";
+import { Badge, Button, EmptyState, Icon, VerifiedBadge } from "@/components/shop/ds";
 import { Link, useRouter } from "@/i18n/navigation";
 import { getOrder } from "@/lib/shop/orders.api";
 import { isCod, paymentChip } from "@/lib/shop/order-status";
@@ -230,8 +230,9 @@ export function OrderTracking({ orderId }: { orderId: string }) {
           <>
             <AccountCard style={{ marginBottom: 16 }}>
               <div className="ds-overline">{o.orderNumber}</div>
-              <p className="muted" style={{ fontSize: 12.5, marginTop: 3 }}>
+              <p className="muted" style={{ fontSize: 12.5, marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}>
                 {o.store?.name ? t("fromStore", { store: o.store.name }) : t("yourParcel")}
+                {o.store?.name && o.store.verified && <VerifiedBadge kind="vendor" size={13} />}
               </p>
               <div style={{ marginTop: 12 }}>
                 <Button

@@ -184,6 +184,12 @@ export interface ProductStoreRef {
   name: string;
   /** Vendor vacation mode. Does **not** hide the product; it is a flag to render. */
   isOpen: boolean;
+  /**
+   * `kyc_details.legit_verified`. Optional here because list rows only gained it
+   * on 2026-09-27 — an older API omits it, and that means no badge. The detail
+   * store (`ProductStore`) has always carried it and narrows it to required.
+   */
+  verified?: boolean;
 }
 
 /** One row of `GET /api/public/products`. */

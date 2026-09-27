@@ -1986,7 +1986,12 @@
             "working": "جارٍ التنفيذ…",
             "itemCount": "{n, plural, zero {لا توجد منتجات} one {منتج واحد} two {منتجان} few {# منتجات} many {# منتجًا} other {# منتج}}",
             "onHoliday": "في إجازة",
-            "viewStore": "عرض المتجر"
+            "viewStore": "عرض المتجر",
+            "verified": {
+                "vendor": "بائع موثّق",
+                "agency": "شركة توصيل موثّقة",
+                "agent": "مندوب توصيل موثّق"
+            }
         },
         "chrome": {
             "brandHome": "متجر Wi-Mall",

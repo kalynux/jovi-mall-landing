@@ -300,6 +300,11 @@ export interface CodCollection {
 export interface OrderStore {
   slug: string | null;
   name: string | null;
+  /**
+   * The vendor's `kyc_details.legit_verified`, read live — not the verdict at the
+   * time of the order. **Absent** on an API older than 2026-09-27: no badge then.
+   */
+  verified?: boolean;
 }
 
 /**
@@ -426,6 +431,11 @@ export interface CustomerShipmentAgency {
   supportPhone: string | null;
   supportEmail: string | null;
   supportWhatsapp: string | null;
+  /**
+   * The agency's `kyc_details.legit_verified` — an administrator's verdict, never
+   * the documents behind it. **Absent** on an API older than 2026-09-27.
+   */
+  verified?: boolean;
 }
 
 /**
@@ -462,6 +472,12 @@ export interface CustomerShipmentAgent {
    * their door *after* they came.
    */
   visibleFrom: CustomerShipmentStatus;
+  /**
+   * `kyc.status === "verified"` on the agent — a platform verdict, and the one
+   * addition to ADR-A06's three fields because it discloses nothing personal.
+   * **Absent** on an API older than 2026-09-27.
+   */
+  verified?: boolean;
 }
 
 export interface CustomerShipment {

@@ -18,6 +18,7 @@ import {
   QtyStepper,
   Rating,
   Tabs,
+  VerifiedBadge,
   type IconName,
 } from "@/components/shop/ds";
 import { useCart, useFavorites, useToast } from "@/components/shop/providers";
@@ -409,7 +410,7 @@ export function ProductDetail({
           >
             <Avatar name={store.name} src={publicUrl(store.logo)} size={24} />
             <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-body)" }}>{store.name}</span>
-            {store.verified && <Icon name="badge-check" size={14} style={{ color: "var(--brand)" }} />}
+            {store.verified && <VerifiedBadge kind="vendor" size={15} />}
             <Icon name="chevron-right" size={14} style={{ color: "var(--text-subtle)" }} />
           </button>
 
@@ -742,6 +743,7 @@ export function ProductDetail({
                   currency={item.currency}
                   priceRange={item.priceRange}
                   vendorName={item.store.name}
+                  vendorVerified={item.store.verified}
                   showVendor
                   favorite={isFavorite(item.id)}
                   onToggleFavorite={() => toggle(item.id)}

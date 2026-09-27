@@ -1986,7 +1986,12 @@
             "working": "Working…",
             "itemCount": "{n, plural, one {# item} other {# items}}",
             "onHoliday": "On holiday",
-            "viewStore": "View store"
+            "viewStore": "View store",
+            "verified": {
+                "vendor": "Verified seller",
+                "agency": "Verified delivery company",
+                "agent": "Verified courier"
+            }
         },
         "chrome": {
             "brandHome": "Wi-Mall shop",

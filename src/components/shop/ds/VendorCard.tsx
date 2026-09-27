@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Avatar } from "./Avatar";
 import { Icon } from "./Icon";
+import { VerifiedBadge } from "./VerifiedBadge";
 
 export interface VendorCardProps {
   name: string;
@@ -82,7 +83,7 @@ export function VendorCard({
           >
             {name}
           </span>
-          {verified && <Icon name="badge-check" size={15} style={{ color: "var(--brand)" }} />}
+          {verified && <VerifiedBadge kind="vendor" size={16} />}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2, flexWrap: "wrap" }}>
           <span style={{ fontSize: 12, color: "var(--text-muted)" }}>

@@ -7,7 +7,7 @@ import {
   AccountShell,
   ResourceView,
 } from "@/components/shop/account/AccountShell";
-import { Avatar, Badge, Button, ConfirmDialog, Icon, type IconName } from "@/components/shop/ds";
+import { Avatar, Badge, Button, ConfirmDialog, Icon, VerifiedBadge, type IconName } from "@/components/shop/ds";
 import { useToast } from "@/components/shop/providers";
 import { ApiError } from "@/lib/auth/auth.types";
 import { translateError } from "@/lib/auth/error-translator";
@@ -427,6 +427,7 @@ export function VendorOrderCard({
             {order.store?.name ?? tOrders("seller")}
           </span>
         )}
+        {order.store?.verified && <VerifiedBadge kind="vendor" size={15} />}
         <div style={{ flex: 1 }} />
         <Badge size="sm" productType={order.orderType}>
           {tKey(`shop.ds.productType.${order.orderType}`)}
@@ -982,6 +983,17 @@ export function Shipments({
  * usual reason is that no agent is bound yet, and naming a wait for someone the
  * customer may never meet is worse than saying nothing.
  */
+/** A carrier name with its verification mark sitting on the same line. */
+const NAME_ROW = {
+  display: "flex",
+  alignItems: "center",
+  gap: 4,
+  fontSize: 12.5,
+  fontWeight: 700,
+  color: "var(--text-strong)",
+  margin: 0,
+} as const;
+
 function Carrier({
   agency,
   agencyName,
@@ -1002,7 +1014,7 @@ function Carrier({
     agency?.supportWhatsapp && {
       icon: "message-circle",
       key: "whatsapp",
-      href: `https://wa.me/${agency.supportWhatsapp.replace(/D/g, "")}`,
+      href: `https://wa.me/${agency.supportWhatsapp.replace(/\D/g, "")}`,
     },
     agency?.supportEmail && { icon: "mail", key: "email", href: `mailto:${agency.supportEmail}` },
   ].filter(Boolean) as { icon: IconName; key: string; href: string }[];
@@ -1015,8 +1027,9 @@ function Carrier({
         <div style={{ display: "flex", alignItems: "center", gap: 9, flexWrap: "wrap" }}>
           <Avatar name={name} src={publicUrl(agency?.logo) ?? undefined} size={28} shape="squircle" />
           <div style={{ minWidth: 0 }}>
-            <p style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-strong)", margin: 0 }}>
+            <p style={NAME_ROW}>
               {name}
+              {agency?.verified && <VerifiedBadge kind="agency" size={14} />}
             </p>
             <p className="muted" style={{ fontSize: 11, margin: 0 }}>
               {t("company")}
@@ -1062,8 +1075,9 @@ function Carrier({
         >
           <Avatar name={agent.displayName} src={publicUrl(agent.photo) ?? undefined} size={28} />
           <div style={{ minWidth: 0 }}>
-            <p style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-strong)", margin: 0 }}>
+            <p style={NAME_ROW}>
               {agent.displayName}
+              {agent.verified && <VerifiedBadge kind="agent" size={14} />}
             </p>
             <p className="muted" style={{ fontSize: 11, margin: 0 }}>
               {t("carrying")}

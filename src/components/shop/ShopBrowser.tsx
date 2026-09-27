@@ -272,6 +272,7 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
       priceRange={product.priceRange}
       rating={product.rating}
       vendorName={product.store.name}
+      vendorVerified={product.store.verified}
       showVendor={showVendor}
       freeDelivery={product.freeDelivery}
       favorite={isFavorite(product.id)}
@@ -284,11 +285,12 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
 
   /** Groups the current page only — the API paginates, so this is a layout, not a filter. */
   const byStore = useMemo(() => {
-    const map = new Map<string, { name: string; isOpen: boolean; items: ProductListItem[] }>();
+    const map = new Map<string, { name: string; isOpen: boolean; verified: boolean; items: ProductListItem[] }>();
     for (const p of products) {
       const entry = map.get(p.store.slug) ?? {
         name: p.store.name,
         isOpen: p.store.isOpen,
+        verified: p.store.verified === true,
         items: [],
       };
       entry.items.push(p);
@@ -497,6 +499,7 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
                   name={store.name}
                   productCount={store.items.length}
                   isOpen={store.isOpen}
+                  verified={store.verified}
                   href={storePath(slug)}
                 />
               </div>

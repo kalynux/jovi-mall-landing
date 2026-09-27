@@ -340,6 +340,7 @@ export default function SavedPage() {
                 currency={entry.product.currency}
                 priceRange={entry.product.priceRange}
                 vendorName={entry.product.store.name}
+                vendorVerified={entry.product.store.verified}
                 showVendor
                 freeDelivery={entry.product.freeDelivery}
                 inStock={entry.product.inStock}

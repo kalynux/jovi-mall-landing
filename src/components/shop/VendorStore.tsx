@@ -5,7 +5,17 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { isNetworkError } from "@/lib/errors/is-network-error";
 import { useRouter } from "@/i18n/navigation";
-import { Avatar, Badge, Button, EmptyState, Icon, ProductCard, Tabs, type IconName } from "@/components/shop/ds";
+import {
+  Avatar,
+  Badge,
+  Button,
+  EmptyState,
+  Icon,
+  ProductCard,
+  Tabs,
+  VerifiedBadge,
+  type IconName,
+} from "@/components/shop/ds";
 import { useCart, useFavorites, useToast } from "@/components/shop/providers";
 import { CART_OFFLINE_MESSAGE_KEY } from "@/lib/shop/cart-errors";
 import { useShopPageTitle } from "@/components/shop/ShopChrome";
@@ -191,7 +201,7 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
             >
               {store.name}
             </h1>
-            {store.verified && <Icon name="badge-check" size={18} style={{ color: "var(--brand)" }} />}
+            {store.verified && <VerifiedBadge kind="vendor" size={20} />}
             {!store.isOpen && (
               <Badge tone="warning" size="sm">
                 {t("onVacation")}

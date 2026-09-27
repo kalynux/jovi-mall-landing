@@ -22,3 +22,5 @@ export { ConfirmDialog } from "./ConfirmDialog";
 export type { ConfirmDialogProps } from "./ConfirmDialog";
 export { ProductCard } from "./ProductCard";
 export { VendorCard } from "./VendorCard";
+export { VerifiedBadge } from "./VerifiedBadge";
+export type { VerifiedKind } from "./VerifiedBadge";
