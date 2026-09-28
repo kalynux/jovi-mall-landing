@@ -12,7 +12,7 @@
  *   - **no `JobPosting` structured data is emitted**
  *
  * That last one is the point. A JobPosting tells Google a real application leads
- * somewhere; publishing five for roles nobody can be hired into is invented
+ * somewhere; publishing four for roles nobody can be hired into is invented
  * structured data, the same class of problem `lib/seo/jsonld.ts` already refuses
  * for review counts. The page stays indexable either way — it is honest prose
  * about a company that is not hiring yet, which is a fine thing to have indexed.
@@ -29,7 +29,7 @@
 
 export const HIRING_OPEN = false;
 
-export type OpeningTeam = "engineering" | "product" | "operations" | "growth";
+export type OpeningTeam = "support";
 export type OpeningCommitment = "fullTime" | "contract" | "internship";
 
 export type Opening = {
@@ -47,18 +47,17 @@ export type Opening = {
 };
 
 /**
- * Grounded in what the codebase actually needs rather than in a generic startup
- * org chart: a Next.js marketing/shop surface in five languages, a modular
- * TypeScript monolith on Mongo, the WhatsApp assistant and its vectoriser, the
- * agent mobile app, and the agency network that does the delivering.
+ * Support first (owner decision, 2026-09-28): the first people Wi-Mall hires
+ * are support assistants, not developers — one role for each kind of person who
+ * works with Wi-Mall directly or indirectly and needs help doing it. The ids
+ * follow the four account types so the copy can be specific about what each
+ * one gets stuck on.
  */
 export const OPENINGS: Opening[] = [
-  { id: "frontend", team: "engineering", commitment: "fullTime", datePosted: "2026-01-01" },
-  { id: "backend", team: "engineering", commitment: "fullTime", datePosted: "2026-01-01" },
-  { id: "assistant", team: "engineering", commitment: "fullTime", datePosted: "2026-01-01" },
-  { id: "mobile", team: "engineering", commitment: "contract", datePosted: "2026-01-01" },
-  { id: "agencyOps", team: "operations", commitment: "fullTime", datePosted: "2026-01-01" },
-  { id: "content", team: "growth", commitment: "contract", datePosted: "2026-01-01" },
+  { id: "customerSupport", team: "support", commitment: "fullTime", datePosted: "2026-01-01" },
+  { id: "vendorSupport", team: "support", commitment: "fullTime", datePosted: "2026-01-01" },
+  { id: "agencySupport", team: "support", commitment: "fullTime", datePosted: "2026-01-01" },
+  { id: "agentSupport", team: "support", commitment: "fullTime", datePosted: "2026-01-01" },
 ];
 
 /** schema.org `employmentType` for a commitment. Only used when hiring is open. */
