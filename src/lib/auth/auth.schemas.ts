@@ -191,8 +191,8 @@ export type LoginFormValues = z.infer<typeof LoginSchema>;
  * Privacy Policy" before its account is created — customers register through
  * the bot and never reach these forms.
  *
- * The backend requires it for vendor and agency (400 VALIDATION_ERROR on
- * `terms_accepted`) and records it for agent too; this form asks all three.
+ * The backend requires it for vendor, agency and agent (400 VALIDATION_ERROR
+ * on `terms_accepted`) and records it as `user.terms_acceptances[]`.
  */
 function refineTermsAccepted(
     data: { role: string; terms_accepted?: boolean },
