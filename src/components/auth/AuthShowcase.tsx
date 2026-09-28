@@ -39,6 +39,8 @@ import {
 import { useTranslations } from "next-intl";
 import type { UiRole } from "@/lib/auth/auth.types";
 import { cn } from "@/lib/utils";
+import { IS_NATIVE_BUILD } from "@/lib/platform";
+import AuthAppDownloads from "@/components/auth/AuthAppDownloads";
 
 interface AuthShowcaseProps {
   mode: "login" | "register";
@@ -259,6 +261,12 @@ export default function AuthShowcase({ mode, role = null, className }: AuthShowc
               );
             })}
           </ul>
+
+          {/* The picked role's app. Inside the re-keyed block so it cross-fades
+              with the copy it belongs to. */}
+          {!IS_NATIVE_BUILD && (
+            <AuthAppDownloads role={role} tone="dark" className="mt-7 border-t border-white/10 pt-6" />
+          )}
         </motion.div>
       </AnimatePresence>
     </div>

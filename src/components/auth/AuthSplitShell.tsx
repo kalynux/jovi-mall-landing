@@ -30,6 +30,8 @@ import type { UiRole } from "@/lib/auth/auth.types";
 import { cn } from "@/lib/utils";
 import AuthPageControls from "@/components/auth/AuthPageControls";
 import AuthShowcase from "@/components/auth/AuthShowcase";
+import AuthAppDownloads from "@/components/auth/AuthAppDownloads";
+import { IS_NATIVE_BUILD } from "@/lib/platform";
 import WiMallMark from "@/components/brand/WiMallMark.generated";
 import { homePath } from "@/lib/shop/shop.routes";
 
@@ -204,6 +206,17 @@ export default function AuthSplitShell({
           <div className="mt-10 border-t border-[var(--border)] pt-6 text-center text-sm text-[var(--text-muted)]">
             {footer}
           </div>
+        )}
+
+        {/* The role's app, below the form wherever the showcase pane — which
+            carries it from `lg` up — is not shown. Last in the column: the
+            form is what this screen is for. */}
+        {!IS_NATIVE_BUILD && (
+          <AuthAppDownloads
+            role={role}
+            tone="light"
+            className="mt-10 flex flex-col items-center border-t border-[var(--border)] pt-6 text-center lg:hidden"
+          />
         )}
       </div>
 

@@ -132,6 +132,43 @@ export function aboutPageJsonLd(locale: Locale, path: string, description: strin
 }
 
 /**
+ * MobileApplication for one app card on /apps — only for an app whose current
+ * release was actually read, so the version and size are facts off the wire.
+ * No `aggregateRating`: there are no ratings, and inventing one is exactly the
+ * kind of structured-data claim Google penalises.
+ */
+export function mobileApplicationJsonLd(
+  locale: Locale,
+  path: string,
+  app: {
+    id: string;
+    name: string;
+    description: string;
+    downloadUrl: string;
+    version: string;
+    fileSize: string;
+    android: string | null;
+  }
+): JsonLdNode {
+  return {
+    "@context": "https://schema.org",
+    "@type": "MobileApplication",
+    "@id": `${localeUrl(locale, path)}#${app.id}`,
+    url: `${localeUrl(locale, path)}#${app.id}`,
+    name: app.name,
+    description: app.description,
+    operatingSystem: app.android ? `Android ${app.android}+` : "Android",
+    applicationCategory: "BusinessApplication",
+    softwareVersion: app.version,
+    fileSize: app.fileSize,
+    downloadUrl: app.downloadUrl,
+    offers: { "@type": "Offer", price: 0, priceCurrency: "XAF" },
+    publisher: { "@id": ORG_ID },
+    inLanguage: locale,
+  };
+}
+
+/**
  * ContactPage for /contact.
  *
  * The email is the one already published on the Organization node, so the two

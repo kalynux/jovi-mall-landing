@@ -66,7 +66,8 @@
         "company": "Company",
         "about": "About",
         "careers": "Careers",
-        "contact": "Contact"
+        "contact": "Contact",
+        "apps": "Apps"
     },
     "hero": {
         "badge": "The WhatsApp Commerce Platform",
@@ -523,6 +524,23 @@
         "createAccount": "Create your agent account",
         "close": "Close"
     },
+    "apps": {
+        "getApp": "Get the {app} app",
+        "apk": "APK",
+        "playStore": "Google Play",
+        "appStore": "App Store",
+        "soon": "Soon",
+        "comingSoon": "Coming soon",
+        "downloadApk": "Download APK",
+        "apkAria": "Download {app} for Android (APK file)",
+        "apkAriaSized": "Download {app} for Android (APK file, {size})",
+        "storeAria": "Get {app} on {store}",
+        "storeSoonAria": "{app} on {store}: coming soon",
+        "version": "v{version}",
+        "requires": "Android {version}+",
+        "allApps": "All Wi-Mall apps",
+        "storesNote": "Google Play and App Store listings are on the way. Until then, the Android apps install straight from Wi-Mall as APK files."
+    },
     "addRole": {
         "title": "Add a new role",
         "subtitle": "You currently have: {roles}",
@@ -922,7 +940,8 @@
             "customers": "For customers",
             "about": "About",
             "careers": "Careers",
-            "contact": "Contact"
+            "contact": "Contact",
+            "apps": "Apps"
         },
         "common": {
             "breadcrumbLabel": "Breadcrumb",
@@ -1748,6 +1767,53 @@
                 "whatsappMessage": "Hello Wi-Mall — I have a question.",
                 "roleTitle": "Already using Wi-Mall",
                 "roleBody": "If you have an account, start from the support route in your dashboard: it arrives with your order context already attached."
+            }
+        },
+        "apps": {
+            "metaTitle": "Wi-Mall apps for Android: shop, vendor, agency and agent",
+            "metaDescription": "Download the Wi-Mall apps for Android: the shop for customers, Wi-Vendor for sellers, Wi-Agency for delivery agencies and Wi-Agent for delivery agents. Version, size and requirements for each.",
+            "eyebrow": "Apps",
+            "title": "Wi-Mall on your phone",
+            "lead": "Four apps, one for each side of Wi-Mall. Download the one for your role straight from Wi-Mall. Store listings are coming.",
+            "listTitle": "Pick your app",
+            "listLead": "Each app signs in with the same Wi-Mall account as the website. The version and size shown are the current release.",
+            "cards": {
+                "shop": {
+                    "for": "For customers",
+                    "body": "Browse shops, order, pay and follow your deliveries: the Wi-Mall shop in your pocket."
+                },
+                "vendor": {
+                    "for": "For vendors",
+                    "body": "Manage your products, orders and payouts, and keep your AI sales assistant up to date from anywhere."
+                },
+                "agency": {
+                    "for": "For agencies",
+                    "body": "Dispatch deliveries to your agents, track every shipment and manage your agency's earnings."
+                },
+                "agent": {
+                    "for": "For agents",
+                    "body": "Get delivery alerts, navigate to each drop-off and confirm deliveries in one tap. Agents work only in this app: there is no web version."
+                }
+            },
+            "facts": {
+                "version": "Version",
+                "size": "Size",
+                "requires": "Requires",
+                "updated": "Updated",
+                "checksum": "SHA-256 checksum",
+                "unavailable": "Version details can't be loaded right now. The download button still gets the latest release."
+            },
+            "install": {
+                "title": "Installing an APK",
+                "lead": "The first time you install an app from outside the Play Store, Android asks for one extra permission. It takes a minute.",
+                "s1Title": "Download the file",
+                "s1Body": "Tap Download APK on your phone. The file is saved to your Downloads.",
+                "s2Title": "Open it",
+                "s2Body": "Open the file from the download notification or from your Files app.",
+                "s3Title": "Allow the install",
+                "s3Body": "If Android asks, allow your browser or Files app to install unknown apps, then go back.",
+                "s4Title": "Install and sign in",
+                "s4Body": "Tap Install, open the app and sign in with your Wi-Mall account. To update, download the new version from this page."
             }
         }
     },

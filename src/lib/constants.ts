@@ -48,9 +48,12 @@ export const EXTERNAL_LINKS = {
      * agent role has a dashboard origin in `ROLE_SUBDOMAIN_MAP` for an already
      * signed-in session, but a new agent has nothing to continue *to* on the
      * web, which is why the dialog leads with this rather than a web link.
+     *
+     * `||`, not `??`: every .env file declares this key with an empty value,
+     * and `??` kept that empty string — a download button with no href.
      */
     agentApkUrl:
-        process.env.NEXT_PUBLIC_AGENT_APP_APK_URL ??
+        process.env.NEXT_PUBLIC_AGENT_APP_APK_URL ||
         "https://api.wi-mall.com/api/public/app/agent-android/download",
 };
 

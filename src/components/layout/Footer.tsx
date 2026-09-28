@@ -41,6 +41,7 @@ export default function Footer() {
         { label: nav("agencies"), href: "/agencies" },
         { label: nav("agents"), href: "/agents" },
         { label: nav("customers"), href: "/customers" },
+        { label: nav("apps"), href: "/apps" },
       ],
     },
     {

@@ -32,6 +32,8 @@ export const MARKETING_ROUTES: MarketingRoute[] = [
   // vendors page rather than below the two delivery roles.
   { path: "/customers", key: "customers", priority: 0.9, changeFrequency: "monthly" },
   { path: "/pricing", key: "pricing", priority: 0.9, changeFrequency: "monthly" },
+  // Weekly: its version lines change with every APK release.
+  { path: "/apps", key: "apps", priority: 0.7, changeFrequency: "weekly" },
   { path: "/faq", key: "faq", priority: 0.7, changeFrequency: "monthly" },
   { path: "/cameroon", key: "cameroon", priority: 0.7, changeFrequency: "monthly" },
   // The company tier. Lower priority than the role pages on purpose: they are

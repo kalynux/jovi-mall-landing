@@ -66,7 +66,8 @@
         "company": "Empresa",
         "about": "Nosotros",
         "careers": "Empleo",
-        "contact": "Contacto"
+        "contact": "Contacto",
+        "apps": "Apps"
     },
     "hero": {
         "badge": "La plataforma de comercio WhatsApp",
@@ -523,6 +524,23 @@
         "createAccount": "Crea tu cuenta de repartidor",
         "close": "Cerrar"
     },
+    "apps": {
+        "getApp": "Instala la app {app}",
+        "apk": "APK",
+        "playStore": "Google Play",
+        "appStore": "App Store",
+        "soon": "Pronto",
+        "comingSoon": "Muy pronto",
+        "downloadApk": "Descargar APK",
+        "apkAria": "Descargar {app} para Android (archivo APK)",
+        "apkAriaSized": "Descargar {app} para Android (archivo APK, {size})",
+        "storeAria": "Consigue {app} en {store}",
+        "storeSoonAria": "{app} en {store}: muy pronto",
+        "version": "v{version}",
+        "requires": "Android {version}+",
+        "allApps": "Todas las apps de Wi-Mall",
+        "storesNote": "Las fichas en Google Play y App Store llegan pronto. Mientras tanto, las apps de Android se instalan directamente desde Wi-Mall, como archivos APK."
+    },
     "addRole": {
         "title": "Añadir nuevo rol",
         "subtitle": "Actualmente tienes: {roles}",
@@ -922,7 +940,8 @@
             "customers": "Para clientes",
             "about": "Nosotros",
             "careers": "Empleo",
-            "contact": "Contacto"
+            "contact": "Contacto",
+            "apps": "Apps"
         },
         "common": {
             "breadcrumbLabel": "Ruta de navegación",
@@ -1748,6 +1767,53 @@
                 "whatsappMessage": "Hola Wi-Mall — tengo una pregunta.",
                 "roleTitle": "Ya usa Wi-Mall",
                 "roleBody": "Si tiene cuenta, empiece por el canal de soporte de su panel: llega con el contexto de su pedido ya adjunto."
+            }
+        },
+        "apps": {
+            "metaTitle": "Apps de Wi-Mall para Android: tienda, vendedor, agencia y repartidor",
+            "metaDescription": "Descarga las apps de Wi-Mall para Android: la tienda para clientes, Wi-Vendor para vendedores, Wi-Agency para agencias de reparto y Wi-Agent para repartidores. Versión, tamaño y requisitos de cada una.",
+            "eyebrow": "Apps",
+            "title": "Wi-Mall en tu teléfono",
+            "lead": "Cuatro apps, una para cada lado de Wi-Mall. Descarga la de tu rol directamente desde Wi-Mall. Las fichas en las tiendas llegan pronto.",
+            "listTitle": "Elige tu app",
+            "listLead": "Cada app usa la misma cuenta de Wi-Mall que el sitio web. La versión y el tamaño que ves son los de la versión actual.",
+            "cards": {
+                "shop": {
+                    "for": "Para clientes",
+                    "body": "Explora tiendas, pide, paga y sigue tus entregas: la tienda Wi-Mall en tu bolsillo."
+                },
+                "vendor": {
+                    "for": "Para vendedores",
+                    "body": "Gestiona tus productos, pedidos y cobros, y mantén al día tu asistente de ventas con IA desde cualquier lugar."
+                },
+                "agency": {
+                    "for": "Para agencias",
+                    "body": "Asigna entregas a tus repartidores, sigue cada envío y gestiona las ganancias de tu agencia."
+                },
+                "agent": {
+                    "for": "Para repartidores",
+                    "body": "Recibe avisos de entrega, navega hasta cada destino y confirma la entrega con un toque. Los repartidores trabajan solo en esta app: no hay versión web."
+                }
+            },
+            "facts": {
+                "version": "Versión",
+                "size": "Tamaño",
+                "requires": "Requiere",
+                "updated": "Actualizada",
+                "checksum": "Suma de comprobación SHA-256",
+                "unavailable": "Ahora mismo no se pueden cargar los detalles de la versión. El botón de descarga sigue dando la última versión."
+            },
+            "install": {
+                "title": "Instalar un APK",
+                "lead": "La primera vez que instalas una app de fuera de Play Store, Android pide un permiso más. Lleva un minuto.",
+                "s1Title": "Descarga el archivo",
+                "s1Body": "Toca Descargar APK en tu teléfono. El archivo se guarda en Descargas.",
+                "s2Title": "Ábrelo",
+                "s2Body": "Abre el archivo desde la notificación de descarga o desde la app Archivos.",
+                "s3Title": "Permite la instalación",
+                "s3Body": "Si Android lo pide, permite que tu navegador o la app Archivos instale apps desconocidas y vuelve atrás.",
+                "s4Title": "Instala e inicia sesión",
+                "s4Body": "Toca Instalar, abre la app e inicia sesión con tu cuenta de Wi-Mall. Para actualizar, descarga la nueva versión desde esta página."
             }
         }
     },
