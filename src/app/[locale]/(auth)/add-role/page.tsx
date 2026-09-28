@@ -20,6 +20,7 @@ import AuthCard from "@/components/auth/AuthCard";
 import AuthFormField from "@/components/auth/AuthFormField";
 import { GlobalError } from "@/components/auth/GlobalError";
 import RolePicker from "@/components/auth/RolePicker";
+import { TermsConsentField } from "@/components/legal/LegalLink";
 import { AnimatePresence, motion } from "framer-motion";
 
 type ConfirmState = { newRole: UiRole; redirectUrl: string } | null;
@@ -255,6 +256,12 @@ function AddRoleContent() {
                   id="add-role-agency-name"
                 />
               )}
+
+              <TermsConsentField
+                id="add-role-terms"
+                registration={register("terms_accepted")}
+                error={errors.terms_accepted?.message}
+              />
 
               {(() => {
                 const { errorCode, requestId, category } = parseRootType(

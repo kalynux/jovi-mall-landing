@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { LEGAL_URLS } from "./src/lib/legal";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
@@ -100,6 +101,20 @@ const nextConfig: NextConfig = {
          *   200 with a broken page, which is why the Dockerfile says so too.
          */
         output: "standalone" as const,
+
+        /**
+         * Short, permanent addresses for the legal documents, which are hosted
+         * on the CDN; the URLs come from src/lib/legal.ts. Web
+         * only: a static export has no server to answer a redirect.
+         */
+        async redirects() {
+          return [
+            { source: "/privacy", destination: LEGAL_URLS.privacy.en, permanent: true },
+            { source: "/terms", destination: LEGAL_URLS.terms.en, permanent: true },
+            { source: "/fr/confidentialite", destination: LEGAL_URLS.privacy.fr, permanent: true },
+            { source: "/fr/conditions", destination: LEGAL_URLS.terms.fr, permanent: true },
+          ];
+        },
       }),
 };
 

@@ -373,7 +373,7 @@
         "careers": "Carrières",
         "contact": "Contact",
         "privacy": "Politique de confidentialité",
-        "terms": "Conditions d'utilisation",
+        "terms": "Conditions générales d'utilisation",
         "cookies": "Politique des cookies",
         "copyright": "Tous droits réservés.",
         "builtFor": "Conçu pour le commerce moderne. Propulsé par Wi-Mall.",
@@ -471,7 +471,8 @@
             "agencyNameRequired": "Le nom de l'agence est obligatoire",
             "identifierRequired": "Saisissez votre numéro de téléphone ou votre e-mail",
             "codeRequired": "Saisissez le code que le bot vous a envoyé",
-            "codeTooLong": "Ce n'est pas un code de connexion"
+            "codeTooLong": "Ce n'est pas un code de connexion",
+            "termsRequired": "Veuillez accepter les Conditions générales d'utilisation et la Politique de confidentialité pour continuer."
         },
         "identifierTaken": {
             "phone": "Ce numéro de téléphone est déjà associé à un compte Wi-Mall. Connectez-vous à ce compte comme d'habitude, puis ajoutez-y le rôle {role}.",
@@ -941,7 +942,8 @@
             "about": "À propos",
             "careers": "Carrières",
             "contact": "Contact",
-            "apps": "Applications"
+            "apps": "Applications",
+            "cookies": "Cookies"
         },
         "common": {
             "breadcrumbLabel": "Fil d'Ariane",
@@ -1651,65 +1653,54 @@
         },
         "careers": {
             "metaTitle": "Carrières chez Wi-Mall",
-            "metaDescription": "Wi-Mall ne recrute pas en ce moment. Voici les postes que nous ouvrirons en premier — ingénierie, opérations et rédaction — et comment figurer sur la liste avant qu'ils n'apparaissent.",
+            "metaDescription": "Wi-Mall ne recrute pas encore, mais ce sera bientôt le cas : des assistants support pour aider les clients, vendeurs, agences de livraison et livreurs qui travaillent avec Wi-Mall. Voici le travail, et comment figurer sur la liste.",
             "eyebrow": "Carrières",
-            "title": "Petite équipe, surface inhabituellement large",
-            "leadClosed": "Nous ne recrutons pas pour le moment. Voici les postes que nous ouvrirons en premier lorsque cela changera, et le formulaire ci-dessous est la façon de figurer sur la liste avant qu'ils n'apparaissent.",
-            "leadOpen": "Voici les postes pour lesquels nous recrutons en ce moment.",
-            "relatedBody": "Les postes que nous ouvrirons en premier, et comment figurer sur la liste.",
+            "title": "Aider celles et ceux qui font tourner Wi-Mall",
+            "leadClosed": "Nous ne recrutons pas encore, mais ce sera bientôt le cas. Les premiers postes que nous ouvrirons sont au support : aider les clients, les vendeurs, les agences de livraison et les livreurs à obtenir ce dont ils ont besoin de Wi-Mall. Le formulaire ci-dessous vous inscrit sur la liste avant qu'ils n'apparaissent.",
+            "leadOpen": "Voici les postes support pour lesquels nous recrutons en ce moment.",
+            "relatedBody": "Les postes support que nous ouvrirons en premier, et comment figurer sur la liste.",
             "why": {
-                "title": "Ce sur quoi vous travailleriez",
+                "title": "Ce que vous feriez",
                 "p1": "Wi-Mall est une plateforme de commerce par WhatsApp pour le Cameroun : un assistant qui vend dans la conversation, un vrai catalogue derrière, et un réseau d'agences et de livreurs qui amène la commande jusqu'à une porte.",
-                "p2": "La surface est plus large que l'équipe. Un backend TypeScript modulaire avec son propre bus de commandes, un front Next.js en cinq langues dont une de droite à gauche, une application mobile pour les livreurs, un service de suivi séparé, et une couche de paiement qui doit parler mobile money, carte et paiement à la livraison sans traiter aucun des trois comme l'intrus.",
-                "p3": "Cela fait beaucoup pour le nombre de personnes qui s'en occupent actuellement. C'est l'argumentaire honnête, et c'est aussi ce qui le rend intéressant."
+                "p2": "Chaque commande passe entre les mains de personnes qui ne travaillent pas pour nous : le client qui a payé, le vendeur qui l'a emballée, l'agence qui l'a prise en charge et le livreur qui la transporte. Quand quelque chose coince — un paiement qui n'apparaît pas, un produit qui ne se publie pas, une livraison que personne n'a acceptée, un versement qui semble incomplet — quelqu'un doit répondre, comprendre ce qui s'est réellement passé, et le corriger.",
+                "p3": "C'est le travail. L'essentiel se passe dans des conversations WhatsApp, en français et en anglais, avec des personnes sur des téléphones modestes et des données capricieuses, qui ont plus besoin d'une réponse claire que d'une réponse polie."
             },
             "how": {
                 "title": "Comment nous travaillons",
                 "lead": "Certaines choses sont inhabituelles. Mieux vaut le savoir avant d'écrire qu'après.",
-                "i1": "La justesse est imposée par la compilation, pas par la bonne volonté. Un texte marketing qui contredit le catalogue tarifaire en vigueur fait échouer le déploiement et nomme la ligne à corriger.",
-                "i2": "Nous ne publions pas de chiffres que nous ne pouvons pas assumer. Pas de nombre d'avis inventé, pas de traction fabriquée, et des objectifs présentés comme des objectifs.",
-                "i3": "La priorité à l'Afrique est une contrainte que nous respectons vraiment : téléphones d'entrée de gamme, données chères, réseaux qui coupent. Si cela ne marche qu'en wifi rapide, cela ne marche pas.",
-                "i4": "Les commentaires expliquent le pourquoi, pas le quoi. Une décision qui passerait pour un bug sans contexte reçoit ce contexte juste à côté.",
-                "i5": "Cinq langues dès le départ, jamais en rattrapage. Rien ne part en anglais seulement.",
-                "note": "Si cela vous semble une rigueur inutile pour un produit qui débute, ce n'est probablement pas la bonne équipe — et c'est une chose utile à découvrir tôt, pour vous comme pour nous."
+                "i1": "Une réponse honnête vaut mieux qu'une réponse rapide. Si vous ne savez pas encore, dites-le, renseignez-vous et revenez. Ne devinez jamais où se trouve l'argent ou le colis de quelqu'un.",
+                "i2": "Nous corrigeons la cause, pas seulement la conversation. Quand la même question revient trois fois, elle remonte à l'équipe comme une chose à changer dans le produit ou dans les pages d'aide.",
+                "i3": "La priorité à l'Afrique est une contrainte que nous respectons vraiment : téléphones d'entrée de gamme, données chères, réseaux qui coupent. Les réponses sont courtes, claires et lisibles en texte brut.",
+                "i4": "Tout le monde reçoit la même attention, qu'il achète un article, en vende cent, dirige une agence ou fasse sa première livraison.",
+                "i5": "Français et anglais au quotidien, autres langues bienvenues. Nous répondons dans la langue de la personne chaque fois que c'est possible.",
+                "note": "Si cela vous semble beaucoup de soin pour une réponse dans une conversation, ce n'est probablement pas la bonne équipe — et c'est une chose utile à découvrir tôt, pour vous comme pour nous."
             },
             "roles": {
                 "title": "Les postes",
-                "leadClosed": "Aucun n'est encore ouvert. Ils sont listés pour que vous voyiez la forme de l'équipe que nous construisons, et que vous nous disiez lequel est le vôtre.",
+                "leadClosed": "Aucun n'est encore ouvert, mais ce sont les prochains. Ils sont listés pour que vous voyiez le travail et que vous nous disiez lequel est le vôtre.",
                 "leadOpen": "Ouverts maintenant. Candidatez via le formulaire ci-dessous.",
                 "openBadge": "Ouvert",
                 "closedBadge": "Pas encore ouvert",
                 "location": "À distance, priorité Cameroun",
-                "frontend": {
-                    "title": "Ingénieur front-end (Next.js)",
-                    "body": "Le site vitrine, la boutique et les tableaux de bord. React et TypeScript sur l'App Router, cinq langues, et une règle stricte : les mots partent dans le HTML."
+                "customerSupport": {
+                    "title": "Assistant support clients",
+                    "body": "Aider les acheteurs avec leurs commandes, paiements, livraisons et retours, surtout dans des conversations WhatsApp. Trouver où en est vraiment une commande et le dire simplement."
                 },
-                "backend": {
-                    "title": "Ingénieur back-end (Node, TypeScript)",
-                    "body": "Le monolithe modulaire : commandes, paiements, revenus, expéditions. MongoDB avec de vraies transactions, Redis, et une API orientée tâches."
+                "vendorSupport": {
+                    "title": "Assistant support vendeurs",
+                    "body": "Aider les vendeurs à s'installer et à vendre : leur boutique, leurs produits et photos, les formules, les commandes à préparer, et des versements qu'ils peuvent vérifier."
                 },
-                "assistant": {
-                    "title": "Ingénieur, commerce conversationnel",
-                    "body": "L'assistant WhatsApp et l'indexation produit derrière ses recommandations. Transformer ce que quelqu'un a tapé en un panier qu'il reconnaît."
+                "agencySupport": {
+                    "title": "Assistant support agences de livraison",
+                    "body": "Accompagner les agences qui livrent pour Wi-Mall : l'inscription, les régions couvertes, la gestion de leurs livreurs, et le règlement des frais de livraison et du paiement à la livraison."
                 },
-                "mobile": {
-                    "title": "Ingénieur mobile (application livreur)",
-                    "body": "L'application que les livreurs utilisent dans la circulation, sur un téléphone bon marché, d'une seule main. Le hors-ligne est la fonctionnalité, pas la finition."
-                },
-                "agencyOps": {
-                    "title": "Partenariats agences, Cameroun",
-                    "body": "Signer et accompagner les agences de livraison qui couvrent chaque région. Du terrain, pas un poste de bureau."
-                },
-                "content": {
-                    "title": "Rédacteur, français et anglais",
-                    "body": "Articles, aide en ligne et textes produit dans les deux langues de travail. Des phrases simples qui survivent à la traduction."
+                "agentSupport": {
+                    "title": "Assistant support livreurs",
+                    "body": "Aider les livreurs sur le terrain avec l'application, l'acceptation des courses, la confirmation des livraisons, l'argent encaissé et leurs gains — souvent pendant qu'ils sont sur la route."
                 }
             },
             "teams": {
-                "engineering": "Ingénierie",
-                "product": "Produit",
-                "operations": "Opérations",
-                "growth": "Croissance"
+                "support": "Support"
             },
             "commitments": {
                 "fullTime": "Temps plein",
@@ -1719,7 +1710,7 @@
             "form": {
                 "titleClosed": "Rejoindre la liste",
                 "titleOpen": "Candidater",
-                "leadClosed": "Dites-nous ce que vous faites et lequel de ces postes est le vôtre. Quand l'un s'ouvrira, c'est cette liste que nous consulterons en premier.",
+                "leadClosed": "Dites-nous ce que vous faites, dans quelles langues vous travaillez et lequel de ces postes est le vôtre. Quand l'un s'ouvrira, c'est cette liste que nous consulterons en premier.",
                 "leadOpen": "Envoyez votre candidature ici.",
                 "frameTitle": "Formulaire carrières Wi-Mall",
                 "note": "Ce formulaire est hébergé par Google, qui dépose ses propres cookies pendant sa consultation. Il est pour l'instant partagé avec notre formulaire de contact : précisez donc le poste visé."
@@ -1732,7 +1723,7 @@
             },
             "cta": {
                 "title": "Dites-nous qui vous êtes",
-                "body": "Nous ne recrutons pas aujourd'hui, mais la liste est réelle, et c'est par elle que nous commencerons le jour où cela changera.",
+                "body": "Nous ne recrutons pas aujourd'hui, mais ce sera bientôt le cas, et c'est par cette liste que nous commencerons.",
                 "finePrint": "Un formulaire, cinq minutes.",
                 "primary": "Nous contacter",
                 "secondary": "En savoir plus sur Wi-Mall"
@@ -1814,6 +1805,45 @@
                 "s3Body": "Si Android le demande, autorisez votre navigateur ou l'app Fichiers à installer des applis inconnues, puis revenez en arrière.",
                 "s4Title": "Installez et connectez-vous",
                 "s4Body": "Touchez Installer, ouvrez l'app et connectez-vous avec votre compte Wi-Mall. Pour mettre à jour, téléchargez la nouvelle version depuis cette page."
+            }
+        },
+        "cookies": {
+            "metaTitle": "Politique de cookies | Wi-Mall",
+            "metaDescription": "Wi-Mall utilise uniquement les cookies nécessaires à son fonctionnement : vous garder connecté et retenir votre panier et vos réglages. Pas de publicité, pas de pistage.",
+            "eyebrow": "Politique de cookies",
+            "title": "Seulement ce dont Wi-Mall a besoin pour fonctionner",
+            "lead": "Pas de publicité. Pas de pistage. Rien à configurer.",
+            "stored": {
+                "title": "Ce que nous gardons",
+                "signIn": {
+                    "where": "Cookie",
+                    "title": "Rester connecté",
+                    "body": "Deux cookies sécurisés retiennent que vous êtes connecté, pour que vous n'ayez pas à vous reconnecter à chaque page. Ils sont supprimés quand vous vous déconnectez."
+                },
+                "preferences": {
+                    "where": "Votre appareil",
+                    "title": "Vos réglages",
+                    "body": "Votre langue, le mode clair ou sombre et votre indicatif pays, pour que le site reste comme vous l'avez laissé."
+                },
+                "cart": {
+                    "where": "Votre appareil",
+                    "title": "Votre panier et vos favoris",
+                    "body": "Ce que vous ajoutez avant de vous connecter est gardé sur votre téléphone, pour le retrouver à votre retour."
+                }
+            },
+            "never": {
+                "title": "Ce que nous ne faisons jamais",
+                "ads": "Aucun cookie publicitaire.",
+                "tracking": "Aucune mesure d'audience ni pistage qui vous suit sur le web.",
+                "selling": "Nous ne vendons ni ne partageons jamais ce qui est enregistré."
+            },
+            "more": {
+                "title": "Bon à savoir",
+                "google": "Nos formulaires de contact et de recrutement sont hébergés par Google. Pendant qu'ils sont ouverts, Google peut déposer ses propres cookies.",
+                "clear": "Vous pouvez tout effacer à tout moment depuis les réglages de votre navigateur (effacer les données du site). Vous serez déconnecté et un panier enregistré sans compte sera vidé.",
+                "changes": "Si cela change un jour, nous mettrons cette page à jour et vous demanderons d'abord votre accord.",
+                "updated": "Dernière mise à jour : {date}.",
+                "contact": "Une question ? Contactez-nous"
             }
         }
     },
@@ -3072,5 +3102,19 @@
             "signingOut": "Déconnexion…",
             "switchFailed": "Impossible de passer à votre compte client. Déconnectez-vous, puis reconnectez-vous en tant que client."
         }
+    },
+    "cookieNotice": {
+        "label": "Information sur les cookies",
+        "text": "Nous utilisons uniquement les cookies qui vous gardent connecté et retiennent votre panier. Pas de publicité, pas de pistage.",
+        "learnMore": "En savoir plus",
+        "ok": "OK"
+    },
+    "legal": {
+        "sectionTitle": "Mentions légales",
+        "terms": "Conditions générales d'utilisation",
+        "privacy": "Politique de confidentialité",
+        "signupAgreement": "En créant un compte, vous acceptez nos <terms>Conditions générales d'utilisation</terms> et notre <privacy>Politique de confidentialité</privacy>.",
+        "checkoutAgreement": "En passant cette commande, vous acceptez nos <terms>Conditions générales d'utilisation</terms>.",
+        "consentLabel": "J'accepte les <terms>Conditions générales d'utilisation</terms> et la <privacy>Politique de confidentialité</privacy>."
     }
 }

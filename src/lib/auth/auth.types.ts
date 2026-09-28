@@ -178,6 +178,8 @@ export interface RegisterPayload {
     business_name?: string;
     /** Agency only. Seeds `Magazin.name`, not the agency profile. 2–100 chars. */
     agency_name?: string;
+    /** Ticked Terms/Privacy consent. Required by the API for vendor and agency. */
+    terms_accepted?: boolean;
 }
 
 export interface AddRolePayload {
@@ -188,6 +190,8 @@ export interface AddRolePayload {
     business_name?: string;
     /** Agency only. Seeds `Magazin.name`, not the agency profile. 2–100 chars. */
     agency_name?: string;
+    /** Ticked Terms/Privacy consent. Required by the API for vendor and agency. */
+    terms_accepted?: boolean;
 }
 
 // ─── API Response ────────────────────────────────────────────────────────────

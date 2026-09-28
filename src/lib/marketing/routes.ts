@@ -43,6 +43,7 @@ export const MARKETING_ROUTES: MarketingRoute[] = [
   { path: "/about", key: "about", priority: 0.6, changeFrequency: "monthly" },
   { path: "/contact", key: "contact", priority: 0.6, changeFrequency: "monthly" },
   { path: "/careers", key: "careers", priority: 0.5, changeFrequency: "monthly" },
+  { path: "/cookies", key: "cookies", priority: 0.3, changeFrequency: "monthly" },
 ];
 
 /**

@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/lib/theme";
 import { I18nProvider } from "@/lib/i18n-provider";
 import { AuthProvider } from "@/lib/auth/useAuth";
 import FloatingFaqButton from "@/components/layout/FloatingFaqButton";
+import CookieNotice from "@/components/layout/CookieNotice";
 import { NativeShell } from "@/components/native/NativeShell";
 import { AppLoading } from "@/components/native/AppLoading";
 import { IS_NATIVE_BUILD } from "@/lib/platform";
@@ -207,6 +208,7 @@ export default async function RootLayout({ children, params }: LayoutProps) {
               {/* Sitewide, after the page content so it is last in the tab
                   order rather than ahead of the page a visitor came to read. */}
               <FloatingFaqButton />
+              <CookieNotice />
             </AuthProvider>
           </I18nProvider>
         </ThemeProvider>

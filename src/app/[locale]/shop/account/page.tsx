@@ -17,6 +17,8 @@ import { IS_NATIVE_BUILD } from "@/lib/platform";
 import { openExternal } from "@/lib/native/links";
 import { absoluteUrl } from "@/lib/site";
 import type { CustomerProfile } from "@/lib/shop/customer.types";
+import { LegalLink } from "@/components/legal/LegalLink";
+import type { LegalDoc } from "@/lib/legal";
 
 interface MenuRow {
   icon: IconName;
@@ -101,6 +103,7 @@ export default function AccountPage() {
   const { status: authStatus } = useAuthGuard();
   const t = useTranslations("shop.account");
   const tError = useTranslations("errors");
+  const tLegal = useTranslations("legal");
   // The menu rows name themselves with absolute keys, mostly into `shop.nav`.
   const tKey = useTranslations();
 
@@ -310,6 +313,40 @@ export default function AccountPage() {
           </div>
         </div>
       )}
+
+      {/* Legal. Both documents live on the CDN and open in a real browser —
+          a Custom Tab in the app — so their "Download PDF" button works. */}
+      <p
+        className="muted"
+        style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", margin: "20px 4px 8px" }}
+      >
+        {tLegal("sectionTitle")}
+      </p>
+      <div
+        style={{
+          border: "1px solid var(--border)",
+          borderRadius: "var(--radius-lg)",
+          overflow: "hidden",
+          background: "var(--surface)",
+        }}
+      >
+        {(
+          [
+            { doc: "terms", icon: "file-text" },
+            { doc: "privacy", icon: "shield-check" },
+          ] satisfies { doc: LegalDoc; icon: IconName }[]
+        ).map((row) => (
+          <LegalLink key={row.doc} doc={row.doc} style={MENU_ROW_STYLE}>
+            <Icon name={row.icon} size={19} style={{ color: "var(--text-muted)" }} />
+            <span
+              style={{ flex: 1, fontSize: 14.5, fontWeight: 600, color: "var(--text-strong)" }}
+            >
+              {tLegal(row.doc)}
+            </span>
+            <Icon name="external-link" size={17} style={{ color: "var(--text-subtle)" }} />
+          </LegalLink>
+        ))}
+      </div>
 
       <LanguageSheet open={langOpen} onClose={() => setLangOpen(false)} />
 

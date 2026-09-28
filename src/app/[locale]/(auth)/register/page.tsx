@@ -27,6 +27,7 @@ import { GlobalError } from "@/components/auth/GlobalError";
 import RolePicker from "@/components/auth/RolePicker";
 import CustomerWhatsAppCta from "@/components/auth/CustomerWhatsAppCta";
 import { IS_NATIVE_BUILD } from "@/lib/platform";
+import { LegalAgreement, TermsConsentField } from "@/components/legal/LegalLink";
 
 type Step = "role" | "customer-wa" | "form";
 
@@ -210,6 +211,7 @@ function RegisterFormContent() {
               }
               backLabel={customerOnly ? t("signInOtherRole") : undefined}
             />
+            <LegalAgreement kind="signup" className="mt-4 text-center text-xs leading-relaxed text-[var(--text-muted)]" />
           </motion.div>
         )}
 
@@ -421,6 +423,12 @@ function RegisterFormContent() {
                 />
               );
             })()}
+
+            <TermsConsentField
+              id="register-terms"
+              registration={register("terms_accepted")}
+              error={errors.terms_accepted?.message}
+            />
 
             {/* One action, one aside — the mirror of the sign-in screen.
                 Signing in is the quiet alternative here, so it carries the

@@ -471,7 +471,8 @@
             "agencyNameRequired": "El nombre de la agencia es obligatorio",
             "identifierRequired": "Introduce tu número de teléfono o tu correo",
             "codeRequired": "Introduce el código que te envió el bot",
-            "codeTooLong": "Ese no es un código de inicio de sesión"
+            "codeTooLong": "Ese no es un código de inicio de sesión",
+            "termsRequired": "Acepta los Términos del servicio y la Política de privacidad para continuar."
         },
         "identifierTaken": {
             "phone": "Este número de teléfono ya está vinculado a una cuenta de Wi-Mall. Inicia sesión en esa cuenta como sueles hacerlo y después añade el rol de {role}.",
@@ -941,7 +942,8 @@
             "about": "Nosotros",
             "careers": "Empleo",
             "contact": "Contacto",
-            "apps": "Apps"
+            "apps": "Apps",
+            "cookies": "Cookies"
         },
         "common": {
             "breadcrumbLabel": "Ruta de navegación",
@@ -1651,65 +1653,54 @@
         },
         "careers": {
             "metaTitle": "Empleo en Wi-Mall",
-            "metaDescription": "Wi-Mall no está contratando ahora mismo. Estos son los puestos que abriremos primero — ingeniería, operaciones y redacción — y cómo entrar en la lista antes de que aparezcan.",
+            "metaDescription": "Wi-Mall todavía no está contratando, pero lo hará pronto: asistentes de soporte que ayudan a los clientes, vendedores, agencias de reparto y repartidores que trabajan con Wi-Mall. Este es el trabajo, y cómo entrar en la lista.",
             "eyebrow": "Empleo",
-            "title": "Equipo pequeño, superficie inusualmente grande",
-            "leadClosed": "No estamos contratando en este momento. Estos son los puestos que abriremos primero cuando eso cambie, y el formulario de abajo es la forma de entrar en la lista antes de que aparezcan.",
-            "leadOpen": "Estos son los puestos para los que estamos contratando ahora.",
-            "relatedBody": "Los puestos que abriremos primero, y cómo entrar en la lista.",
+            "title": "Ayudar a quienes hacen funcionar Wi-Mall",
+            "leadClosed": "Todavía no estamos contratando, pero lo haremos pronto. Los primeros puestos que abriremos son de soporte: ayudar a clientes, vendedores, agencias de reparto y repartidores a conseguir lo que necesitan de Wi-Mall. El formulario de abajo le pone en la lista antes de que aparezcan.",
+            "leadOpen": "Estos son los puestos de soporte para los que estamos contratando ahora.",
+            "relatedBody": "Los puestos de soporte que abriremos primero, y cómo entrar en la lista.",
             "why": {
-                "title": "En qué trabajaría",
+                "title": "Lo que haría",
                 "p1": "Wi-Mall es una plataforma de comercio por WhatsApp para Camerún: un asistente que vende dentro del chat, un catálogo de verdad detrás, y una red de agencias y repartidores que lleva el pedido hasta una puerta.",
-                "p2": "La superficie es más amplia que el equipo. Un backend TypeScript modular con su propio bus de comandos, un front-end Next.js en cinco idiomas incluido uno de derecha a izquierda, una aplicación móvil para repartidores, un servicio de seguimiento aparte, y una capa de pagos que tiene que hablar dinero móvil, tarjeta y contra reembolso sin tratar a ninguno como el raro de la familia.",
-                "p3": "Es mucho para el número de personas que ahora mismo lo lleva. Ese es el argumento honesto, y también es la parte interesante."
+                "p2": "Cada pedido pasa por personas que no trabajan para nosotros: el cliente que pagó, el vendedor que lo empaquetó, la agencia que lo aceptó y el repartidor que lo lleva. Cuando algo falla — un pago que no aparece, un producto que no se publica, un reparto que nadie ha aceptado, un cobro que parece incompleto — alguien tiene que responder, averiguar qué pasó de verdad y arreglarlo.",
+                "p3": "Ese es el trabajo. Casi todo ocurre en chats de WhatsApp, en francés e inglés, con personas en teléfonos baratos y datos inestables, que necesitan una respuesta clara más que una respuesta amable."
             },
             "how": {
                 "title": "Cómo trabajamos",
                 "lead": "Parte de esto es inusual. Mejor saberlo antes de escribir que después.",
-                "i1": "La corrección la impone la compilación, no la buena voluntad. Un texto de marketing que contradiga el catálogo de precios vigente hace fallar el despliegue y señala la línea a corregir.",
-                "i2": "No publicamos cifras que no podamos sostener. Sin recuentos de reseñas inventados, sin tracción fabricada, y con objetivos presentados como objetivos.",
-                "i3": "La prioridad a África es una restricción que respetamos de verdad: teléfonos de gama de entrada, datos caros, redes que se caen. Si solo funciona con wifi rápido, no funciona.",
-                "i4": "Los comentarios explican el porqué, no el qué. Una decisión que sin contexto parecería un error lleva ese contexto escrito al lado.",
-                "i5": "Cinco idiomas desde el principio, nunca en una pasada posterior. Nada sale solo en inglés.",
-                "note": "Si eso suena a rigor innecesario para un producto que empieza, probablemente no sea el equipo adecuado — y es algo útil de descubrir pronto, para ambas partes."
+                "i1": "Una respuesta honesta vale más que una rápida. Si todavía no lo sabe, dígalo, averígüelo y vuelva. Nunca adivine dónde está el dinero o el paquete de alguien.",
+                "i2": "Corregimos la causa, no solo la conversación. Cuando la misma pregunta llega tres veces, vuelve al equipo como algo que cambiar en el producto o en las páginas de ayuda.",
+                "i3": "La prioridad a África es una restricción que respetamos de verdad: teléfonos de gama de entrada, datos caros, redes que se caen. Las respuestas son cortas, claras y legibles como texto plano.",
+                "i4": "Todos reciben el mismo cuidado, ya compren un artículo, vendan cien, dirijan una agencia o hagan su primer reparto.",
+                "i5": "Francés e inglés cada día, otros idiomas son bienvenidos. Respondemos en el idioma en que nos escribieron siempre que podemos.",
+                "note": "Si le parece mucho cuidado para una respuesta en un chat, probablemente este no es el equipo adecuado — y es útil para ambos descubrirlo pronto."
             },
             "roles": {
                 "title": "Los puestos",
-                "leadClosed": "Ninguno está abierto todavía. Están listados para que vea la forma del equipo que estamos construyendo, y nos diga cuál es el suyo.",
+                "leadClosed": "Ninguno está abierto todavía, pero son los siguientes. Están listados para que vea el trabajo y nos diga cuál es el suyo.",
                 "leadOpen": "Abiertos ahora. Postule con el formulario de abajo.",
                 "openBadge": "Abierto",
                 "closedBadge": "Aún no abierto",
                 "location": "En remoto, con prioridad a Camerún",
-                "frontend": {
-                    "title": "Ingeniero front-end (Next.js)",
-                    "body": "El sitio público, la tienda y los paneles. React y TypeScript sobre App Router, cinco idiomas, y una regla dura: las palabras viajan en el HTML."
+                "customerSupport": {
+                    "title": "Asistente de soporte a clientes",
+                    "body": "Ayudar a los compradores con pedidos, pagos, repartos y devoluciones, sobre todo en chats de WhatsApp. Averiguar dónde está de verdad un pedido y decirlo con claridad."
                 },
-                "backend": {
-                    "title": "Ingeniero back-end (Node, TypeScript)",
-                    "body": "El monolito modular: pedidos, pagos, ganancias, envíos. MongoDB con transacciones de verdad, Redis, y una API orientada a tareas."
+                "vendorSupport": {
+                    "title": "Asistente de soporte a vendedores",
+                    "body": "Poner a los vendedores a vender: su tienda, productos y fotos, los planes, los pedidos por preparar, y cobros que puedan comprobar."
                 },
-                "assistant": {
-                    "title": "Ingeniero, comercio conversacional",
-                    "body": "El asistente de WhatsApp y la indexación de productos detrás de sus recomendaciones. Convertir lo que alguien escribió en un carrito que reconoce."
+                "agencySupport": {
+                    "title": "Asistente de soporte a agencias de reparto",
+                    "body": "Acompañar a las agencias que reparten para Wi-Mall: el registro, las regiones que cubren, la gestión de sus repartidores, y la liquidación de las tarifas de reparto y del pago contra entrega."
                 },
-                "mobile": {
-                    "title": "Ingeniero móvil (aplicación de reparto)",
-                    "body": "La aplicación que los repartidores usan en el tráfico, en un teléfono barato, con una sola mano. El funcionamiento sin conexión es la función, no el acabado."
-                },
-                "agencyOps": {
-                    "title": "Alianzas con agencias, Camerún",
-                    "body": "Firmar y acompañar a las agencias de reparto que cubren cada región. Trabajo de campo, no de escritorio."
-                },
-                "content": {
-                    "title": "Redactor, inglés y francés",
-                    "body": "Artículos, textos de ayuda y prosa de producto en los dos idiomas de trabajo. Frases sencillas que sobreviven a la traducción."
+                "agentSupport": {
+                    "title": "Asistente de soporte a repartidores",
+                    "body": "Ayudar a los repartidores sobre el terreno con la aplicación, aceptar trabajos, confirmar entregas, el dinero cobrado y sus ganancias — a menudo mientras están en la calle."
                 }
             },
             "teams": {
-                "engineering": "Ingeniería",
-                "product": "Producto",
-                "operations": "Operaciones",
-                "growth": "Crecimiento"
+                "support": "Soporte"
             },
             "commitments": {
                 "fullTime": "Jornada completa",
@@ -1719,7 +1710,7 @@
             "form": {
                 "titleClosed": "Entrar en la lista",
                 "titleOpen": "Postular",
-                "leadClosed": "Cuéntenos qué hace y cuál de estos es el suyo. Cuando se abra uno, esta es la lista a la que iremos primero.",
+                "leadClosed": "Cuéntenos qué hace, en qué idiomas trabaja y cuál de estos puestos es el suyo. Cuando se abra uno, esta es la lista a la que iremos primero.",
                 "leadOpen": "Envíelo por aquí.",
                 "frameTitle": "Formulario de empleo de Wi-Mall",
                 "note": "Este formulario está alojado por Google, que coloca sus propias cookies mientras está abierto. Por ahora lo compartimos con nuestro formulario de contacto, así que indique a qué puesto se refiere."
@@ -1732,7 +1723,7 @@
             },
             "cta": {
                 "title": "Cuéntenos quién es",
-                "body": "Hoy no estamos contratando, pero la lista es real, y es por donde empezamos cuando eso cambie.",
+                "body": "Hoy no estamos contratando, pero lo haremos pronto, y esta lista es por donde empezamos.",
                 "finePrint": "Un formulario, cinco minutos.",
                 "primary": "Escríbanos",
                 "secondary": "Conocer Wi-Mall"
@@ -1814,6 +1805,45 @@
                 "s3Body": "Si Android lo pide, permite que tu navegador o la app Archivos instale apps desconocidas y vuelve atrás.",
                 "s4Title": "Instala e inicia sesión",
                 "s4Body": "Toca Instalar, abre la app e inicia sesión con tu cuenta de Wi-Mall. Para actualizar, descarga la nueva versión desde esta página."
+            }
+        },
+        "cookies": {
+            "metaTitle": "Política de cookies | Wi-Mall",
+            "metaDescription": "Wi-Mall solo usa las cookies que necesita para funcionar: mantener tu sesión iniciada y recordar tu carrito y tus ajustes. Sin anuncios, sin rastreo.",
+            "eyebrow": "Política de cookies",
+            "title": "Solo lo que Wi-Mall necesita para funcionar",
+            "lead": "Sin anuncios. Sin rastreo. Nada que configurar.",
+            "stored": {
+                "title": "Lo que guardamos",
+                "signIn": {
+                    "where": "Cookie",
+                    "title": "Mantener tu sesión",
+                    "body": "Dos cookies seguras recuerdan que has iniciado sesión, para que no tengas que entrar en cada página. Se borran cuando cierras sesión."
+                },
+                "preferences": {
+                    "where": "Tu dispositivo",
+                    "title": "Tus ajustes",
+                    "body": "Tu idioma, el modo claro u oscuro y el prefijo de tu país, para que el sitio siga como lo dejaste."
+                },
+                "cart": {
+                    "where": "Tu dispositivo",
+                    "title": "Tu carrito y favoritos",
+                    "body": "Lo que añades antes de iniciar sesión se guarda en tu teléfono, para que siga ahí cuando vuelvas."
+                }
+            },
+            "never": {
+                "title": "Lo que nunca hacemos",
+                "ads": "Ninguna cookie publicitaria.",
+                "tracking": "Ninguna analítica ni rastreo que te siga por la web.",
+                "selling": "Nunca vendemos ni compartimos lo que se guarda."
+            },
+            "more": {
+                "title": "Conviene saber",
+                "google": "Nuestros formularios de contacto y de empleo están alojados por Google. Mientras están abiertos, Google puede usar sus propias cookies.",
+                "clear": "Puedes borrarlo todo cuando quieras desde los ajustes del navegador (borrar datos del sitio). Se cerrará tu sesión y se vaciará un carrito guardado sin cuenta.",
+                "changes": "Si esto cambia algún día, actualizaremos esta página y te pediremos permiso primero.",
+                "updated": "Última actualización: {date}.",
+                "contact": "¿Preguntas? Contáctanos"
             }
         }
     },
@@ -3072,5 +3102,19 @@
             "signingOut": "Cerrando sesión…",
             "switchFailed": "No pudimos cambiarte a tu cuenta de cliente. Cierra sesión y vuelve a entrar como cliente."
         }
+    },
+    "cookieNotice": {
+        "label": "Aviso de cookies",
+        "text": "Solo usamos cookies que mantienen tu sesión iniciada y recuerdan tu carrito. Sin anuncios, sin rastreo.",
+        "learnMore": "Más información",
+        "ok": "OK"
+    },
+    "legal": {
+        "sectionTitle": "Legal",
+        "terms": "Términos del servicio",
+        "privacy": "Política de privacidad",
+        "signupAgreement": "Al crear una cuenta, aceptas nuestros <terms>Términos del servicio</terms> y nuestra <privacy>Política de privacidad</privacy>.",
+        "checkoutAgreement": "Al realizar este pedido, aceptas nuestros <terms>Términos del servicio</terms>.",
+        "consentLabel": "Acepto los <terms>Términos del servicio</terms> y la <privacy>Política de privacidad</privacy>."
     }
 }

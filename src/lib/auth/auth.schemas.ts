@@ -186,6 +186,27 @@ export const LoginSchema = z
 
 export type LoginFormValues = z.infer<typeof LoginSchema>;
 
+/**
+ * Every role but customer must tick "I agree to the Terms of Service and
+ * Privacy Policy" before its account is created — customers register through
+ * the bot and never reach these forms.
+ *
+ * The backend requires it for vendor and agency (400 VALIDATION_ERROR on
+ * `terms_accepted`) and records it for agent too; this form asks all three.
+ */
+function refineTermsAccepted(
+    data: { role: string; terms_accepted?: boolean },
+    ctx: z.RefinementCtx
+): void {
+    if (data.role !== "customer" && data.terms_accepted !== true) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: fieldError("termsRequired"),
+            path: ["terms_accepted"],
+        });
+    }
+}
+
 // ─── Register ────────────────────────────────────────────────────────────────
 export const RegisterSchema = z
     .object({
@@ -220,8 +241,11 @@ export const RegisterSchema = z
         business_name: z.string().optional(),
         /** Seeds Magazin.name — see refineBusinessName. */
         agency_name: z.string().optional(),
+        /** The Terms/Privacy checkbox — see refineTermsAccepted. */
+        terms_accepted: z.boolean().optional(),
     })
     .superRefine((data, ctx) => {
+        refineTermsAccepted(data, ctx);
         if (data.role === "vendor") {
             refineBusinessName(
                 data.business_name,
@@ -251,8 +275,11 @@ export const AddRoleSchema = z
         business_name: z.string().optional(),
         /** Seeds Magazin.name — see refineBusinessName. */
         agency_name: z.string().optional(),
+        /** The Terms/Privacy checkbox — see refineTermsAccepted. */
+        terms_accepted: z.boolean().optional(),
     })
     .superRefine((data, ctx) => {
+        refineTermsAccepted(data, ctx);
         // name is required for every non-customer role — it lands on the role
         // profile itself (display_name for vendor/agency, name for agent).
         if (data.role !== "customer" && !data.name?.trim()) {

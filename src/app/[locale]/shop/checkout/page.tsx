@@ -12,6 +12,7 @@ import {
 } from "@/components/shop/PaymentMethodPicker";
 import { useSavedPayment } from "@/components/shop/useSavedPayment";
 import { DeliveryMinimumNotice, fromShop } from "@/components/shop/DeliveryMinimumNotice";
+import { LegalAgreement } from "@/components/legal/LegalLink";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import { ApiError } from "@/lib/auth/auth.types";
 import { isNetworkError } from "@/lib/errors/is-network-error";
@@ -523,39 +524,43 @@ export default function CheckoutPage() {
       {shortOfMinimum && <DeliveryMinimumNotice quote={quote} lines={lines} />}
 
       <div
-        style={{ display: "flex", alignItems: "center", gap: 12, position: "sticky", bottom: 0 }}
+        style={{ flexDirection: "column", alignItems: "stretch", gap: 8, position: "sticky", bottom: 0 }}
         className="stickybar rounded-t-2xl"
       >
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11.5, color: "var(--text-muted)", fontWeight: 600 }}>
-            {t("total")}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11.5, color: "var(--text-muted)", fontWeight: 600 }}>
+              {t("total")}
+            </div>
+            <div style={{ fontSize: 20, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+              {formatMoney(total, currency)}
+            </div>
           </div>
-          <div style={{ fontSize: 20, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
-            {formatMoney(total, currency)}
-          </div>
+          <Button
+            size="lg"
+            elevated
+            leadingIcon={isCod ? "banknote" : "lock"}
+            disabled={!canPay}
+            title={
+              !addressOk
+                ? t("chooseAddress")
+                : !phoneOk
+                  ? t("enterValidNumber")
+                  : shortOfMinimum
+                    ? tMinimum("buttonHint")
+                    : undefined
+            }
+            onClick={() => void placeOrder()}
+          >
+            {placing
+              ? t("placing")
+              : isCod
+                ? t("placeOrder")
+                : t("payAmount", { amount: formatMoney(total, currency) })}
+          </Button>
         </div>
-        <Button
-          size="lg"
-          elevated
-          leadingIcon={isCod ? "banknote" : "lock"}
-          disabled={!canPay}
-          title={
-            !addressOk
-              ? t("chooseAddress")
-              : !phoneOk
-                ? t("enterValidNumber")
-                : shortOfMinimum
-                  ? tMinimum("buttonHint")
-                  : undefined
-          }
-          onClick={() => void placeOrder()}
-        >
-          {placing
-            ? t("placing")
-            : isCod
-              ? t("placeOrder")
-              : t("payAmount", { amount: formatMoney(total, currency) })}
-        </Button>
+        {/* Under the pay button, as the order is what the Terms bind. */}
+        <LegalAgreement kind="checkout" />
       </div>
     </div>
   );

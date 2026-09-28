@@ -471,7 +471,8 @@
             "agencyNameRequired": "Agency name is required",
             "identifierRequired": "Enter your phone number or email",
             "codeRequired": "Enter the code the bot sent you",
-            "codeTooLong": "That is not a sign-in code"
+            "codeTooLong": "That is not a sign-in code",
+            "termsRequired": "Please accept the Terms of Service and Privacy Policy to continue."
         },
         "identifierTaken": {
             "phone": "This phone number is already linked to a Wi-Mall account. Sign in to that account the way you usually do, then add the {role} role from there.",
@@ -941,7 +942,8 @@
             "about": "About",
             "careers": "Careers",
             "contact": "Contact",
-            "apps": "Apps"
+            "apps": "Apps",
+            "cookies": "Cookies"
         },
         "common": {
             "breadcrumbLabel": "Breadcrumb",
@@ -1651,65 +1653,54 @@
         },
         "careers": {
             "metaTitle": "Careers at Wi-Mall",
-            "metaDescription": "Wi-Mall is not hiring right now. These are the roles we will open first — engineering, operations and writing — and how to get on the list before they do.",
+            "metaDescription": "Wi-Mall is not hiring yet, but will be soon: support assistants who help the customers, vendors, delivery agencies and agents working with Wi-Mall. Here is the work, and how to get on the list.",
             "eyebrow": "Careers",
-            "title": "Small team, unusually large surface",
-            "leadClosed": "We are not hiring at the moment. These are the roles we will open first when that changes, and the form below is how you get on the list before they appear.",
-            "leadOpen": "These are the roles we are hiring for right now.",
-            "relatedBody": "The roles we will open first, and how to get on the list before they do.",
+            "title": "Help the people who make Wi-Mall work",
+            "leadClosed": "We are not hiring yet, but we will be soon. The first roles we open are in support: helping customers, vendors, delivery agencies and agents get what they need from Wi-Mall. The form below puts you on the list before they appear.",
+            "leadOpen": "These are the support roles we are hiring for right now.",
+            "relatedBody": "The support roles we will open first, and how to get on the list before they do.",
             "why": {
-                "title": "What you would be working on",
+                "title": "What you would be doing",
                 "p1": "Wi-Mall is a WhatsApp-first commerce platform for Cameroon: an assistant that sells inside a chat, a real catalogue behind it, and a network of delivery agencies and agents that gets the thing to a door.",
-                "p2": "The surface is wider than the team. A modular TypeScript backend with its own command bus, a Next.js front end in five languages including a right-to-left one, a mobile app for delivery agents, a separate tracking service, and a payments layer that has to speak mobile money, cards and cash on delivery without treating any of them as the odd one out.",
-                "p3": "That is a lot for the number of people currently doing it. It is the honest pitch, and it is also the interesting part."
+                "p2": "Every order passes through people who do not work for us: the customer who paid, the vendor who packed it, the agency that took it on and the agent carrying it. When something goes wrong — a payment that has not shown up, a product that will not publish, a delivery nobody has accepted, a payout that looks short — someone has to answer, find out what actually happened, and put it right.",
+                "p3": "That is the job. Most of it happens in WhatsApp chats, in French and English, with people on cheap phones and patchy data who need a clear answer more than a polite one."
             },
             "how": {
                 "title": "How we work",
                 "lead": "Some of it is unusual. Better to know before you write than after.",
-                "i1": "Correctness is enforced by the build, not by good intentions. Marketing copy that contradicts the live price catalogue fails the deploy and names the line to fix.",
-                "i2": "We do not publish numbers we cannot stand behind. No invented review counts, no fabricated traction, and targets labelled as targets.",
-                "i3": "Africa-first is a constraint we actually honour: entry-level handsets, expensive data, networks that drop. If it only works on fast wifi, it does not work.",
-                "i4": "Comments explain why, not what. A decision that would read as a bug without context gets the context written next to it.",
-                "i5": "Five languages from the start, never as a later pass. Nothing ships English-only.",
-                "note": "If that reads as unnecessary rigour for an early product, this is probably not the right team — and that is a useful thing for both of us to find out early."
+                "i1": "An honest answer beats a fast one. If you do not know yet, say so, find out, and come back. Never guess where someone's money or parcel is.",
+                "i2": "We fix the cause, not only the conversation. When the same question comes in three times, it goes back to the team as something to change in the product or the help pages.",
+                "i3": "Africa-first is a constraint we actually honour: entry-level handsets, expensive data, networks that drop. Replies are short, clear and readable as plain text.",
+                "i4": "Everyone gets the same care, whether they are buying one item, selling a hundred, running an agency or making their first delivery.",
+                "i5": "French and English every day, other languages welcome. We answer people in the language they wrote in whenever we can.",
+                "note": "If that sounds like a lot of care for a chat reply, this is probably not the right team — and that is a useful thing for both of us to find out early."
             },
             "roles": {
                 "title": "The roles",
-                "leadClosed": "None of these are open yet. They are listed so you can see the shape of the team we are building, and tell us which one is yours.",
+                "leadClosed": "None of these are open yet, but they are next. They are listed so you can see the work and tell us which one is yours.",
                 "leadOpen": "Open now. Apply through the form below.",
                 "openBadge": "Open",
                 "closedBadge": "Not open yet",
                 "location": "Remote, Cameroon-first",
-                "frontend": {
-                    "title": "Frontend engineer (Next.js)",
-                    "body": "The marketing site, the shop and the dashboards. React and TypeScript on the App Router, five locales, and a hard rule that the words ship in the HTML."
+                "customerSupport": {
+                    "title": "Customer support assistant",
+                    "body": "Helping shoppers with orders, payments, delivery and returns, mostly in WhatsApp chats. Finding out where an order really is and saying so plainly."
                 },
-                "backend": {
-                    "title": "Backend engineer (Node, TypeScript)",
-                    "body": "The modular monolith: orders, payments, earnings, shipments. MongoDB with real transactions, Redis, and a task-oriented API."
+                "vendorSupport": {
+                    "title": "Vendor support assistant",
+                    "body": "Getting sellers set up and selling: their shop, products and photos, plans, orders to prepare, and payouts they can check."
                 },
-                "assistant": {
-                    "title": "Engineer, conversational commerce",
-                    "body": "The WhatsApp assistant and the product indexing behind its recommendations. Turning what somebody typed into a cart they recognise."
+                "agencySupport": {
+                    "title": "Delivery agency support assistant",
+                    "body": "Supporting the agencies that deliver for Wi-Mall: signing up, the regions they cover, managing their agents, and settling delivery fees and cash on delivery."
                 },
-                "mobile": {
-                    "title": "Mobile engineer (delivery app)",
-                    "body": "The app agents use in traffic, on a cheap handset, with one hand. Offline behaviour is the feature, not the polish."
-                },
-                "agencyOps": {
-                    "title": "Agency partnerships, Cameroon",
-                    "body": "Signing and supporting the delivery agencies that cover each region. Field work, not a desk job."
-                },
-                "content": {
-                    "title": "Writer, English and French",
-                    "body": "Articles, help copy and product prose in both working languages. Plain sentences that survive translation."
+                "agentSupport": {
+                    "title": "Agent support assistant",
+                    "body": "Helping delivery agents in the field with the app, accepting jobs, confirming deliveries, cash collected and earnings — often while they are on the road."
                 }
             },
             "teams": {
-                "engineering": "Engineering",
-                "product": "Product",
-                "operations": "Operations",
-                "growth": "Growth"
+                "support": "Support"
             },
             "commitments": {
                 "fullTime": "Full time",
@@ -1719,7 +1710,7 @@
             "form": {
                 "titleClosed": "Get on the list",
                 "titleOpen": "Apply",
-                "leadClosed": "Tell us what you do and which of these is yours. When one opens, this is the list we go to first.",
+                "leadClosed": "Tell us what you do, which languages you work in and which of these roles is yours. When one opens, this is the list we go to first.",
                 "leadOpen": "Send it through here.",
                 "frameTitle": "Wi-Mall careers form",
                 "note": "This form is hosted by Google, which sets its own cookies while it is open. It is currently shared with our contact form, so say which role you mean."
@@ -1732,7 +1723,7 @@
             },
             "cta": {
                 "title": "Tell us who you are",
-                "body": "We are not hiring today, but the list is real, and it is where we start when that changes.",
+                "body": "We are not hiring today, but we will be soon, and this list is where we start.",
                 "finePrint": "One form, five minutes.",
                 "primary": "Get in touch",
                 "secondary": "Read about Wi-Mall"
@@ -1814,6 +1805,45 @@
                 "s3Body": "If Android asks, allow your browser or Files app to install unknown apps, then go back.",
                 "s4Title": "Install and sign in",
                 "s4Body": "Tap Install, open the app and sign in with your Wi-Mall account. To update, download the new version from this page."
+            }
+        },
+        "cookies": {
+            "metaTitle": "Cookie Policy | Wi-Mall",
+            "metaDescription": "Wi-Mall only uses the cookies it needs to work: keeping you signed in and remembering your cart and settings. No ads, no tracking.",
+            "eyebrow": "Cookie Policy",
+            "title": "Only what Wi-Mall needs to work",
+            "lead": "No ads. No tracking. Nothing for you to set up.",
+            "stored": {
+                "title": "What we keep",
+                "signIn": {
+                    "where": "Cookie",
+                    "title": "Keeping you signed in",
+                    "body": "Two secure cookies remember that you are signed in, so you do not have to log in on every page. They are removed when you sign out."
+                },
+                "preferences": {
+                    "where": "Your device",
+                    "title": "Your settings",
+                    "body": "Your language, light or dark mode and your country code, so the site looks the way you left it."
+                },
+                "cart": {
+                    "where": "Your device",
+                    "title": "Your cart and favourites",
+                    "body": "What you add before signing in is kept on your phone, so it is still there when you come back."
+                }
+            },
+            "never": {
+                "title": "What we never do",
+                "ads": "No advertising cookies.",
+                "tracking": "No analytics or tracking that follows you around the web.",
+                "selling": "We never sell or share what is stored."
+            },
+            "more": {
+                "title": "Good to know",
+                "google": "Our contact and careers forms are hosted by Google. While one is open, Google may set its own cookies.",
+                "clear": "You can delete all of this at any time from your browser settings (clear site data). You will be signed out and a cart saved without an account will be emptied.",
+                "changes": "If this ever changes, we will update this page and ask you first.",
+                "updated": "Last updated: {date}.",
+                "contact": "Questions? Contact us"
             }
         }
     },
@@ -3072,5 +3102,19 @@
             "signingOut": "Signing out…",
             "switchFailed": "We couldn't switch you to your customer account. Sign out, then sign back in as a customer."
         }
+    },
+    "cookieNotice": {
+        "label": "Cookie notice",
+        "text": "We only use cookies that keep you signed in and remember your cart. No ads, no tracking.",
+        "learnMore": "Learn more",
+        "ok": "OK"
+    },
+    "legal": {
+        "sectionTitle": "Legal",
+        "terms": "Terms of Service",
+        "privacy": "Privacy Policy",
+        "signupAgreement": "By creating an account, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
+        "checkoutAgreement": "By placing this order, you agree to our <terms>Terms of Service</terms>.",
+        "consentLabel": "I agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>."
     }
 }

@@ -3,7 +3,8 @@ import { Link } from "@/i18n/navigation";
 import { Facebook, Instagram } from "lucide-react";
 import WiMallMark from "@/components/brand/WiMallMark.generated";
 import { BRAND, SOCIAL_LINKS } from "@/lib/constants";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { legalUrl } from "@/lib/legal";
 import { useOptionalSectionNav } from "@/components/scroll/SectionNavProvider";
 
 /** Keyed by `SOCIAL_LINKS[].network`, so adding a profile without a glyph is a type error. */
@@ -12,6 +13,7 @@ const SOCIAL_ICONS = { Instagram, Facebook } satisfies Record<(typeof SOCIAL_LIN
 export default function Footer() {
   const t = useTranslations("footer");
   const nav = useTranslations("navbar");
+  const locale = useLocale();
   // Optional: null when the Footer is rendered off the landing page (e.g. /shop).
   const sectionNav = useOptionalSectionNav();
 
@@ -71,9 +73,10 @@ export default function Footer() {
     {
       label: t("legal"),
       links: [
-        { label: t("privacy"), href: "#" },
-        { label: t("terms"), href: "#" },
-        { label: t("cookies"), href: "#" },
+        // Hosted on the CDN in English and French; see lib/legal.ts.
+        { label: t("privacy"), href: legalUrl("privacy", locale) },
+        { label: t("terms"), href: legalUrl("terms", locale) },
+        { label: t("cookies"), href: "/cookies" },
       ],
     },
   ];
@@ -129,13 +132,24 @@ export default function Footer() {
               <ul className="flex flex-col gap-2">
                 {group.links.map((link) => (
                   <li key={link.href + link.label}>
-                    <Link
-                      href={resolveHref(link.href)}
-                      onClick={(e) => handleLink(e, link.href)}
-                      className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:text-primary-600 transition-colors duration-200"
-                    >
-                      {link.label}
-                    </Link>
+                    {link.href.startsWith("https://") ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener"
+                        className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:text-primary-600 transition-colors duration-200"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        href={resolveHref(link.href)}
+                        onClick={(e) => handleLink(e, link.href)}
+                        className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:text-primary-600 transition-colors duration-200"
+                      >
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

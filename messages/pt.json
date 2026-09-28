@@ -471,7 +471,8 @@
             "agencyNameRequired": "O nome da agência é obrigatório",
             "identifierRequired": "Introduza o seu número de telefone ou e-mail",
             "codeRequired": "Introduza o código que o bot lhe enviou",
-            "codeTooLong": "Esse não é um código de início de sessão"
+            "codeTooLong": "Esse não é um código de início de sessão",
+            "termsRequired": "Aceite os Termos de Serviço e a Política de Privacidade para continuar."
         },
         "identifierTaken": {
             "phone": "Este número de telefone já está associado a uma conta Wi-Mall. Entre nessa conta como de costume e depois adicione o papel de {role}.",
@@ -941,7 +942,8 @@
             "about": "Sobre",
             "careers": "Carreiras",
             "contact": "Contacto",
-            "apps": "Apps"
+            "apps": "Apps",
+            "cookies": "Cookies"
         },
         "common": {
             "breadcrumbLabel": "Trilha de navegação",
@@ -1651,65 +1653,54 @@
         },
         "careers": {
             "metaTitle": "Carreiras na Wi-Mall",
-            "metaDescription": "A Wi-Mall não está a recrutar de momento. Estas são as funções que abriremos primeiro — engenharia, operações e escrita — e como entrar na lista antes disso.",
+            "metaDescription": "A Wi-Mall ainda não está a recrutar, mas estará em breve: assistentes de apoio que ajudam os clientes, vendedores, agências de entrega e estafetas que trabalham com a Wi-Mall. Eis o trabalho, e como entrar na lista.",
             "eyebrow": "Carreiras",
-            "title": "Equipa pequena, superfície invulgarmente grande",
-            "leadClosed": "Não estamos a recrutar de momento. Estas são as funções que abriremos primeiro quando isso mudar, e o formulário abaixo é a forma de entrar na lista antes de aparecerem.",
-            "leadOpen": "Estas são as funções para as quais estamos a recrutar agora.",
-            "relatedBody": "As funções que abriremos primeiro, e como entrar na lista.",
+            "title": "Ajudar as pessoas que fazem a Wi-Mall funcionar",
+            "leadClosed": "Ainda não estamos a recrutar, mas estaremos em breve. As primeiras funções que abriremos são de apoio: ajudar clientes, vendedores, agências de entrega e estafetas a obter o que precisam da Wi-Mall. O formulário abaixo põe-no na lista antes de elas aparecerem.",
+            "leadOpen": "Estas são as funções de apoio para as quais estamos a recrutar agora.",
+            "relatedBody": "As funções de apoio que abriremos primeiro, e como entrar na lista.",
             "why": {
-                "title": "Em que estaria a trabalhar",
+                "title": "O que faria",
                 "p1": "A Wi-Mall é uma plataforma de comércio pelo WhatsApp para os Camarões: um assistente que vende dentro da conversa, um catálogo a sério por trás, e uma rede de agências e estafetas que leva a encomenda até uma porta.",
-                "p2": "A superfície é maior do que a equipa. Um backend TypeScript modular com o seu próprio barramento de comandos, um front-end Next.js em cinco línguas incluindo uma da direita para a esquerda, uma aplicação móvel para estafetas, um serviço de seguimento separado, e uma camada de pagamentos que tem de falar dinheiro móvel, cartão e pagamento na entrega sem tratar nenhum deles como o estranho da família.",
-                "p3": "É muito para o número de pessoas que atualmente o faz. É esse o argumento honesto, e é também a parte interessante."
+                "p2": "Cada encomenda passa por pessoas que não trabalham para nós: o cliente que pagou, o vendedor que a embalou, a agência que a aceitou e o estafeta que a transporta. Quando algo corre mal — um pagamento que não aparece, um produto que não se publica, uma entrega que ninguém aceitou, um pagamento ao vendedor que parece curto — alguém tem de responder, descobrir o que realmente aconteceu e resolver.",
+                "p3": "É esse o trabalho. Quase tudo acontece em conversas de WhatsApp, em francês e inglês, com pessoas em telemóveis baratos e dados instáveis, que precisam mais de uma resposta clara do que de uma resposta simpática."
             },
             "how": {
                 "title": "Como trabalhamos",
                 "lead": "Parte disto é invulgar. Melhor saber antes de escrever do que depois.",
-                "i1": "A correção é imposta pela compilação, não pela boa vontade. Texto de marketing que contradiga o catálogo de preços em vigor faz falhar a publicação e indica a linha a corrigir.",
-                "i2": "Não publicamos números que não possamos defender. Sem contagens de avaliações inventadas, sem tração fabricada, e com objetivos identificados como objetivos.",
-                "i3": "A prioridade a África é uma limitação que respeitamos de facto: telemóveis de gama de entrada, dados caros, redes que caem. Se só funciona com wifi rápido, não funciona.",
-                "i4": "Os comentários explicam o porquê, não o quê. Uma decisão que sem contexto pareceria um erro leva esse contexto escrito ao lado.",
-                "i5": "Cinco línguas desde o início, nunca numa passagem posterior. Nada sai apenas em inglês.",
-                "note": "Se isso lhe parece rigor desnecessário para um produto no início, provavelmente não é a equipa certa — e é uma coisa útil de descobrir cedo, para ambos os lados."
+                "i1": "Uma resposta honesta vale mais do que uma rápida. Se ainda não sabe, diga-o, descubra e volte. Nunca adivinhe onde está o dinheiro ou a encomenda de alguém.",
+                "i2": "Corrigimos a causa, não só a conversa. Quando a mesma pergunta chega três vezes, volta para a equipa como algo a mudar no produto ou nas páginas de ajuda.",
+                "i3": "A prioridade a África é uma restrição que respeitamos a sério: telemóveis de entrada de gama, dados caros, redes que caem. As respostas são curtas, claras e legíveis como texto simples.",
+                "i4": "Todos recebem o mesmo cuidado, quer comprem um artigo, vendam cem, gerem uma agência ou façam a primeira entrega.",
+                "i5": "Francês e inglês todos os dias, outras línguas são bem-vindas. Respondemos na língua em que nos escreveram sempre que possível.",
+                "note": "Se isto lhe parece muito cuidado para uma resposta num chat, esta provavelmente não é a equipa certa — e é útil para ambos descobri-lo cedo."
             },
             "roles": {
                 "title": "As funções",
-                "leadClosed": "Nenhuma está aberta ainda. Estão listadas para que veja a forma da equipa que estamos a construir, e nos diga qual é a sua.",
+                "leadClosed": "Nenhuma está aberta ainda, mas são as próximas. Estão listadas para que veja o trabalho e nos diga qual é a sua.",
                 "leadOpen": "Abertas agora. Candidate-se pelo formulário abaixo.",
                 "openBadge": "Aberta",
                 "closedBadge": "Ainda não aberta",
                 "location": "Remoto, com prioridade aos Camarões",
-                "frontend": {
-                    "title": "Engenheiro front-end (Next.js)",
-                    "body": "O site institucional, a loja e os painéis. React e TypeScript no App Router, cinco línguas, e uma regra dura: as palavras seguem no HTML."
+                "customerSupport": {
+                    "title": "Assistente de apoio ao cliente",
+                    "body": "Ajudar compradores com encomendas, pagamentos, entregas e devoluções, sobretudo em conversas de WhatsApp. Descobrir onde está realmente uma encomenda e dizê-lo com clareza."
                 },
-                "backend": {
-                    "title": "Engenheiro back-end (Node, TypeScript)",
-                    "body": "O monólito modular: encomendas, pagamentos, ganhos, envios. MongoDB com transações a sério, Redis, e uma API orientada a tarefas."
+                "vendorSupport": {
+                    "title": "Assistente de apoio a vendedores",
+                    "body": "Pôr os vendedores a vender: a loja, os produtos e fotografias, os planos, as encomendas a preparar, e pagamentos que conseguem verificar."
                 },
-                "assistant": {
-                    "title": "Engenheiro, comércio conversacional",
-                    "body": "O assistente de WhatsApp e a indexação de produtos por trás das suas recomendações. Transformar o que alguém escreveu num carrinho que reconhece."
+                "agencySupport": {
+                    "title": "Assistente de apoio a agências de entrega",
+                    "body": "Apoiar as agências que entregam para a Wi-Mall: o registo, as regiões que cobrem, a gestão dos seus estafetas, e a liquidação das taxas de entrega e do pagamento na entrega."
                 },
-                "mobile": {
-                    "title": "Engenheiro móvel (aplicação de entregas)",
-                    "body": "A aplicação que os estafetas usam no trânsito, num telemóvel barato, com uma só mão. O offline é a funcionalidade, não o acabamento."
-                },
-                "agencyOps": {
-                    "title": "Parcerias com agências, Camarões",
-                    "body": "Angariar e apoiar as agências de entrega que cobrem cada região. Trabalho de terreno, não de secretária."
-                },
-                "content": {
-                    "title": "Redator, inglês e francês",
-                    "body": "Artigos, textos de ajuda e prosa de produto nas duas línguas de trabalho. Frases simples que sobrevivem à tradução."
+                "agentSupport": {
+                    "title": "Assistente de apoio a estafetas",
+                    "body": "Ajudar os estafetas no terreno com a aplicação, aceitar trabalhos, confirmar entregas, o dinheiro recebido e os ganhos — muitas vezes enquanto estão na estrada."
                 }
             },
             "teams": {
-                "engineering": "Engenharia",
-                "product": "Produto",
-                "operations": "Operações",
-                "growth": "Crescimento"
+                "support": "Apoio"
             },
             "commitments": {
                 "fullTime": "Tempo inteiro",
@@ -1719,7 +1710,7 @@
             "form": {
                 "titleClosed": "Entrar na lista",
                 "titleOpen": "Candidatar-se",
-                "leadClosed": "Diga-nos o que faz e qual destas é a sua. Quando uma abrir, é a esta lista que vamos primeiro.",
+                "leadClosed": "Diga-nos o que faz, em que línguas trabalha e qual destas funções é a sua. Quando uma abrir, é a esta lista que vamos primeiro.",
                 "leadOpen": "Envie por aqui.",
                 "frameTitle": "Formulário de carreiras da Wi-Mall",
                 "note": "Este formulário é alojado pela Google, que coloca os seus próprios cookies enquanto estiver aberto. De momento é partilhado com o nosso formulário de contacto, por isso indique a função a que se refere."
@@ -1732,7 +1723,7 @@
             },
             "cta": {
                 "title": "Diga-nos quem é",
-                "body": "Hoje não estamos a recrutar, mas a lista é real, e é por ela que começamos quando isso mudar.",
+                "body": "Hoje não estamos a recrutar, mas estaremos em breve, e é por esta lista que começamos.",
                 "finePrint": "Um formulário, cinco minutos.",
                 "primary": "Fale connosco",
                 "secondary": "Saber mais sobre a Wi-Mall"
@@ -1814,6 +1805,45 @@
                 "s3Body": "Se o Android pedir, permita que o navegador ou a app Ficheiros instale apps desconhecidas e volte atrás.",
                 "s4Title": "Instale e entre",
                 "s4Body": "Toque em Instalar, abra a app e entre com a sua conta Wi-Mall. Para atualizar, baixe a nova versão nesta página."
+            }
+        },
+        "cookies": {
+            "metaTitle": "Política de cookies | Wi-Mall",
+            "metaDescription": "A Wi-Mall usa apenas os cookies de que precisa para funcionar: manter a sua sessão iniciada e guardar o seu carrinho e definições. Sem anúncios, sem rastreamento.",
+            "eyebrow": "Política de cookies",
+            "title": "Apenas o que a Wi-Mall precisa para funcionar",
+            "lead": "Sem anúncios. Sem rastreamento. Nada para configurar.",
+            "stored": {
+                "title": "O que guardamos",
+                "signIn": {
+                    "where": "Cookie",
+                    "title": "Manter a sessão iniciada",
+                    "body": "Dois cookies seguros lembram que tem a sessão iniciada, para não ter de entrar em cada página. São apagados quando termina a sessão."
+                },
+                "preferences": {
+                    "where": "O seu dispositivo",
+                    "title": "As suas definições",
+                    "body": "O seu idioma, o modo claro ou escuro e o indicativo do seu país, para o site ficar como o deixou."
+                },
+                "cart": {
+                    "where": "O seu dispositivo",
+                    "title": "O seu carrinho e favoritos",
+                    "body": "O que adiciona antes de iniciar sessão fica guardado no seu telemóvel, para continuar lá quando voltar."
+                }
+            },
+            "never": {
+                "title": "O que nunca fazemos",
+                "ads": "Nenhum cookie de publicidade.",
+                "tracking": "Nenhuma análise ou rastreamento que o siga pela web.",
+                "selling": "Nunca vendemos nem partilhamos o que fica guardado."
+            },
+            "more": {
+                "title": "Bom saber",
+                "google": "Os nossos formulários de contacto e de candidatura são alojados pela Google. Enquanto estão abertos, a Google pode definir os seus próprios cookies.",
+                "clear": "Pode apagar tudo a qualquer momento nas definições do navegador (limpar dados do site). A sua sessão será terminada e um carrinho guardado sem conta será esvaziado.",
+                "changes": "Se isto mudar, atualizaremos esta página e pediremos primeiro a sua autorização.",
+                "updated": "Última atualização: {date}.",
+                "contact": "Dúvidas? Contacte-nos"
             }
         }
     },
@@ -3072,5 +3102,19 @@
             "signingOut": "A terminar sessão…",
             "switchFailed": "Não foi possível mudar para a sua conta de cliente. Termine a sessão e volte a entrar como cliente."
         }
+    },
+    "cookieNotice": {
+        "label": "Aviso de cookies",
+        "text": "Usamos apenas cookies que mantêm a sua sessão iniciada e guardam o seu carrinho. Sem anúncios, sem rastreamento.",
+        "learnMore": "Saber mais",
+        "ok": "OK"
+    },
+    "legal": {
+        "sectionTitle": "Legal",
+        "terms": "Termos de Serviço",
+        "privacy": "Política de Privacidade",
+        "signupAgreement": "Ao criar uma conta, aceita os nossos <terms>Termos de Serviço</terms> e a nossa <privacy>Política de Privacidade</privacy>.",
+        "checkoutAgreement": "Ao fazer esta encomenda, aceita os nossos <terms>Termos de Serviço</terms>.",
+        "consentLabel": "Aceito os <terms>Termos de Serviço</terms> e a <privacy>Política de Privacidade</privacy>."
     }
 }
