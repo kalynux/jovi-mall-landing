@@ -2273,6 +2273,7 @@
             "cancelSeeTerms": "Voir les conditions du vendeur",
             "cancellationFee": "Frais d’annulation",
             "noCancellationValue": "Cette commande ne peut plus être annulée une fois passée",
+            "paymentFeeNote": "<b>Règle Wi-Mall pour toutes les boutiques :</b> un remboursement peut être un peu inférieur à ce que vous avez payé. Le service de paiement garde ses frais, même si la commande n’est pas livrée.",
             "addedToCart": "Ajouté au panier · {variant}",
             "replaceFailed": "Impossible de remplacer votre panier. Videz-le et réessayez.",
             "digitalLimit": "Votre panier contient déjà un produit numérique. Payez-le d’abord.",

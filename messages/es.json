@@ -2273,6 +2273,7 @@
             "cancelSeeTerms": "Ver las condiciones del vendedor",
             "cancellationFee": "Gastos de cancelación",
             "noCancellationValue": "Este pedido no se puede cancelar una vez realizado",
+            "paymentFeeNote": "<b>Regla de Wi-Mall para todas las tiendas:</b> un reembolso puede ser un poco menor que lo que pagaste. El servicio de pago se queda con su comisión, aunque el pedido no se entregue.",
             "addedToCart": "Añadido al carrito · {variant}",
             "replaceFailed": "No se pudo reemplazar tu carrito. Vacíalo e inténtalo de nuevo.",
             "digitalLimit": "Tu carrito ya contiene un producto digital. Págalo primero.",

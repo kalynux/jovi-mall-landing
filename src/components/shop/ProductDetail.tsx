@@ -892,13 +892,24 @@ function PolicyBlock({ store }: { store: Product["store"] }) {
   const t = useTranslations("shop.product");
   const { returnPolicy, cancellationPolicy } = store.policies;
 
+  // The payment-fee rule is Wi-Mall's, not the vendor's, so it shows under
+  // every shop's terms — including a shop that published none.
+  const feeNote = (
+    <Notice tone="info" icon="info">
+      {t.rich("paymentFeeNote", { b: (chunks) => <strong>{chunks}</strong> })}
+    </Notice>
+  );
+
   if (!returnPolicy && !cancellationPolicy) {
     return (
-      <EmptyState
-        icon="file-text"
-        title={t("noPolicyTitle")}
-        description={t("noPolicyDescription", { store: store.name })}
-      />
+      <div>
+        <EmptyState
+          icon="file-text"
+          title={t("noPolicyTitle")}
+          description={t("noPolicyDescription", { store: store.name })}
+        />
+        <div style={{ marginTop: 18 }}>{feeNote}</div>
+      </div>
     );
   }
 
@@ -906,6 +917,7 @@ function PolicyBlock({ store }: { store: Product["store"] }) {
     <div>
       {returnPolicy && <ReturnTerms policy={returnPolicy} />}
       {cancellationPolicy && <CancellationTerms policy={cancellationPolicy} />}
+      <div style={{ marginTop: 22 }}>{feeNote}</div>
     </div>
   );
 }

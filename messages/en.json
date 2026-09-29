@@ -2273,6 +2273,7 @@
             "cancelSeeTerms": "See seller terms",
             "cancellationFee": "Cancellation fee",
             "noCancellationValue": "This order cannot be cancelled once placed",
+            "paymentFeeNote": "<b>Wi-Mall rule for all shops:</b> a refund may be a little less than what you paid. The payment service keeps its fee, even if the order is not delivered.",
             "addedToCart": "Added to cart · {variant}",
             "replaceFailed": "Could not replace your cart. Please empty it and try again.",
             "digitalLimit": "Your cart already holds a digital product. Pay for that one first.",
