@@ -10,6 +10,7 @@ import { variantAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath } from "@/i18n/routing";
 import { BLOG_ROOT, articlePath, categoryPath } from "@/lib/blog/blog.routes";
 import { blogRobots } from "@/lib/blog/blog.seo";
+import { SHARE_IMAGES } from "@/lib/seo/share";
 import {
   categoryPathByLocale,
   getCategoryBySlug,
@@ -66,6 +67,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title,
       description,
       url: localePath(locale, categoryPath(category.slug)),
+      images: SHARE_IMAGES,
     },
   };
 }

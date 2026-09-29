@@ -11,6 +11,7 @@ import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath } from "@/i18n/routing";
 import { FAQ_GROUPS } from "@/lib/marketing/faq";
 import { getPlanFacts } from "@/lib/marketing/plans.api";
+import { SHARE_IMAGES } from "@/lib/seo/share";
 
 const PATH = "/faq";
 
@@ -29,6 +30,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: t("faq.metaTitle"),
       description: t("faq.metaDescription"),
       url: localePath(locale, PATH),
+      images: SHARE_IMAGES,
     },
   };
 }

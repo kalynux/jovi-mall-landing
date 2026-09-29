@@ -10,6 +10,7 @@ import { PAGE_SIZE, parseProductSearchParams } from "@/lib/shop/shop.query";
 import { publicUrl } from "@/lib/shop/shop.types";
 import { storePath } from "@/lib/shop/shop.routes";
 import { isLocale } from "@/i18n/routing";
+import { SHARE_IMAGES } from "@/lib/seo/share";
 
 interface PageProps {
   params: Promise<{ locale: string; storeSlug: string }>;
@@ -28,6 +29,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const path = storePath(store.slug);
   const where = [store.city, store.country].filter(Boolean).join(", ");
+  const storeShareImages = [publicUrl(store.banner) ?? publicUrl(store.logo)].filter(
+    (url): url is string => Boolean(url),
+  );
 
   return {
     title: t("storeTitle", { store: store.name }),
@@ -36,13 +40,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title: where ? t("storeOgTitle", { store: store.name, where }) : store.name,
       description: store.description,
-      // `banner` and `logo` are both nullable; a store with neither gets no
-      // image rather than a broken one. Resolved through `publicUrl` so a file
-      // held back by its owner's storage plan is treated as absent — a scraper
-      // fetching a dead og:image is worse than a card with no picture.
-      images: [publicUrl(store.banner) ?? publicUrl(store.logo)].filter(
-        (url): url is string => Boolean(url),
-      ),
+      // `banner` and `logo` are both nullable. Resolved through `publicUrl` so
+      // a file held back by its owner's storage plan is treated as absent — a
+      // scraper fetching a dead og:image is worse than one that never existed.
+      //
+      // A store with neither falls back to the site card rather than to
+      // nothing: `openGraph` replaces the layout's block instead of merging
+      // with it (see lib/seo/share.ts), so an empty array here is a blank
+      // share, not an inherited one.
+      images: storeShareImages.length ? storeShareImages : SHARE_IMAGES,
       url: path,
       type: "website",
     },

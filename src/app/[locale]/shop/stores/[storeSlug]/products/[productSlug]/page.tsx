@@ -23,6 +23,7 @@ import { localeAlternates } from "@/lib/seo/alternates";
 import { productPath, storePath } from "@/lib/shop/shop.routes";
 import { isLocale } from "@/i18n/routing";
 import { publicUrl } from "@/lib/shop/shop.types";
+import { SHARE_IMAGES } from "@/lib/seo/share";
 
 interface PageProps {
   params: Promise<{ locale: string; storeSlug: string; productSlug: string }>;
@@ -51,6 +52,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // for — and the product's own title/description are the fallback.
   const title = product.seo?.title ?? product.title;
   const description = product.seo?.description ?? product.description;
+  const productShareImages = product.images
+    .map((image) => publicUrl(image))
+    .filter((url): url is string => url !== null)
+    .slice(0, 1);
 
   return {
     title: t("productTitle", { product: title }),
@@ -60,11 +65,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title,
       description,
       // `publicUrl` filters out authorized files, which have no URL a crawler
-      // could fetch. Product imagery is public, so this is normally a no-op.
-      images: product.images
-        .map((image) => publicUrl(image))
-        .filter((url): url is string => url !== null)
-        .slice(0, 1),
+      // could fetch. Product imagery is public, so that is normally a no-op —
+      // but a product listed without a photo falls back to the site card rather
+      // than to nothing, since `openGraph` replaces the layout's block instead
+      // of merging with it (see lib/seo/share.ts).
+      images: productShareImages.length ? productShareImages : SHARE_IMAGES,
       url: path,
       type: "website",
     },

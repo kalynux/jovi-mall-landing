@@ -11,6 +11,7 @@ import { NativeShell } from "@/components/native/NativeShell";
 import { AppLoading } from "@/components/native/AppLoading";
 import { IS_NATIVE_BUILD } from "@/lib/platform";
 import { SITE_URL } from "@/lib/site";
+import { SHARE_IMAGES, SHARE_IMAGES_TWITTER } from "@/lib/seo/share";
 import { jakarta, jetbrainsMono } from "@/lib/fonts";
 import {
   isLocale,
@@ -98,11 +99,19 @@ export async function generateMetadata({
       alternateLocale: LOCALE_CODES.filter((code) => code !== locale).map(
         (code) => OG_LOCALE[code]
       ),
+      // The default card. See `lib/seo/share.ts` for why the file convention
+      // never attached it, and why every page that declares `openGraph` has to
+      // name `images` too.
+      images: SHARE_IMAGES,
     },
     twitter: {
       card: "summary_large_image",
       title: t("title"),
       description: t("shareDescription"),
+      // `summary_large_image` with no image renders as a bare text card, which
+      // is what this was doing. `twitter` does inherit, so this one line covers
+      // every descendant route.
+      images: SHARE_IMAGES_TWITTER,
     },
     // NOTE: deliberately no `alternates` here. Metadata is inherited, so a
     // canonical or hreflang set on this layout would be emitted by every route —

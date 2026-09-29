@@ -19,6 +19,7 @@ import {
 import { aboutPageJsonLd, breadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath } from "@/i18n/routing";
+import { SHARE_IMAGES } from "@/lib/seo/share";
 
 const PATH = "/about";
 
@@ -37,6 +38,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: t("about.metaTitle"),
       description: t("about.metaDescription"),
       url: localePath(locale, PATH),
+      images: SHARE_IMAGES,
     },
   };
 }

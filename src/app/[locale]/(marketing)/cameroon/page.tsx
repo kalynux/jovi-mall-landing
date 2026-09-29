@@ -21,6 +21,7 @@ import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath } from "@/i18n/routing";
 import { CITIES, REGIONS, cityPath } from "@/lib/marketing/geo";
 import { COUNTRY_FAQ } from "@/lib/marketing/faq";
+import { SHARE_IMAGES } from "@/lib/seo/share";
 
 const PATH = "/cameroon";
 
@@ -39,6 +40,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: t("country.metaTitle"),
       description: t("country.metaDescription"),
       url: localePath(locale, PATH),
+      images: SHARE_IMAGES,
     },
   };
 }

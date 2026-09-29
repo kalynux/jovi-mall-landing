@@ -16,6 +16,7 @@ import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath } from "@/i18n/routing";
 import { CITIES, cityPath, findCity, findRegion } from "@/lib/marketing/geo";
 import { getPlanFacts } from "@/lib/marketing/plans.api";
+import { SHARE_IMAGES } from "@/lib/seo/share";
 
 type PageProps = { params: Promise<{ locale: string; city: string }> };
 
@@ -47,6 +48,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: t("city.metaTitlePattern", { city: city.name }),
       description: t("city.metaDescriptionPattern", { city: city.name, region }),
       url: localePath(locale, path),
+      images: SHARE_IMAGES,
     },
   };
 }

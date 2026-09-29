@@ -20,6 +20,7 @@ import { isLocale, localePath } from "@/i18n/routing";
 import { careersFormIsShared, careersFormUrl } from "@/lib/marketing/forms";
 import { EMPLOYMENT_TYPE, HIRING_OPEN, OPENINGS } from "@/lib/marketing/careers";
 import { cn } from "@/lib/utils";
+import { SHARE_IMAGES } from "@/lib/seo/share";
 
 const PATH = "/careers";
 
@@ -38,6 +39,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: t("careers.metaTitle"),
       description: t("careers.metaDescription"),
       url: localePath(locale, PATH),
+      images: SHARE_IMAGES,
     },
   };
 }

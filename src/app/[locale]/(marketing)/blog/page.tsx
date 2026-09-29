@@ -13,6 +13,7 @@ import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath, type Locale } from "@/i18n/routing";
 import { BLOG_ROOT, articlePath } from "@/lib/blog/blog.routes";
 import { blogRobots } from "@/lib/blog/blog.seo";
+import { SHARE_IMAGES } from "@/lib/seo/share";
 import {
   getFeaturedArticle,
   listArticles,
@@ -57,6 +58,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: t("blog.metaTitle"),
       description: t("blog.metaDescription"),
       url: localePath(locale, PATH),
+      images: SHARE_IMAGES,
     },
   };
 }

@@ -33,6 +33,7 @@ import {
 import { PRICING_FAQ } from "@/lib/marketing/faq";
 import { formatNumber, formatPrice, formatUnitPrice } from "@/lib/marketing/format";
 import { stripBidiIsolates } from "@/lib/bidi";
+import { SHARE_IMAGES } from "@/lib/seo/share";
 
 const PATH = "/pricing";
 
@@ -55,6 +56,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: t("pricing.metaTitle"),
       description: t("pricing.metaDescription", facts),
       url: localePath(locale, PATH),
+      images: SHARE_IMAGES,
     },
   };
 }

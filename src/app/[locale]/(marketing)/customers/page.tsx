@@ -22,6 +22,7 @@ import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath } from "@/i18n/routing";
 import { CUSTOMER_FAQ } from "@/lib/marketing/faq";
 import { buildWhatsAppUrl } from "@/lib/constants";
+import { SHARE_IMAGES } from "@/lib/seo/share";
 
 const PATH = "/customers";
 
@@ -40,6 +41,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: t("customers.metaTitle"),
       description: t("customers.metaDescription"),
       url: localePath(locale, PATH),
+      images: SHARE_IMAGES,
     },
   };
 }

@@ -20,6 +20,7 @@ import { isLocale, localePath, type Locale } from "@/i18n/routing";
 import { BLOG_ROOT, articlePath, categoryPath } from "@/lib/blog/blog.routes";
 import { blogRobots } from "@/lib/blog/blog.seo";
 import { categorySlugFor } from "@/lib/blog/blog.categories";
+import { SHARE_IMAGES } from "@/lib/seo/share";
 import {
   getAdjacentArticles,
   getArticle,
@@ -120,7 +121,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       modifiedTime: article.updatedAt ?? article.publishedAt,
       authors: [article.author.name],
       section: article.category.label,
-      ...(article.cover ? { images: [{ url: article.cover.url, alt: article.cover.alt }] } : {}),
+      // The article's own cover when it has one, the site card when it does
+      // not. Omitting `images` here would leave the article with none at all:
+      // `openGraph` REPLACES the layout's block rather than merging with it
+      // (see lib/seo/share.ts), so a coverless article shared on WhatsApp was a
+      // title on a blank rectangle.
+      images: article.cover
+        ? [{ url: article.cover.url, alt: article.cover.alt }]
+        : SHARE_IMAGES,
     },
   };
 }

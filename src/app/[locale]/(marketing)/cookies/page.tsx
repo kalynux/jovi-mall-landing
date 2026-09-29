@@ -7,6 +7,7 @@ import { CardGrid, CheckList, InfoCard, PageHeader, Prose, Section, TextLink } f
 import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath } from "@/i18n/routing";
+import { SHARE_IMAGES } from "@/lib/seo/share";
 
 const PATH = "/cookies";
 
@@ -32,6 +33,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: t("cookies.metaTitle"),
       description: t("cookies.metaDescription"),
       url: localePath(locale, PATH),
+      images: SHARE_IMAGES,
     },
   };
 }

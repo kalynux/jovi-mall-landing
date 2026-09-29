@@ -10,6 +10,7 @@ import { getAppReleases } from "@/lib/apps/apps.api";
 import { breadcrumbJsonLd, mobileApplicationJsonLd } from "@/lib/seo/jsonld";
 import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath } from "@/i18n/routing";
+import { SHARE_IMAGES } from "@/lib/seo/share";
 
 const PATH = "/apps";
 
@@ -34,6 +35,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: t("apps.metaTitle"),
       description: t("apps.metaDescription"),
       url: localePath(locale, PATH),
+      images: SHARE_IMAGES,
     },
   };
 }
