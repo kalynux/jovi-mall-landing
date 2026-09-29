@@ -22,8 +22,12 @@ import type { Metadata } from "next";
  * `follow` is deliberate either way: the internal links from an article to
  * /pricing still pass their signal, so the blog is not a dead end while it
  * waits.
+ *
+ * **Flipped to `false` on 2026-09-29**, the day the first reviewed article was
+ * published (`se-faire-payer-avant-livraison`, French). The blog is now
+ * indexable and its URLs reach the sitemap.
  */
-export const BLOG_IS_PLACEHOLDER = true;
+export const BLOG_IS_PLACEHOLDER = false;
 
 export function blogRobots(): Metadata["robots"] {
   return BLOG_IS_PLACEHOLDER ? { index: false, follow: true } : undefined;

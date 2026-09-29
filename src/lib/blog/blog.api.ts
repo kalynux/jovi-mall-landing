@@ -60,7 +60,19 @@ type ApiAuthor = {
   avatarUrl: string | null;
 };
 
-type ApiCover = { url: string; alt: string; width: number; height: number } | null;
+/**
+ * The documented cover shape — plus the one the live API actually sends.
+ *
+ * As of 2026-09-29 the public article endpoints serialise `cover` as a raw
+ * Mongoose subdocument (`{ $__parent, $__, $isNew, _doc, alt }`), so `url`,
+ * `width` and `height` are `undefined` at the top level and sit under `_doc`
+ * instead. `alt` is the exception: it is resolved per-locale and written onto
+ * the outer object. `toCover()` accepts either. Reported to the backend.
+ */
+type ApiCover =
+  | { url: string; alt: string; width: number; height: number }
+  | { alt?: string; _doc?: { url?: string; width?: number; height?: number } }
+  | null;
 
 type ApiSummary = {
   id: string;
@@ -203,6 +215,49 @@ function resolveCategory(
   return { ...category, label: labels[category.key], count: counts[category.key] ?? 0 };
 }
 
+/**
+ * Normalise a cover into the shape the components expect, or drop it entirely.
+ *
+ * This is deliberately more than a passthrough, for two reasons:
+ *
+ * 1. The live API sends the Mongoose subdocument described on `ApiCover`, so
+ *    reading `.url` off it yields `undefined`. That is **worse than no cover**:
+ *    `ArticleCard` and the article page both branch on `cover` being *truthy*,
+ *    so a wrapped object renders `<img src="undefined">` — a broken image
+ *    instead of the generated `CoverArt` — and `openGraph.images` gets an entry
+ *    with no URL, costing the article its WhatsApp and Facebook preview.
+ * 2. Anything without a usable `url` is therefore treated as *no cover*, so the
+ *    designed fallback renders rather than a broken box.
+ *
+ * Once the backend serialises the documented shape this keeps working
+ * unchanged, and the `_doc` branch can be deleted.
+ */
+function toCover(cover: ApiCover): ArticleSummary["cover"] {
+  if (!cover) return undefined;
+
+  const outer = cover as {
+    url?: string;
+    alt?: string;
+    width?: number;
+    height?: number;
+    _doc?: { url?: string; width?: number; height?: number };
+  };
+  const inner = outer._doc ?? outer;
+
+  if (!inner.url) return undefined;
+
+  return {
+    url: inner.url,
+    // Resolved per-locale onto the outer object, never inside `_doc`.
+    alt: outer.alt ?? "",
+    // Advisory only — every render sizes the box in CSS — so a missing
+    // dimension falls back to the standard share ratio rather than costing us
+    // the image.
+    width: inner.width ?? 1200,
+    height: inner.height ?? 630,
+  };
+}
+
 function toSummary(
   item: ApiSummary,
   labels: CategoryLabels,
@@ -222,7 +277,7 @@ function toSummary(
     publishedAt: item.publishedAt,
     updatedAt: item.updatedAt,
     featured: item.featured,
-    cover: item.cover ?? undefined,
+    cover: toCover(item.cover),
     wordCount: item.wordCount,
     // Computed here, never sent: an editor's estimate drifts the moment the
     // article is revised. `wordCount` is derived on write, so this cannot.
