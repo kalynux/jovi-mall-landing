@@ -2,12 +2,18 @@
 
 import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
-import { Chip, Icon, type IconName } from "@/components/shop/ds";
+import { Button, Chip, Icon, type IconName } from "@/components/shop/ds";
 import { PhoneField } from "@/components/ui/phone";
 import { isValidPhone, toE164 } from "@/lib/phone";
-import { detectCameroonOperator } from "@/lib/shop/cm-operator";
+import { detectCameroonOperator, providerMismatch } from "@/lib/shop/cm-operator";
 import type { SavedPaymentMethod } from "@/lib/shop/customer.types";
-import type { PaymentChannel, PaymentGateway, PhoneOperator } from "@/lib/shop/payments.api";
+import {
+  providerForSavedWallet,
+  type ChargeRequest,
+  type PaymentProvider,
+  type PaymentProviderOption,
+} from "@/lib/shop/payments.api";
+import { NETWORK_NAME } from "./payment-networks";
 // Type-only, so the cycle with `useSavedPayment` (which imports
 // `optionForSavedMethod` from here) is erased at compile time, not a real one.
 import type { SavedPayment } from "./useSavedPayment";
@@ -15,44 +21,38 @@ import type { SavedPayment } from "./useSavedPayment";
 /**
  * Choosing how to pay, in one place.
  *
- * This lived inside the checkout page, which was fine while checkout was the
- * only screen that took money. It is not: an order left at `AWAITING_PAYMENT`
- * is paid from its detail screen, through the same gateways, with the same
- * operator mapping. Two copies of that mapping is the kind of duplication that
- * drifts silently — a gateway added to one list and not the other is a payment
- * option that works on one screen and 400s on the other.
+ * Every screen that takes money renders this: checkout, the order pay sheet,
+ * booking pay and booking balance. One copy of the provider mapping, so a
+ * provider cannot work on one screen and fail on another.
  *
- * ── The gateway is ours, and is never a question ─────────────────────────────
+ * ── The list comes from the server, never from this file ─────────────────────
  *
- * `POST /api/payments/initiate` requires a `gateway`, and there is no server
- * default — `getPaymentGateway()` throws `400 PAYMENT_GATEWAY_NOT_SUPPORTED`
- * for anything outside the three it knows. So the storefront must send one, and
- * it always sends **NOTCHPAY** for mobile money. That is a merchant decision,
- * not a shopper one: a customer has no way to know what NotchPay or My-CoolPay
- * are, and picking between them is picking between two of our own contracts.
- * It is on the option below and on no screen.
+ * `GET /api/payments/options` says what can be paid with right now (see
+ * `usePaymentOptions`), and `optionsFromProviders` turns each entry into a row.
+ * This file only knows how to *draw* a provider — its label and artwork — and
+ * what the shopper has to type for it. Which providers exist, in what order,
+ * and which company carries the money are the server's to decide, and an
+ * administrator can change all three with no release. So nothing here names an
+ * aggregator, and nothing is shown that `/options` did not list.
  *
- * My-CoolPay stays in the type union because the backend implements it and it
- * is one edit away, but note it is **not a drop-in swap**: its Orange Money flow
- * answers `REQUIRE_OTP`, which needs a code screen and
- * `POST /payments/:id/authorize`, and neither exists here yet.
+ * ── The network is the shopper's; the number is checked against it ──────────
  *
- * ── The operator is the shopper's, and is derived, not asked ─────────────────
- *
- * See `lib/shop/cm-operator.ts`. NotchPay needs an explicit `cm.mtn`/`cm.orange`
- * and the backend lets a *declared* operator override what the number says — so
- * the tile is selected from the number as it is typed rather than left to a tap
- * that can contradict it. Overriding is still possible, because Cameroon has
- * number portability and the shopper knows their own account.
+ * See `lib/shop/cm-operator.ts`. The tile is pre-selected from the number as it
+ * is typed, and a tile the shopper TAPS is never flipped back. But the server
+ * refuses a provider that contradicts the number's prefix, so a contradiction
+ * is said here, under the field, and the pay button waits — the same rule the
+ * server applies, before the shopper commits rather than after a 422.
  */
 
 export interface PaymentOption {
   id: string;
+  /** What is sent as `provider`. Absent only on cash on delivery, which is never charged online. */
+  provider?: PaymentProvider;
   /**
    * A **full dotted key** (`shop.payMethods.*`), never a sentence — these are
-   * module-level constants, so there is no render and no locale to read when
-   * they are built. Resolved at the call site with a root-scoped `tKey`, which
-   * is what lets a screen outside this file render a rail it was handed.
+   * built outside any render, so there is no locale to read when they are.
+   * Resolved at the call site with a root-scoped `tKey`, which is what lets a
+   * screen outside this file render a row it was handed.
    */
   labelKey: string;
   /** Small print under the label. Kept short — this is a row, not a page. */
@@ -67,174 +67,131 @@ export interface PaymentOption {
   art?: "tile" | "plate";
   /** Fallback when there is no artwork — a lucide name. */
   icon?: IconName;
-  gateway: PaymentGateway;
-  /** What tells the gateway which prompt to send. Mobile money only. */
-  operator?: PhoneOperator;
+  /** `/options` listed `phoneNumber` in the entry's `fields`. */
   needsPhone: boolean;
-  /** Settled at handoff, not through a gateway — `initiate` is never called. */
+  /** `/options` warned that an SMS code may follow. A hint only — the charge's answer decides. */
+  mayRequireOtp?: boolean;
+  /** Settled at handoff — `initiate` is never called. */
   isCod?: boolean;
 }
 
-export const MTN: PaymentOption = {
-  id: "mtn",
-  labelKey: "shop.payMethods.mtn",
-  logos: [{ src: "/payment/mtn-momo.png", alt: "" }],
-  art: "tile",
-  gateway: "NOTCHPAY",
-  operator: "MTN",
-  needsPhone: true,
+/** How each provider the server can list is drawn. Presentation only. */
+const PRESENTATION: Record<
+  PaymentProvider,
+  Pick<PaymentOption, "labelKey" | "hintKey" | "logos" | "art" | "icon">
+> = {
+  MTN: {
+    labelKey: "shop.payMethods.mtn",
+    logos: [{ src: "/payment/mtn-momo.png", alt: "" }],
+    art: "tile",
+  },
+  ORANGE: {
+    labelKey: "shop.payMethods.orange",
+    logos: [{ src: "/payment/orange-money.png", alt: "" }],
+    art: "tile",
+  },
+  MOOV: {
+    labelKey: "shop.payMethods.moov",
+    icon: "smartphone",
+  },
+  CARD: {
+    labelKey: "shop.payMethods.card",
+    hintKey: "shop.payMethods.cardHint",
+    logos: [
+      { src: "/payment/visa.png", alt: "Visa" },
+      { src: "/payment/mastercard.png", alt: "Mastercard" },
+    ],
+    art: "plate",
+  },
 };
 
-export const ORANGE: PaymentOption = {
-  id: "orange",
-  labelKey: "shop.payMethods.orange",
-  logos: [{ src: "/payment/orange-money.png", alt: "" }],
-  art: "tile",
-  gateway: "NOTCHPAY",
-  operator: "ORANGE",
-  needsPhone: true,
-};
+/** The `channel` fields this form knows how to collect. */
+const COLLECTABLE = new Set(["phoneNumber"]);
 
-export const CARD: PaymentOption = {
-  id: "card",
-  labelKey: "shop.payMethods.card",
-  hintKey: "shop.payMethods.cardHint",
-  logos: [
-    { src: "/payment/visa.png", alt: "Visa" },
-    { src: "/payment/mastercard.png", alt: "Mastercard" },
-  ],
-  art: "plate",
-  gateway: "STRIPE",
-  needsPhone: false,
-};
+/**
+ * The rows for an `/options` answer, in the server's order.
+ *
+ * An entry that asks for a field this form cannot collect is left out rather
+ * than drawn: a row whose charge can only fail `VALIDATION_ERROR` is worse than
+ * no row. None does today — mobile money wants `phoneNumber`, a card nothing.
+ */
+export function optionsFromProviders(entries: PaymentProviderOption[]): PaymentOption[] {
+  return entries
+    .filter((entry) => entry.fields.every((field) => COLLECTABLE.has(field)))
+    .map((entry) => ({
+      id: entry.provider.toLowerCase(),
+      provider: entry.provider,
+      ...PRESENTATION[entry.provider],
+      needsPhone: entry.fields.includes("phoneNumber"),
+      mayRequireOtp: entry.mayRequireOtp,
+    }));
+}
 
 export const COD: PaymentOption = {
   id: "cod",
   labelKey: "shop.payMethods.cod",
   hintKey: "shop.payMethods.codHint",
   icon: "banknote",
-  gateway: "NOTCHPAY",
   needsPhone: false,
   isCod: true,
 };
 
-/** The two mobile-money rails, which are the only ones proven end to end. */
-export const MOBILE_MONEY_OPTIONS: PaymentOption[] = [MTN, ORANGE];
-
 /**
- * Whether card payments are offered anywhere in the storefront.
+ * The body of a charge for a chosen row: `provider` plus the fields it listed,
+ * and nothing else — no `gateway`, no `phoneOperator` (the provider IS the
+ * operator), no `cardToken` (a card is confirmed client-side).
  *
- * ── Why this is keyed on the publishable key ──────────────────────────────────
+ * `toE164` rather than the raw field value: the number is debited as given, and
+ * a locally-formatted one is not a number that can be routed to. The fallback
+ * keeps a malformed entry going to the server's own validator, which names the
+ * field, rather than being silently blanked here.
  *
- * Cards need BOTH halves of a Stripe account, and the two live on opposite sides:
- * `STRIPE_SECRET_KEY` on the backend, which mints the payment, and this
- * publishable key in the browser, which Stripe's Payment Element needs to confirm
- * it (see `PayLink`, which reads exactly this variable). Neither half works alone,
- * so "is the publishable key set" is a faithful proxy for "can a card payment
- * complete" — and it means switching cards on is a configuration change, not a
- * code change.
- *
- * ── Why it is FALSE in production today ──────────────────────────────────────
- *
- * Stripe is deliberately switched off on the backend: `STRIPE_SECRET_KEY` is
- * absent from the deployed environment, and its absence IS the off switch.
- * NotchPay and MyCoolPay carry real payments.
- *
- * ⚠ WHAT THAT COST BEFORE THIS FLAG EXISTED, measured on 2026-09-13: the gateway
- *   is registered unconditionally on the backend, so a card request reached
- *   `getStripeClient()`, which throws `PAYMENT_GATEWAY_NOT_IMPLEMENTED` at **503**
- *   — "Stripe is not configured". A shopper could pick "Card (Visa or Mastercard)"
- *   at checkout, or send themselves a pay link, and get a server error after
- *   committing to a choice. That is the worst moment to fail.
- *
- * ⚠ SET THE BACKEND SECRET FIRST, THEN THIS. In the other order there is a window
- *   where the UI offers what the server cannot complete, which is the state this
- *   flag exists to remove.
- *
- * Inlined at build time by Next, so with the key unset `CARD` is simply not in the
- * list the bundle ships.
+ * `null` for cash on delivery, which has nothing to charge.
  */
-export const CARD_PAYMENTS_AVAILABLE = Boolean(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim()
-);
-
-/**
- * Everything checkout offers, in the order checkout has always offered it.
- *
- * `CARD` is kept defined above rather than deleted: it is correct, it is what
- * should appear the moment Stripe is switched on, and deleting it would mean
- * rebuilding the logos, the copy and the gateway wiring from scratch later.
- */
-export const CHECKOUT_OPTIONS: PaymentOption[] = CARD_PAYMENTS_AVAILABLE
-  ? [MTN, ORANGE, CARD, COD]
-  : [MTN, ORANGE, COD];
-
-/**
- * The `channel` for a chosen option.
- *
- * `toE164` rather than the raw field value: the gateway debits the number it is
- * given, and a locally-formatted one is not a number it can route to. The
- * fallback keeps a malformed entry going to the server's own validator, which
- * names the field, rather than being silently blanked here.
- */
-export function paymentChannel(option: PaymentOption, phone: string): PaymentChannel {
-  if (!option.needsPhone) return {};
-  return { phoneNumber: toE164(phone) ?? phone, phoneOperator: option.operator };
+export function chargeRequest(option: PaymentOption, phone: string): ChargeRequest | null {
+  if (!option.provider) return null;
+  return {
+    provider: option.provider,
+    channel: option.needsPhone ? { phoneNumber: toE164(phone) ?? phone } : {},
+  };
 }
 
-/** Whether the option's requirements are met — the gate on any pay button. */
+/**
+ * Whether the row's requirements are met — the gate on any pay button.
+ *
+ * A number on the wrong network fails it: the server refuses that as
+ * `PAYMENT_PROVIDER_PHONE_MISMATCH`, and the picker already says why.
+ */
 export function paymentReady(option: PaymentOption, phone: string): boolean {
-  return !option.needsPhone || isValidPhone(phone);
+  if (!option.needsPhone) return true;
+  return isValidPhone(phone) && providerMismatch(option.provider, phone) === null;
 }
 
 /**
- * The rail a saved payment method is paid over, if this screen offers it.
+ * The row a saved payment method is paid over, if this screen offers it.
  *
  * A saved method and a payment option are not the same kind of thing. The
  * account page saves an *instrument* — this wallet, that card — while the rows
- * here are the *rails* the platform can charge over. So preselecting a saved
- * method means finding its rail, and the join has to be done on two fields
- * because two writers populate them differently:
+ * here are the *providers* the platform can charge right now. So pre-selecting
+ * a saved method means finding its provider, and then checking that `/options`
+ * still lists it.
  *
- *   - `brand` is what `customer/payment-methods.md` documents for a method
- *     enrolled through a gateway (`MTN`, `ORANGE`, `visa`).
- *   - `provider` is what the account page's own add form writes
- *     (`mtn_momo`, `orange_money`, `moov_money`), leaving `brand` null.
- *
- * `null` is a real answer, not a failure: a `bank_transfer` method, or a Moov
- * wallet — which the add form offers because the operator exists and
- * `PhoneOperator` names it, but which neither gateway is wired to charge — has
- * no row here. The caller leaves its own default selected rather than
- * preselecting a rail the shopper cannot pay on.
+ * The saved `provider` is the charge vocabulary, so the join is direct — but
+ * only for a mobile wallet. `null` is a real answer, not a failure: an old
+ * saved card or bank transfer, a wallet whose network the server no longer
+ * knows (`provider: null`), or one whose provider is switched off. Those stay
+ * on the account page, listed and deletable; here the caller leaves its own
+ * default selected.
  */
 export function optionForSavedMethod(
-  method: Pick<SavedPaymentMethod, "method_type" | "provider" | "brand">,
+  method: Pick<SavedPaymentMethod, "kind" | "provider">,
   options: PaymentOption[],
 ): PaymentOption | null {
-  if (method.method_type === "card") {
-    return options.find((o) => !o.needsPhone && !o.isCod) ?? null;
-  }
-  if (method.method_type !== "mobile_money") return null;
+  if (method.kind !== "MOBILE_MONEY") return null;
 
-  // `brand` first and `provider` only as a fallback, rather than matching
-  // against the two concatenated: they can disagree, and when they do the
-  // gateway's own `brand` is the field that describes the instrument it will
-  // actually charge. Concatenating would let whichever operator was tested
-  // first win an argument it has no business winning.
-  const operator = operatorNamedBy(method.brand) ?? operatorNamedBy(method.provider);
-  if (!operator) return null;
-
-  return options.find((o) => o.operator === operator) ?? null;
-}
-
-/** The operator a `brand` or `provider` string names, if it names one. */
-function operatorNamedBy(value: string | null | undefined): PhoneOperator | null {
-  const text = (value ?? "").toUpperCase();
-  if (!text) return null;
-  // Substring rather than equality because the same operator arrives spelt
-  // three ways across the two writers — `MTN`, `mtn_momo`, `MTN Mobile Money`.
-  const match = (["MTN", "ORANGE", "MOOV"] as const).find((o) => text.includes(o));
-  return match ?? null;
+  const provider = providerForSavedWallet(method.provider);
+  if (!provider) return null;
+  return options.find((o) => o.provider === provider) ?? null;
 }
 
 export function PaymentMethodPicker({
@@ -259,36 +216,34 @@ export function PaymentMethodPicker({
   saved?: SavedPayment;
 }) {
   const t = useTranslations("shop.payMethods");
-  // Root-scoped: the option constants above emit absolute keys.
+  const tProvider = useTranslations("shop.payProvider");
+  // Root-scoped: the rows emit absolute keys.
   const tKey = useTranslations();
   const detection = value.needsPhone ? detectCameroonOperator(phone) : { status: "unknown" as const };
   const detected = detection.status === "detected" ? detection.operator : null;
+  const mismatch = value.needsPhone ? providerMismatch(value.provider, phone) : null;
 
   /**
    * Move the selection to the network the number belongs to.
    *
    * Keyed on the detected operator rather than on the phone value, so it fires
-   * when the *answer* changes and not on every keystroke. That is what leaves
-   * room for an override: tapping MTN on an Orange number sticks, because the
-   * detection has not changed — right up until the shopper edits the number
-   * into a different network, at which point a stale override is exactly the
-   * bug this exists to prevent, and the fresh answer wins.
+   * when the *answer* changes and not on every keystroke. A tile the shopper
+   * taps afterwards therefore sticks — and if it contradicts the number, the
+   * mismatch line below says so and the pay button waits, which is the server's
+   * own rule. Editing the number into a different network re-runs this, and the
+   * fresh answer wins.
    */
   const applied = useRef<string | null | undefined>(undefined);
   /**
-   * Seeded from the *first* render's detection, which is what makes a prefilled
-   * number safe.
+   * Seeded from the *first* render's detection.
    *
    * A field that already had a number in it when this mounted was not typed
-   * here — it came from a saved payment method, whose network the shopper
-   * declared themselves when they saved it. Cameroon has number portability, so
-   * an Orange wallet on an MTN-prefix number is a real account, and without this
-   * the mount would read the prefix, decide "MTN", and switch the row out from
-   * under a selection that was already correct.
+   * here — it came from a saved payment method the shopper picked by name. The
+   * mount does not second-guess that choice by switching the row: if the number
+   * is on another network, the mismatch line says so and the shopper decides.
    *
-   * An empty field seeds `null` — identical to the old starting state, so a
-   * checkout with nothing saved behaves exactly as it always has, and editing
-   * the number afterwards still lets a fresh detection win.
+   * An empty field seeds `null`, so editing the number afterwards still lets a
+   * fresh detection win.
    */
   if (applied.current === undefined) applied.current = detected;
   useEffect(() => {
@@ -301,7 +256,7 @@ export function PaymentMethodPicker({
     if (applied.current === detected) return;
     applied.current = detected;
 
-    const match = options.find((o) => o.operator === detected);
+    const match = options.find((o) => o.provider === detected);
     if (match && match.id !== value.id) onChange(match);
   }, [detected, options, value.id, onChange]);
 
@@ -347,7 +302,7 @@ export function PaymentMethodPicker({
                 {/* "Detected" earns its place: it explains why the selection
                     moved on its own, which is otherwise a control changing
                     under the shopper's hand for no visible reason. */}
-                {detected && o.operator === detected ? (
+                {detected && o.provider === detected ? (
                   <span
                     style={{
                       display: "block",
@@ -362,6 +317,10 @@ export function PaymentMethodPicker({
                 ) : o.hintKey ? (
                   <span className="muted" style={{ display: "block", fontSize: 11.5, marginTop: 1 }}>
                     {tKey(o.hintKey)}
+                  </span>
+                ) : o.mayRequireOtp ? (
+                  <span className="muted" style={{ display: "block", fontSize: 11.5, marginTop: 1 }}>
+                    {tProvider("mayNeedCode")}
                   </span>
                 ) : null}
               </span>
@@ -395,34 +354,103 @@ export function PaymentMethodPicker({
             hint={t("phoneHint")}
           />
 
-          {/* A complete number on a network neither gateway can charge. Said
-              here, before the pay button, because the alternative is a 422 the
-              shopper reads as "payment declined" — and the fix (use an MTN or
-              Orange number) is not something they could guess from that. */}
-          {detection.status === "unsupported" && (
-            <p
-              role="alert"
-              style={{
-                display: "flex",
-                gap: 7,
-                alignItems: "flex-start",
-                fontSize: 12,
-                lineHeight: 1.5,
-                color: "var(--text-body)",
-                margin: "8px 0 0",
-              }}
-            >
-              <Icon
-                name="triangle-alert"
-                size={14}
-                style={{ color: "var(--warning)", flexShrink: 0, marginTop: 2 }}
-              />
-              <span>{t("unsupportedOperator")}</span>
-            </p>
+          {/* The number is on another network than the chosen tile. The server
+              refuses exactly this (`PAYMENT_PROVIDER_PHONE_MISMATCH`), so it is
+              said here and the pay button waits, rather than after a 422. */}
+          {mismatch && value.provider && value.provider !== "CARD" && (
+            <FieldNote tone="danger">
+              {tProvider("mismatch", {
+                detected: NETWORK_NAME[mismatch],
+                provider: NETWORK_NAME[value.provider],
+              })}
+            </FieldNote>
+          )}
+
+          {/* A complete number the prefix table cannot place — Nexttel, Camtel,
+              a ported or foreign number. The server charges it on the network
+              the shopper chose, so this is a check-the-number hint, not a
+              refusal, and the button stays live. */}
+          {!mismatch && detection.status === "unsupported" && value.provider && value.provider !== "CARD" && (
+            <FieldNote tone="warning">
+              {tProvider("unplacedNumber", { network: NETWORK_NAME[value.provider] })}
+            </FieldNote>
           )}
         </div>
       )}
     </>
+  );
+}
+
+/** One line under the phone field, announced when it appears. */
+function FieldNote({ tone, children }: { tone: "danger" | "warning"; children: React.ReactNode }) {
+  return (
+    <p
+      role="alert"
+      style={{
+        display: "flex",
+        gap: 7,
+        alignItems: "flex-start",
+        fontSize: 12,
+        lineHeight: 1.5,
+        color: "var(--text-body)",
+        margin: "8px 0 0",
+      }}
+    >
+      <Icon
+        name="triangle-alert"
+        size={14}
+        style={{ color: `var(--${tone})`, flexShrink: 0, marginTop: 2 }}
+      />
+      <span>{children}</span>
+    </p>
+  );
+}
+
+/**
+ * Said in place of the rows when `/options` lists nothing: an administrator
+ * switched online payment off. Not an error, so there is no retry — only what
+ * the shopper can still do, which the caller passes when there is something.
+ */
+export function OnlinePaymentUnavailable({ withCod }: { withCod?: boolean }) {
+  const t = useTranslations("shop.payProvider");
+  return (
+    <div
+      role="status"
+      style={{
+        display: "flex",
+        gap: 9,
+        alignItems: "flex-start",
+        border: "1px solid var(--border)",
+        background: "var(--surface-2)",
+        borderRadius: "var(--radius-md)",
+        padding: "11px 13px",
+        marginBottom: 12,
+      }}
+    >
+      <Icon name="info" size={17} style={{ color: "var(--text-muted)", flexShrink: 0, marginTop: 1 }} />
+      <p style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--text-body)", margin: 0 }}>
+        {withCod ? t("onlineUnavailableCod") : t("onlineUnavailable")}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * `/options` itself did not answer — a dropped connection, not "nothing to pay
+ * with". The one state here that earns a retry: an empty list is an answer.
+ */
+export function OptionsLoadFailed({ onRetry }: { onRetry: () => void }) {
+  const t = useTranslations("shop.payProvider");
+  const tCommon = useTranslations("shop.common");
+  return (
+    <div style={{ textAlign: "center", padding: "12px 0 16px" }}>
+      <p className="muted" style={{ fontSize: 13, lineHeight: 1.55, margin: "0 0 10px" }}>
+        {t("loadFailed")}
+      </p>
+      <Button variant="secondary" size="sm" leadingIcon="refresh-cw" onClick={onRetry}>
+        {tCommon("retry")}
+      </Button>
+    </div>
   );
 }
 
@@ -445,7 +473,7 @@ function SavedMethodBar({ saved, disabled }: { saved: SavedPayment; disabled?: b
   const { usable, active, usingSaved, apply, option, phone } = saved;
   if (usable.length === 0 || !active) return null;
 
-  const needsNumber = usingSaved && option.needsPhone && !isValidPhone(phone);
+  const needsNumber = usingSaved && option?.needsPhone === true && !isValidPhone(phone);
   const many = usable.length > 1;
 
   return (
@@ -456,12 +484,12 @@ function SavedMethodBar({ saved, disabled }: { saved: SavedPayment; disabled?: b
             <Chip
               key={m.id}
               size="sm"
-              icon={m.method_type === "card" ? "credit-card" : "smartphone"}
+              icon={m.kind === "CARD" ? "credit-card" : "smartphone"}
               selected={usingSaved && active.id === m.id}
               disabled={disabled}
               onClick={() => void apply(m)}
             >
-              {m.display_label}
+              {m.label}
             </Chip>
           ))}
         </div>
@@ -489,8 +517,8 @@ function SavedMethodBar({ saved, disabled }: { saved: SavedPayment; disabled?: b
           />
           <span>
             {needsNumber
-              ? t("savedNeedsNumber", { method: active.display_label })
-              : t("savedUsing", { method: active.display_label })}
+              ? t("savedNeedsNumber", { method: active.label })
+              : t("savedUsing", { method: active.label })}
           </span>
         </p>
       )}

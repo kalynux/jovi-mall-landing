@@ -5,7 +5,8 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Button, Icon, type IconName } from "@/components/shop/ds";
 import { useShopPageTitle } from "@/components/shop/ShopChrome";
-import { verifyPayment } from "@/lib/shop/payments.api";
+import { PaymentOtpStep, PaymentRedirectPrompt } from "@/components/shop/PaymentSteps";
+import { verifyPayment, type PaymentInstructions } from "@/lib/shop/payments.api";
 import { orderGroupPath } from "@/lib/shop/shop.routes";
 import { useAppResume } from "@/lib/native/useAppResume";
 import { enablePush } from "@/lib/native/push";
@@ -29,6 +30,17 @@ import { IS_NATIVE_BUILD } from "@/lib/platform";
  *
  * COD skips all of this — there is no transaction, and the order is already
  * fulfillable.
+ *
+ * ── Two steps can come before the wait ───────────────────────────────────────
+ *
+ * The pay screens read the charge's `instructions` and hand over what they
+ * found in the query:
+ *
+ *   - `otp=1` — the network sends an SMS code first, and nothing reaches the
+ *     handset until it is relayed. So the code form is shown and polling waits
+ *     for it; polling a charge that cannot move yet would only time out.
+ *   - `redirect=<url>` — the payment continues on another page. Polling runs
+ *     alongside, and resumes when the app comes back to the foreground.
  */
 
 /** Long enough for a shopper to find their handset and approve, then stop. */
@@ -53,6 +65,9 @@ export default function SuccessPage() {
    */
   const [reason, setReason] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>("pending");
+  /** Set while the SMS code step is open; the poll waits for it. */
+  const [codeFor, setCodeFor] = useState<string | null>(null);
+  const [redirect, setRedirect] = useState<string | null>(null);
   /** Bumped when the app returns to the foreground, to restart the poll. */
   const [resumeNonce, setResumeNonce] = useState(0);
 
@@ -66,6 +81,7 @@ export default function SuccessPage() {
     setUssd(params.get("ussd"));
     setNote(params.get("note"));
     setReason(params.get("reason"));
+    setRedirect(params.get("redirect"));
 
     if (params.get("cod") === "1") {
       setPhase("cod");
@@ -79,6 +95,14 @@ export default function SuccessPage() {
       return;
     }
     if (!transactionId) return;
+
+    // Nothing can settle until the code is in. `onCodeAccepted` drops the
+    // flag from the URL and bumps the nonce, which lands back here to poll.
+    if (params.get("otp") === "1") {
+      setCodeFor(transactionId);
+      return;
+    }
+    setCodeFor(null);
 
     let cancelled = false;
     let attempts = 0;
@@ -129,6 +153,24 @@ export default function SuccessPage() {
   useAppResume(() => {
     if (phase === "pending") setResumeNonce((n) => n + 1);
   });
+
+  /**
+   * The code went through: the shopper now approves on the handset as usual.
+   *
+   * The step's fresh instructions replace the query's, and `otp` leaves it, so
+   * a reload or an app resume polls rather than asking for the code again.
+   */
+  const onCodeAccepted = (instructions: PaymentInstructions | undefined, message?: string) => {
+    const params = new URLSearchParams(window.location.search);
+    params.delete("otp");
+    params.delete("ussd");
+    params.delete("note");
+    if (instructions?.ussdCode) params.set("ussd", instructions.ussdCode);
+    const nextNote = instructions?.message ?? message;
+    if (nextNote) params.set("note", nextNote);
+    window.history.replaceState(window.history.state, "", `${window.location.pathname}?${params}`);
+    setResumeNonce((n) => n + 1);
+  };
 
   /**
    * Ask for push permission HERE, and nowhere else in the app.
@@ -194,12 +236,11 @@ export default function SuccessPage() {
         {t(view.bodyKey)}
       </p>
 
-      {/* What the gateway said to do, which is not always the same thing.
-          NotchPay answers a `cm.mtn` charge with `action: "confirm"` and NO
-          ussd — the operator pushes the prompt to the handset and there is
-          nothing to dial — so a screen hard-coded to "dial this code" would be
-          wrong for the commonest case. The code, when there is one, still gets
-          the prominent treatment; the written instruction is the fallback. */}
+      {/* What the charge said to do, which is not always the same thing. A
+          push to the handset often comes with NO ussd — there is nothing to
+          dial — so a screen hard-coded to "dial this code" would be wrong for
+          the commonest case. The code, when there is one, still gets the
+          prominent treatment; the written instruction is the fallback. */}
       {/* What the gateway said when it said no. A shopper who is told "your
           balance is insufficient" knows what to do next; one told only that
           something went wrong retries the identical failure. */}
@@ -225,7 +266,29 @@ export default function SuccessPage() {
         </div>
       )}
 
-      {phase === "pending" && (ussd || note) && (
+      {phase === "pending" && codeFor && (
+        <div style={{ width: "100%", maxWidth: 360, marginTop: 18 }}>
+          <PaymentOtpStep
+            transactionId={codeFor}
+            onAuthorized={onCodeAccepted}
+            onRestart={(why) => {
+              // Too many wrong codes failed the transaction. The order is still
+              // payable, which is what the failed view's button offers.
+              setCodeFor(null);
+              setReason(why);
+              setPhase("failed");
+            }}
+          />
+        </div>
+      )}
+
+      {phase === "pending" && !codeFor && redirect && (
+        <div style={{ width: "100%", maxWidth: 360, marginTop: 18 }}>
+          <PaymentRedirectPrompt url={redirect} />
+        </div>
+      )}
+
+      {phase === "pending" && !codeFor && !redirect && (ussd || note) && (
         <div
           style={{
             width: "100%",

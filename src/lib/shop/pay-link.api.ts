@@ -80,7 +80,14 @@ export interface PayLinkSession {
   /** Poll `POST /api/payments/verify` with this once the card is confirmed. */
   transactionId: string;
   state: PayLinkState;
+  /**
+   * Which company carried the money — a label at most, and **never** a branch:
+   * an administrator can add or switch aggregators with no release, so any
+   * string can arrive here.
+   */
   gateway: string;
+  /** What the customer pays with (`CARD` for every pay link). `null` on a link minted before 2026-09-30. */
+  provider: string | null;
   /** What the customer agreed to pay, in the catalogue's currency. */
   amount: number;
   currency: string;
@@ -168,8 +175,8 @@ export interface MintedPayLink {
  * ⚠ **A mobile-money transaction cannot have one** (`422
  * PAYMENT_LINK_NOT_APPLICABLE`): it completes on the payer's own handset
  * against the payer's own number, so a page would have nothing to do. Pay links
- * are a card path, which is why the caller creates a `STRIPE` transaction
- * first. `422 PAYMENT_LINK_NOT_PAYABLE` means it is already settled, failed or
+ * are a card path, which is why the caller opens a `CARD` charge first.
+ * `422 PAYMENT_LINK_NOT_PAYABLE` means it is already settled, failed or
  * cancelled; `404` means unknown, malformed, or somebody else's —
  * indistinguishable on purpose.
  */
@@ -178,6 +185,22 @@ export async function mintPayLink(transactionId: string): Promise<MintedPayLink>
     `/api/payments/${encodeURIComponent(transactionId)}/pay-link`,
     { method: "POST" },
   );
+}
+
+/**
+ * Where to send the shopper to finish a CARD charge themselves.
+ *
+ * A card charge answers a Stripe `clientSecret`, and the one screen in this app
+ * that confirms one is the hosted page at `/pay/[token]` — it loads Stripe.js
+ * with the server's own publishable key (`session.publishableKey`), never a
+ * key baked into the build. So a pay screen that gets `clientSecret` back mints
+ * a link against that transaction and goes there, rather than growing a second
+ * card form. Minting revokes any earlier link for the same transaction, which
+ * is harmless here: the shopper is about to use this one.
+ */
+export async function cardPagePath(transactionId: string): Promise<string> {
+  const minted = await mintPayLink(transactionId);
+  return payPath(minted.token);
 }
 
 /**

@@ -171,6 +171,20 @@ export type BackendErrorCode =
     | "PAYMENT_ORDER_IS_COD"
     | "PAYMENT_OPERATOR_UNDETERMINED"
     | "PAYMENT_CURRENCY_NOT_SUPPORTED"
+    // ─── Provider routing (api-doc/payments/routing.md, 2026-09-30) ────────────
+    /** 400. No `provider`, and none could be derived. A current build never sees it. */
+    | "PAYMENT_PROVIDER_REQUIRED"
+    /** 422. `details: { provider, offered }` — `offered` is the fresh provider list. */
+    | "PAYMENT_PROVIDER_UNAVAILABLE"
+    /** 422. `details: { provider, detected, spent: false }` — the number is on `detected`. */
+    | "PAYMENT_PROVIDER_PHONE_MISMATCH"
+    // ─── The one-time code step (`POST /payments/:transactionId/authorize`) ────
+    /** 422. Wrong code. `details.attemptsRemaining` says how many are left. */
+    | "PAYMENT_OTP_INVALID"
+    /** 422. Too many wrong codes — the transaction is now `FAILED`. */
+    | "PAYMENT_OTP_ATTEMPTS_EXCEEDED"
+    /** 422. No code step on this transaction, or it is no longer pending. */
+    | "PAYMENT_OTP_NOT_REQUIRED"
     // ─── The hosted card page (api-doc/payments/README.md § GAP-008) ───────────
     /**
      * 404. The pay link is malformed, unknown, **or superseded by a newer mint**

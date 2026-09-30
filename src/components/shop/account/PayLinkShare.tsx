@@ -9,7 +9,8 @@ import { translateError } from "@/lib/auth/error-translator";
 import { shareLink } from "@/lib/native/share";
 import { formatMoney } from "@/lib/shop/format";
 import { mintPayLink, payLinkUrl } from "@/lib/shop/pay-link.api";
-import { initiatePayment } from "@/lib/shop/payments.api";
+import { initiatePayment, type PaymentProvider } from "@/lib/shop/payments.api";
+import { useChargeRefusal } from "@/components/shop/useChargeRefusal";
 
 /**
  * "Send this to whoever is paying" — the half of the pay-link feature that
@@ -25,28 +26,26 @@ import { initiatePayment } from "@/lib/shop/payments.api";
  * no call site, so that page could only be reached by a URL the storefront had
  * no way to produce. This is the button between them.
  *
- * ── Why it creates a STRIPE transaction ──────────────────────────────────────
+ * ── Why it opens a CARD charge ───────────────────────────────────────────────
  *
  * A pay link is inherently a card path. Mobile money debits the payer's own
  * number from a prompt on the payer's own handset, so there is nothing for a web
  * page to do — and the backend says so, refusing to mint for one with
- * `422 PAYMENT_LINK_NOT_APPLICABLE`. So the flow is: create a card transaction,
+ * `422 PAYMENT_LINK_NOT_APPLICABLE`. So the flow is: open a `CARD` charge,
  * mint a handle against it, send the handle.
  *
- * 🔴 **This is also the storefront's only working card path, and that is not a
- * coincidence.** `PayGroupSheet` deliberately offers mobile money only, because
- * `initiate` returns a Stripe `clientSecret` that no screen in this app has ever
- * consumed. The pay-link page *does* consume it — Stripe's Payment Element, card
- * details going straight to Stripe. Sending yourself the link is therefore a
- * legitimate way to pay by card, not only a way to ask somebody else.
+ * The host shows this only while `/options` lists `CARD`: with cards off the
+ * server refuses the charge (`PAYMENT_PROVIDER_UNAVAILABLE`), and if they go
+ * off while the sheet is open that refusal is passed up through
+ * `onUnavailable`, so the sheet re-renders from the fresh list and this goes.
  *
  * ── The constraint that will bite, and where it comes from ───────────────────
  *
- * ⚠ `initiate` is idempotent on **`(orderId, userId, total)`** — the gateway is
- * NOT part of the key (`payment-orchestrator.service.ts`,
+ * ⚠ `initiate` is idempotent on **`(orderId, userId, total)`** — how it is paid
+ * is NOT part of the key (`payment-orchestrator.service.ts`,
  * `generateIdempotencyKey`). So if a mobile-money attempt for this same group is
- * still `INITIATED` or `PENDING`, asking for a STRIPE transaction hands back
- * that mobile-money one instead, and the mint then answers
+ * still `INITIATED` or `PENDING`, asking for a card charge hands back that
+ * mobile-money one instead, and the mint then answers
  * `PAYMENT_LINK_NOT_APPLICABLE`. That is not a bug here to work around — it is
  * the server correctly refusing to run two payments for one order. The message
  * below says so in those terms, because "try again later" would be useless: the
@@ -68,12 +67,15 @@ export function PayLinkShare({
   amount,
   currency,
   reference,
+  onUnavailable,
 }: {
   cartId: string;
   amount: number;
   currency: string;
   /** The order reference, so the shared message is recognisable. */
   reference?: string | null;
+  /** Cards were switched off after the sheet loaded: the fresh `details.offered`. */
+  onUnavailable: (offered: PaymentProvider[] | null) => void;
 }) {
   const t = useTranslations("shop.pay.share");
   const tErrors = useTranslations("errors");
@@ -93,20 +95,16 @@ export function PayLinkShare({
    */
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const refusal = useChargeRefusal(onUnavailable);
 
   const send = useCallback(async () => {
     setError(null);
     setBusy(true);
 
     try {
-      // Card, for the reason in the header note. No `channel` fields are
-      // required for STRIPE — `phoneNumber` is mandatory only for the mobile
-      // gateways — so nothing is invented here to satisfy the shape.
-      const payment = await initiatePayment({
-        cartId,
-        gateway: "STRIPE",
-        channel: {},
-      });
+      // Card, for the reason in the header note. A card entry lists no
+      // `channel` fields, so nothing is invented here to satisfy the shape.
+      const payment = await initiatePayment({ cartId, provider: "CARD", channel: {} });
 
       const minted = await mintPayLink(payment.transactionId);
       const url = payLinkUrl(minted);
@@ -139,12 +137,12 @@ export function PayLinkShare({
       } else if (err instanceof ApiError && err.code === "PAYMENT_LINK_NOT_PAYABLE") {
         setError(t("notPayable"));
       } else {
-        setError(translateError(tErrors, err, t("createFailed")));
+        setError(refusal(err) ?? translateError(tErrors, err, t("createFailed")));
       }
     } finally {
       setBusy(false);
     }
-  }, [cartId, amount, currency, reference, flash, t, tErrors]);
+  }, [cartId, amount, currency, reference, flash, t, tErrors, refusal]);
 
   return (
     <div

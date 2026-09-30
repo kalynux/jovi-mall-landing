@@ -5,12 +5,16 @@ import { useRouter } from "@/i18n/navigation";
 import { Badge, Button, Icon, Skeleton } from "@/components/shop/ds";
 import { useCart } from "@/components/shop/providers";
 import {
-  CHECKOUT_OPTIONS,
+  COD,
+  OnlinePaymentUnavailable,
+  OptionsLoadFailed,
   PaymentMethodPicker,
-  paymentChannel,
+  chargeRequest,
   paymentReady,
 } from "@/components/shop/PaymentMethodPicker";
+import { usePaymentOptions } from "@/components/shop/usePaymentOptions";
 import { useSavedPayment } from "@/components/shop/useSavedPayment";
+import { useChargeRefusal } from "@/components/shop/useChargeRefusal";
 import { DeliveryMinimumNotice, fromShop } from "@/components/shop/DeliveryMinimumNotice";
 import { LegalAgreement } from "@/components/legal/LegalLink";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
@@ -21,7 +25,13 @@ import { useTranslations } from "next-intl";
 import { quoteCart } from "@/lib/shop/cart.api";
 import { checkout } from "@/lib/shop/orders.api";
 import { getProfile } from "@/lib/shop/profile.api";
-import { initiatePayment, isSettledFailure } from "@/lib/shop/payments.api";
+import {
+  getPaymentOptions,
+  initiatePayment,
+  isSettledFailure,
+  nextPaymentStep,
+} from "@/lib/shop/payments.api";
+import { cardPagePath } from "@/lib/shop/pay-link.api";
 import { rememberPaymentAttempt } from "@/lib/shop/payment-attempts";
 import { formatMoney } from "@/lib/shop/format";
 import type { CartLine } from "@/lib/shop/shop.types";
@@ -43,6 +53,15 @@ import type {
  *      nothing.
  *   2. `POST /api/payments/initiate` with that `cartId` → one transaction for
  *      the whole group. Cash on delivery skips this entirely.
+ *
+ * ── What can be paid with is asked, not assumed ──────────────────────────────
+ *
+ * The online rows are `GET /api/payments/options`, read when the page opens
+ * and read AGAIN just before the orders are created. Checkout is the one pay
+ * screen where the orders exist before the charge does, so a provider switched
+ * off in between must be caught while the form still exists — after step 1
+ * there is no cart left to keep. An empty list is "online payment is
+ * unavailable", and cash on delivery stays where the cart allows it.
  *
  * ── Two failures worth catching early ────────────────────────────────────────
  *
@@ -92,6 +111,7 @@ export default function CheckoutPage() {
   const t = useTranslations("shop.checkout");
   const tKey = useTranslations();
   const tMinimum = useTranslations("shop.deliveryMinimum");
+  const tProvider = useTranslations("shop.payProvider");
 
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [addressId, setAddressId] = useState<string | null>(null);
@@ -101,18 +121,23 @@ export default function CheckoutPage() {
   const [loadingProfile, setLoadingProfile] = useState(true);
 
   const isDigital = productType === "digital";
+  const online = usePaymentOptions(status === "authenticated");
+  const refusal = useChargeRefusal(online.applyOffered);
   /**
-   * Cash on delivery is dropped for a digital cart: there is nothing to hand
-   * over, and the backend refuses it with `COD_NOT_AVAILABLE_FOR_DIGITAL`.
+   * What `/options` lists, then cash on delivery — which is dropped for a
+   * digital cart: there is nothing to hand over, and the backend refuses it
+   * with `COD_NOT_AVAILABLE_FOR_DIGITAL`. `null` until `/options` answers —
+   * unless it failed outright, when cash on delivery needs no answer from it.
    *
    * Memoised because the picker takes it as an effect dependency — a fresh
    * array literal every render would re-run the operator auto-select on every
-   * keystroke, for a list that changes only with the cart's type.
+   * keystroke, for a list that changes only with its inputs.
    */
-  const payOptions = useMemo(
-    () => CHECKOUT_OPTIONS.filter((o) => !(o.isCod && isDigital)),
-    [isDigital]
-  );
+  const payOptions = useMemo(() => {
+    if (online.options === null) return online.failed && !isDigital ? [COD] : null;
+    return isDigital ? online.options : [...online.options, COD];
+  }, [online.options, online.failed, isDigital]);
+  const onlineUnavailable = online.options?.length === 0;
   // Digital orders have nothing to deliver, so the backend ignores the address
   // entirely for them — asking would be a step with no purpose.
   const needsAddress = !isDigital;
@@ -127,7 +152,7 @@ export default function CheckoutPage() {
    */
   const payForm = useSavedPayment(payOptions, status === "authenticated");
   const { option, phone } = payForm;
-  const isCod = option.isCod === true;
+  const isCod = option?.isCod === true;
 
   /* ── Saved addresses ───────────────────────────────────────────────────── */
 
@@ -208,8 +233,27 @@ export default function CheckoutPage() {
   /* ── Place the order ───────────────────────────────────────────────────── */
 
   const placeOrder = useCallback(async () => {
+    if (!option) return;
+    const charge = chargeRequest(option, phone);
     setError(null);
     setPlacing(true);
+
+    // Is the chosen provider still offered? Asked here, before any order
+    // exists, because this is the last moment the refusal can leave the form
+    // intact. A failed read is not a "no" — the charge's own refusal still
+    // guards the other side.
+    if (charge) {
+      const fresh = await getPaymentOptions().catch(() => null);
+      if (fresh && !fresh.some((entry) => entry.provider === charge.provider)) {
+        online.applyOffered(fresh.map((entry) => entry.provider));
+        setError(fresh.length === 0 ? tProvider("onlineUnavailable") : tProvider("providerSwitchedOff"));
+        setPlacing(false);
+        return;
+      }
+    }
+
+    /** Set once the orders exist: from then on a failure has an order to point at. */
+    let placedGroup: string | null = null;
 
     try {
       const result = await checkout({
@@ -219,18 +263,15 @@ export default function CheckoutPage() {
 
       // The cart is cleared server-side on success; drop the local mirror so the
       // header badge does not keep showing a basket that no longer exists.
+      placedGroup = result.cartId;
       await clear().catch(() => undefined);
 
-      if (isCod) {
+      if (isCod || !charge) {
         router.push(`/shop/checkout/success?group=${encodeURIComponent(result.cartId)}&cod=1`);
         return;
       }
 
-      const payment = await initiatePayment({
-        cartId: result.cartId,
-        gateway: option.gateway,
-        channel: paymentChannel(option, phone),
-      });
+      const payment = await initiatePayment({ cartId: result.cartId, ...charge });
 
       // The one moment this id is knowable — nothing on the order side ever
       // returns it. The order screen's "Check payment" reads it back to force a
@@ -241,11 +282,21 @@ export default function CheckoutPage() {
         group: result.cartId,
         transaction: payment.transactionId,
       });
+      // The answer decides the next screen — never which company carries the
+      // money. A card goes to the hosted page that confirms it; a code step or
+      // a page to open is shown by the success screen, which also polls.
+      const step = nextPaymentStep(payment.instructions);
+      if (!isSettledFailure(payment.status) && step.kind === "card") {
+        router.push(await cardPagePath(payment.transactionId));
+        return;
+      }
+      if (step.kind === "otp") params.set("otp", "1");
+      if (step.kind === "redirect") params.set("redirect", step.url);
       if (payment.instructions?.ussdCode) params.set("ussd", payment.instructions.ussdCode);
-      // What the gateway actually told us to tell the shopper. NotchPay writes
-      // this per `action` — a `cm.mtn` charge answers "confirm" with NO ussd,
-      // and the operator pushes a prompt instead — so discarding it and showing
-      // our own fixed sentence guesses at a step that varies.
+      // What the charge actually told us to tell the shopper. It varies per
+      // network and per aggregator — a push to the handset often answers with
+      // NO ussd — so discarding it for our own fixed sentence would guess at a
+      // step that varies.
       if (payment.instructions?.message) params.set("note", payment.instructions.message);
       // The gateway refused on this very response — there is nothing to wait
       // for, so say so instead of spending a minute of polling to find out.
@@ -262,14 +313,27 @@ export default function CheckoutPage() {
       }
       router.push(`/shop/checkout/success?${params}`);
     } catch (err: unknown) {
+      // The orders exist and only the charge failed. The cart is already gone,
+      // so there is no form to go back to: say why on the success screen's
+      // failed view, whose button opens the order — payable there, with a
+      // fresh `/options`. (Staying here fell through to the empty-cart
+      // redirect and dropped the shopper on /shop/cart with nothing said.)
+      if (placedGroup) {
+        const params = new URLSearchParams({ group: placedGroup, failed: "1" });
+        params.set("reason", refusal(err) ?? translateError(tErrors, err, tCheckout("GENERIC")));
+        router.push(`/shop/checkout/success?${params}`);
+        return;
+      }
       setPlacing(false);
-      // The orders were not created (checkout is atomic) or payment failed after
-      // they were. Either way the cart may have changed server-side, so re-read
-      // it rather than leaving a stale view.
+      // Checkout is atomic, so nothing was created — but the cart may have
+      // changed server-side, so re-read it rather than leaving a stale view.
       void refresh();
       setError(checkoutError(tCheckout, tErrors, err, tMinimum, lines));
     }
   }, [
+    online,
+    tProvider,
+    refusal,
     isCod,
     needsAddress,
     addressId,
@@ -295,7 +359,7 @@ export default function CheckoutPage() {
   if (
     status === "loading" ||
     !hydrated ||
-    (status === "authenticated" && (loadingProfile || !payForm.ready))
+    (status === "authenticated" && (loadingProfile || (!payForm.ready && !online.failed)))
   ) {
     return (
       <div className="mx-auto max-w-[760px] px-4 py-8 sm:px-6">
@@ -315,7 +379,7 @@ export default function CheckoutPage() {
 
   const currency = quote?.currency ?? lines[0]?.currency ?? "XAF";
   const total = quote?.total ?? lines.reduce((sum, l) => sum + l.price * l.qty, 0);
-  const phoneOk = paymentReady(option, phone);
+  const phoneOk = option !== null && paymentReady(option, phone);
   const addressOk = !needsAddress || Boolean(addressId);
   // Only a quote for the method on screen counts: a switch to COD re-quotes,
   // and until it answers the online verdict must not unblock the button.
@@ -436,18 +500,25 @@ export default function CheckoutPage() {
       <p className="ds-overline" style={{ marginBottom: 8 }}>
         {t("paymentMethod")}
       </p>
-      <PaymentMethodPicker
-        key={payForm.formKey}
-        options={payOptions}
-        value={option}
-        onChange={payForm.setOption}
-        phone={phone}
-        onPhoneChange={payForm.setPhone}
-        disabled={placing}
-        saved={payForm}
-      />
+      {online.failed ? (
+        <OptionsLoadFailed onRetry={online.reload} />
+      ) : (
+        onlineUnavailable && <OnlinePaymentUnavailable withCod={!isDigital} />
+      )}
+      {option && payOptions && payOptions.length > 0 && (
+        <PaymentMethodPicker
+          key={payForm.formKey}
+          options={payOptions}
+          value={option}
+          onChange={payForm.setOption}
+          phone={phone}
+          onPhoneChange={payForm.setPhone}
+          disabled={placing}
+          saved={payForm}
+        />
+      )}
 
-      {option.id === "card" && (
+      {option?.provider === "CARD" && (
         <p className="muted" style={{ fontSize: 12.5, marginBottom: 20, lineHeight: 1.5 }}>
           {t("cardNote")}
         </p>
@@ -536,6 +607,7 @@ export default function CheckoutPage() {
               {formatMoney(total, currency)}
             </div>
           </div>
+          {option && (
           <Button
             size="lg"
             elevated
@@ -558,6 +630,7 @@ export default function CheckoutPage() {
                 ? t("placeOrder")
                 : t("payAmount", { amount: formatMoney(total, currency) })}
           </Button>
+          )}
         </div>
         {/* Under the pay button, as the order is what the Terms bind. */}
         <LegalAgreement kind="checkout" />

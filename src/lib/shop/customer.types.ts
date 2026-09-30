@@ -84,20 +84,12 @@ export interface SavedAddress {
   geo: GeoAddress | null;
 }
 
-export type PaymentMethodType = "card" | "mobile_money" | "bank_transfer";
-
 /**
- * The payment method as the **profile** returns it — deliberately sanitized:
- * gateway ids are never included here. The richer record (brand, last4, expiry)
- * lives on `/api/me/payment-methods`; see `SavedPaymentMethod` below.
+ * The profile's `savedPaymentMethods[]` items. Since 2026-09-30 the profile
+ * carries the same object as `/api/me/payment-methods` — kept as an alias so
+ * the profile type still says where it came from.
  */
-export interface ProfilePaymentMethod {
-  id: string;
-  provider: string;
-  display_label: string;
-  method_type: PaymentMethodType;
-  is_default: boolean;
-}
+export type ProfilePaymentMethod = SavedPaymentMethod;
 
 export interface CustomerPreferences {
   /** BCP-47, e.g. "en" / "fr". */
@@ -158,44 +150,51 @@ export interface AddAddressPayload {
 
 // ─── Saved payment methods (`/api/me/payment-methods`) ───────────────────────
 
+/** What a saved method is. `CARD` and `BANK_TRANSFER` occur on rows saved before 2026-09-30 only. */
+export type SavedMethodKind = "MOBILE_MONEY" | "CARD" | "BANK_TRANSFER";
+
+/** The networks a wallet can be SAVED on. The same values a charge sends as `provider`. */
+export type SavedWalletProvider = "MTN" | "ORANGE" | "MOOV";
+
 /**
- * What a read of `/api/me/payment-methods` actually carries.
+ * One saved method, as every read returns it — the list, the default, the save
+ * answer, and the profile's `savedPaymentMethods[]`.
  *
- * Note what is *not* here. `gateway_customer_id` and `gateway_instrument_id`
- * are accepted on write and stored, but the backend never returns them on any
- * endpoint — it treats them as secrets. They were declared optional here, which
- * reads as "sometimes present" and is wrong in the direction that matters: for
- * mobile money the instrument id **is** the wallet's phone number, so anything
- * reaching for it to prefill a payment got `undefined` and fell back to asking
- * the shopper to retype their own number. `lib/shop/wallet-numbers` is how that
- * number is recovered instead.
+ * Note what is *not* here: the full phone number. The server never returns it,
+ * on any endpoint — only `maskedPhone` and `last4`. So a payment form that
+ * wants the number pre-filled reads it from `lib/shop/wallet-numbers`, the copy
+ * this device kept when the wallet was saved, checked against `last4`.
  */
 export interface SavedPaymentMethod {
   id: string;
-  /** Gateway or wallet, e.g. `stripe`, `notchpay`, `mtn_momo`, `orange_money`. */
-  provider: string;
-  method_type: PaymentMethodType;
-  display_label: string;
-  brand?: string | null;
-  last4?: string | null;
-  exp_month?: number | null;
-  exp_year?: number | null;
-  holder_name?: string | null;
-  is_default: boolean;
+  /**
+   * The same vocabulary as the charge `provider`. `CARD` (an old saved card)
+   * and `null` (an old wallet whose network is unknown) are listed and
+   * deletable, but never pre-selected for a payment.
+   */
+  provider: SavedWalletProvider | "CARD" | null;
+  kind: SavedMethodKind;
+  /** Server-written list text, e.g. `MTN Mobile Money · ••••4417`. */
+  label: string;
+  /** `+2376••••4417`. `null` for a card, and for an old row whose number is unknown. */
+  maskedPhone: string | null;
+  last4: string | null;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
+/**
+ * `POST /api/me/payment-methods` — strict: any other key is refused with
+ * `400 VALIDATION_ERROR`, and so is `CARD`. Wallets only.
+ */
 export interface AddPaymentMethodPayload {
-  provider: string;
-  gateway_customer_id: string;
-  gateway_instrument_id: string;
-  method_type: PaymentMethodType;
-  display_label: string;
-  brand?: string;
-  last4?: string;
-  exp_month?: number;
-  exp_year?: number;
-  holder_name?: string;
-  is_default?: boolean;
+  provider: SavedWalletProvider;
+  /** E.164. */
+  phoneNumber: string;
+  /** 1–100 chars. Omit it and the server writes `MTN Mobile Money · ••••4417`; never send "". */
+  label?: string;
+  isDefault?: boolean;
 }
 
 // ─── Orders ──────────────────────────────────────────────────────────────────

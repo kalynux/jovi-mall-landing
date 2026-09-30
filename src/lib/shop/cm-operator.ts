@@ -3,36 +3,33 @@
  *
  * ── Why the storefront needs this at all ─────────────────────────────────────
  *
- * `POST /api/payments/initiate` takes a **gateway** and a **channel**, and they
- * are not the same question. The gateway (NotchPay) is ours and is never shown.
- * The `channel.phoneOperator` is the shopper's network, and NotchPay's direct
- * charge takes an explicit `cm.mtn` / `cm.orange` — it will not work it out from
- * the number.
+ * A charge names a **provider** (MTN, ORANGE…), and since 2026-09-30 the server
+ * checks it against the number before anything is written
+ * (`checkChargeRequest` in `payments/domain/payment-routing.ts`):
  *
- * The backend does derive it, in `payments/domain/cm-operator.ts` — but read
- * the order of trust there:
+ *   - the number's **prefix** is read, and nothing else;
+ *   - a prefix that names a *different* network than the chosen provider is
+ *     refused with `422 PAYMENT_PROVIDER_PHONE_MISMATCH` (`details.detected`);
+ *   - a prefix the table does not know (Nexttel 66x, Camtel 62x, a ported or
+ *     foreign number) is **accepted**, and the shopper's choice wins;
+ *   - `CARD` does not look at the number at all.
  *
- *     const stated = (declared || '').toUpperCase();
- *     if (stated === 'MTN' || stated === 'ORANGE') return stated;
- *
- * **A declared operator always beats the number.** So a shopper who taps "MTN
- * Mobile Money" and types an Orange number gets `cm.mtn` sent for an Orange
- * number, and the payment is declined at the gateway with nothing on screen
- * explaining why. The backend's own comment names that as the outcome worth
- * avoiding — it just cannot avoid it, because by then the wrong answer has
- * already been declared.
- *
- * This table is that same derivation, moved to where the number is typed, so
- * the tile matches the number by default and the declaration is right.
+ * ⚠ This used to be the opposite. The old contract let a *declared* operator
+ *   beat the number, so this file's job was to make the declaration match the
+ *   prefix. The server now refuses a contradiction instead, so the picker uses
+ *   this table twice: to pre-select the tile from what is typed, and — through
+ *   `providerMismatch` — to say "this number is on MTN" before the pay button
+ *   rather than after a 422. It never silently flips a tile the shopper tapped.
  *
  * ⚠ **It is a mirror, so it must not drift.** If the ranges below stop matching
- * `PREFIX_RANGES` in the backend file, the storefront will confidently declare
- * an operator the backend would have derived differently. Change both together.
+ * `PREFIX_RANGES` in the backend's `payments/domain/cm-operator.ts`, the shop
+ * will either block a number the server would take, or let through one it will
+ * refuse. Change both together.
  */
 
 import { isValidPhone, parsePhoneValue } from "@/lib/phone";
 
-/** The operators the mobile-money gateways can actually charge in Cameroon. */
+/** The networks the prefix table can name. */
 export type CameroonMobileOperator = "MTN" | "ORANGE";
 
 /**
@@ -43,8 +40,8 @@ export type CameroonMobileOperator = "MTN" | "ORANGE";
  *   MTN     650-654, 670-679, 680-684
  *   ORANGE  655-659, 685-689, 690-699
  *
- * 660-669 is Nexttel and 62x is Camtel. Neither is a mobile-money rail either
- * gateway supports, so both fall through — which is a real answer, not a gap.
+ * 660-669 is Nexttel and 62x is Camtel. Neither is in the table, so both fall
+ * through — and the server then charges whatever the shopper chose.
  */
 const PREFIX_RANGES: readonly {
   from: number;
@@ -62,7 +59,7 @@ const PREFIX_RANGES: readonly {
 export type OperatorDetection =
   /** The number names its network. Select this tile. */
   | { status: "detected"; operator: CameroonMobileOperator }
-  /** A complete number on a network no gateway can charge. Say so. */
+  /** A complete number the table cannot place. The shopper's choice stands. */
   | { status: "unsupported" }
   /** Still being typed, or too partial to judge. Say nothing. */
   | { status: "unknown" };
@@ -72,10 +69,10 @@ const UNKNOWN: OperatorDetection = { status: "unknown" };
 /**
  * Read the network off a phone-field value.
  *
- * Three states rather than `operator | null`, because "still typing" and "this
- * number cannot be charged" want opposite things from the UI: the first must
- * stay silent, and the second must warn. Collapsing them — which is what the
- * backend's `null` does, correctly, for its own purposes — would put a red
+ * Three states rather than `operator | null`, because "still typing" and "we
+ * cannot place this number" want opposite things from the UI: the first must
+ * stay silent, and the second earns a hint. Collapsing them — which is what
+ * the backend's `null` does, correctly, for its own purposes — would put a
  * warning under a field after the first digit.
  */
 export function detectCameroonOperator(value: string | null | undefined): OperatorDetection {
@@ -99,4 +96,22 @@ export function detectCameroonOperator(value: string | null | undefined): Operat
   const prefix = Number(digits.slice(0, 3));
   const match = PREFIX_RANGES.find((r) => prefix >= r.from && prefix <= r.to);
   return match ? { status: "detected", operator: match.operator } : { status: "unsupported" };
+}
+
+/**
+ * The network a number is on, when it contradicts the chosen provider.
+ *
+ * Exactly the server's mismatch rule, so a `null` here is a number the server
+ * will not refuse as a mismatch: a card, a half-typed or unplaceable number, or
+ * one on the chosen network. `MOOV` has no prefix of its own in the table, so an
+ * MTN or Orange number chosen as Moov is a mismatch too.
+ */
+export function providerMismatch(
+  provider: string | null | undefined,
+  value: string | null | undefined,
+): CameroonMobileOperator | null {
+  if (provider !== "MTN" && provider !== "ORANGE" && provider !== "MOOV") return null;
+  const detection = detectCameroonOperator(value);
+  if (detection.status !== "detected") return null;
+  return detection.operator === provider ? null : detection.operator;
 }

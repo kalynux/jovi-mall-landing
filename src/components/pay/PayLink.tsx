@@ -200,16 +200,16 @@ function PayableSession({
   const t = useTranslations("shop.pay.link");
 
   /*
-   * The server's key wins.
+   * The server's key, and only the server's.
    *
    * It is read off the same account that minted the client secret, so the two
-   * are guaranteed to agree. `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` is the
-   * fallback for a build talking to an API that has not been given one — it
-   * keeps the page working in development, and a mismatch between the two would
-   * surface as Stripe refusing the secret rather than as a silent wrong charge.
+   * are guaranteed to agree. There is no build-time fallback any more: since
+   * 2026-09-30 the server decides at runtime whether cards are on and which
+   * account carries them, so a key baked into the build could name an account
+   * the charge was never opened on. No key means this page cannot take a card
+   * right now, which the branch below says.
    */
-  const publishableKey =
-    session.publishableKey || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || null;
+  const publishableKey = session.publishableKey || null;
 
   /*
    * `loadStripe` is memoised on the key rather than called at module scope.

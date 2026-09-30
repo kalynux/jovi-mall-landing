@@ -5,17 +5,20 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { BottomSheet, Button, Icon, Skeleton } from "@/components/shop/ds";
 import {
-  MOBILE_MONEY_OPTIONS,
+  OnlinePaymentUnavailable,
+  OptionsLoadFailed,
   PaymentMethodPicker,
-  paymentChannel,
+  chargeRequest,
   paymentReady,
 } from "@/components/shop/PaymentMethodPicker";
+import { usePaymentOptions } from "@/components/shop/usePaymentOptions";
 import { useSavedPayment } from "@/components/shop/useSavedPayment";
+import { useChargeRefusal } from "@/components/shop/useChargeRefusal";
 import { PayLinkShare } from "./PayLinkShare";
-import { CARD_PAYMENTS_AVAILABLE } from "@/components/shop/PaymentMethodPicker";
 import { translateError } from "@/lib/auth/error-translator";
 import { formatMoney } from "@/lib/shop/format";
-import { initiatePayment, isSettledFailure } from "@/lib/shop/payments.api";
+import { cardPagePath } from "@/lib/shop/pay-link.api";
+import { initiatePayment, isSettledFailure, nextPaymentStep } from "@/lib/shop/payments.api";
 import { rememberPaymentAttempt } from "@/lib/shop/payment-attempts";
 import { payableOrders, payableTotal } from "@/lib/shop/order-status";
 import type { OrderGroup } from "@/lib/shop/customer.types";
@@ -47,23 +50,22 @@ import type { OrderGroup } from "@/lib/shop/customer.types";
  * So there is no "has a payment already started?" check here, deliberately. The
  * server answers that question better than the client could.
  *
- * ── Mobile money in the picker; cards through the pay link ───────────────────
+ * ── What the picker offers is the server's answer ────────────────────────────
  *
- * The picker offers mobile money only, and that is still deliberate: a `CARD`
- * entry here would take the shopper to a Stripe `clientSecret` that **this
- * screen** cannot complete, leaving the order looking mid-payment.
+ * `GET /api/payments/options` is re-read every time the sheet opens, and the
+ * rows are exactly what it lists — none when online payment is switched off.
+ * What happens after the tap is read off the charge's own `instructions`: a
+ * code step, a page to open, a card form, or the prompt on the phone.
  *
- * But the storefront does have a working card path now — the hosted page at
- * `/pay/[token]`, which consumes exactly that `clientSecret` through Stripe's
- * Payment Element. So `PayLinkShare` at the foot of this sheet is not only "ask
- * somebody else": sending yourself the link is how you pay by card. That is why
- * it lives here rather than on the order card — this sheet is where the shopper
- * is answering "how do I pay for this", and it is one of the answers.
+ * A card charge goes to the hosted page at `/pay/[token]`, the one screen that
+ * confirms a Stripe `clientSecret`. The same page is behind `PayLinkShare` at
+ * the foot of this sheet, which is "somebody else pays by card" — shown only
+ * while `/options` lists `CARD`, because every pay link is a card charge.
  *
- * ⚠ The two paths cannot both be live at once. `initiate` keys idempotency on
- * `(orderId, userId, total)` **without the gateway**, so a mobile-money attempt
- * left `PENDING` here makes the mint refuse with `PAYMENT_LINK_NOT_APPLICABLE`.
- * `PayLinkShare` says so in the shopper's own terms rather than retrying.
+ * ⚠ The two cannot both be live at once. `initiate` keys idempotency on the
+ * order, not on how it is paid, so a mobile-money attempt left `PENDING` here
+ * makes the mint refuse with `PAYMENT_LINK_NOT_APPLICABLE`. `PayLinkShare`
+ * says so in the shopper's own terms rather than retrying.
  */
 export function PayGroupSheet({
   group,
@@ -84,8 +86,10 @@ export function PayGroupSheet({
    * fetching on mount would put a saved-methods request behind every order card
    * the shopper so much as looks at.
    */
-  const payForm = useSavedPayment(MOBILE_MONEY_OPTIONS, open);
+  const payOptions = usePaymentOptions(open);
+  const payForm = useSavedPayment(payOptions.options, open);
   const { option, phone } = payForm;
+  const refusal = useChargeRefusal(payOptions.applyOffered);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -97,15 +101,13 @@ export function PayGroupSheet({
   const currency = orders[0]?.currency ?? group.currency;
 
   const pay = useCallback(async () => {
+    const charge = option ? chargeRequest(option, phone) : null;
+    if (!charge) return;
     setError(null);
     setBusy(true);
 
     try {
-      const payment = await initiatePayment({
-        cartId: group.cartId,
-        gateway: option.gateway,
-        channel: paymentChannel(option, phone),
-      });
+      const payment = await initiatePayment({ cartId: group.cartId, ...charge });
 
       // Write the transaction id down before leaving. It is returned exactly
       // once, and the order screen's "Check payment" needs it to force a
@@ -118,6 +120,16 @@ export function PayGroupSheet({
         group: group.cartId,
         transaction: payment.transactionId,
       });
+      const step = nextPaymentStep(payment.instructions);
+      // A card is confirmed on the hosted page, not waited for here.
+      if (!isSettledFailure(payment.status) && step.kind === "card") {
+        router.push(await cardPagePath(payment.transactionId));
+        return;
+      }
+      // A code step, or a page to open, is shown by the success screen, which
+      // is also where the result is polled for.
+      if (step.kind === "otp") params.set("otp", "1");
+      if (step.kind === "redirect") params.set("redirect", step.url);
       if (payment.instructions?.ussdCode) params.set("ussd", payment.instructions.ussdCode);
       // The gateway's own per-action instruction — see the note at the same
       // line in the checkout page.
@@ -137,11 +149,14 @@ export function PayGroupSheet({
       router.push(`/shop/checkout/success?${params}`);
     } catch (err) {
       setBusy(false);
-      setError(translateError(tErrors, err, t("startFailed")));
+      // Nothing was charged on a provider refusal; the form is left as it is.
+      setError(refusal(err) ?? translateError(tErrors, err, t("startFailed")));
     }
-  }, [group.cartId, option, phone, router, t, tErrors]);
+  }, [group.cartId, option, phone, router, t, tErrors, refusal]);
 
-  const canPay = payForm.ready && paymentReady(option, phone) && !busy;
+  const phoneOk = option !== null && paymentReady(option, phone);
+  const canPay = payForm.ready && phoneOk && !busy;
+  const cardListed = payOptions.options?.some((o) => o.provider === "CARD") ?? false;
 
   return (
     <BottomSheet
@@ -174,7 +189,7 @@ export function PayGroupSheet({
             elevated
             leadingIcon="lock"
             disabled={!canPay}
-            title={paymentReady(option, phone) ? undefined : t("enterValidNumber")}
+            title={option && !phoneOk ? t("enterValidNumber") : undefined}
             onClick={() => void pay()}
           >
             {busy ? t("starting") : t("payAmount", { amount: formatMoney(amount, currency) })}
@@ -214,10 +229,14 @@ export function PayGroupSheet({
       {/* Held back until the saved methods have answered: a wallet number that
           lands after the picker mounts arrives as an edit, and the operator
           detection overrides the rail it came from. See `useSavedPayment`. */}
-      {payForm.ready ? (
+      {payOptions.failed ? (
+        <OptionsLoadFailed onRetry={payOptions.reload} />
+      ) : payOptions.options?.length === 0 ? (
+        <OnlinePaymentUnavailable />
+      ) : payForm.ready && option && payOptions.options ? (
         <PaymentMethodPicker
           key={payForm.formKey}
-          options={MOBILE_MONEY_OPTIONS}
+          options={payOptions.options}
           value={option}
           onChange={payForm.setOption}
           phone={phone}
@@ -235,19 +254,17 @@ export function PayGroupSheet({
           the only card path the storefront has — see the note in
           `PayLinkShare`.
 
-          ⚠ HIDDEN WHILE CARDS ARE OFF, and the reason is that this is a CARD
-            path, not merely a sharing one: it mints the link by calling
-            `initiatePayment({ gateway: "STRIPE" })`. With no
-            `STRIPE_SECRET_KEY` on the backend that request fails 503, so the
-            shopper would tap "send a payment link" and get a server error.
-            Gating the checkout picker alone would have left this one live —
-            which is why the flag is shared rather than applied at the list. */}
-      {CARD_PAYMENTS_AVAILABLE && (
+          ⚠ SHOWN ONLY WHILE /options LISTS CARD. This is a card path, not
+            merely a sharing one: it mints the link against a `CARD` charge,
+            which the server refuses while cards are off — so offering it then
+            would be a button that can only fail. */}
+      {cardListed && (
         <PayLinkShare
           cartId={group.cartId}
           amount={amount}
           currency={currency}
           reference={orders[0]?.orderNumber}
+          onUnavailable={payOptions.applyOffered}
         />
       )}
     </BottomSheet>

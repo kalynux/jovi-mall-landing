@@ -4,16 +4,11 @@
  * ── Why the client has to remember these at all ──────────────────────────────
  *
  * A saved mobile-money method *is* a phone number — `AddPaymentMethodPayload`
- * sends the same E.164 value as both `gateway_customer_id` and
- * `gateway_instrument_id`, because for a wallet the customer and the instrument
- * are the same thing. But the backend treats those two fields as secrets and
- * **never returns them** on any endpoint (see `customer/payment-methods.md`,
- * "Security model"). What comes back is `provider`, `brand`, `last4` and a
- * display label — enough to name the wallet, not enough to charge it.
- *
- * That is right for a card, where the number is the gateway's business. It is
- * awkward for mobile money, where the number is what `POST /api/payments/initiate`
- * has to be handed in `channel.phoneNumber`. So without this, "saved for faster
+ * sends it as `phoneNumber`. But the backend **never returns the full number**
+ * on any endpoint (see `customer/payment-methods.md`). What comes back is
+ * `provider`, `label`, `maskedPhone` and `last4` — enough to name the wallet,
+ * not enough to charge it, because the number is what
+ * `POST /api/payments/initiate` has to be handed in `channel.phoneNumber`. So without this, "saved for faster
  * checkout" can only preselect the network and still make the shopper type
  * their own wallet number back in.
  *

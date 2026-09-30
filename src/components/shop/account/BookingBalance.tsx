@@ -11,14 +11,19 @@ import { useApiResource } from "@/lib/shop/useApiResource";
 import { formatMoney } from "@/lib/shop/format";
 import { ApiError } from "@/lib/auth/auth.types";
 import {
-  MOBILE_MONEY_OPTIONS,
-  MTN,
-  paymentChannel,
+  chargeRequest,
+  OnlinePaymentUnavailable,
+  OptionsLoadFailed,
   PaymentMethodPicker,
   paymentReady,
-  type PaymentOption,
 } from "@/components/shop/PaymentMethodPicker";
+import { PaymentOtpStep, PaymentRedirectPrompt } from "@/components/shop/PaymentSteps";
+import { usePaymentOptions } from "@/components/shop/usePaymentOptions";
+import { useSavedPayment } from "@/components/shop/useSavedPayment";
+import { useChargeRefusal } from "@/components/shop/useChargeRefusal";
 import { getBookingBalance, payBookingBalance } from "@/lib/shop/bookings.api";
+import { cardPagePath } from "@/lib/shop/pay-link.api";
+import { isSettledFailure, nextPaymentStep } from "@/lib/shop/payments.api";
 import { bookingPath } from "@/lib/shop/shop.routes";
 
 /**
@@ -31,13 +36,13 @@ import { bookingPath } from "@/lib/shop/shop.routes";
  * a balance, and the platform deliberately never charges it on its own. Paying
  * it is the customer's action, which is what this page is.
  *
- * ── Cash and card are not offered ────────────────────────────────────────────
+ * ── What is offered ──────────────────────────────────────────────────────────
  *
- * `COD` has no meaning here: there is no courier and nothing to hand over, and
- * the alternative to paying online is settling with the provider directly, which
- * they record themselves. Card is left out for the same reason checkout treats
- * it as secondary — the two mobile-money rails are the ones proven end to end in
- * this market.
+ * What `GET /api/payments/options` lists now — re-read here rather than reusing
+ * the first payment's choice, which may have been switched off since. `COD` has
+ * no meaning here: there is no courier and nothing to hand over, and the
+ * alternative to paying online is settling with the provider directly, which
+ * they record themselves.
  */
 export function BookingBalance({ bookingId }: { bookingId: string }) {
   // Bound above the guards below — this screen has three render branches, so a
@@ -51,33 +56,59 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
 
   const balance = useApiResource(() => getBookingBalance(bookingId), [bookingId, status]);
 
-  const [option, setOption] = useState<PaymentOption>(MTN);
-  const [phone, setPhone] = useState("");
+  const payOptions = usePaymentOptions(status === "authenticated");
+  const payForm = useSavedPayment(payOptions.options, status === "authenticated");
+  const { option, phone } = payForm;
+  const refusal = useChargeRefusal(payOptions.applyOffered);
   const [busy, setBusy] = useState(false);
+  /** A code step is open for this transaction. */
+  const [otpFor, setOtpFor] = useState<string | null>(null);
+  /** The payment continues on this page. */
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
+
+  const handBack = useCallback(() => {
+    flash(t("checkYourPhone"));
+    router.push(bookingPath(bookingId));
+  }, [bookingId, flash, router, t]);
 
   const pay = useCallback(async () => {
+    const charge = option ? chargeRequest(option, phone) : null;
+    if (!charge) return;
     setBusy(true);
     try {
-      await payBookingBalance(bookingId, option.gateway, paymentChannel(option, phone));
-      flash(t("checkYourPhone"));
-      router.push(bookingPath(bookingId));
+      const payment = await payBookingBalance(bookingId, charge);
+      if (isSettledFailure(payment.status)) {
+        flash(t("payStartFailed"));
+        return;
+      }
+      const step = nextPaymentStep(payment.instructions);
+      if (step.kind === "card") router.push(await cardPagePath(payment.transactionId));
+      else if (step.kind === "otp") setOtpFor(payment.transactionId);
+      else if (step.kind === "redirect") setRedirectUrl(step.url);
+      else handBack();
     } catch (err) {
       const code = err instanceof ApiError ? err.code : undefined;
       flash(
-        code === "BOOKING_NO_BALANCE_DUE"
-          ? t("nothingLeftToPay")
-          : code === "BOOKING_BALANCE_ALREADY_SETTLED"
-            ? t("balanceSettled")
-            : code === "BOOKING_NOT_COMPLETED"
-              ? t("notCompleted")
-              : t("payStartFailed"),
+        // A provider refusal wrote nothing; the form stays, and says what to fix.
+        refusal(err) ??
+          (code === "BOOKING_NO_BALANCE_DUE"
+            ? t("nothingLeftToPay")
+            : code === "BOOKING_BALANCE_ALREADY_SETTLED"
+              ? t("balanceSettled")
+              : code === "BOOKING_NOT_COMPLETED"
+                ? t("notCompleted")
+                : t("payStartFailed")),
       );
     } finally {
       setBusy(false);
     }
-  }, [bookingId, option, phone, flash, router, t]);
+  }, [bookingId, option, phone, flash, router, t, refusal, handBack]);
 
-  if (status === "loading" || balance.status === "loading") {
+  if (
+    status === "loading" ||
+    balance.status === "loading" ||
+    (status === "authenticated" && !payForm.ready && !payOptions.failed)
+  ) {
     return (
       <div className="mx-auto max-w-[560px] px-4 py-6 sm:px-6">
         <Skeleton height={220} />
@@ -103,6 +134,33 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
     );
   }
 
+  if (otpFor || redirectUrl) {
+    return (
+      <div className="mx-auto max-w-[560px] px-4 py-6 sm:px-6">
+        <h1 className="sr-only">{tKey("shop.nav.titles.bookingBalance")}</h1>
+        {otpFor ? (
+          <PaymentOtpStep
+            transactionId={otpFor}
+            onAuthorized={handBack}
+            onRestart={(reason) => {
+              setOtpFor(null);
+              flash(reason);
+            }}
+          />
+        ) : (
+          redirectUrl && <PaymentRedirectPrompt url={redirectUrl} />
+        )}
+        {redirectUrl && (
+          <div style={{ marginTop: 12 }}>
+            <Button block variant="secondary" onClick={() => router.push(bookingPath(bookingId))}>
+              {t("backToBooking")}
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-[560px] px-4 py-6 sm:px-6">
       <h1 className="sr-only">{tKey("shop.nav.titles.bookingBalance")}</h1>
@@ -124,27 +182,37 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
         </p>
       </div>
 
-      <PaymentMethodPicker
-        options={MOBILE_MONEY_OPTIONS}
-        value={option}
-        onChange={setOption}
-        phone={phone}
-        onPhoneChange={setPhone}
-        disabled={busy}
-      />
+      {payOptions.failed ? (
+        <OptionsLoadFailed onRetry={payOptions.reload} />
+      ) : option && payOptions.options ? (
+        <PaymentMethodPicker
+          key={payForm.formKey}
+          options={payOptions.options}
+          value={option}
+          onChange={payForm.setOption}
+          phone={phone}
+          onPhoneChange={payForm.setPhone}
+          disabled={busy}
+          saved={payForm}
+        />
+      ) : (
+        <OnlinePaymentUnavailable />
+      )}
 
       <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
-        <Button
-          block
-          size="lg"
-          elevated
-          disabled={busy || !paymentReady(option, phone)}
-          onClick={() => void pay()}
-        >
-          {busy
-            ? t("starting")
-            : t("payAmount", { amount: formatMoney(bal.outstanding, bal.currency) })}
-        </Button>
+        {option && (
+          <Button
+            block
+            size="lg"
+            elevated
+            disabled={busy || !paymentReady(option, phone)}
+            onClick={() => void pay()}
+          >
+            {busy
+              ? t("starting")
+              : t("payAmount", { amount: formatMoney(bal.outstanding, bal.currency) })}
+          </Button>
+        )}
 
         {/* The other way to settle, said plainly — the provider records it and
             the balance closes, so nobody has to pay online who would rather not. */}

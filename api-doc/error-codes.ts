@@ -38,6 +38,7 @@ type DomainPrefix =
     | 'STOCK'         // the two-sided stock-adjustment request flow
     | 'REVIEW'        // reviews & ratings — products AND deliveries
     | 'SYSTEM'        // operations surface: maintenance mode, cache controls
+    | 'APP'           // first-party mobile app distribution (the agent APK download)
     | 'INTERNAL'      // INTERNAL_SERVER_ERROR
     | 'NOT'           // NOT_FOUND — router-level only
     | 'REQUEST'       // body-parser rejections — global handler only (Phase 16)
@@ -49,6 +50,7 @@ type DomainPrefix =
     | 'STRIPE'
     | 'NOTCHPAY'
     | 'MYCOOLPAY'
+    | 'CAMPAY'
     | 'VALIDATION';   // VALIDATION_ERROR — ZodError catch in global handler only
 
 // Compile-time check: every key must start with a known domain prefix.
@@ -171,6 +173,23 @@ export const ERROR_CODES = Object.freeze({
     PAYMENT_ORDER_ALREADY_PAID: 'PAYMENT_ORDER_ALREADY_PAID',
     PAYMENT_INVALID_ORDER_STATUS: 'PAYMENT_INVALID_ORDER_STATUS',
     PAYMENT_GATEWAY_NOT_SUPPORTED: 'PAYMENT_GATEWAY_NOT_SUPPORTED',
+    /**
+     * ⚠ **"This deployment has no gateway", which is OUR configuration — never "that gateway
+     * is not on offer", which is `PAYMENT_GATEWAY_NOT_SUPPORTED` and a different fault.**
+     *
+     * They were one code, raised at 503 for an unconfigured deployment and at 400 for a
+     * client naming an unknown gateway. One code at two statuses derives two categories —
+     * `external_service` and `validation` — so the same code told an operator to go and look
+     * at a third party that was never involved, and `test:errors` § 3 reported it as a new
+     * conflict. Splitting it is what makes each half honest.
+     *
+     * ⚠ **Raise it at 500, not 503.** A 503 derives `external_service` (nobody is down: a
+     * secret is unset), which would then need an override to put it back to `internal` — and
+     * a 500 already derives `internal` by the rules, so the override would be dead and
+     * `test:errors` § 2 refuses dead overrides. `MAIL_PROVIDER_NOT_CONFIGURED` is the
+     * precedent: 500, no override.
+     */
+    PAYMENT_GATEWAY_NOT_CONFIGURED: 'PAYMENT_GATEWAY_NOT_CONFIGURED',
     PAYMENT_INITIATION_FAILED: 'PAYMENT_INITIATION_FAILED',
     PAYMENT_VERIFICATION_FAILED: 'PAYMENT_VERIFICATION_FAILED',
     PAYMENT_BOOKING_NOT_FOUND: 'PAYMENT_BOOKING_NOT_FOUND',
@@ -187,6 +206,18 @@ export const ERROR_CODES = Object.freeze({
     PAYMENT_CART_NO_PAYABLE_ORDERS: 'PAYMENT_CART_NO_PAYABLE_ORDERS',
     PAYMENT_CART_MIXED_CURRENCY: 'PAYMENT_CART_MIXED_CURRENCY',
     PAYMENT_REFERENCE_REQUIRED: 'PAYMENT_REFERENCE_REQUIRED',
+    /**
+     * A mobile-money payment was asked for and there is no payer number to charge — none given,
+     * and none on the customer's account. 422, so `business_rule`: the customer can fix it by
+     * sending a number.
+     *
+     * ⚠ **Added 2026-09-16 because `PAYMENT_REFERENCE_REQUIRED` above was being BORROWED for this.**
+     * That code was declared and raised by nothing, and its name means a payment REFERENCE, not a
+     * phone number. A wrong name on a money refusal is exactly what a later reader "fixes" into a
+     * different bug. The borrowed code is kept declared and now raised by nothing again, pending a
+     * cleanup pass — do not delete it mid-round without checking `test:errors`.
+     */
+    PAYMENT_PAYER_NUMBER_REQUIRED: 'PAYMENT_PAYER_NUMBER_REQUIRED',
     PAYMENT_ORDER_IS_COD: 'PAYMENT_ORDER_IS_COD',
     STRIPE_WEBHOOK_SIGNATURE_INVALID: 'STRIPE_WEBHOOK_SIGNATURE_INVALID',
     /**
@@ -200,6 +231,21 @@ export const ERROR_CODES = Object.freeze({
      * conversation than "which network is this number on?".
      */
     PAYMENT_OPERATOR_UNDETERMINED: 'PAYMENT_OPERATOR_UNDETERMINED',
+
+    // ── PAYMENT ROUTING (ADR-A08, api-doc/payments/routing.md) ────────────────
+    // All five are raised BEFORE anything is written, and all are client-safe categories so
+    // `details` reaches the caller (wi-admin forwards it only for those). `test:errors` pins
+    // their statuses.
+    /** 422. The provider is disabled, or no aggregator can route it now. `details.offered` lists what can. */
+    PAYMENT_PROVIDER_UNAVAILABLE: 'PAYMENT_PROVIDER_UNAVAILABLE',
+    /** 422. The number's prefix belongs to another operator than `provider`. `{ provider, detected, spent: false }`. */
+    PAYMENT_PROVIDER_PHONE_MISMATCH: 'PAYMENT_PROVIDER_PHONE_MISMATCH',
+    /** 400. No `provider`, and none could be derived from a legacy body. */
+    PAYMENT_PROVIDER_REQUIRED: 'PAYMENT_PROVIDER_REQUIRED',
+    /** 422. A payment-settings write broke a hard rule. `details.errors[]` names each one. */
+    PAYMENT_SETTINGS_INVALID: 'PAYMENT_SETTINGS_INVALID',
+    /** 409. `expectedVersion` is not the stored `version`: reload and retry. */
+    PAYMENT_SETTINGS_VERSION_CONFLICT: 'PAYMENT_SETTINGS_VERSION_CONFLICT',
     /**
      * A currency with a minor unit was sent to a mobile-money gateway.
      *
@@ -251,7 +297,7 @@ export const ERROR_CODES = Object.freeze({
     /** A link was asked for on a transaction that is already settled, failed or cancelled. */
     PAYMENT_LINK_NOT_PAYABLE: 'PAYMENT_LINK_NOT_PAYABLE',
 
-    // ── NOTCHPAY / MYCOOLPAY ──────────────────────────────────────────────────
+    // ── NOTCHPAY / MYCOOLPAY / CAMPAY ─────────────────────────────────────────
     // Raised at 5xx only, so `INTEGRATION_PREFIXES` files them as `external_service`
     // and the boundary replaces the message and drops `details`. That is deliberate:
     // the diagnostics are for our logs, and a provider's own error text is not
@@ -262,6 +308,8 @@ export const ERROR_CODES = Object.freeze({
     NOTCHPAY_UNREACHABLE: 'NOTCHPAY_UNREACHABLE',
     MYCOOLPAY_REQUEST_FAILED: 'MYCOOLPAY_REQUEST_FAILED',
     MYCOOLPAY_UNREACHABLE: 'MYCOOLPAY_UNREACHABLE',
+    CAMPAY_REQUEST_FAILED: 'CAMPAY_REQUEST_FAILED',
+    CAMPAY_UNREACHABLE: 'CAMPAY_UNREACHABLE',
 
     // ── REFUND ────────────────────────────────────────────────────────────────
     REFUND_NOT_ELIGIBLE: 'REFUND_NOT_ELIGIBLE',
@@ -483,6 +531,22 @@ export const ERROR_CODES = Object.freeze({
      */
     BOT_PRODUCT_LIST_EXPIRED: 'BOT_PRODUCT_LIST_EXPIRED',
     /**
+     * A SCREEN session — checkout, orders, stores, the support form — is unknown, lapsed,
+     * spent or belongs to another conversation. Same 404 and the same single refusal bucket as
+     * the product list above, for the same reason.
+     *
+     * ⚠ **It exists because the product-list code was being raised for screens that hold no
+     * products**, and its customer sentence says *"tell me what you are looking for and I will
+     * search again"* — which, to somebody whose CHECKOUT expired, is an answer to a question
+     * they did not ask. The remedy differs by screen and none of them is a fresh search: open
+     * checkout again, ask for your orders again, tap Get help again.
+     *
+     * ⚠ **`details.spent` is how a caller tells "gone" from "already used"** on a checkout
+     * handle, which is single-use by design. The sentence stays the same either way: a customer
+     * who pressed twice and one whose ten minutes ran out both need a fresh screen.
+     */
+    BOT_SCREEN_SESSION_EXPIRED: 'BOT_SCREEN_SESSION_EXPIRED',
+    /**
      * A callback token this service did not mint, or minted under a vocabulary it
      * no longer has.
      *
@@ -493,6 +557,13 @@ export const ERROR_CODES = Object.freeze({
      * tap is simply silent.
      */
     BOT_ACTION_TOKEN_UNKNOWN: 'BOT_ACTION_TOKEN_UNKNOWN',
+    /**
+     * `chat_answer_question` was called and no Yes/No question is waiting in this
+     * conversation — none was drawn, its fifteen minutes passed, a tap already
+     * answered it, or the one showing is a question a word may not answer (account
+     * closure; a checkout with several addresses to choose from). 409 → `conflict`.
+     */
+    BOT_NO_PENDING_QUESTION: 'BOT_NO_PENDING_QUESTION',
     /**
      * The Mini App asked to add something the list it was opened for never
      * offered.
@@ -599,6 +670,16 @@ export const ERROR_CODES = Object.freeze({
      * survives, so nothing the customer is currently using breaks.
      */
     BOT_CONNECTION_ACTIVE_CHANNEL: 'BOT_CONNECTION_ACTIVE_CHANNEL',
+    /**
+     * A **Send it again** on a contact change, pressed inside the two-minute cooldown. 429, so
+     * the category rules file it as `rate_limit` with no override.
+     *
+     * ⚠ **`details.retryAfterSeconds` survives the boundary** — `retryafterseconds` is on
+     * `RATE_LIMIT_DETAIL_KEYS` in `core/error-detail-policy.ts`, so the customer can be told
+     * how long to wait. That is the whole reason the wait is worth reporting rather than
+     * swallowing: "try again later" without a number is what makes somebody press repeatedly.
+     */
+    BOT_CONTACT_CODE_RESEND_TOO_SOON: 'BOT_CONTACT_CODE_RESEND_TOO_SOON',
 
     // ── GOOGLE / INTEGRATIONS ─────────────────────────────────────────────────
     GOOGLE_MISSING_CLIENT_ID: 'GOOGLE_MISSING_CLIENT_ID',
@@ -681,6 +762,24 @@ export const ERROR_CODES = Object.freeze({
     ORDER_ALREADY_CANCELLED: 'ORDER_ALREADY_CANCELLED',
     ORDER_NOT_CANCELLABLE: 'ORDER_NOT_CANCELLABLE',
     ORDER_CANCEL_REQUIRES_REFUND: 'ORDER_CANCEL_REQUIRES_REFUND',
+    /**
+     * The three refusals of "record what the customer said about why they cancelled".
+     *
+     * The words arrive one turn AFTER the cancellation — the tap is the decision, the reason is
+     * typed next — so the write has to be guarded against three ways that turn can go wrong.
+     *
+     *   - `NOT_CANCELLED` (422) — the order is not cancelled, so there is no cancellation to
+     *     explain. A model relaying an ordinary complaint about a live order must not have it
+     *     filed as a cancellation reason.
+     *   - `ALREADY_RECORDED` (409) — one note per cancellation. A replayed tool call cannot
+     *     append a second, contradictory story to the same order's history.
+     *   - `WINDOW_CLOSED` (422) — the words came more than a day later. A chat thread lives
+     *     forever, so without a bound an old conversation could attach a sentence to an order
+     *     cancelled months ago, where nobody reading the history would expect one.
+     */
+    ORDER_CANCELLATION_REASON_NOT_CANCELLED: 'ORDER_CANCELLATION_REASON_NOT_CANCELLED',
+    ORDER_CANCELLATION_REASON_ALREADY_RECORDED: 'ORDER_CANCELLATION_REASON_ALREADY_RECORDED',
+    ORDER_CANCELLATION_REASON_WINDOW_CLOSED: 'ORDER_CANCELLATION_REASON_WINDOW_CLOSED',
     // Shared by order + booking customer cancellation (vendor cancellation_policy gate).
     CANCELLATION_NOT_ALLOWED: 'CANCELLATION_NOT_ALLOWED',
 
@@ -825,6 +924,14 @@ export const ERROR_CODES = Object.freeze({
     MAIL_SEND_REJECTED: 'MAIL_SEND_REJECTED',
     // Every provider in the chain failed. Carries the last provider's verdict.
     MAIL_ALL_PROVIDERS_FAILED: 'MAIL_ALL_PROVIDERS_FAILED',
+
+    // ── ACCOUNT STATEMENT MAIL (`/api/internal/admin/mail/statement`) ─────────
+    // The recipient is resolved HERE from the profile, never supplied by the caller,
+    // so "who may receive a statement" has no input to get wrong. Both 409s: the
+    // request is well-formed and the account's state refuses it.
+    STATEMENT_RECIPIENT_MISSING: 'STATEMENT_RECIPIENT_MISSING',
+    STATEMENT_RECIPIENT_UNVERIFIED: 'STATEMENT_RECIPIENT_UNVERIFIED',
+    STATEMENT_ATTACHMENT_TOO_LARGE: 'STATEMENT_ATTACHMENT_TOO_LARGE',
 
     // ── VENDORS ─────────────────────────────────────────────────────────────
     VENDOR_UNSUPPORTED_FISCAL_CALENDAR: 'VENDOR_UNSUPPORTED_FISCAL_CALENDAR',
@@ -1042,11 +1149,24 @@ export const ERROR_CODES = Object.freeze({
     DELIVERY_AGENT_NOT_FOUND: 'DELIVERY_AGENT_NOT_FOUND',
     DELIVERY_AGENCY_ALREADY_EXISTS: 'DELIVERY_AGENCY_ALREADY_EXISTS',
     /**
-     * A compare-and-set on `delivery_agencies.status` missed — the agency was not in the
-     * status the operation required. Two administrators holding one agency's screen open
-     * is the case: the loser is told the state moved rather than overwriting the winner.
+     * A business-verification verdict was submitted for an agency that already holds it —
+     * approving an approved agency, or refusing a refused one. Two administrators holding
+     * one agency's screen open is the case: the second is told the decision was already
+     * made rather than re-stamping it with their own name and moment.
+     *
+     * ⚠ **Renamed from `DELIVERY_AGENCY_STATUS_CONFLICT` on 2026-09-15 (BR-026 § 3), and
+     * the old name was actively misleading.** It described a compare-and-set on
+     * `delivery_agencies.status`, which is what this was until the activation split gave
+     * `status` and the KYC verdict two different owners. The predicate has not touched
+     * `status` since, so an administrator sent to that field by the code's name was looking
+     * at the wrong column. `details.currentVerification` is the value that decided it;
+     * `details.currentStatus` is carried beside it because it is still true, not because it
+     * is relevant.
+     *
+     * Not raised by `deactivate`/`reactivate`, which are a different axis and have never
+     * used this code.
      */
-    DELIVERY_AGENCY_STATUS_CONFLICT: 'DELIVERY_AGENCY_STATUS_CONFLICT',
+    DELIVERY_AGENCY_VERIFICATION_CONFLICT: 'DELIVERY_AGENCY_VERIFICATION_CONFLICT',
     DELIVERY_ONBOARDING_STEP_INVALID: 'DELIVERY_ONBOARDING_STEP_INVALID',
     DELIVERY_ONBOARDING_STEP_INCOMPLETE: 'DELIVERY_ONBOARDING_STEP_INCOMPLETE',
     DELIVERY_ONBOARDING_ALREADY_COMPLETED: 'DELIVERY_ONBOARDING_ALREADY_COMPLETED',
@@ -1098,6 +1218,12 @@ export const ERROR_CODES = Object.freeze({
     // COD threshold allocation (agent global pool ← contract sub-allocations)
     AGENT_COD_THRESHOLD_OUT_OF_BOUNDS: 'AGENT_COD_THRESHOLD_OUT_OF_BOUNDS',
     AGENT_COD_THRESHOLD_BELOW_ALLOCATED: 'AGENT_COD_THRESHOLD_BELOW_ALLOCATED',
+    // The agent asked to carry MORE than their ceiling (plan value, an admin's pinned
+    // pool, or 0 while KYC is unverified). They may only ever lower it themselves.
+    AGENT_COD_POOL_ABOVE_CEILING: 'AGENT_COD_POOL_ABOVE_CEILING',
+    // The pool moved underneath a write (a plan/KYC sync or an admin override landed
+    // between the read and the compare-and-set). Re-read and retry.
+    AGENT_COD_POOL_CONFLICT: 'AGENT_COD_POOL_CONFLICT',
     // An administrator's pinned trust score (O-7) outside 0–100. Same scale as
     // the computed score, because the whole point is that it substitutes for it.
     AGENT_TRUST_OVERRIDE_OUT_OF_BOUNDS: 'AGENT_TRUST_OVERRIDE_OUT_OF_BOUNDS',
@@ -1263,8 +1389,9 @@ export const ERROR_CODES = Object.freeze({
      *
      * Not in ADR-A02, and added because the anonymisation makes an in-flight delivery
      * undeliverable rather than merely untidy: `CashCollectionService.notifyCodeIssued`
-     * sends the COD delivery code to `Customer.phone`, which closure clears, and the
-     * messaging connections that carry every other delivery notification are deleted. The
+     * sends the COD delivery code on the customer's notification channel (since 2026-09-27;
+     * before, to `Customer.phone`, which closure clears), and closure deletes the messaging
+     * connections that carry it and every other delivery notification. The
      * agent arrives at an address holding a parcel the recipient can no longer be given a
      * code for.
      *
@@ -1605,6 +1732,8 @@ export const ERROR_CODES = Object.freeze({
     BOOKING_BALANCE_PAYMENT_IN_PROGRESS: 'BOOKING_BALANCE_PAYMENT_IN_PROGRESS',
     /** The booking must be completed before its balance can be settled. */
     BOOKING_NOT_COMPLETED: 'BOOKING_NOT_COMPLETED',
+    /** Owed, but not payable yet — the shop has not accepted it (bookings phase 6, the list's Pay). */
+    BOOKING_NOT_PAYABLE_NOW: 'BOOKING_NOT_PAYABLE_NOW',
     /** An active booking already overlaps the requested interval (commit-time race). */
     BOOKING_SLOT_UNAVAILABLE: 'BOOKING_SLOT_UNAVAILABLE',
     /** The booking is past the point where it can be cancelled by its owner. */
@@ -1653,6 +1782,38 @@ export const ERROR_CODES = Object.freeze({
     EARNINGS_PAYOUT_REQUEST_NOT_FOUND: 'EARNINGS_PAYOUT_REQUEST_NOT_FOUND',
     EARNINGS_PAYOUT_REQUEST_NOT_PENDING: 'EARNINGS_PAYOUT_REQUEST_NOT_PENDING',
 
+    // Payout EXECUTION — NotchPay transfers + tier-3 triage.
+    EARNINGS_PAYOUT_NOT_SENDABLE: 'EARNINGS_PAYOUT_NOT_SENDABLE',
+    EARNINGS_PAYOUT_TRANSFER_IN_FLIGHT: 'EARNINGS_PAYOUT_TRANSFER_IN_FLIGHT',
+    /** Only a payout whose transfer is in flight (`processing`) can be resolved by hand. 409. */
+    EARNINGS_PAYOUT_NOT_PROCESSING: 'EARNINGS_PAYOUT_NOT_PROCESSING',
+    EARNINGS_PAYOUT_ALREADY_TRIAGED: 'EARNINGS_PAYOUT_ALREADY_TRIAGED',
+    /**
+     * ⚠ **"This payout's DESTINATION cannot be sent to automatically" — a bank or card row
+     * that predates `ENABLED_PAYOUT_METHODS`. Raised at 422, `business_rule`, and settled by
+     * hand through `markPaid`.** Never "this deployment has no payout gateway", which is
+     * `EARNINGS_PAYOUT_GATEWAY_NOT_CONFIGURED` below.
+     */
+    EARNINGS_PAYOUT_GATEWAY_UNSUPPORTED: 'EARNINGS_PAYOUT_GATEWAY_UNSUPPORTED',
+    /**
+     * ⚠ **"This deployment has no payout gateway", which is OUR configuration.** The exact
+     * shape of `PAYMENT_GATEWAY_NOT_CONFIGURED`, one module along — and the third instance of
+     * this split on the platform, after that pair and `MAIL_PROVIDER_NOT_CONFIGURED`.
+     *
+     * They were one code, raised at 422 for an unsendable destination and at 503 for an
+     * unconfigured deployment. One code at two statuses derives two categories —
+     * `business_rule` and `external_service` — so the same code sent an operator to look at a
+     * third party that was never involved, and `test:errors` § 3 reported it as a new conflict
+     * on 2026-09-16, where it then failed CI for five days.
+     *
+     * ⚠ **Raise it at 500, not 503.** A 503 derives `external_service` (nobody is down: a
+     * setting is unset), which would need an override to put it back to `internal` — and a
+     * 500 derives `internal` by the rules already, so the override would be dead and
+     * `test:errors` § 2 refuses dead overrides.
+     */
+    EARNINGS_PAYOUT_GATEWAY_NOT_CONFIGURED: 'EARNINGS_PAYOUT_GATEWAY_NOT_CONFIGURED',
+    EARNINGS_PAYOUT_TRANSFER_FAILED: 'EARNINGS_PAYOUT_TRANSFER_FAILED',
+
     // ── COD (cash on delivery: collection, cash liabilities, reconciliation) ──
     COD_NOT_AVAILABLE_FOR_DIGITAL: 'COD_NOT_AVAILABLE_FOR_DIGITAL',
     COD_AGENCY_NOT_SUPPORTED: 'COD_AGENCY_NOT_SUPPORTED',
@@ -1671,7 +1832,14 @@ export const ERROR_CODES = Object.freeze({
     COD_DEPOSIT_EXCEEDS_BALANCE: 'COD_DEPOSIT_EXCEEDS_BALANCE',
     COD_DEPOSIT_NOT_FOUND: 'COD_DEPOSIT_NOT_FOUND',
     COD_DEPOSIT_ALREADY_RESOLVED: 'COD_DEPOSIT_ALREADY_RESOLVED',
-    COD_DEPOSIT_REFERENCE_REQUIRED: 'COD_DEPOSIT_REFERENCE_REQUIRED',
+    /**
+     * A deposit or remittance declaration carried no proof image. A dedicated code for the
+     * same reason as `SHIPMENT_PROOF_FILE_REQUIRED`: the likely cause is the wrong multipart
+     * field name, or a client still sending the old JSON body.
+     */
+    COD_PROOF_FILE_REQUIRED: 'COD_PROOF_FILE_REQUIRED',
+    /** The deposit/remittance has no proof image (recorded by its receiver, or legacy). */
+    COD_PROOF_NOT_FOUND: 'COD_PROOF_NOT_FOUND',
     /** Direct-to-platform deposit for cash the agency has already remitted. */
     COD_DEPOSIT_AGENCY_ALREADY_SETTLED: 'COD_DEPOSIT_AGENCY_ALREADY_SETTLED',
     COD_DEPOSIT_WRONG_RECIPIENT: 'COD_DEPOSIT_WRONG_RECIPIENT',
@@ -1784,6 +1952,32 @@ export const ERROR_CODES = Object.freeze({
      * differently for each: this one clears on a clock, that one clears on a resend window.
      */
     RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
+
+    // ── APP DISTRIBUTION — the direct-download surface for first-party mobile apps ──
+    // Public, unauthenticated reads. There is no `APP_*_FORBIDDEN`: the download is open by
+    // design, and an APK's authenticity is the signature Android checks at install, not the
+    // secrecy of its URL. See modules/app-distribution.
+
+    /** The `:app` path segment is not one of `APP_KEYS`. 404, so an unknown app and an
+     *  unpublished one are indistinguishable from outside — there is nothing to enumerate. */
+    APP_UNKNOWN: 'APP_UNKNOWN',
+    /**
+     * A known app with no published release. 404.
+     *
+     * ⚠ This is the ORDINARY state of a new app key, not a fault. A landing page must render
+     * "not available yet" from it rather than an error — see `api-doc/public/app-downloads.md`.
+     */
+    APP_RELEASE_NOT_FOUND: 'APP_RELEASE_NOT_FOUND',
+    /**
+     * A published row exists and its bytes cannot be addressed. 503.
+     *
+     * Reachable exactly one way: the active storage provider cannot build a public URL for a
+     * key it did not write — a deployment that published under `r2` and now boots on `local`,
+     * or the reverse. The row is not wrong and the artefact is not lost; the provider is
+     * looking in the wrong store. Never raised for a missing object, which this service
+     * cannot see: the CDN answers that 404 itself.
+     */
+    APP_RELEASE_UNAVAILABLE: 'APP_RELEASE_UNAVAILABLE',
 
     // ── MIDDLEWARE / ROUTER FALLBACKS — DO NOT USE IN SERVICES ───────────────
     INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',  // assigned by global handler

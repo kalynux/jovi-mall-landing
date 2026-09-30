@@ -1,13 +1,13 @@
 /**
  * Saved payment methods — the shared `/api/me/payment-methods` surface.
  *
- * Preferred over the customer-scoped `/api/customer/payment-methods` duplicate:
- * this one is the only surface with a list and a set-default route, and it keeps
- * the display fields (`brand`, `last4`, expiry, holder) that the profile's
- * sanitized copy drops.
+ * Preferred over the customer-scoped `/api/customer/payment-methods` aliases:
+ * this is the only surface with a list and a set-default route. Since
+ * 2026-09-30 every surface returns the same object (`SavedPaymentMethod`).
  *
- * Nothing secret is stored here. Tokenization lives with the gateway; these
- * records hold only what is needed to render the method in the UI.
+ * Wallets only: a save is `{ provider: MTN|ORANGE|MOOV, phoneNumber, label?,
+ * isDefault? }`, strict, and names no payment company. The full number is
+ * never returned — `lib/shop/wallet-numbers` keeps this device's copy.
  */
 import { apiFetch } from "@/lib/api/client";
 import type {

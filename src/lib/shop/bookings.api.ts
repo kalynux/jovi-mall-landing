@@ -27,6 +27,7 @@
  */
 import { apiFetch, apiFetchList } from "@/lib/api/client";
 import type { ListMeta } from "./shop.types";
+import type { ChargeRequest, InitiatePaymentResponse } from "./payments.api";
 
 /**
  * One bookable interval.
@@ -58,8 +59,8 @@ export type BookingStatus = "pending" | "confirmed" | "completed" | "no-show" | 
  * 🔴 `refund_pending` is **not** `refunded`.
  *
  * It means money is owed back but the gateway could not return it
- * automatically — cash bookings, and My-CoolPay, whose API has no refund
- * endpoint — so a human completes the payout from a support ticket. **The
+ * automatically — cash bookings, and payments carried by an aggregator with no
+ * refund endpoint — so a human completes the payout from a support ticket. **The
  * customer does not have their money yet**, and a UI that renders the two the
  * same way tells them they have been repaid when they have not.
  */
@@ -222,23 +223,21 @@ export async function createBooking(
 
 /* ── 4 · Paying ──────────────────────────────────────────────────────────── */
 
-export interface BookingPaymentChannel {
-  /** E.164 for mobile money. */
-  phoneNumber?: string;
-  phoneOperator?: string;
-  customerEmail?: string;
-  customerName?: string;
-}
-
-/** POST /api/bookings/:id/pay */
+/**
+ * POST /api/bookings/:id/pay
+ *
+ * The same `{ provider, channel }` body as the cart's `initiate`, and the same
+ * result — here under `data`, which `apiFetch` unwraps. Branch on its
+ * `instructions` with `nextPaymentStep`, exactly as checkout does. It can
+ * refuse with the same three provider codes before anything is written.
+ */
 export async function payBooking(
   bookingId: string,
-  gateway: "NOTCHPAY" | "MYCOOLPAY" | "STRIPE",
-  channel: BookingPaymentChannel,
-): Promise<Record<string, unknown>> {
-  return apiFetch(`/api/bookings/${encodeURIComponent(bookingId)}/pay`, {
+  charge: ChargeRequest,
+): Promise<InitiatePaymentResponse> {
+  return apiFetch<InitiatePaymentResponse>(`/api/bookings/${encodeURIComponent(bookingId)}/pay`, {
     method: "POST",
-    body: JSON.stringify({ gateway, channel }),
+    body: JSON.stringify(charge),
   });
 }
 
@@ -253,8 +252,11 @@ export interface BookingPaymentState {
   transaction: {
     id: string;
     status: string;
+    /** Which company carried the money. A label at most — never branch on it, and expect names this build has never seen. */
     gateway: string;
     gatewayRef: string;
+    /** What the customer paid with. `null` on a payment opened before 2026-09-30. */
+    provider: string | null;
   } | null;
 }
 
@@ -372,15 +374,18 @@ export async function getBookingBalance(id: string): Promise<BookingBalance> {
   );
 }
 
-/** POST /api/customer/bookings/:id/pay-balance — same body as the first payment. */
+/**
+ * POST /api/customer/bookings/:id/pay-balance — the same body and answer as the
+ * first payment. The providers on offer may have changed since then, so the
+ * screen re-reads `/options` rather than reusing the first payment's choice.
+ */
 export async function payBookingBalance(
   id: string,
-  gateway: "NOTCHPAY" | "MYCOOLPAY" | "STRIPE",
-  channel: BookingPaymentChannel,
-): Promise<Record<string, unknown>> {
-  return apiFetch(`/api/customer/bookings/${encodeURIComponent(id)}/pay-balance`, {
+  charge: ChargeRequest,
+): Promise<InitiatePaymentResponse> {
+  return apiFetch<InitiatePaymentResponse>(`/api/customer/bookings/${encodeURIComponent(id)}/pay-balance`, {
     method: "POST",
-    body: JSON.stringify({ gateway, channel }),
+    body: JSON.stringify(charge),
   });
 }
 

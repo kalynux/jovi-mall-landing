@@ -31,7 +31,15 @@ import { optionForSavedMethod, type PaymentOption } from "./PaymentMethodPicker"
  * Both exist for the same underlying reason, and both are cheap.
  */
 export interface SavedPayment {
-  option: PaymentOption;
+  /**
+   * The row the form is on. `null` while `/options` has not answered, and when
+   * it answered with nothing — no pay button in either case.
+   *
+   * Always one of the CURRENT options: a row that `/options` (or a
+   * `PAYMENT_PROVIDER_UNAVAILABLE` refusal) takes away falls back to the first
+   * one left, and everything else on the form stays as it is.
+   */
+  option: PaymentOption | null;
   setOption: (option: PaymentOption) => void;
   phone: string;
   setPhone: (phone: string) => void;
@@ -58,10 +66,11 @@ export interface SavedPayment {
    * The picker's `key`.
    *
    * Remounting on a switch is what re-seeds the picker's "this number was
-   * declared, not typed" memory. Without it, applying an Orange wallet that
-   * sits on a ported MTN-prefix number sets the Orange rail, then the incoming
-   * number trips the detection and moves the selection to MTN — charging the
-   * wrong network for a wallet the shopper picked by name.
+   * declared, not typed" memory. Without it, applying a saved wallet whose
+   * number the prefix table reads differently would set that wallet's row, then
+   * the incoming number would trip the detection and silently move the
+   * selection — flipping a choice the shopper made by name. With it, the row
+   * stays and the picker's mismatch line explains what the server will refuse.
    *
    * Safe to key on because `active` changes only on an explicit `apply`, never
    * while the shopper is typing, and `apply` batches the rail and the number
@@ -72,8 +81,12 @@ export interface SavedPayment {
   ready: boolean;
 }
 
-export function useSavedPayment(options: PaymentOption[], enabled = true): SavedPayment {
-  const [option, setOption] = useState<PaymentOption>(options[0]);
+export function useSavedPayment(
+  options: PaymentOption[] | null,
+  enabled = true,
+): SavedPayment {
+  /** What was chosen. Resolved against the live list below, never used raw. */
+  const [chosen, setOption] = useState<PaymentOption | null>(null);
   const [phone, setPhone] = useState("");
   const [usable, setUsable] = useState<SavedPaymentMethod[]>([]);
   const [active, setActive] = useState<SavedPaymentMethod | null>(null);
@@ -84,8 +97,9 @@ export function useSavedPayment(options: PaymentOption[], enabled = true): Saved
    *
    * A dependency would re-run the fetch every time the caller's list changed
    * identity — checkout's drops cash on delivery once it knows the cart is
-   * digital — and none of those changes can alter which saved methods are
-   * usable, because no saved method maps to a rail that comes and goes.
+   * digital. A provider switched off mid-screen does change what is usable,
+   * but that is already safe without a re-fetch: `apply` re-checks the live
+   * list and does nothing for a wallet whose row is gone.
    */
   const optionsRef = useRef(options);
   // ⚠ KNOWN EXCEPTION, AND THE RULE IS RIGHT IN PRINCIPLE. Writing a ref during
@@ -110,9 +124,15 @@ export function useSavedPayment(options: PaymentOption[], enabled = true): Saved
    * exactly the ordering the rest of this file exists to prevent.
    */
   const loaded = useRef(false);
+  /**
+   * The saved methods are matched against the rows, so they wait for
+   * `/options`. Only its arrival matters here — later changes to the list are
+   * absorbed by resolving `option` against it on every render.
+   */
+  const optionsReady = options !== null;
 
   useEffect(() => {
-    if (!enabled || loaded.current) return;
+    if (!enabled || !optionsReady || loaded.current) return;
     loaded.current = true;
     let cancelled = false;
     let settled = false;
@@ -123,12 +143,12 @@ export function useSavedPayment(options: PaymentOption[], enabled = true): Saved
       const methods = await listPaymentMethods().catch((): SavedPaymentMethod[] => []);
       if (cancelled) return;
 
-      const rails = optionsRef.current;
+      const rails = optionsRef.current ?? [];
       const mine = methods.filter((m) => optionForSavedMethod(m, rails) !== null);
       setUsable(mine);
 
       /**
-       * `is_default` first, then the head of the list.
+       * `isDefault` first, then the head of the list.
        *
        * The fallback is not a tie-break, it is the mobile-money-only screens:
        * a shopper whose default is a saved card has no default *here*, and
@@ -136,7 +156,7 @@ export function useSavedPayment(options: PaymentOption[], enabled = true): Saved
        * the form on its hardcoded guess. The list arrives default-first, so
        * `[0]` is the best of the rest.
        */
-      const preferred = mine.find((m) => m.is_default) ?? mine[0] ?? null;
+      const preferred = mine.find((m) => m.isDefault) ?? mine[0] ?? null;
       const rail = preferred ? optionForSavedMethod(preferred, rails) : null;
 
       if (preferred && rail) {
@@ -163,10 +183,10 @@ export function useSavedPayment(options: PaymentOption[], enabled = true): Saved
       // `ready` that never flipped, and every reopen would sit on the skeleton.
       if (!settled) loaded.current = false;
     };
-  }, [enabled]);
+  }, [enabled, optionsReady]);
 
   const apply = useCallback(async (method: SavedPaymentMethod) => {
-    const rail = optionForSavedMethod(method, optionsRef.current);
+    const rail = optionForSavedMethod(method, optionsRef.current ?? []);
     if (!rail) return;
 
     // Awaited before any setState so the rail, the number and the remount land
@@ -181,6 +201,8 @@ export function useSavedPayment(options: PaymentOption[], enabled = true): Saved
     setPhone(number ?? "");
   }, []);
 
+  const option = options?.find((o) => o.id === chosen?.id) ?? options?.[0] ?? null;
+
   /**
    * A *complete* number is what can contradict the active method. An empty or
    * half-typed field is the cross-device case — the rail came from the saved
@@ -190,9 +212,8 @@ export function useSavedPayment(options: PaymentOption[], enabled = true): Saved
    */
   const contradicted =
     active !== null &&
-    // Same known exception as the ref write above; this is its read side.
-    // eslint-disable-next-line react-hooks/refs
-    (optionForSavedMethod(active, optionsRef.current)?.id !== option.id ||
+    option !== null &&
+    (optionForSavedMethod(active, options ?? [])?.id !== option.id ||
       (option.needsPhone &&
         Boolean(active.last4) &&
         isValidPhone(phone) &&
