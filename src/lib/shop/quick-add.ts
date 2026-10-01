@@ -27,7 +27,7 @@ export type QuickAddResolution =
  * can actually buy, so it is trustworthy where it exists; the first sellable
  * variant is the fallback for a product whose default was archived.
  */
-function defaultVariant(product: Product): Variant | undefined {
+export function defaultVariant(product: Product): Variant | undefined {
   return (
     product.variants.find((v) => v.id === product.defaultVariantId) ?? product.variants[0]
   );

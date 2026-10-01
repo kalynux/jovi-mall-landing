@@ -17,7 +17,11 @@ import { EXTERNAL_LINKS, buildWhatsAppUrl } from "@/lib/constants";
  *   `/start bargain_<productId>_<variantId>` — 57 characters of the 64 allowed,
  *   and no `:` because the payload admits only `[A-Za-z0-9_-]`.
  * - **Always the selected variant**: whether a price is negotiable is a
- *   per-variant fact. Quantity is never sent; the bot opens at 1.
+ *   per-variant fact. Quantity is never sent; the bot opens at 1. The backend
+ *   also takes the product id alone, but `api-doc/public/bargain-deep-link.md`
+ *   allows that only for a single-variant product, so this module never builds
+ *   it: a product card, whose row carries no variant ids, looks up the default
+ *   variant first (`ProductCard`'s `BargainCorner`).
  *
  * ⛔ **Deploy order: backend first.** Until jovi-mall answers `/bargain` and
  * reads the `/start` argument, WhatsApp replies "unknown command" and Telegram

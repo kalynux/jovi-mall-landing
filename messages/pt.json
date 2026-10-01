@@ -2145,7 +2145,9 @@
                 "agency": "Empresa de entregas verificada",
                 "agent": "Estafeta verificado"
             },
-            "negotiable": "Preço negociável"
+            "bargain": "Negociar",
+            "moreActions": "Preço negociável — mais opções",
+            "closeActions": "Fechar opções"
         },
         "chrome": {
             "brandHome": "Loja Wi-Mall",

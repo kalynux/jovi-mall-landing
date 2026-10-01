@@ -765,6 +765,7 @@ export function ProductDetail({
                   onToggleFavorite={() => toggle(item.id)}
                   inStock={item.inStock}
                   negotiable={item.negotiable}
+                  productId={item.id}
                   href={productPathFor(item)}
                 />
               </div>
@@ -795,6 +796,7 @@ export function ProductDetail({
                   onToggleFavorite={() => toggle(item.id)}
                   inStock={item.inStock}
                   negotiable={item.negotiable}
+                  productId={item.id}
                   href={productPathFor(item)}
                 />
               </div>

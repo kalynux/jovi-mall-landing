@@ -2145,7 +2145,9 @@
                 "agency": "Verified delivery company",
                 "agent": "Verified courier"
             },
-            "negotiable": "Price negotiable"
+            "bargain": "Bargain",
+            "moreActions": "Price negotiable — more options",
+            "closeActions": "Close options"
         },
         "chrome": {
             "brandHome": "Wi-Mall shop",

@@ -2145,7 +2145,9 @@
                 "agency": "شركة توصيل موثّقة",
                 "agent": "مندوب توصيل موثّق"
             },
-            "negotiable": "السعر قابل للتفاوض"
+            "bargain": "فاوض",
+            "moreActions": "السعر قابل للتفاوض — خيارات أخرى",
+            "closeActions": "إغلاق الخيارات"
         },
         "chrome": {
             "brandHome": "متجر Wi-Mall",
