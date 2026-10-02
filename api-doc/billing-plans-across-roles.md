@@ -18,8 +18,9 @@ which doc each dashboard team should build from.
 
 Every role has **3 pricing-plan tiers** (a free one + two paid). A subscriber holds
 at most **one active plan + one queued (`pending_activation`)** plan at a time.
-Buying a paid plan charges a payment gateway directly (NotchPay / MyCoolPay /
-Stripe) and, on confirmation, activates or queues the plan automatically — **no
+Buying a paid plan charges the payer's chosen **provider** (`MTN` / `ORANGE`, `CARD` when
+switched on — listed by `GET /api/payments/options`) through whichever aggregator the server has
+active, and, on confirmation, activates or queues the plan automatically — **no
 recurring charge**; a paid term simply **expires** after `term_days` and either
 hands over to the queued plan or **downgrades to the role's free tier** (a daily
 server job). Activating a plan grants its `credit_allowance` once into the role's
@@ -48,7 +49,7 @@ server job). Activating a plan grants its `credit_allowance` once into the role'
 | **Base path** | `/api/vendor` | `/api/agency` | `/api/agent` | `/api/internal/admin/billing` ⚠ |
 | **Doc** | [vendor/billing.md](./vendor/billing.md) | [agency/billing.md](./agency/billing.md) | [agent/billing.md](./agent/billing.md) | [admin/billing.md](./admin/billing.md) |
 | **Free tier** | `starter` | `agency_free` | `agent_free` | — |
-| **Plan limit** | products / storage / commission | `max_unterminated_shipments` (**soft**) | `max_unterminated_shipments` (**hard**) · `max_cod_pool` (COD cash, **once KYC-verified**) | defines all |
+| **Plan limit** | products / storage / commission | `max_unterminated_shipments` (**soft**) | `max_unterminated_shipments` (**hard**) · `max_cod_pool` (⚠ **dormant since 2026-10-02** — the agent COD pool is the 500 000 platform default) | defines all |
 | **Free-tier limit** | 15 products, 1 GB storage, 7% commission | **1000** unterminated shipments, **5 GB** storage | **20** concurrent deliveries, **1 GB** storage, **500 000 XAF** COD pool | — |
 | **Enforcement** | **four** catalogue paths blocked at cap (`403 BILLING_LIMIT_EXCEEDED`) — see below | never blocks — alert only | offer-accept blocked at cap (`422 AGENT_AT_CAPACITY`) | — |
 | **Paid tiers today** | active | `is_active:false` (build UI, not yet buyable) | `is_active:false` | manage via catalog |
@@ -128,10 +129,12 @@ Swap `{role}` for `vendor`, `agency`, or `agent`:
 | GET / PATCH | `/api/{role}/settings` | Plan-expiry notice window (`notifyDaysBeforeExpiry`, 0–90) |
 | GET | `/api/{role}/transactions` | Unified plan + credit + earnings history |
 
-**Payment / verify / polling** mechanics (gateway `instructions`, Stripe client-secret
-flow, the two-plan activate-now-vs-queue rule, idempotent verify, ~3–5s polling) are
-documented once in [vendor/billing.md](./vendor/billing.md) and apply unchanged to
-every role. Stripe specifics: [vendor/stripe-payments.md](./vendor/stripe-payments.md).
+**Payment / verify / polling** mechanics (`/payments/options`, the `{ provider, channel }` body,
+payment `instructions`, the OTP and card flows, the two-plan activate-now-vs-queue rule,
+idempotent verify, ~3–5s polling) are documented once in [vendor/billing.md](./vendor/billing.md)
+and apply unchanged to every role. Card specifics: [vendor/stripe-payments.md](./vendor/stripe-payments.md).
+Since 2026-09-30 a client sends `provider`, never `gateway`:
+[FRONTEND-CHANGELOG-payment-providers.md](./FRONTEND-CHANGELOG-payment-providers.md).
 
 ### Response field names (changed)
 
