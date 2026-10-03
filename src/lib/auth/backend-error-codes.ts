@@ -555,6 +555,13 @@ export type BackendErrorCode =
     // ─── Customer ──────────────────────────────────────────────────────────────
     | "CUSTOMER_NOT_FOUND"
     | "CUSTOMER_ADDRESS_NOT_FOUND"
+    /**
+     * 400 (2026-10-02) — an address's `geo` names no region of its country, by
+     * region or by city. `details`: `{ region, city, countryCode, addressId?,
+     * allowedRegions }`. Resend with `geo.components.region` = a picked `key`;
+     * see `lib/shop/address-region.ts`. POST/PATCH addresses and checkout.
+     */
+    | "ADDRESS_REGION_INVALID"
     | "CUSTOMER_PAYMENT_METHOD_NOT_FOUND"
     // ─── Payment methods (saved instruments) ───────────────────────────────────
     | "PAYMENT_METHOD_NOT_FOUND"
@@ -736,6 +743,12 @@ export type BackendErrorCode =
     | "EARNINGS_PAYOUT_REQUEST_NOT_PENDING"
     // ─── COD (cash on delivery) ────────────────────────────────────────────────
     | "COD_NOT_AVAILABLE_FOR_DIGITAL"
+    /**
+     * 422 (2026-10-02) — a shop in the cart has switched cash on delivery off.
+     * `details`: `{ vendorId }`. Raised by a COD checkout only, before the agency
+     * rules below; the cart quote cannot predict it (backend gap G-10).
+     */
+    | "COD_VENDOR_NOT_ACCEPTED"
     | "COD_AGENCY_NOT_SUPPORTED"
     | "COD_ORDER_AMOUNT_EXCEEDS_LIMIT"
     | "COD_COLLECTION_NOT_FOUND"

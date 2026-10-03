@@ -216,6 +216,29 @@ test("deleting a plan the prose names is the one edit that still fails", () => {
   assert.throws(() => facts("en", PLANS.filter((p) => p.code !== "growth")), PlanFactsError);
 });
 
+// ── The agent COD pool is not a plan benefit (dormant since 2026-10-02) ──────
+
+test("an agent plan carrying max_cod_pool renders no COD line", () => {
+  // Every verified agent carries the same 500 000 whatever the plan, so a
+  // per-plan figure must reach neither the prose nor the cards.
+  const pooled = facts("en", edit("agent_free", { max_cod_pool: 2_000_000 }));
+  assert.deepEqual(pooled, facts("en", edit("agent_free", { max_cod_pool: undefined })));
+  assert.doesNotMatch(Object.values(pooled).join(" "), /2,000,000|cash on delivery/i);
+
+  // `PLAN_LIMITS` sits behind `server-only` and cannot load here, but a card
+  // line needs its copy: with these keys gone, no card can print the pool, its
+  // `*` marker or the identity-verification footnote under it.
+  for (const locale of LOCALES) {
+    for (const key of ["pages.plans.codPool", "pages.plans.noCodPool", "pages.pricing.agent.codPoolNote"]) {
+      const value = key.split(".").reduce<string | Tree | undefined>(
+        (node, part) => (node && typeof node === "object" ? node[part] : undefined),
+        MESSAGES[locale]
+      );
+      assert.equal(value, undefined, `${locale}: ${key} is back — the COD pool is not a plan benefit`);
+    }
+  }
+});
+
 // ── Grammar ──────────────────────────────────────────────────────────────────
 
 test("Arabic nouns agree with their count: dual, plural, accusative and genitive", () => {

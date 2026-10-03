@@ -628,6 +628,7 @@
         "PAYMENT_ORDER_NOT_FOUND": "No se encontró el pedido.",
         "PAYMENT_ORDER_ALREADY_PAID": "Este pedido ya ha sido pagado.",
         "PAYMENT_ORDER_IS_COD": "Este pedido se paga en efectivo contra entrega: no hay nada que pagar en línea.",
+        "COD_VENDOR_NOT_ACCEPTED": "Este vendedor no acepta el pago contra entrega. Paga en línea o quita sus artículos para mantener el pago contra entrega en el resto.",
         "PAYMENT_OPERATOR_UNDETERMINED": "No pudimos determinar la red móvil de este número. El dinero móvil funciona con números MTN y Orange en Camerún.",
         "PAYMENT_CURRENCY_NOT_SUPPORTED": "Este método de pago no puede usarse para esta moneda.",
         "PAYMENT_OTP_NOT_REQUIRED": "Este pago no necesita código. Revisa la solicitud de pago en tu teléfono.",
@@ -807,6 +808,7 @@
         "DELIVERY_AGENT_NOT_FOUND": "No se encontró el repartidor.",
         "CUSTOMER_NOT_FOUND": "No se encontró la cuenta de cliente.",
         "CUSTOMER_ADDRESS_NOT_FOUND": "No se encontró la dirección de entrega.",
+        "ADDRESS_REGION_INVALID": "Esta dirección no está en una región reconocida. Elige su región e inténtalo de nuevo.",
         "ORDER_DELIVERY_ADDRESS_REQUIRED": "Necesitamos una dirección de entrega que podamos localizar antes de realizar este pedido.",
         "CUSTOMER_PAYMENT_METHOD_NOT_FOUND": "No se encontró el método de pago.",
         "PAYMENT_METHOD_NOT_FOUND": "Ese método de pago ya no existe.",
@@ -876,10 +878,12 @@
             "ORDER_DELIVERY_ADDRESS_REQUIRED": "Elige una dirección de entrega antes de pagar.",
             "ADDRESS_NOT_GEOCODED": "No podemos localizar la dirección que has elegido. Ábrela en tus direcciones y vuelve a seleccionarla entre los resultados de búsqueda — una dirección escrita a mano no tiene coordenadas de entrega.",
             "CUSTOMER_ADDRESS_NOT_FOUND": "Esa dirección de entrega ya no está en tu cuenta. Elige otra.",
+            "ADDRESS_REGION_INVALID": "No pudimos saber en qué región está tu dirección de entrega. No se ha pedido ni cobrado nada: elige su región abajo y volveremos a hacer el pedido.",
             "ORDER_CART_EMPTY": "Tu carrito está vacío.",
             "COD_NOT_AVAILABLE_FOR_DIGITAL": "El pago contra reembolso no está disponible para productos digitales. Elige otro método de pago.",
             "COD_ORDER_AMOUNT_EXCEEDS_LIMIT": "Este pedido es demasiado grande para el pago contra reembolso. Paga en línea.",
             "COD_AGENCY_NOT_SUPPORTED": "El transportista de este pedido no gestiona el pago contra reembolso. Paga en línea.",
+            "COD_VENDOR_NOT_ACCEPTED": "Tus artículos {from} no se pueden pagar contra entrega: el vendedor no lo acepta. Paga en línea o quita sus artículos para mantener el pago contra entrega en el resto — no se ha cobrado nada.",
             "ORDER_NO_DELIVERY_AGENCY": "Uno de estos artículos no tiene servicio de entrega disponible ahora mismo. Retíralo e inténtalo de nuevo.",
             "NEGOTIATION_LOCK_INVALID": "No hemos encontrado un precio acordado por chat, así que no se ha realizado ningún pedido. Retira ese artículo o añádelo a su precio normal y vuelve a intentarlo.",
             "NEGOTIATION_LOCK_EXPIRED": "Un precio acordado por chat ha caducado, así que no se ha realizado ningún pedido. Escribe al vendedor para acordar uno nuevo, o añade el artículo a su precio normal.",
@@ -974,8 +978,6 @@
             "free": "Gratis",
             "perTerm": "/ {days} {days, plural, one {día} other {días}}",
             "unlimited": "Ilimitados",
-            "codPool": "Lleva hasta {amount} en cobros contra entrega",
-            "noCodPool": "Sin entregas con cobro contra entrega",
             "cta": "Empezar",
             "limits": {
                 "products": "productos activos",
@@ -1055,8 +1057,7 @@
             "agent": {
                 "title": "Planes para repartidores",
                 "lead": "Misma idea que en las agencias: la cifra es cuántas entregas puedes tener en marcha a la vez, no una cuota mensual.",
-                "note": "Este límite es estricto. Aceptar una oferta más por encima de tu tope se rechaza hasta que termines una de las entregas que ya llevas.",
-                "codPoolNote": "* Lo máximo en cobros contra entrega que puedes llevar encima a la vez, sumando todas las agencias con las que trabajas. Se aplica una vez verificada tu identidad; hasta entonces, no llevas cobros contra entrega."
+                "note": "Este límite es estricto. Aceptar una oferta más por encima de tu tope se rechaza hasta que termines una de las entregas que ya llevas."
             },
             "credits": {
                 "title": "Qué son los créditos",
@@ -2469,6 +2470,7 @@
             "addressFallback": "Dirección",
             "defaultAddress": "Predeterminada",
             "manageAddresses": "Gestionar direcciones",
+            "regionFixCta": "Guardar región y hacer el pedido",
             "paymentMethod": "Método de pago",
             "cardNote": "Te pediremos los datos de tu tarjeta en el siguiente paso, en el formulario seguro del propio proveedor de pago.",
             "codNote": "Pagas al repartidor en la entrega. Te enviamos un código de entrega — dáselo al repartidor solo cuando tengas tu paquete.",
@@ -2829,6 +2831,13 @@
             "city": "Ciudad",
             "region": "Región (opcional)",
             "useAsDefault": "Usar como mi dirección de entrega predeterminada"
+        },
+        "regionPicker": {
+            "title": "¿En qué región está esta dirección?",
+            "body": "No pudimos asociar «{place}» a una región. Elígela de la lista: las entregas se asignan por región.",
+            "bodyNoPlace": "No pudimos saber en qué región está esta dirección. Elígela de la lista: las entregas se asignan por región.",
+            "label": "Región",
+            "placeholder": "Elige una región"
         },
         "paymentMethods": {
             "description": "Guardados para pagar más rápido.",

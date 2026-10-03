@@ -628,6 +628,7 @@
         "PAYMENT_ORDER_NOT_FOUND": "La commande est introuvable.",
         "PAYMENT_ORDER_ALREADY_PAID": "Cette commande a déjà été payée.",
         "PAYMENT_ORDER_IS_COD": "Cette commande est payée en espèces à la livraison — il n’y a rien à payer en ligne.",
+        "COD_VENDOR_NOT_ACCEPTED": "Ce vendeur n’accepte pas le paiement à la livraison. Payez en ligne, ou retirez ses articles pour garder le paiement à la livraison sur le reste.",
         "PAYMENT_OPERATOR_UNDETERMINED": "Nous n’avons pas pu déterminer l’opérateur de ce numéro. Le mobile money fonctionne avec les numéros MTN et Orange au Cameroun.",
         "PAYMENT_CURRENCY_NOT_SUPPORTED": "Ce moyen de paiement ne peut pas être utilisé pour cette devise.",
         "PAYMENT_OTP_NOT_REQUIRED": "Ce paiement ne demande pas de code. Vérifiez la demande de paiement sur votre téléphone.",
@@ -807,6 +808,7 @@
         "DELIVERY_AGENT_NOT_FOUND": "Le livreur est introuvable.",
         "CUSTOMER_NOT_FOUND": "Le compte client est introuvable.",
         "CUSTOMER_ADDRESS_NOT_FOUND": "L'adresse de livraison est introuvable.",
+        "ADDRESS_REGION_INVALID": "Cette adresse n'est pas dans une région reconnue. Choisissez sa région et réessayez.",
         "ORDER_DELIVERY_ADDRESS_REQUIRED": "Nous avons besoin d'une adresse de livraison localisable avant de valider cette commande.",
         "CUSTOMER_PAYMENT_METHOD_NOT_FOUND": "Le mode de paiement est introuvable.",
         "PAYMENT_METHOD_NOT_FOUND": "Ce moyen de paiement n’existe plus.",
@@ -876,10 +878,12 @@
             "ORDER_DELIVERY_ADDRESS_REQUIRED": "Choisissez une adresse de livraison avant de payer.",
             "ADDRESS_NOT_GEOCODED": "Nous ne parvenons pas à localiser l'adresse choisie. Ouvrez-la dans vos adresses et resélectionnez-la parmi les résultats de recherche — une adresse saisie à la main n'a pas de coordonnées de livraison.",
             "CUSTOMER_ADDRESS_NOT_FOUND": "Cette adresse de livraison ne figure plus sur votre compte. Choisissez-en une autre.",
+            "ADDRESS_REGION_INVALID": "Nous n'avons pas pu déterminer la région de votre adresse de livraison. Rien n'a été commandé ni débité — choisissez sa région ci-dessous et nous relancerons la commande.",
             "ORDER_CART_EMPTY": "Votre panier est vide.",
             "COD_NOT_AVAILABLE_FOR_DIGITAL": "Le paiement à la livraison n'est pas disponible pour les produits numériques. Choisissez un autre moyen de paiement.",
             "COD_ORDER_AMOUNT_EXCEEDS_LIMIT": "Cette commande est trop importante pour le paiement à la livraison. Veuillez payer en ligne.",
             "COD_AGENCY_NOT_SUPPORTED": "Le transporteur de cette commande ne gère pas le paiement à la livraison. Veuillez payer en ligne.",
+            "COD_VENDOR_NOT_ACCEPTED": "Vos articles pris {from} ne peuvent pas être payés à la livraison : le vendeur ne l'accepte pas. Payez en ligne, ou retirez ses articles pour garder le paiement à la livraison sur le reste — rien n'a été débité.",
             "ORDER_NO_DELIVERY_AGENCY": "L'un de ces articles n'a aucun service de livraison disponible actuellement. Retirez-le et réessayez.",
             "NEGOTIATION_LOCK_INVALID": "Un prix convenu par chat est introuvable, donc rien n'a été commandé. Retirez cet article ou ajoutez-le à son prix normal, puis réessayez.",
             "NEGOTIATION_LOCK_EXPIRED": "Un prix convenu par chat a expiré, donc rien n'a été commandé. Écrivez au vendeur pour en convenir d'un nouveau, ou ajoutez l'article à son prix normal.",
@@ -974,8 +978,6 @@
             "free": "Gratuit",
             "perTerm": "/ {days} {days, plural, one {jour} other {jours}}",
             "unlimited": "Illimité",
-            "codPool": "Transportez jusqu'à {amount} de paiements à la livraison",
-            "noCodPool": "Aucune course en paiement à la livraison",
             "cta": "Commencer",
             "limits": {
                 "products": "produits actifs",
@@ -1055,8 +1057,7 @@
             "agent": {
                 "title": "Forfaits livreur",
                 "lead": "Même logique que pour les agences : le chiffre correspond au nombre de livraisons que vous pouvez tenir en même temps, pas à un quota mensuel.",
-                "note": "Ce plafond est strict. Accepter une offre de plus au-delà de votre limite est refusé tant qu'une des livraisons en cours n'est pas terminée.",
-                "codPoolNote": "* Le montant maximal de paiements à la livraison que vous pouvez avoir sur vous en même temps, toutes agences confondues. Il s'applique une fois votre identité vérifiée ; avant cela, vous ne transportez aucun paiement à la livraison."
+                "note": "Ce plafond est strict. Accepter une offre de plus au-delà de votre limite est refusé tant qu'une des livraisons en cours n'est pas terminée."
             },
             "credits": {
                 "title": "Ce que sont les crédits",
@@ -2469,6 +2470,7 @@
             "addressFallback": "Adresse",
             "defaultAddress": "Par défaut",
             "manageAddresses": "Gérer les adresses",
+            "regionFixCta": "Enregistrer la région et commander",
             "paymentMethod": "Moyen de paiement",
             "cardNote": "Vos coordonnées bancaires vous seront demandées à l'étape suivante, sur le formulaire sécurisé du prestataire de paiement.",
             "codNote": "Vous payez le livreur à la livraison. Nous vous envoyons un code de livraison — ne le donnez au livreur qu'une fois votre colis en main.",
@@ -2829,6 +2831,13 @@
             "city": "Ville",
             "region": "Région (facultatif)",
             "useAsDefault": "Utiliser comme adresse de livraison par défaut"
+        },
+        "regionPicker": {
+            "title": "Dans quelle région se trouve cette adresse ?",
+            "body": "Nous n'avons pas pu associer « {place} » à une région. Choisissez-la dans la liste — les livraisons sont attribuées par région.",
+            "bodyNoPlace": "Nous n'avons pas pu déterminer la région de cette adresse. Choisissez-la dans la liste — les livraisons sont attribuées par région.",
+            "label": "Région",
+            "placeholder": "Choisir une région"
         },
         "paymentMethods": {
             "description": "Enregistrés pour payer plus vite.",

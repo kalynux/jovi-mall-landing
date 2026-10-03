@@ -21,7 +21,6 @@ import { breadcrumbJsonLd, offerCatalogJsonLd } from "@/lib/seo/jsonld";
 import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath } from "@/i18n/routing";
 import {
-  carriesCodPool,
   fetchCreditCatalog,
   fetchPlansByRole,
   getPlanFacts,
@@ -100,8 +99,6 @@ export default async function PricingPage({ params }: PageProps) {
     unavailable: t("plans.unavailable"),
     cta: t("plans.cta"),
     unlimited: t("plans.unlimited"),
-    codPool: (amount: string) => t("plans.codPool", { amount }),
-    noCodPool: t("plans.noCodPool"),
     limitLabels: {
       products: t("plans.limits.products"),
       storage: t("plans.limits.storage"),
@@ -127,7 +124,7 @@ export default async function PricingPage({ params }: PageProps) {
     .filter((plan) => plan.is_active)
     .map((plan) => ({
       name: plan.name,
-      description: describeLimits(plan, copy, num, price),
+      description: describeLimits(plan, copy, num),
       price: plan.price,
       currency: plan.currency,
       category: plan.code,
@@ -183,7 +180,6 @@ export default async function PricingPage({ params }: PageProps) {
       {ROLE_SECTIONS.map(({ role, anchor, accent }, i) => {
         const plans = plansByRole[role];
         const hasUnsoldTier = plans.some((plan) => !plan.is_active);
-        const hasCodPool = plans.some(carriesCodPool);
 
         return (
           <Section
@@ -204,10 +200,6 @@ export default async function PricingPage({ params }: PageProps) {
             </div>
             <div className="mt-6 max-w-2xl space-y-2 text-sm leading-relaxed text-[var(--text-muted)]">
               <p>{t(`pricing.${role}.note`)}</p>
-              {/* The footnote to the asterisked COD line on the agent cards.
-                  Gated like the cards are, so an API that does not send the
-                  pool yet leaves no orphan footnote. */}
-              {hasCodPool && <p>{t("pricing.agent.codPoolNote")}</p>}
               {/* Only claimed when the catalog actually withholds a tier — the
                   moment they go on sale, the sentence disappears on its own. */}
               {hasUnsoldTier && <p>{t("pricing.unsoldTierNote")}</p>}
@@ -282,12 +274,9 @@ export default async function PricingPage({ params }: PageProps) {
 function describeLimits(
   plan: PublicPlan,
   copy: PlanCopy,
-  num: (value: number) => string,
-  price: (value: number, currency: string) => string
+  num: (value: number) => string
 ): string {
   return PLAN_LIMITS[plan.role]
-    .map((spec) => formatLimit(plan, spec, copy, num, price))
-    .filter((line): line is string => line !== null)
-    .map(stripBidiIsolates)
+    .map((spec) => stripBidiIsolates(formatLimit(plan, spec, copy, num)))
     .join(", ");
 }

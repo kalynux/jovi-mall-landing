@@ -628,6 +628,7 @@
         "PAYMENT_ORDER_NOT_FOUND": "O pedido não pôde ser encontrado.",
         "PAYMENT_ORDER_ALREADY_PAID": "Este pedido já foi pago.",
         "PAYMENT_ORDER_IS_COD": "Este pedido é pago em dinheiro na entrega — não há nada a pagar online.",
+        "COD_VENDOR_NOT_ACCEPTED": "Este vendedor não aceita pagamento na entrega. Pague online ou remova esses artigos para manter o pagamento na entrega no resto.",
         "PAYMENT_OPERATOR_UNDETERMINED": "Não conseguimos identificar a operadora deste número. O mobile money funciona com números MTN e Orange nos Camarões.",
         "PAYMENT_CURRENCY_NOT_SUPPORTED": "Este método de pagamento não pode ser usado para esta moeda.",
         "PAYMENT_OTP_NOT_REQUIRED": "Este pagamento não precisa de código. Verifique o pedido de pagamento no seu telemóvel.",
@@ -807,6 +808,7 @@
         "DELIVERY_AGENT_NOT_FOUND": "O entregador não pôde ser encontrado.",
         "CUSTOMER_NOT_FOUND": "A conta do cliente não pôde ser encontrada.",
         "CUSTOMER_ADDRESS_NOT_FOUND": "A morada de entrega não pôde ser encontrada.",
+        "ADDRESS_REGION_INVALID": "Este endereço não está numa região reconhecida. Escolha a região e tente novamente.",
         "ORDER_DELIVERY_ADDRESS_REQUIRED": "Precisamos de um endereço de entrega que possamos localizar antes de finalizar este pedido.",
         "CUSTOMER_PAYMENT_METHOD_NOT_FOUND": "O método de pagamento não pôde ser encontrado.",
         "PAYMENT_METHOD_NOT_FOUND": "Esse método de pagamento já não existe.",
@@ -876,10 +878,12 @@
             "ORDER_DELIVERY_ADDRESS_REQUIRED": "Escolha um endereço de entrega antes de pagar.",
             "ADDRESS_NOT_GEOCODED": "Não conseguimos localizar o endereço que escolheu. Abra-o nos seus endereços e volte a selecioná-lo a partir dos resultados da pesquisa — um endereço escrito à mão não tem coordenadas de entrega.",
             "CUSTOMER_ADDRESS_NOT_FOUND": "Esse endereço de entrega já não está na sua conta. Escolha outro.",
+            "ADDRESS_REGION_INVALID": "Não conseguimos saber em que região fica o seu endereço de entrega. Nada foi encomendado nem cobrado — escolha a região abaixo e voltaremos a fazer a encomenda.",
             "ORDER_CART_EMPTY": "Seu carrinho está vazio.",
             "COD_NOT_AVAILABLE_FOR_DIGITAL": "O pagamento na entrega não está disponível para produtos digitais. Escolha outro método de pagamento.",
             "COD_ORDER_AMOUNT_EXCEEDS_LIMIT": "Este pedido é demasiado grande para pagamento na entrega. Pague online.",
             "COD_AGENCY_NOT_SUPPORTED": "A transportadora deste pedido não aceita pagamento na entrega. Pague online.",
+            "COD_VENDOR_NOT_ACCEPTED": "Os seus artigos {from} não podem ser pagos na entrega: o vendedor não aceita. Pague online ou remova esses artigos para manter o pagamento na entrega no resto — nada foi cobrado.",
             "ORDER_NO_DELIVERY_AGENCY": "Um destes artigos não tem serviço de entrega disponível neste momento. Remova-o e tente novamente.",
             "NEGOTIATION_LOCK_INVALID": "Não encontrámos um preço acordado por chat, por isso nada foi encomendado. Remova esse artigo ou adicione-o ao preço normal e tente novamente.",
             "NEGOTIATION_LOCK_EXPIRED": "Um preço acordado por chat expirou, por isso nada foi encomendado. Escreva ao vendedor para acordar um novo, ou adicione o artigo ao preço normal.",
@@ -974,8 +978,6 @@
             "free": "Grátis",
             "perTerm": "/ {days} {days, plural, one {dia} other {dias}}",
             "unlimited": "Ilimitado",
-            "codPool": "Leve até {amount} em pagamentos na entrega",
-            "noCodPool": "Sem entregas com pagamento na entrega",
             "cta": "Começar",
             "limits": {
                 "products": "produtos ativos",
@@ -1055,8 +1057,7 @@
             "agent": {
                 "title": "Planos para entregadores",
                 "lead": "Mesma ideia das agências: o número é quantas entregas você pode segurar ao mesmo tempo, não uma cota mensal.",
-                "note": "Esse limite é rígido. Aceitar mais uma oferta acima do seu teto é recusado até que uma das entregas em mãos seja concluída.",
-                "codPoolNote": "* O máximo em pagamentos na entrega que você pode ter consigo ao mesmo tempo, somando todas as agências com que trabalha. Vale depois que a sua identidade for verificada; antes disso, você não leva pagamentos na entrega."
+                "note": "Esse limite é rígido. Aceitar mais uma oferta acima do seu teto é recusado até que uma das entregas em mãos seja concluída."
             },
             "credits": {
                 "title": "O que são créditos",
@@ -2469,6 +2470,7 @@
             "addressFallback": "Endereço",
             "defaultAddress": "Predefinido",
             "manageAddresses": "Gerir endereços",
+            "regionFixCta": "Guardar região e encomendar",
             "paymentMethod": "Método de pagamento",
             "cardNote": "Os dados do seu cartão serão pedidos no passo seguinte, no formulário seguro do próprio prestador de pagamento.",
             "codNote": "Paga ao estafeta na entrega. Enviamos-lhe um código de entrega — dê-o ao estafeta apenas quando tiver a sua encomenda.",
@@ -2829,6 +2831,13 @@
             "city": "Cidade",
             "region": "Região (opcional)",
             "useAsDefault": "Usar como o meu endereço de entrega predefinido"
+        },
+        "regionPicker": {
+            "title": "Em que região fica este endereço?",
+            "body": "Não conseguimos associar «{place}» a uma região. Escolha-a na lista — as entregas são atribuídas por região.",
+            "bodyNoPlace": "Não conseguimos saber em que região fica este endereço. Escolha-a na lista — as entregas são atribuídas por região.",
+            "label": "Região",
+            "placeholder": "Escolha uma região"
         },
         "paymentMethods": {
             "description": "Guardados para pagar mais depressa.",

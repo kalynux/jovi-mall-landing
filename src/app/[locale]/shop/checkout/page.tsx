@@ -16,6 +16,7 @@ import { usePaymentOptions } from "@/components/shop/usePaymentOptions";
 import { useSavedPayment } from "@/components/shop/useSavedPayment";
 import { useChargeRefusal } from "@/components/shop/useChargeRefusal";
 import { DeliveryMinimumNotice, fromShop } from "@/components/shop/DeliveryMinimumNotice";
+import { RegionPicker } from "@/components/shop/RegionPicker";
 import { LegalAgreement } from "@/components/legal/LegalLink";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import { ApiError } from "@/lib/auth/auth.types";
@@ -24,6 +25,8 @@ import { lookupMessage, translateError } from "@/lib/auth/error-translator";
 import { useTranslations } from "next-intl";
 import { quoteCart } from "@/lib/shop/cart.api";
 import { checkout } from "@/lib/shop/orders.api";
+import { updateAddress } from "@/lib/shop/addresses.api";
+import { regionInvalidDetails, withRegion } from "@/lib/shop/address-region";
 import { getProfile } from "@/lib/shop/profile.api";
 import {
   getPaymentOptions,
@@ -36,6 +39,7 @@ import { rememberPaymentAttempt } from "@/lib/shop/payment-attempts";
 import { formatMoney } from "@/lib/shop/format";
 import type { CartLine } from "@/lib/shop/shop.types";
 import type {
+  AddressRegionInvalidDetails,
   CartQuote,
   DeliveryMinimumErrorDetails,
   SavedAddress,
@@ -81,6 +85,15 @@ import type {
  * for the payment method passed — and cash on delivery is stricter (checked per
  * agency, with the COD fee), so the quote re-runs when the method changes and
  * the pay button waits while `meetsDeliveryMinimum` is false.
+ *
+ * ── The address's region (2026-10-02) ────────────────────────────────────────
+ *
+ * Checkout refuses a saved address whose `geo` names no region of its country
+ * (`400 ADDRESS_REGION_INVALID`) — agency coverage is matched by region, so it
+ * could never be delivered. The quote does NOT check this; only checkout does.
+ * The body here carries `deliveryAddressId`, not an address, so the fix is an
+ * edit of that saved address (`PATCH /addresses/:id` with the picked region's
+ * key in `geo.components.region`) and then the same checkout again.
  */
 
 function addressLine(address: SavedAddress): string {
@@ -119,6 +132,12 @@ export default function CheckoutPage() {
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  /** A checkout refused with `ADDRESS_REGION_INVALID`, and the saved address to fix. */
+  const [regionFix, setRegionFix] = useState<{
+    details: AddressRegionInvalidDetails;
+    addressId: string;
+  } | null>(null);
+  const [fixingRegion, setFixingRegion] = useState(false);
 
   const isDigital = productType === "digital";
   const online = usePaymentOptions(status === "authenticated");
@@ -236,6 +255,7 @@ export default function CheckoutPage() {
     if (!option) return;
     const charge = chargeRequest(option, phone);
     setError(null);
+    setRegionFix(null);
     setPlacing(true);
 
     // Is the chosen provider still offered? Asked here, before any order
@@ -329,6 +349,11 @@ export default function CheckoutPage() {
       // changed server-side, so re-read it rather than leaving a stale view.
       void refresh();
       setError(checkoutError(tCheckout, tErrors, err, tMinimum, lines));
+      // The backend names the saved address it checked — the chosen one, or the
+      // default it fell back to — so `addressId` is the selection only as a guard.
+      const region = regionInvalidDetails(err);
+      const culprit = region?.addressId ?? addressId;
+      if (region && culprit) setRegionFix({ details: region, addressId: culprit });
     }
   }, [
     online,
@@ -347,6 +372,34 @@ export default function CheckoutPage() {
     tCheckout,
     tErrors,
   ]);
+
+  /**
+   * Save the picked region on the refused saved address, then place the order
+   * again. A saved address with no `geo` is never region-checked, so `geo` is
+   * there in practice; without it the only way out is the addresses page.
+   */
+  const fixRegionAndRetry = async (regionKey: string) => {
+    if (!regionFix) return;
+    const target = addresses.find((a) => a._id === regionFix.addressId);
+    if (!target?.geo) {
+      router.push("/shop/account/addresses");
+      return;
+    }
+    setFixingRegion(true);
+    try {
+      const profile = await updateAddress(target._id, { geo: withRegion(target.geo, regionKey) });
+      // Shown as returned — the server writes the canonical name ("Centre").
+      setAddresses(profile.savedAddresses ?? []);
+      setRegionFix(null);
+      setFixingRegion(false);
+      await placeOrder();
+    } catch (err: unknown) {
+      setFixingRegion(false);
+      setError(translateError(tErrors, err, tCheckout("GENERIC")));
+      const region = regionInvalidDetails(err);
+      if (region) setRegionFix({ details: region, addressId: target._id });
+    }
+  };
 
   // `payForm.ready` joins the gate rather than getting a spinner of its own: the
   // picker must not mount before the saved wallet has landed in the field, or
@@ -416,6 +469,31 @@ export default function CheckoutPage() {
         </div>
       )}
 
+      {regionFix && (
+        <RegionPicker
+          details={regionFix.details}
+          confirmLabel={t("regionFixCta")}
+          busy={fixingRegion || placing}
+          onConfirm={(key) => void fixRegionAndRetry(key)}
+        >
+          <button
+            type="button"
+            onClick={() => router.push("/shop/account/addresses")}
+            style={{
+              border: "none",
+              background: "none",
+              color: "var(--brand-hover)",
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: "pointer",
+              padding: "4px 0",
+            }}
+          >
+            {t("manageAddresses")}
+          </button>
+        </RegionPicker>
+      )}
+
       {/* Address */}
       {needsAddress && (
         <>
@@ -444,7 +522,11 @@ export default function CheckoutPage() {
               {addresses.map((address) => (
                 <button
                   key={address._id}
-                  onClick={() => setAddressId(address._id)}
+                  onClick={() => {
+                    setAddressId(address._id);
+                    // The region refusal was about the previous choice.
+                    if (regionFix && regionFix.addressId !== address._id) setRegionFix(null);
+                  }}
                   style={{
                     display: "flex",
                     alignItems: "flex-start",
@@ -735,6 +817,14 @@ function checkoutError(
 
   if (error.code === "ORDER_BELOW_DELIVERY_MINIMUM") {
     return deliveryMinimumProblem(tCheckout, tMinimum, error, lines);
+  }
+
+  // The shop has switched cash on delivery off, so retrying COD will never pass.
+  // Naming the shop is what lets the shopper keep COD for everyone else's items.
+  if (error.code === "COD_VENDOR_NOT_ACCEPTED") {
+    const vendorId = (error.details as { vendorId?: string } | undefined)?.vendorId;
+    const from = vendorId ? fromShop(tMinimum, vendorId, lines) : tMinimum("fromThisSeller");
+    return tCheckout("COD_VENDOR_NOT_ACCEPTED", { from });
   }
 
   const scoped = lookupMessage(tCheckout, error.code);

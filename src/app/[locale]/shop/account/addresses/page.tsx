@@ -21,7 +21,11 @@ import { getProfile } from "@/lib/shop/profile.api";
 import { useApiResource } from "@/lib/shop/useApiResource";
 import { IS_NATIVE_BUILD } from "@/lib/platform";
 import { UseMyLocation } from "@/components/shop/account/UseMyLocation";
+import { RegionPicker } from "@/components/shop/RegionPicker";
+import { regionInvalidDetails, withRegion } from "@/lib/shop/address-region";
 import type {
+  AddAddressPayload,
+  AddressRegionInvalidDetails,
   CustomerProfile,
   GeoCandidate,
   SavedAddress,
@@ -253,6 +257,14 @@ function AddAddressSheet({
   const [state, setState] = useState("");
   const [isDefault, setIsDefault] = useState(false);
   const [saving, setSaving] = useState(false);
+  /**
+   * A save refused with `ADDRESS_REGION_INVALID`, and the exact payload that was
+   * refused: the picker resends THAT, with only `geo.components.region` changed.
+   */
+  const [regionFix, setRegionFix] = useState<{
+    details: AddressRegionInvalidDetails;
+    payload: AddAddressPayload;
+  } | null>(null);
 
   const { flashError } = useToast();
   const tError = useTranslations("errors");
@@ -261,6 +273,8 @@ function AddAddressSheet({
   const onQueryChange = (value: string) => {
     setQuery(value);
     setPicked(null);
+    // A new search is a new `geo`; the refused one's region no longer applies.
+    setRegionFix(null);
     if (debounce.current) clearTimeout(debounce.current);
     if (value.trim().length < 3) {
       setResults([]);
@@ -282,6 +296,7 @@ function AddAddressSheet({
 
   const pick = (c: GeoCandidate) => {
     setPicked(c);
+    setRegionFix(null);
     setResults([]);
     setQuery(c.formatted_address);
     // Prefill from the structured components so the stored text and the
@@ -301,35 +316,53 @@ function AddAddressSheet({
     setCity("");
     setState("");
     setIsDefault(false);
+    setRegionFix(null);
   };
 
   const canSave = label.trim().length > 0 && line1.trim().length > 0 && city.trim().length > 0;
 
-  const save = async () => {
-    if (!canSave) return;
+  const submit = async (payload: AddAddressPayload) => {
     setSaving(true);
     try {
-      const next = await addAddress({
-        label: label.trim(),
-        address_line1: line1.trim(),
-        // Clearable fields: `null` clears, omitting leaves alone. On a create
-        // there is nothing to leave alone, so an empty box means "not set".
-        address_line2: line2.trim() || null,
-        city: city.trim(),
-        state: state.trim() || null,
-        country: picked?.components.country_code ?? "CM",
-        is_default: isDefault,
-        geo: picked
-          ? { ...picked, raw_input: query.trim() || null }
-          : null,
-      });
+      const next = await addAddress(payload);
       reset();
       onAdded(next);
     } catch (err) {
+      // Only an address with `geo` is region-checked, so `payload.geo` is there
+      // whenever this fires — the guard is for the type, not a real branch.
+      // The toast is still raised for it: the picker sits at the top of the
+      // sheet, and the button that was pressed is in the footer.
+      const details = regionInvalidDetails(err);
+      if (details && payload.geo) setRegionFix({ details, payload });
       flashError(translateError(tError, err, t("saveError")));
     } finally {
       setSaving(false);
     }
+  };
+
+  /** Resend the refused request with the picked region's key. */
+  const saveWithRegion = (regionKey: string) => {
+    if (!regionFix?.payload.geo) return;
+    void submit({ ...regionFix.payload, geo: withRegion(regionFix.payload.geo, regionKey) });
+  };
+
+  const save = async () => {
+    if (!canSave) return;
+    setRegionFix(null);
+    await submit({
+      label: label.trim(),
+      address_line1: line1.trim(),
+      // Clearable fields: `null` clears, omitting leaves alone. On a create
+      // there is nothing to leave alone, so an empty box means "not set".
+      address_line2: line2.trim() || null,
+      city: city.trim(),
+      state: state.trim() || null,
+      country: picked?.components.country_code ?? "CM",
+      is_default: isDefault,
+      geo: picked
+        ? { ...picked, raw_input: query.trim() || null }
+        : null,
+    });
   };
 
   return (
@@ -348,6 +381,15 @@ function AddAddressSheet({
         </div>
       }
     >
+      {regionFix && (
+        <RegionPicker
+          details={regionFix.details}
+          confirmLabel={t("saveCta")}
+          busy={saving}
+          onConfirm={saveWithRegion}
+        />
+      )}
+
       <Field label={t("labelField")}>
         <input
           className="field"

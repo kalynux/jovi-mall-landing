@@ -786,6 +786,31 @@ export interface DeliveryMinimumErrorDetails {
   currency: string;
 }
 
+/** One of a country's regions, as `ADDRESS_REGION_INVALID` lists them. */
+export interface AllowedRegion {
+  /** What to send back as `geo.components.region`, e.g. `"far_north"`. */
+  key: string;
+  /** Only `en` and `fr` are written; other locales fall back to `en`. */
+  name: { en: string; fr: string };
+}
+
+/**
+ * `details` of `400 ADDRESS_REGION_INVALID` (2026-10-02,
+ * `api-doc/customer/profile.md` → Region). Neither `geo.components.region` nor
+ * the city names a region of the address's country. Raised by
+ * `POST`/`PATCH /customer/addresses` and by checkout; only an address with
+ * `geo` is checked.
+ */
+export interface AddressRegionInvalidDetails {
+  /** What was sent, so the copy can quote it. */
+  region: string | null;
+  city: string | null;
+  countryCode: string;
+  /** Present when a SAVED address is the culprit: a PATCH, or checkout. */
+  addressId?: string;
+  allowedRegions: AllowedRegion[];
+}
+
 /**
  * `POST /api/customer/cart/quote`.
  *

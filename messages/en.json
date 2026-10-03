@@ -628,6 +628,7 @@
         "PAYMENT_ORDER_NOT_FOUND": "The order could not be found.",
         "PAYMENT_ORDER_ALREADY_PAID": "This order has already been paid.",
         "PAYMENT_ORDER_IS_COD": "This order is paid in cash on delivery — there is nothing to pay online.",
+        "COD_VENDOR_NOT_ACCEPTED": "This seller doesn't accept cash on delivery. Pay online, or remove their items to keep cash on delivery for the rest.",
         "PAYMENT_OPERATOR_UNDETERMINED": "We could not tell which mobile network this number is on. Mobile money works on MTN and Orange numbers in Cameroon.",
         "PAYMENT_CURRENCY_NOT_SUPPORTED": "This payment method cannot be used for this currency.",
         "PAYMENT_OTP_NOT_REQUIRED": "This payment does not need a code. Check your phone for the payment prompt.",
@@ -807,6 +808,7 @@
         "DELIVERY_AGENT_NOT_FOUND": "The delivery agent could not be found.",
         "CUSTOMER_NOT_FOUND": "The customer account could not be found.",
         "CUSTOMER_ADDRESS_NOT_FOUND": "The delivery address could not be found.",
+        "ADDRESS_REGION_INVALID": "This address isn't in a region we recognise. Pick its region and try again.",
         "ORDER_DELIVERY_ADDRESS_REQUIRED": "We need a delivery address we can locate before this order can be placed.",
         "CUSTOMER_PAYMENT_METHOD_NOT_FOUND": "The payment method could not be found.",
         "PAYMENT_METHOD_NOT_FOUND": "That payment method no longer exists.",
@@ -876,10 +878,12 @@
             "ORDER_DELIVERY_ADDRESS_REQUIRED": "Choose a delivery address before paying.",
             "ADDRESS_NOT_GEOCODED": "We cannot locate the address you chose. Open it in your addresses and re-pick it from the search results — a typed address has no coordinates to deliver to.",
             "CUSTOMER_ADDRESS_NOT_FOUND": "That delivery address is no longer on your account. Choose another one.",
+            "ADDRESS_REGION_INVALID": "We couldn't tell which region your delivery address is in. Nothing was ordered and nothing was charged — pick its region below and we'll place the order again.",
             "ORDER_CART_EMPTY": "Your cart is empty.",
             "COD_NOT_AVAILABLE_FOR_DIGITAL": "Cash on delivery is not available for digital products. Choose another payment method.",
             "COD_ORDER_AMOUNT_EXCEEDS_LIMIT": "This order is too large for cash on delivery. Please pay online instead.",
             "COD_AGENCY_NOT_SUPPORTED": "The courier for this order does not handle cash on delivery. Please pay online instead.",
+            "COD_VENDOR_NOT_ACCEPTED": "Your items {from} can't be paid cash on delivery — the seller doesn't accept it. Pay online, or remove their items to keep cash on delivery for the rest. Nothing was charged.",
             "ORDER_NO_DELIVERY_AGENCY": "One of these items has no delivery service available right now. Remove it and try again.",
             "NEGOTIATION_LOCK_INVALID": "A price you agreed in chat could not be found, so nothing was ordered. Remove that item or add it at its normal price, then try again.",
             "NEGOTIATION_LOCK_EXPIRED": "A price you agreed in chat has expired, so nothing was ordered. Message the seller to agree a new one, or add the item at its normal price.",
@@ -974,8 +978,6 @@
             "free": "Free",
             "perTerm": "/ {days} {days, plural, one {day} other {days}}",
             "unlimited": "Unlimited",
-            "codPool": "Carry up to {amount} in cash-on-delivery payments",
-            "noCodPool": "No cash-on-delivery runs",
             "cta": "Get started",
             "limits": {
                 "products": "active products",
@@ -1055,8 +1057,7 @@
             "agent": {
                 "title": "Delivery agent plans",
                 "lead": "Same idea as agencies: the number is how many deliveries you can be holding at any one moment, not a monthly quota.",
-                "note": "This cap is hard. Accepting one more offer past your ceiling is refused until one of the deliveries you are holding is finished.",
-                "codPoolNote": "* The most cash-on-delivery money you can hold at once, across every agency you work with. It applies once your identity has been verified; before that, you carry no cash-on-delivery payments."
+                "note": "This cap is hard. Accepting one more offer past your ceiling is refused until one of the deliveries you are holding is finished."
             },
             "credits": {
                 "title": "What credits are",
@@ -2469,6 +2470,7 @@
             "addressFallback": "Address",
             "defaultAddress": "Default",
             "manageAddresses": "Manage addresses",
+            "regionFixCta": "Save region and place order",
             "paymentMethod": "Payment method",
             "cardNote": "You will be asked for your card details on the next step, on the payment provider’s own secure form.",
             "codNote": "You pay the courier on delivery. We send you a delivery code — give it to the courier only once you have your parcel.",
@@ -2829,6 +2831,13 @@
             "city": "City",
             "region": "Region (optional)",
             "useAsDefault": "Use as my default delivery address"
+        },
+        "regionPicker": {
+            "title": "Which region is this address in?",
+            "body": "We couldn't match “{place}” to a region. Pick it from the list — deliveries are assigned by region.",
+            "bodyNoPlace": "We couldn't tell which region this address is in. Pick it from the list — deliveries are assigned by region.",
+            "label": "Region",
+            "placeholder": "Choose a region"
         },
         "paymentMethods": {
             "description": "Saved for faster checkout.",

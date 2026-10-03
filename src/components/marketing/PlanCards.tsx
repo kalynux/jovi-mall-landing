@@ -1,13 +1,7 @@
 import RoleCtaButton from "@/components/ui/RoleCtaButton";
 import { cn } from "@/lib/utils";
 import { bytesToGb } from "@/lib/marketing/format";
-import {
-  carriesCodPool,
-  COD_POOL_CURRENCY,
-  PLAN_LIMITS,
-  type LimitSpec,
-  type PublicPlan,
-} from "@/lib/marketing/plans.api";
+import { PLAN_LIMITS, type LimitSpec, type PublicPlan } from "@/lib/marketing/plans.api";
 
 /**
  * One role's tier cards, rendered straight from the public catalog.
@@ -38,31 +32,21 @@ export type PlanCopy = {
   unavailable: string;
   cta: string;
   unlimited: string;
-  /** The agent COD-pool line. A sentence around the amount, not a label after it. */
-  codPool: (amount: string) => string;
-  noCodPool: string;
 };
 
 /**
- * One limit line, or `null` when there is nothing true to say.
+ * One limit line.
  *
  * Exported for the pricing page's structured data, which must describe a plan
- * exactly as its card does. A second formatter there is how a `null` COD pool
- * would come out as "unlimited".
+ * exactly as its card does.
  */
 export function formatLimit(
   plan: PublicPlan,
   spec: LimitSpec,
   copy: PlanCopy,
-  formatNumber: (value: number) => string,
-  formatPrice: (value: number, currency: string) => string
-): string | null {
+  formatNumber: (value: number) => string
+): string {
   const raw = plan[spec.field];
-
-  // Before the generic null check, never after it: this is the one limit where
-  // `null` means none rather than unbounded.
-  if (spec.format === "codPool") return formatCodPool(raw, copy, formatPrice);
-
   const label = copy.limitLabels[spec.key] ?? spec.key;
   const value = typeof raw === "number" ? raw : null;
 
@@ -80,23 +64,6 @@ export function formatLimit(
   }
 }
 
-/**
- * Deliberately not `formatLimit`'s null handling — api-doc/public/FRONTEND-
- * CHANGELOG-cod-pool.md says not to share one. `null` is no cash on delivery,
- * and so is `0`: the backend reads an unset pool as a zero ceiling.
- */
-function formatCodPool(
-  raw: PublicPlan[keyof PublicPlan] | undefined,
-  copy: PlanCopy,
-  formatPrice: (value: number, currency: string) => string
-): string | null {
-  // An API from before 2026-09-21 does not send the key. Saying nothing is
-  // true there; "no cash on delivery" would not be.
-  if (raw === undefined) return null;
-  if (typeof raw !== "number" || raw <= 0) return copy.noCodPool;
-  return copy.codPool(formatPrice(raw, COD_POOL_CURRENCY));
-}
-
 export function PlanCard({
   plan,
   copy,
@@ -111,13 +78,10 @@ export function PlanCard({
   highlight?: boolean;
 }) {
   const isFree = plan.price === 0;
-  const limits = PLAN_LIMITS[plan.role].flatMap((spec) => {
-    const text = formatLimit(plan, spec, copy, formatNumber, formatPrice);
-    return text === null ? [] : [{ spec, text }];
-  });
-  // The footnote under the agent grid ("once your identity is verified")
-  // qualifies the amount, so only a stated amount carries its marker.
-  const codPoolMarked = carriesCodPool(plan);
+  const limits = PLAN_LIMITS[plan.role].map((spec) => ({
+    spec,
+    text: formatLimit(plan, spec, copy, formatNumber),
+  }));
 
   return (
     <div
@@ -189,10 +153,7 @@ export function PlanCard({
               aria-hidden="true"
               className="mt-[7px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-role"
             />
-            <span>
-              {text}
-              {spec.format === "codPool" && codPoolMarked && <span aria-hidden="true">*</span>}
-            </span>
+            <span>{text}</span>
           </li>
         ))}
       </ul>

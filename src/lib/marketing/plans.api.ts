@@ -53,12 +53,10 @@ export type PublicPlan = {
   commission_percent: number | null;
   max_unterminated_shipments: number | null;
   /**
-   * Agent plans only: the cash-on-delivery money, in XAF, an agent on this tier
-   * may carry once their identity is verified. ⚠ `null` means **no** COD, the
-   * opposite of every other limit here. See `PLAN_LIMITS`.
-   *
-   * Optional because it was published on 2026-09-21, and an API older than that
-   * omits the key entirely. Absent means "not told", never "none".
+   * Agent plans only, and ⚠ **dormant since 2026-10-02**: every verified agent
+   * carries the same 500 000 XAF whatever their plan, so this is never shown as
+   * a plan benefit (api-doc/public/FRONTEND-CHANGELOG-cod-pool.md). Kept on the
+   * type only because the API still sends it.
    */
   max_cod_pool?: number | null;
   live_tracking_enabled: boolean;
@@ -95,18 +93,15 @@ export type CreditCatalog = {
  * that list `null` means unlimited. A field a role does not use is simply absent
  * from its list and never reaches the formatter.
  *
- * ⚠ **Except the COD pool, which fails closed.** An agent plan with
- * `max_cod_pool: null` carries no cash at all, because it is cash. So it has
- * its own `format`, and the card formats it without ever reaching the
- * "unlimited" branch.
+ * `max_cod_pool` is deliberately absent from the agent list: it went dormant on
+ * 2026-10-02, when the COD ceiling stopped depending on the plan.
  *
- * `key` resolves to `pages.plans.limits.<key>` for the label, except `codPool`,
- * whose line is a whole sentence (`pages.plans.codPool`).
+ * `key` resolves to `pages.plans.limits.<key>` for the label.
  */
 export type LimitSpec = {
   key: string;
   field: keyof PublicPlan;
-  format: "count" | "bytes" | "percent" | "codPool";
+  format: "count" | "bytes" | "percent";
 };
 
 export const PLAN_LIMITS: Record<PlanRole, LimitSpec[]> = {
@@ -123,31 +118,10 @@ export const PLAN_LIMITS: Record<PlanRole, LimitSpec[]> = {
   ],
   agent: [
     { key: "concurrentDeliveries", field: "max_unterminated_shipments", format: "count" },
-    // Beside the delivery cap, as api-doc/public/FRONTEND-CHANGELOG-cod-pool.md asks.
-    { key: "codPool", field: "max_cod_pool", format: "codPool" },
     { key: "storage", field: "max_storage_bytes", format: "bytes" },
     { key: "credits", field: "credit_allowance", format: "count" },
   ],
 };
-
-/**
- * The pool is XAF by contract, not in the plan's `currency`. That field prices
- * the plan; a plan priced in another currency would still cap cash in XAF.
- */
-export const COD_POOL_CURRENCY = "XAF";
-
-/**
- * Whether a card states a COD amount, and so whether the identity-verification
- * footnote has anything to qualify. Gated on the role's own list, so a stray
- * number on a vendor plan cannot put the footnote under the vendor cards.
- */
-export function carriesCodPool(plan: PublicPlan): boolean {
-  return (
-    PLAN_LIMITS[plan.role].some((spec) => spec.format === "codPool") &&
-    typeof plan.max_cod_pool === "number" &&
-    plan.max_cod_pool > 0
-  );
-}
 
 /* ─── Fetching ────────────────────────────────────────────────────────────── */
 
