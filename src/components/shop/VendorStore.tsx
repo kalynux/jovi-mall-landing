@@ -18,6 +18,8 @@ import {
 } from "@/components/shop/ds";
 import { useCart, useFavorites, useToast } from "@/components/shop/providers";
 import { CART_OFFLINE_MESSAGE_KEY } from "@/lib/shop/cart-errors";
+import { deliveryTermsOf, promisesFreeDelivery } from "@/lib/shop/delivery";
+import { formatMoney } from "@/lib/shop/format";
 import { useShopPageTitle } from "@/components/shop/ShopChrome";
 import { resolveQuickAdd } from "@/lib/shop/quick-add";
 import { productPathFor, storePath } from "@/lib/shop/shop.routes";
@@ -146,7 +148,8 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
       compareAt={item.compareAtPrice}
       currency={item.currency}
       priceRange={item.priceRange}
-      freeDelivery={item.freeDelivery}
+      category={item.categories[0]?.name}
+      deliveryTerms={deliveryTermsOf(item)}
       inStock={item.inStock}
       negotiable={item.negotiable}
       productId={item.id}
@@ -158,6 +161,7 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
   );
 
   const where = [store.city, store.country].filter(Boolean).join(", ");
+  const storeTerms = store.deliveryTerms ?? null;
 
   return (
     <div>
@@ -226,6 +230,20 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
             <span className="muted">
               {t("sellingSince", { year: new Date(store.memberSince).getFullYear() })}
             </span>
+            {/* The shop's own delivery terms (ADR-A11). A shop that charges
+                delivery says nothing here — the fee is the delivery company's
+                and depends on the basket and the address. The store read
+                carries no currency, so the shop's products lend theirs. */}
+            {promisesFreeDelivery(storeTerms) && (
+              <span className="muted" style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+                <Icon name="truck" size={13} />
+                {storeTerms.mode === "always"
+                  ? t("freeDelivery")
+                  : t("freeDeliveryFrom", {
+                      amount: formatMoney(storeTerms.freeAboveAmount ?? 0, products[0]?.currency ?? "XAF"),
+                    })}
+              </span>
+            )}
           </div>
 
           {store.description && (

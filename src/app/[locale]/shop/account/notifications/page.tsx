@@ -52,6 +52,7 @@ const AGGREGATE_ICON: Record<NotificationAggregate, IconName> = {
   payment: "wallet",
   booking: "calendar-clock",
   ticket: "life-buoy",
+  account: "user-x",
 };
 
 export default function NotificationsPage() {

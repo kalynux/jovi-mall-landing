@@ -16,6 +16,7 @@ import { usePaymentOptions } from "@/components/shop/usePaymentOptions";
 import { useSavedPayment } from "@/components/shop/useSavedPayment";
 import { useChargeRefusal } from "@/components/shop/useChargeRefusal";
 import { DeliveryMinimumNotice, fromShop } from "@/components/shop/DeliveryMinimumNotice";
+import { DeliveryQuoteLines } from "@/components/shop/DeliveryQuoteLines";
 import { RegionPicker } from "@/components/shop/RegionPicker";
 import { LegalAgreement } from "@/components/legal/LegalLink";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
@@ -94,6 +95,19 @@ import type {
  * The body here carries `deliveryAddressId`, not an address, so the fix is an
  * edit of that saved address (`PATCH /addresses/:id` with the picked region's
  * key in `geo.components.region`) and then the same checkout again.
+ *
+ * ── Customer-paid delivery (ADR-A11, 2026-10-04) ─────────────────────────────
+ *
+ * A shop may now charge delivery, and the quote's `total` includes it — the
+ * summary draws one delivery line per shop and that `total`, and adds nothing up
+ * itself. The fee's out-of-region part depends on the address, which is one more
+ * reason the quote re-runs when the address changes.
+ *
+ * Where every carrying company accepts it, an online checkout may pay the items
+ * now and hand the delivery fee to the rider in cash (`deliveryFeeCash` on the
+ * quote, `deliveryFeePayment: "cash_to_rider"` on checkout). Both amounts are the
+ * quote's. The field is sent only when chosen, so an API that predates it never
+ * sees a key it does not know.
  */
 
 function addressLine(address: SavedAddress): string {
@@ -124,6 +138,7 @@ export default function CheckoutPage() {
   const t = useTranslations("shop.checkout");
   const tKey = useTranslations();
   const tMinimum = useTranslations("shop.deliveryMinimum");
+  const tDelivery = useTranslations("shop.delivery");
   const tProvider = useTranslations("shop.payProvider");
 
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
@@ -138,6 +153,10 @@ export default function CheckoutPage() {
     addressId: string;
   } | null>(null);
   const [fixingRegion, setFixingRegion] = useState(false);
+  /** The shopper chose to hand the delivery fee to the rider in cash. */
+  const [cashToRider, setCashToRider] = useState(false);
+  /** Bumped to re-quote when checkout refuses what the last quote offered. */
+  const [quoteNonce, setQuoteNonce] = useState(0);
 
   const isDigital = productType === "digital";
   const online = usePaymentOptions(status === "authenticated");
@@ -230,7 +249,19 @@ export default function CheckoutPage() {
     return () => {
       cancelled = true;
     };
-  }, [status, addressId, count, needsAddress, isCod, tCheckout]);
+  }, [status, addressId, count, needsAddress, isCod, tCheckout, quoteNonce]);
+
+  /**
+   * The cash-for-delivery offer, from a quote for the method on screen. Priced
+   * on the online method, so it is read only while online is picked — a quote
+   * still in flight for COD must not offer it.
+   */
+  const cashOffer =
+    !isCod && quote?.paymentMethod === "online" && quote.deliveryFeeCash?.available
+      ? quote.deliveryFeeCash
+      : null;
+  /** What is actually being asked for: the choice, while it is still on offer. */
+  const payDeliveryInCash = cashToRider && cashOffer !== null;
 
   /* ── Empty cart ────────────────────────────────────────────────────────── */
 
@@ -279,6 +310,7 @@ export default function CheckoutPage() {
       const result = await checkout({
         paymentMethod: isCod ? "cash_on_delivery" : "online",
         ...(needsAddress && addressId ? { deliveryAddressId: addressId } : {}),
+        ...(payDeliveryInCash ? { deliveryFeePayment: "cash_to_rider" as const } : {}),
       });
 
       // The cart is cleared server-side on success; drop the local mirror so the
@@ -302,6 +334,9 @@ export default function CheckoutPage() {
         group: result.cartId,
         transaction: payment.transactionId,
       });
+      // The delivery fee is still to hand over in cash; the success screen
+      // says so, and the order carries the amount and the delivery code.
+      if (payDeliveryInCash) params.set("rider", "1");
       // The answer decides the next screen — never which company carries the
       // money. A card goes to the hosted page that confirms it; a code step or
       // a page to open is shown by the success screen, which also polls.
@@ -340,6 +375,7 @@ export default function CheckoutPage() {
       // redirect and dropped the shopper on /shop/cart with nothing said.)
       if (placedGroup) {
         const params = new URLSearchParams({ group: placedGroup, failed: "1" });
+        if (payDeliveryInCash) params.set("rider", "1");
         params.set("reason", refusal(err) ?? translateError(tErrors, err, tCheckout("GENERIC")));
         router.push(`/shop/checkout/success?${params}`);
         return;
@@ -349,6 +385,13 @@ export default function CheckoutPage() {
       // changed server-side, so re-read it rather than leaving a stale view.
       void refresh();
       setError(checkoutError(tCheckout, tErrors, err, tMinimum, lines));
+      // A carrying company stopped taking the fee in cash since the quote (or
+      // the basket changed). Nothing was created: fall back to paying delivery
+      // with the order, and re-quote so the screen shows what is on offer now.
+      if (err instanceof ApiError && err.code === "DELIVERY_FEE_CASH_NOT_AVAILABLE") {
+        setCashToRider(false);
+        setQuoteNonce((n) => n + 1);
+      }
       // The backend names the saved address it checked — the chosen one, or the
       // default it fell back to — so `addressId` is the selection only as a guard.
       const region = regionInvalidDetails(err);
@@ -360,6 +403,7 @@ export default function CheckoutPage() {
     tProvider,
     refusal,
     isCod,
+    payDeliveryInCash,
     needsAddress,
     addressId,
     lines,
@@ -432,6 +476,14 @@ export default function CheckoutPage() {
 
   const currency = quote?.currency ?? lines[0]?.currency ?? "XAF";
   const total = quote?.total ?? lines.reduce((sum, l) => sum + l.price * l.qty, 0);
+  /**
+   * Without a quote a physical cart's delivery is unknown, so the local sum is
+   * only a total BEFORE delivery — labelled as one, and kept off the pay button,
+   * which must name the figure that will actually be charged.
+   */
+  const totalKnown = quote !== null || isDigital;
+  /** What the pay button charges now: the items only when the fee goes to the rider. */
+  const dueNow = payDeliveryInCash && cashOffer ? cashOffer.amountDueOnline : total;
   const phoneOk = option !== null && paymentReady(option, phone);
   const addressOk = !needsAddress || Boolean(addressId);
   // Only a quote for the method on screen counts: a switch to COD re-quotes,
@@ -440,7 +492,9 @@ export default function CheckoutPage() {
     quote !== null &&
     quote.paymentMethod === (isCod ? "cash_on_delivery" : "online") &&
     quote.meetsDeliveryMinimum === false;
-  const canPay = phoneOk && addressOk && !shortOfMinimum && !placing;
+  // `totalKnown` joins the gate since delivery can cost something: an order is
+  // never placed against a total the screen did not show.
+  const canPay = phoneOk && addressOk && totalKnown && !shortOfMinimum && !placing;
 
   return (
     <div className="mx-auto max-w-[760px] px-4 py-6 sm:px-6">
@@ -612,6 +666,43 @@ export default function CheckoutPage() {
         </p>
       )}
 
+      {/* Items online now, the delivery fee in cash to the rider — offered only
+          while the quote says every carrying company accepts it. */}
+      {cashOffer && (
+        <label
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 11,
+            padding: 13,
+            marginBottom: 20,
+            borderRadius: "var(--radius-md)",
+            cursor: placing ? "default" : "pointer",
+            background: "var(--surface)",
+            border: payDeliveryInCash ? "1.5px solid var(--brand)" : "1.5px solid var(--border)",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={payDeliveryInCash}
+            disabled={placing}
+            onChange={(e) => setCashToRider(e.target.checked)}
+            style={{ marginTop: 3, accentColor: "var(--brand)", width: 16, height: 16, flexShrink: 0 }}
+          />
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: "block", fontWeight: 700, fontSize: 14, color: "var(--text-strong)" }}>
+              {tDelivery("cashToRider")}
+            </span>
+            <span className="muted" style={{ display: "block", fontSize: 12.5, lineHeight: 1.5, marginTop: 2 }}>
+              {tDelivery("cashToRiderBody", {
+                online: formatMoney(cashOffer.amountDueOnline, currency),
+                cash: formatMoney(cashOffer.amountDueToRider, currency),
+              })}
+            </span>
+          </span>
+        </label>
+      )}
+
       {/* Summary */}
       <p className="ds-overline" style={{ marginBottom: 8 }}>
         {t("orderSummary")}
@@ -643,27 +734,29 @@ export default function CheckoutPage() {
 
         <div style={{ borderTop: "1px solid var(--border-subtle)", marginTop: 8, paddingTop: 8 }}>
           <SummaryRow label={t("subtotal")} value={formatMoney(quote?.subtotal ?? total, currency)} />
-          {!isDigital && (
-            <SummaryRow
-              label={t("delivery")}
-              value={
-                <span style={{ color: "var(--success)", fontWeight: 700 }}>
-                  {t("deliveryIncluded")}
-                </span>
-              }
-            />
+          {/* One line per shop, already inside the quote's `total`. */}
+          {!isDigital &&
+            (quote ? (
+              <DeliveryQuoteLines quote={quote} lines={lines} compact />
+            ) : (
+              <SummaryRow
+                label={t("delivery")}
+                value={<span className="muted">{tDelivery("calculating")}</span>}
+              />
+            ))}
+          <SummaryRow
+            label={totalKnown ? t("total") : tDelivery("totalBeforeDelivery")}
+            value={formatMoney(total, currency)}
+            strong
+          />
+          {payDeliveryInCash && cashOffer && (
+            <>
+              <SummaryRow label={tDelivery("payNow")} value={formatMoney(cashOffer.amountDueOnline, currency)} />
+              <SummaryRow label={tDelivery("cashForRider")} value={formatMoney(cashOffer.amountDueToRider, currency)} />
+            </>
           )}
-          <SummaryRow label={t("total")} value={formatMoney(total, currency)} strong />
         </div>
       </div>
-
-      {quote?.absorbedByVendor ? (
-        <p className="muted" style={{ fontSize: 12, marginBottom: 8 }}>
-          {t("vendorCoversDelivery", {
-            amount: formatMoney(quote.absorbedByVendor, currency),
-          })}
-        </p>
-      ) : null}
 
       {quote && quote.perVendor.length > 1 && (
         <div style={{ display: "flex", gap: 7, marginTop: 8, marginBottom: 20 }}>
@@ -683,10 +776,10 @@ export default function CheckoutPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 11.5, color: "var(--text-muted)", fontWeight: 600 }}>
-              {t("total")}
+              {payDeliveryInCash ? tDelivery("payNow") : totalKnown ? t("total") : tDelivery("totalBeforeDelivery")}
             </div>
             <div style={{ fontSize: 20, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
-              {formatMoney(total, currency)}
+              {formatMoney(dueNow, currency)}
             </div>
           </div>
           {option && (
@@ -702,15 +795,17 @@ export default function CheckoutPage() {
                   ? t("enterValidNumber")
                   : shortOfMinimum
                     ? tMinimum("buttonHint")
-                    : undefined
+                    : !totalKnown
+                      ? tDelivery("calculating")
+                      : undefined
             }
             onClick={() => void placeOrder()}
           >
             {placing
               ? t("placing")
-              : isCod
+              : isCod || !totalKnown
                 ? t("placeOrder")
-                : t("payAmount", { amount: formatMoney(total, currency) })}
+                : t("payAmount", { amount: formatMoney(dueNow, currency) })}
           </Button>
           )}
         </div>

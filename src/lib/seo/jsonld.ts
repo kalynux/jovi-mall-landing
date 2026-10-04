@@ -463,7 +463,8 @@ export function productJsonLd(locale: Locale, product: Product): JsonLdNode {
     image: product.images
       .map((image) => publicUrl(image))
       .filter((url): url is string => url !== null),
-    category: product.category,
+    // The primary category; omitted for a product the backend has not converted.
+    ...(product.categories[0] ? { category: product.categories[0].name } : {}),
     // `sku` is published per variant now, and is already globally unique and
     // already shown to the customer on cart and order lines — so it is safe to
     // emit, and `Offer` wants a stable identifier for rich results.

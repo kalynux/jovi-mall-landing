@@ -67,3 +67,29 @@ test("the catalogue rows answer with the web's own nested shapes", () => {
   assert.equal(matchStorefrontPath("shop/stores/a"), "/shop/stores/a");
   assert.equal(matchStorefrontPath(`shop/p/${ID}`), `/shop/p/${ID}`);
 });
+
+test("the delivery-fee notifications open the order they name (ADR-A11)", () => {
+  // `order.delivery_fee.*` and `order.combined_delivery.answered` all carry the
+  // catalogue's ORDER_BUTTON and an `order` aggregate with the ORDER id — the
+  // order page is where approve / decline / pay and the combined request live.
+  assert.equal(
+    resolveNotificationDestination(`shop/account/orders/detail/${ID}`),
+    `/shop/account/orders/detail/${ID}`,
+  );
+  assert.equal(
+    resolveNotificationDestination("", { type: "order", id: ID }),
+    `/shop/account/orders/detail/${ID}`,
+  );
+});
+
+test("`account.closure_requested` opens the closure page (ADR-A10)", () => {
+  // The button path, which WhatsApp freezes into the template at approval.
+  assert.equal(resolveNotificationDestination("shop/account/closure"), "/shop/account/closure");
+  // No path: the aggregate id is the REQUEST, which the page does not take.
+  assert.equal(
+    resolveNotificationDestination("", { type: "account", id: ID }),
+    "/shop/account/closure",
+  );
+  // The same address arriving as an App Link.
+  assert.equal(matchStorefrontPath("/shop/account/closure/"), "/shop/account/closure");
+});

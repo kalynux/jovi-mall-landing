@@ -13,6 +13,7 @@ import type {
   CheckoutResult,
   CustomerOrder,
   CustomerShipment,
+  DeliveryFeePayment,
   OrderGroup,
 } from "./customer.types";
 
@@ -32,10 +33,17 @@ import type {
  *
  * Online checkout continues at `POST /api/payments/initiate` with the returned
  * `cartId`. Cash on delivery needs no payment call.
+ *
+ * `deliveryFeePayment: "cash_to_rider"` (ADR-A11 W-F) pays the ITEMS online and
+ * hands each customer-paid delivery fee to the rider in cash. Online only, and
+ * only while the quote's `deliveryFeeCash.available` is true — otherwise
+ * `422 DELIVERY_FEE_CASH_NOT_AVAILABLE` and nothing is created. Omitted means
+ * `with_order`.
  */
 export async function checkout(input: {
   paymentMethod?: "online" | "cash_on_delivery";
   deliveryAddressId?: string;
+  deliveryFeePayment?: DeliveryFeePayment;
 }): Promise<CheckoutResult> {
   return apiFetch<CheckoutResult>("/api/customer/orders/checkout", {
     method: "POST",

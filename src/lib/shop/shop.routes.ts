@@ -198,6 +198,16 @@ export function storePath(storeSlug: string): string {
   return `${SHOP_ROOT}/stores/${storeSlug}`;
 }
 
+/**
+ * A category's page: the browse grid filtered to it. Built from the `slug`,
+ * never the name — the API also takes an id or a name, but a name is not an
+ * identifier, and old name links resolve only because the API is lenient. A
+ * query string on both targets, so the app needs no route of its own.
+ */
+export function categoryPath(slug: string): string {
+  return `${SHOP_ROOT}?category=${encodeURIComponent(slug)}`;
+}
+
 /** A product row from any list already carries `store.slug`, so this needs no join. */
 export function productPathFor(product: {
   slug: string;
@@ -232,6 +242,21 @@ export const BOOKING_LIST = `${SHOP_ROOT}/account/bookings`;
 
 /** The support ticket list. Static, so it is in every build. */
 export const TICKET_LIST = `${SHOP_ROOT}/account/support`;
+
+/**
+ * Answering an administrator's closure request (ADR-A10). Static — one open
+ * request per role, so no id — and therefore in every build. ⚠ WhatsApp freezes
+ * this URL into the `customer_account_closure_requested` template at approval:
+ * it must never move.
+ */
+export const CLOSURE_REQUEST_PATH = `${SHOP_ROOT}/account/closure`;
+
+/**
+ * Where a session whose shopping account was closed lands. Deliberately NOT
+ * under `/shop/account`: the middleware sends a signed-out visitor there to
+ * sign in, and by the time anyone reaches this page they are signed out.
+ */
+export const ACCOUNT_CLOSED_PATH = `${SHOP_ROOT}/account-closed`;
 
 /** One appointment. */
 export function bookingPath(bookingId: string): string {

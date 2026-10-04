@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import {
   Avatar,
   Badge,
@@ -23,11 +23,12 @@ import {
 } from "@/components/shop/ds";
 import { useCart, useFavorites, useToast } from "@/components/shop/providers";
 import { CART_OFFLINE_MESSAGE_KEY } from "@/lib/shop/cart-errors";
+import { deliveryTermsOf } from "@/lib/shop/delivery";
 import { useShopPageTitle } from "@/components/shop/ShopChrome";
 import { availabilityLabelKey, unavailableLabelKey } from "@/lib/shop/availability";
 import { discountPct, formatMoney } from "@/lib/shop/format";
 import { tapFeedback } from "@/lib/native/haptics";
-import { productPathFor, storePath } from "@/lib/shop/shop.routes";
+import { categoryPath, productPathFor, storePath } from "@/lib/shop/shop.routes";
 import { recordView } from "@/lib/shop/saved.api";
 import { ProductReviews } from "@/components/shop/ProductReviews";
 import { BookingPanel } from "@/components/shop/BookingPanel";
@@ -35,6 +36,7 @@ import { BargainButton } from "@/components/shop/BargainButton";
 import { BARGAIN_ENABLED } from "@/lib/shop/bargain";
 import type {
   CancellationPolicy,
+  DeliveryTerms,
   Product,
   ProductListItem,
   ReturnPolicy,
@@ -458,9 +460,15 @@ export function ProductDetail({
           </h1>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <Badge tone="neutral" variant="outline" size="sm">
-              {p.category}
-            </Badge>
+            {/* Every category, primary first, each a link to its filtered grid.
+                An unconverted product has none, and shows none. */}
+            {p.categories.map((c) => (
+              <Link key={c.id} href={categoryPath(c.slug)} className="ds-ugc" style={{ textDecoration: "none" }}>
+                <Badge tone="neutral" variant="outline" size="sm">
+                  {c.name}
+                </Badge>
+              </Link>
+            ))}
             {store.city && (
               <span className="muted" style={{ fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 3 }}>
                 <Icon name="map-pin" size={13} /> {store.city}
@@ -643,10 +651,15 @@ export function ProductDetail({
           <div style={{ marginTop: 18 }}>
             {p.type === "physical" && (
               <InfoCard title={tCommon("delivery")} icon="truck">
+                {/* The SHOP's terms (ADR-A11). "Included" was true when every
+                    shop paid delivery and is wrong now. A customer-paid fee
+                    depends on the delivery company, the basket's weight and
+                    the address, so this page never quotes a number for it —
+                    the cart does. */}
                 <InfoRow
                   icon="coins"
                   label={tCommon("delivery")}
-                  value={p.freeDelivery ? t("deliveryFree") : t("deliveryIncluded")}
+                  value={deliveryTermsLine(t, deliveryTermsOf(p), currency)}
                 />
                 <InfoRow
                   icon="package-check"
@@ -722,7 +735,9 @@ export function ProductDetail({
           )}
           {tab === "specs" && (
             <div>
-              <InfoRow icon="dot" label={t("specCategory")} value={p.category} />
+              {p.categories.length > 0 && (
+                <InfoRow icon="dot" label={t("specCategory")} value={p.categories.map((c) => c.name).join(", ")} />
+              )}
               <InfoRow icon="dot" label={t("specSoldBy")} value={store.name} />
               {variant && <InfoRow icon="dot" label={t("specSku")} value={variant.sku} />}
               {p.options.map((o) => (
@@ -758,6 +773,8 @@ export function ProductDetail({
                   compareAt={item.compareAtPrice}
                   currency={item.currency}
                   priceRange={item.priceRange}
+                  category={item.categories[0]?.name}
+                  deliveryTerms={deliveryTermsOf(item)}
                   vendorName={item.store.name}
                   vendorVerified={item.store.verified}
                   showVendor
@@ -792,6 +809,7 @@ export function ProductDetail({
                   compareAt={item.compareAtPrice}
                   currency={item.currency}
                   priceRange={item.priceRange}
+                  deliveryTerms={deliveryTermsOf(item)}
                   favorite={isFavorite(item.id)}
                   onToggleFavorite={() => toggle(item.id)}
                   inStock={item.inStock}
@@ -1081,5 +1099,24 @@ function InfoCard({ title, icon, children }: { title: string; icon: IconName; ch
       <div style={{ padding: "2px 13px 6px" }}>{children}</div>
     </div>
   );
+}
+
+/**
+ * The product page's delivery line, from the shop's terms (ADR-A11).
+ *
+ * `never` — and an older API that sent no terms — says the fee is shown at
+ * checkout, never a figure: the fee depends on the delivery company, the
+ * basket's weight and the address, none of which this page knows.
+ */
+function deliveryTermsLine(
+  t: (key: string, values?: Record<string, string>) => string,
+  terms: DeliveryTerms | null,
+  currency: string,
+): string {
+  if (terms?.mode === "always") return t("deliveryFree");
+  if (terms?.mode === "above" && terms.freeAboveAmount !== null) {
+    return t("deliveryFreeFrom", { amount: formatMoney(terms.freeAboveAmount, currency) });
+  }
+  return t("deliveryAtCheckout");
 }
 

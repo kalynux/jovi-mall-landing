@@ -80,6 +80,8 @@ const EXACT_TITLES: Record<string, string> = {
   "/shop/account/support": "shop.nav.titles.support",
   "/shop/account/support/new": "shop.nav.titles.supportNew",
   "/shop/account/close": "shop.nav.titles.close",
+  "/shop/account/closure": "shop.nav.titles.closure",
+  "/shop/account-closed": "shop.nav.titles.accountClosed",
   "/shop/p": "shop.nav.titles.product",
   "/shop/store": "shop.nav.titles.store",
 };
@@ -144,11 +146,12 @@ const EXACT_PARENTS: Record<string, string> = {
 /**
  * Screens whose back arrow ignores history entirely.
  *
- * Only the order confirmation, and for one reason: the entry behind it is the
- * checkout form for an order that has already been placed. Stepping back into
- * it offers to pay for something bought a second ago.
+ * The order confirmation, because the entry behind it is the checkout form for
+ * an order that has already been placed: stepping back into it offers to pay
+ * for something bought a second ago. And the account-closed notice, because
+ * what is behind it is a screen of an account that no longer exists.
  */
-const IGNORES_HISTORY = new Set(["/shop/checkout/success"]);
+const IGNORES_HISTORY = new Set(["/shop/checkout/success", "/shop/account-closed"]);
 
 export function shopParentPath(pathname: string): string {
   const here = normalizePath(pathname);

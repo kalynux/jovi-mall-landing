@@ -104,7 +104,7 @@ you like) — the backend does not block the cart on it.
 | Param | Type | Default | Notes |
 |---|---|---|---|
 | `q` | string ≤ 200 | — | Full-text over title, tags and description. See the note below. |
-| `category` | string | — | Exact match on the free-text `category` field |
+| `category` | string | — | A category **slug**, **id** or **name** (any spelling variant — `shoe` finds "Shoes" — but never a typo). A product matches when it holds that category among its 1–5. Unknown → an empty page, not an error |
 | `type` | `physical` \| `digital` \| `service` | — | Repeatable (`?type=a&type=b`) **or** comma-separated |
 | `storeSlug` | string | — | Narrow to one store |
 | `minPrice` / `maxPrice` | integer | — | Whole units. `minPrice > maxPrice` is a `400`, not an empty page |
@@ -135,7 +135,8 @@ you like) — the backend does not block the cart on it.
       "slug": "ankara-wax-print-maxi-dress",
       "title": "Ankara Wax Print Maxi Dress",
       "type": "physical",
-      "category": "Fashion",
+      "categories": [{ "id": "66ff0c1e2a4b5c6d7e8f9a01", "name": "Fashion", "slug": "fashion" }],
+      "category": "Fashion",          // ⚠ deprecated — categories[0].name
       "tags": ["wax", "handmade"],
 
       "price": 24000,               // resolved from the default variant — see "bargainable" below
@@ -158,7 +159,8 @@ you like) — the backend does not block the cart on it.
 
       "store": { "slug": "maison-bella", "name": "Maison Bella", "isOpen": true, "verified": true },
 
-      "freeDelivery": false,
+      "freeDelivery": false,                    // DERIVED: true iff deliveryTerms.mode === "always"
+      "deliveryTerms": { "mode": "above", "freeAboveAmount": 20000 },   // the SHOP's terms (ADR-A11)
       "updatedAt": "2026-07-30T09:20:00.000Z"
     }
   ],
@@ -305,7 +307,8 @@ The product page. `GET /api/public/products/:productId` returns the identical bo
     "title": "Ankara Wax Print Maxi Dress",
     "description": "Comfortable cotton…",
     "type": "physical",
-    "category": "Fashion",
+    "categories": [{ "id": "66ff0c1e2a4b5c6d7e8f9a01", "name": "Fashion", "slug": "fashion" }],
+    "category": "Fashion",          // ⚠ deprecated — categories[0].name
     "tags": ["wax", "handmade"],
     "seo": { "title": "…", "description": "…" },   // omitted when unset
     "contentLanguage": "fr",
@@ -390,7 +393,8 @@ The product page. `GET /api/public/products/:productId` returns the identical bo
       }
     },
 
-    "freeDelivery": false,
+    "freeDelivery": false,                      // DERIVED from deliveryTerms, see below
+    "deliveryTerms": { "mode": "above", "freeAboveAmount": 20000 },
     "createdAt": "…",
     "updatedAt": "…"
   }
@@ -585,22 +589,23 @@ A SKU containing `/` cannot be addressed here — it would split the path. Perce
 
 ## GET /api/public/categories
 
-`Product.category` is a plain indexed string; there is no Category collection, model or
-taxonomy anywhere. The chip list is therefore derived, over exactly the browse filter — so a
-category whose every product is a draft does not appear.
+Since 2026-10-04 categories are **one marketplace-wide list** and a product holds 1–5 of them
+(`FRONTEND-CHANGELOG-product-categories.md`). The chips are still DERIVED over exactly the
+browse filter — a category with no publishable product (all drafts, or created on a save that
+then failed) does not appear. A product counts toward **each** of its categories.
 
 ```jsonc
 {
   "success": true,
   "data": [
-    { "name": "Fashion", "productCount": 48 },
-    { "name": "Home",    "productCount": 31 }
+    { "id": "66ff0c1e2a4b5c6d7e8f9a01", "name": "Fashion", "slug": "fashion", "productCount": 48 },
+    { "id": "66ff0c1e2a4b5c6d7e8f9a02", "name": "Home",    "slug": "home",    "productCount": 31 }
   ]
 }
 ```
 
 A bare array, sorted by count descending then name. No `meta` — it is a small complete set,
-not a page.
+not a page. Link a chip with `?category=<slug>` (or the id, which survives a rename).
 
 ---
 
@@ -638,10 +643,19 @@ The directory, and the sitemap's source of store URLs.
     "city": "Douala",
     "verified": true,
     "productCount": 48,
-    "memberSince": "2026-02-01T00:00:00.000Z"
+    "memberSince": "2026-02-01T00:00:00.000Z",
+    "deliveryTerms": { "mode": "above", "freeAboveAmount": 20000 }
   }
 }
 ```
+
+> **`deliveryTerms` (2026-10-03, ADR-A11)** — on the store reads, the product rows and the product
+> detail. Who pays delivery on this shop's part of a basket: `always` (the shop — free delivery),
+> `never` (the customer) or `above` (free once the basket holds at least `freeAboveAmount` of this
+> shop's items; inclusive). A shop that never set it reads `always`. **`freeDelivery` on a product is
+> now derived** — `true` only for `always`; an `above` shop reads `false` because the badge would
+> promise what the basket may not meet, so render "free from X" from `deliveryTerms` instead. There
+> is no per-product free-delivery flag any more.
 
 `404 STORE_NOT_FOUND` when the slug is unknown or the vendor is suspended.
 

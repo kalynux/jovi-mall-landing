@@ -284,9 +284,10 @@ export async function getProductById(
 /**
  * `GET /api/public/categories` — the chip list, with counts.
  *
- * A bare array with no `meta`: `Product.category` is free text with no taxonomy
- * collection anywhere, so this is derived over the same filter as the browse
- * grid. A category whose every product is a draft does not appear.
+ * A bare array with no `meta`, ordered by count then name. Categories are one
+ * marketplace-wide list (a product holds 1–5), but this is still derived over
+ * the browse filter, so a category whose every product is a draft does not
+ * appear. Link a row by its `slug` (`categoryPath`).
  */
 export async function listCategories(): Promise<CategoryCount[]> {
   const data = await getJson<CategoryCount[]>("/api/public/categories");

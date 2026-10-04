@@ -192,13 +192,40 @@ export interface ProductStoreRef {
   verified?: boolean;
 }
 
+/**
+ * Who pays delivery on a shop's part of a basket (ADR-A11, 2026-10-03) — the
+ * SHOP's setting, carried on its product rows, its product pages and its store
+ * read.
+ *
+ *   - `always` — the shop pays: "Free delivery".
+ *   - `above`  — free once the basket holds at least `freeAboveAmount` of THIS
+ *                shop's items (inclusive): "Free delivery from X".
+ *   - `never`  — the customer pays the delivery company's fee, which depends on
+ *                the basket's weight and the address. Never quote a number for
+ *                it outside the cart quote.
+ *
+ * A shop that never chose reads `always`. Optional on every type below only so
+ * an API from before the field degrades to the old `freeDelivery` flag.
+ */
+export interface DeliveryTerms {
+  mode: "always" | "never" | "above";
+  /** The threshold when `mode` is `above`; `null` otherwise. */
+  freeAboveAmount: number | null;
+}
+
 /** One row of `GET /api/public/products`. */
 export interface ProductListItem {
   id: string;
   slug: string;
   title: string;
   type: ProductType;
-  category: string;
+  /**
+   * 1–5 entries from the marketplace-wide list, in the vendor's order; `[0]`
+   * is the primary. Can be `[]` on data the backend has not converted yet —
+   * render that as "no category", not an error. Link by `slug`, never by name.
+   * The deprecated single `category` string is deliberately not typed here.
+   */
+  categories: CategoryRef[];
   tags: string[];
 
   /** Resolved from the default variant — a product itself has no price. */
@@ -227,7 +254,12 @@ export interface ProductListItem {
 
   store: ProductStoreRef;
 
+  /**
+   * DERIVED since ADR-A11: `true` only when `deliveryTerms.mode` is `always`.
+   * Render from `deliveryTerms` — an `above` shop reads `false` here.
+   */
   freeDelivery: boolean;
+  deliveryTerms?: DeliveryTerms;
   /** Real `lastModified` for the sitemap. */
   updatedAt: string;
 }
@@ -350,7 +382,13 @@ export interface Product {
   title: string;
   description: string;
   type: ProductType;
-  category: string;
+  /**
+   * 1–5 entries from the marketplace-wide list, in the vendor's order; `[0]`
+   * is the primary. Can be `[]` on data the backend has not converted yet —
+   * render that as "no category", not an error. Link by `slug`, never by name.
+   * The deprecated single `category` string is deliberately not typed here.
+   */
+  categories: CategoryRef[];
   tags: string[];
   /** **Omitted** when the vendor set neither field. */
   seo?: { title?: string; description?: string };
@@ -381,7 +419,9 @@ export interface Product {
   defaultVariantId: string | null;
 
   store: ProductStore;
+  /** DERIVED — see `ProductListItem.freeDelivery`. Render from `deliveryTerms`. */
   freeDelivery: boolean;
+  deliveryTerms?: DeliveryTerms;
   createdAt: string;
   updatedAt: string;
 }
@@ -406,10 +446,24 @@ export interface Store {
   productCount: number;
   /** `store.created_at`. */
   memberSince: string;
+  /** The shop's free-delivery terms (ADR-A11). Absent on an older API. */
+  deliveryTerms?: DeliveryTerms;
 }
 
-export interface CategoryCount {
+/** A category as a product carries it. `id` survives a rename; `slug` does not. */
+export interface CategoryRef {
+  id: string;
+  /** Vendor- or admin-written and never translated — show it as given. */
   name: string;
+  slug: string;
+}
+
+/**
+ * `GET /api/public/categories` row. `productCount` counts a multi-category
+ * product once in each of its categories, so the counts do not sum to the
+ * catalogue size.
+ */
+export interface CategoryCount extends CategoryRef {
   productCount: number;
 }
 

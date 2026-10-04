@@ -7,11 +7,12 @@ import { Rating } from "./Rating";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useBargain } from "@/components/shop/BargainButton";
 import { Link } from "@/i18n/navigation";
-import type { PriceRange, ProductType } from "@/lib/shop/shop.types";
+import type { DeliveryTerms, PriceRange, ProductType } from "@/lib/shop/shop.types";
 import { unavailableLabelKey } from "@/lib/shop/availability";
 import { BARGAIN_ENABLED } from "@/lib/shop/bargain";
 import { getProductById } from "@/lib/shop/catalog.api";
-import { discountPct } from "@/lib/shop/format";
+import { promisesFreeDelivery } from "@/lib/shop/delivery";
+import { discountPct, formatMoney } from "@/lib/shop/format";
 import { defaultVariant } from "@/lib/shop/quick-add";
 import { useReducedMotionSafe } from "@/lib/reduced-motion";
 import { Badge } from "./Badge";
@@ -38,6 +39,12 @@ export interface ProductCardProps {
   vendorVerified?: boolean;
   showVendor?: boolean;
   /**
+   * The primary category's name (`categories[0]`). Plain text, not a link: the
+   * whole card is one, and a link inside a link is invalid. Omit it for a
+   * product with no category.
+   */
+  category?: string;
+  /**
    * The published-review aggregate, or `null` when nobody has reviewed it.
    *
    * The API sends `null` rather than a zero-count object, so there is no
@@ -46,10 +53,13 @@ export interface ProductCardProps {
    */
   rating?: { average: number; count: number } | null;
   /**
-   * A real backend field, unlike the free-text delivery label this card used to
-   * take. It is a boolean promise about this product, not a description.
+   * The SHOP's free-delivery terms (ADR-A11) — pass `deliveryTermsOf(row)`.
+   * `always` draws "Free delivery", `above` "Free delivery from X", and `never`
+   * draws nothing: the fee depends on the basket and the address, so a card
+   * never quotes one. Replaced the per-product `freeDelivery` boolean, which
+   * cannot express "from X".
    */
-  freeDelivery?: boolean;
+  deliveryTerms?: DeliveryTerms | null;
   favorite?: boolean;
   onToggleFavorite?: () => void;
   /** Boolean by design — the API publishes no stock count. */
@@ -365,8 +375,9 @@ export function ProductCard(props: ProductCardProps) {
     vendorName,
     vendorVerified,
     showVendor,
+    category,
     rating,
-    freeDelivery,
+    deliveryTerms = null,
     favorite,
     onToggleFavorite,
     inStock = true,
@@ -426,6 +437,23 @@ export function ProductCard(props: ProductCardProps) {
         </div>
       )}
 
+      {category && (
+        // `ds-ugc`: the name is vendor- or admin-written and never translated.
+        <div
+          className="ds-ugc"
+          style={{
+            fontSize: 11.5,
+            fontWeight: 600,
+            color: "var(--text-muted)",
+            marginBottom: 3,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {category}
+        </div>
+      )}
       {rating && (
         <div style={{ marginBottom: 3 }}>
           <Rating value={rating.average} count={rating.count} size={12} />
@@ -435,10 +463,12 @@ export function ProductCard(props: ProductCardProps) {
       <div style={{ marginTop: 6 }}>
         <PriceDisplay amount={price} compareAt={compareAt} currency={currency} range={priceRange} size="sm" />
       </div>
-      {freeDelivery && (
+      {promisesFreeDelivery(deliveryTerms) && (
         <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 6, fontSize: 11.5, color: "var(--text-muted)", fontWeight: 600 }}>
           <Icon name="truck" size={13} />
-          {t("freeDelivery")}
+          {deliveryTerms.mode === "always"
+            ? t("freeDelivery")
+            : t("freeDeliveryFrom", { amount: formatMoney(deliveryTerms.freeAboveAmount ?? 0, currency) })}
         </div>
       )}
     </>

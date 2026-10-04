@@ -866,7 +866,26 @@
         "MESSAGING_IDENTITY_ALREADY_LINKED": "That chat account is already connected to a different Wi-Mall account. Disconnect it there first, or contact support.",
         "MESSAGING_CONNECTION_NOT_FOUND": "That channel is not connected.",
         "PHONE_VERIFICATION_DELIVERY_FAILED": "We couldn't send your code on WhatsApp right now. Please try again in a minute.",
-        "AUTH_ACCOUNT_CLOSED": "This account has been closed. It can't be reopened or signed in to."
+        "AUTH_ACCOUNT_CLOSED": "This account has been closed. It can't be reopened or signed in to.",
+        "AUTH_ROLE_CLOSED": "This account has been closed and can't be reopened. Any other account you hold on Wi-Mall is not affected.",
+        "ROLE_CLOSURE_REQUEST_NOT_FOUND": "There is no open closure request for this account.",
+        "ROLE_CLOSURE_REQUEST_EXPIRED": "This closure request is no longer open. It has expired or has already been answered.",
+        "ROLE_CLOSURE_BLOCKED": "Some things still have to be settled before this account can be closed.",
+        "ROLE_CLOSED": "This role was closed on your account and can't be reopened.",
+        "DELIVERY_FEE_CASH_NOT_AVAILABLE": "Paying the delivery fee in cash to the rider isn't available for this order. Pay delivery with your order instead.",
+        "DELIVERY_FEE_PROPOSAL_NOT_FOUND": "This delivery fee change no longer exists.",
+        "DELIVERY_FEE_PROPOSAL_NOT_PENDING": "This delivery fee change has already been answered.",
+        "DELIVERY_FEE_PROPOSAL_NOT_YOURS": "This delivery fee change isn't yours to answer.",
+        "DELIVERY_FEE_PROPOSAL_STALE": "This delivery fee change can't be applied any more — the parcel has moved on.",
+        "DELIVERY_FEE_PROPOSAL_SETTLEMENT_CONFLICT": "We couldn't apply this delivery fee right now. Nothing changed — try again in a moment.",
+        "DELIVERY_FEE_PROPOSAL_VERSION_MISMATCH": "This delivery fee changed since you opened it. Reload to see the current one.",
+        "DELIVERY_FEE_PROPOSAL_ORDER_NOT_PAID": "The delivery fee on this order can't change while its payment isn't settled.",
+        "DELIVERY_FEE_TOPUP_IN_PROGRESS": "A payment for this delivery fee is still in progress. Wait for it to finish.",
+        "DELIVERY_FEE_TOPUP_NOT_DUE": "Nothing is owed for this delivery fee.",
+        "COMBINED_DELIVERY_REQUEST_NOT_FOUND": "This combined-price request no longer exists.",
+        "COMBINED_DELIVERY_REQUEST_INELIGIBLE": "A combined price needs at least two parcels with the same delivery company that haven't been picked up yet and have no other fee change pending.",
+        "COMBINED_DELIVERY_REQUEST_ALREADY_OPEN": "You've already asked this delivery company for a combined price on this order.",
+        "COMBINED_DELIVERY_REQUEST_NOT_OPEN": "This request has already been answered or cancelled."
     },
     "checkout": {
         "errors": {
@@ -893,7 +912,8 @@
             "ORDER_BELOW_DELIVERY_MINIMUM": "Your items {from} are below the minimum for delivery. Add {amount} more from that seller and try again — nothing was charged.",
             "ORDER_BELOW_DELIVERY_MINIMUM_UNKNOWN": "Your items {from} are below the minimum for delivery. Add more from that seller and try again — nothing was charged.",
             "ORDER_BELOW_DELIVERY_MINIMUM_UNREACHABLE": "Your items {from} can't be delivered right now. Remove them and try again — nothing was charged.",
-            "ORDER_BELOW_DELIVERY_MINIMUM_COD_UNREACHABLE": "Your items {from} can't be paid cash on delivery. Pay online instead, or remove them — nothing was charged."
+            "ORDER_BELOW_DELIVERY_MINIMUM_COD_UNREACHABLE": "Your items {from} can't be paid cash on delivery. Pay online instead, or remove them — nothing was charged.",
+            "DELIVERY_FEE_CASH_NOT_AVAILABLE": "Paying the delivery fee in cash isn't available for this order any more. Nothing was ordered and nothing was charged — delivery is now paid with your order; check the total and try again."
         }
     },
     "errorPage": {
@@ -2086,7 +2106,9 @@
                 "supportNew": "New ticket",
                 "close": "Close account",
                 "product": "Product",
-                "store": "Store"
+                "store": "Store",
+                "closure": "Closure request",
+                "accountClosed": "Account closed"
             }
         },
         "query": {
@@ -2148,7 +2170,8 @@
             },
             "bargain": "Bargain",
             "moreActions": "Price negotiable — more options",
-            "closeActions": "Close options"
+            "closeActions": "Close options",
+            "freeDeliveryFrom": "Free delivery from {amount}"
         },
         "chrome": {
             "brandHome": "Wi-Mall shop",
@@ -2187,6 +2210,7 @@
             "categoryWithCount": "{name} · {count}",
             "inStock": "In stock",
             "emptyTitle": "No products found",
+            "emptyCategory": "No products in this category",
             "emptyWithQuery": "Nothing matches “{query}”. Search matches whole words, so try a complete one — or clear a filter.",
             "emptyNoQuery": "Try clearing a filter or searching something else.",
             "reset": "Reset",
@@ -2222,8 +2246,7 @@
             "tabSpecs": "Specifications",
             "tabPolicies": "Returns & cancellation",
             "tabReviews": "Reviews",
-            "deliveryFree": "Free delivery on this item",
-            "deliveryIncluded": "Included — the seller covers delivery",
+            "deliveryFree": "Free — the shop covers delivery",
             "shipsFrom": "Ships from",
             "defaultOrigin": "Cameroon",
             "digitalDelivery": "Digital delivery",
@@ -2247,7 +2270,7 @@
             "specSku": "SKU",
             "specTags": "Tags",
             "relatedCoPurchase": "Frequently bought together",
-            "relatedSameCategory": "More in this category",
+            "relatedSameCategory": "More in these categories",
             "moreFromStore": "More from {store}",
             "replaceCartTitle": "Replace your cart?",
             "emptyCartTitle": "This empties your cart",
@@ -2325,7 +2348,9 @@
                 "telegram": "Continue on Telegram",
                 "telegramNote": "Tap Start in Telegram and the assistant picks up this item.",
                 "message": "I’d like to negotiate the price of {item}."
-            }
+            },
+            "deliveryFreeFrom": "Free on orders of {amount} or more from this shop",
+            "deliveryAtCheckout": "Delivery fee shown at checkout"
         },
         "store": {
             "tabs": {
@@ -2360,7 +2385,9 @@
             "addFailed": "Could not add that to your cart. Please try again.",
             "unavailableTitle": "This store isn’t available",
             "unavailableDescription": "It may have closed or changed its address. Browse the shop to find other sellers.",
-            "loadFailed": "We couldn’t load that store."
+            "loadFailed": "We couldn’t load that store.",
+            "freeDelivery": "Free delivery",
+            "freeDeliveryFrom": "Free delivery from {amount}"
         },
         "payMethods": {
             "mtn": "MTN Mobile Money",
@@ -2427,8 +2454,6 @@
             "orderSummary": "Order summary",
             "subtotal": "Subtotal",
             "delivery": "Delivery",
-            "deliveryIncluded": "Included",
-            "vendorCoversDelivery": "Your seller covers {amount} of delivery on this order.",
             "discount": "Discount",
             "discountAmount": "− {amount}",
             "tax": "Tax",
@@ -2479,9 +2504,7 @@
             "lineStore": " · {store}",
             "subtotal": "Subtotal",
             "delivery": "Delivery",
-            "deliveryIncluded": "Included",
             "total": "Total",
-            "vendorCoversDelivery": "Your seller covers {amount} of delivery on this order.",
             "multiVendorNote": "{n, plural, other {This becomes # orders — one per seller, each shipping independently. You are charged once for the group.}}",
             "chooseAddress": "Choose a delivery address",
             "enterValidNumber": "Enter a valid mobile money number",
@@ -2631,7 +2654,6 @@
             "breakdown": {
                 "items": "Items",
                 "delivery": "Delivery",
-                "included": "Included",
                 "discount": "Discount",
                 "discountAmount": "− {amount}",
                 "tax": "Tax",
@@ -3149,6 +3171,167 @@
             "switching": "Switching…",
             "signingOut": "Signing out…",
             "switchFailed": "We couldn't switch you to your customer account. Sign out, then sign back in as a customer."
+        },
+        "closureRequest": {
+            "description": "An administrator has asked to close your shopping account.",
+            "headline": "An administrator has asked to close your shopping account",
+            "nothingChanges": "Nothing changes unless you confirm. If you do nothing, the request expires on {date}.",
+            "reasonLabel": "Reason given",
+            "consequencesTitle": "If you confirm",
+            "consequences": {
+                "profile": "Your name, contact details and saved addresses are removed from your shopping account.",
+                "orders": "Past orders are kept as business records, without your name or contact details.",
+                "signOut": "You are signed out. If you also have a business account on Wi-Mall — a shop, an agency or a delivery account — it is not affected, and you can still sign in to it.",
+                "final": "This cannot be undone. A closed shopping account cannot be reopened."
+            },
+            "warningsTitle": "You will give up",
+            "warnings": {
+                "plan": "The paid time left on your {plan} plan.",
+                "planUntil": "The paid time left on your {plan} plan, which runs until {date}.",
+                "credit": "Your credit balance of {amount}.",
+                "other": "Something you have paid for on this account."
+            },
+            "blockersTitle": "Settle these first",
+            "blockersIntro": "Your shopping account can only be closed once these are settled.",
+            "blockers": {
+                "orders_in_flight": "{count, plural, one {# order is} other {# orders are}} still in progress. They have to finish first.",
+                "bookings_upcoming": "{count, plural, one {# upcoming booking has} other {# upcoming bookings have}} to be finished or cancelled first.",
+                "other": "Something on your account still has to be settled first.",
+                "seeOrders": "See my orders",
+                "seeBookings": "See my bookings"
+            },
+            "typeToConfirm": "Type <code>{phrase}</code> to confirm",
+            "confirm": "Close my shopping account",
+            "confirming": "Closing…",
+            "blockedHint": "You can confirm once everything above is settled.",
+            "keepTitle": "Want to keep your account?",
+            "keepBody": "Say so here. The administrator sees your answer, and nothing about your account changes.",
+            "noteLabel": "Note for the administrator (optional)",
+            "notePlaceholder": "Why you want to keep it",
+            "keep": "Keep my account",
+            "keeping": "Sending…",
+            "empty": {
+                "title": "Nothing is waiting",
+                "description": "No one has asked to close your shopping account. If an administrator ever does, the request will appear here."
+            },
+            "kept": {
+                "title": "Your account stays open",
+                "description": "We have told the administrator that you want to keep your account. Nothing has changed."
+            },
+            "gone": {
+                "title": "This request is no longer open",
+                "description": "It has expired, been withdrawn or already been answered. Nothing has changed on your account."
+            },
+            "backToAccount": "Back to my account",
+            "banner": {
+                "title": "An administrator has asked to close your shopping account",
+                "body": "Nothing changes unless you confirm. Please answer by {date}.",
+                "action": "Review the request"
+            }
+        },
+        "accountClosed": {
+            "title": "Your shopping account is closed",
+            "body": "Your name and contact details have been removed from it. Past orders are kept as business records, without your details.",
+            "business": "If you also have a business account on Wi-Mall — a shop, an agency or a delivery account — it is not affected, and you can sign in to it.",
+            "signIn": "Sign in",
+            "allTitle": "Your Wi-Mall account is closed",
+            "allBody": "Your name and contact details have been removed. Past orders are kept as business records, without your details. There is no account left to sign in to.",
+            "browse": "Browse the shop"
+        },
+        "delivery": {
+            "line": "Delivery",
+            "lineShop": "Delivery · {shop}",
+            "free": "Free",
+            "addForFree": "Add {amount} more {from} for free delivery.",
+            "regionUnknown": "Priced without your delivery region — the fee can change once you choose an address.",
+            "sellerOf": "Seller of {item}",
+            "thisSeller": "This seller",
+            "atCheckout": "Calculated at checkout",
+            "totalBeforeDelivery": "Total before delivery",
+            "calculating": "Calculating delivery…",
+            "cashToRider": "Pay the delivery fee in cash to the rider",
+            "cashToRiderBody": "Pay {online} now for your items, and {cash} in cash to the rider when your parcel arrives.",
+            "payNow": "To pay now",
+            "cashForRider": "Cash for the rider",
+            "riderInfo": "Have the <b>delivery fee in cash</b> ready for the rider. The amount and your delivery code are on your order — give the code once you have your parcel and have paid.",
+            "deliveryInCash": "Delivery (cash to the rider)",
+            "totalOnline": "Total online",
+            "dueToRider": "Still to pay the rider in cash",
+            "refundOwed": "Delivery refund on its way",
+            "refundReturned": "Delivery refunded",
+            "parcelFee": "Delivery fee",
+            "parcelFeeCash": "Delivery fee (cash to the rider)",
+            "parcelRefundable": "Delivery money due back",
+            "riderCashTitle": "Pay {amount} in cash for delivery",
+            "ofWhichDelivery": "Including {amount} for delivery",
+            "riderCashWarning": "Your items are paid. Give this code to the rider <strong>only after</strong> you have your parcel and have paid the delivery fee — it is what records that payment.",
+            "changes": {
+                "title": "Delivery fee changes",
+                "askIncrease": "The delivery company asks {after} instead of {before} to deliver this parcel.",
+                "movedIncrease": "The shop moved this parcel to another delivery company, which charges {after} instead of {before}.",
+                "reason": "Their reason: <q>{reason}</q>",
+                "waitsForYou": "Your parcel can't be picked up until you answer.",
+                "topupDue": "You accepted the new fee. Pay the difference of {amount} — your parcel waits for it.",
+                "declineShopPays": "If you decline, the shop pays the difference — you pay nothing more.",
+                "declineCompany": "If you decline, the delivery company can deliver at the old fee, ask once more, or turn the job down — the shop then picks another company.",
+                "accept": "Accept {amount}",
+                "decline": "Decline",
+                "payAmount": "Pay {amount}",
+                "declineTitle": "Decline the new delivery fee?",
+                "keepDeciding": "Go back",
+                "approved": "New delivery fee accepted",
+                "declined": "New delivery fee declined",
+                "changedReload": "This fee changed since you opened it. Here is the current one.",
+                "answerFailed": "We couldn't send your answer.",
+                "refundByHand": "Our team is sending you {amount} of delivery money by hand.",
+                "historyLowered": "Fee lowered from {before} to {after}",
+                "historyCombined": "Combined price: lowered from {before} to {after}",
+                "historyRaised": "Fee raised from {before} to {after}",
+                "historyDeclined": "You declined a change to {after}",
+                "historyWithdrawn": "A change to {after} was withdrawn",
+                "historyPending": "A change to {after} is being processed"
+            },
+            "topup": {
+                "title": "Pay the delivery difference",
+                "intro": "The new delivery fee is {fee}. Your parcel is collected once this payment is through.",
+                "toPay": "To pay",
+                "payAmount": "Pay {amount}",
+                "starting": "Starting payment…",
+                "startFailed": "We couldn't start this payment.",
+                "refused": "The payment didn't go through. You can try again.",
+                "notDue": "Nothing is owed for this delivery any more.",
+                "paid": "Payment received — your parcel can now be collected.",
+                "stillPending": "No confirmation yet. Your order updates as soon as the payment lands.",
+                "checkPhoneTitle": "Check your phone",
+                "checkPhoneBody": "Approve the payment prompt on your handset. This screen updates when it's through."
+            },
+            "combined": {
+                "title": "Combined delivery price",
+                "intro": "Some of your parcels travel with the same delivery company. You can ask it for one price for all of them — it can only lower the fees.",
+                "theCompany": "the delivery company",
+                "ask": "Ask {company} for a combined price",
+                "requestTo": "{n, plural, one {# parcel with {company}} other {# parcels with {company}}}",
+                "status": {
+                    "open": "Waiting",
+                    "answered": "Answered",
+                    "declined": "Declined",
+                    "cancelled": "Cancelled"
+                },
+                "saving": "New price applied — you save {amount}.",
+                "theirNote": "Their note: <q>{note}</q>",
+                "waiting": "Waiting for the company's answer.",
+                "cancel": "Cancel request",
+                "confirmTitle": "Ask for a combined price?",
+                "confirmBody": "We'll ask {company} for one price for your parcels on this order. A new price can only be lower, and it applies on its own.",
+                "noteLabel": "Note for the company (optional)",
+                "notePlaceholder": "Same street — one trip?",
+                "send": "Send request",
+                "notNow": "Not now",
+                "sent": "Request sent to the delivery company",
+                "sendFailed": "We couldn't send your request.",
+                "cancelled": "Request cancelled",
+                "cancelFailed": "We couldn't cancel this request."
+            }
         }
     },
     "cookieNotice": {

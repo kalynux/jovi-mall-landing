@@ -21,6 +21,7 @@ import {
 import { ShopSearchRow } from "@/components/shop/ShopSearch";
 import { useCart, useFavorites, useToast } from "@/components/shop/providers";
 import { CART_OFFLINE_MESSAGE_KEY } from "@/lib/shop/cart-errors";
+import { deliveryTermsOf } from "@/lib/shop/delivery";
 import { formatMoney, formatXAF } from "@/lib/shop/format";
 import { productIdPath, productPathFor, storePath } from "@/lib/shop/shop.routes";
 import { resolveQuickAdd } from "@/lib/shop/quick-add";
@@ -274,7 +275,8 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
       vendorName={product.store.name}
       vendorVerified={product.store.verified}
       showVendor={showVendor}
-      freeDelivery={product.freeDelivery}
+      category={product.categories[0]?.name}
+      deliveryTerms={deliveryTermsOf(product)}
       favorite={isFavorite(product.id)}
       onToggleFavorite={() => toggle(product.id)}
       inStock={product.inStock}
@@ -301,6 +303,8 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
     return map;
   }, [products]);
 
+  const selectedCat = findCategory(categories, query.category);
+
   const categoryChips = (
     <>
       <Chip selected={!query.category} onClick={() => go({ category: undefined })}>
@@ -308,9 +312,9 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
       </Chip>
       {categories.map((c) => (
         <Chip
-          key={c.name}
-          selected={query.category === c.name}
-          onClick={() => go({ category: c.name })}
+          key={c.id}
+          selected={selectedCat?.id === c.id}
+          onClick={() => go({ category: c.slug })}
         >
           {/* The name is the vendor's; only the join between it and the count
               is ours, and it is a message so RTL can reorder it. */}
@@ -482,7 +486,8 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
           ) : (
             <EmptyState
               icon="search-x"
-              title={t("emptyTitle")}
+              // An unknown `?category=` is an empty page, not an error.
+              title={query.category && !query.q ? t("emptyCategory") : t("emptyTitle")}
               description={
                 query.q ? t("emptyWithQuery", { query: query.q }) : t("emptyNoQuery")
               }
@@ -829,6 +834,20 @@ function FilterBody({
 const ANY_CATEGORY = "";
 
 /**
+ * The category a `?category=` value names. Links are built from the slug, but
+ * the API also accepts an id or a name — and old links carry names — so a
+ * chip still lights up for those.
+ */
+function findCategory(categories: CategoryCount[], value: string | undefined): CategoryCount | undefined {
+  if (!value) return undefined;
+  const lower = value.toLowerCase();
+  return (
+    categories.find((c) => c.slug === value || c.id === value) ??
+    categories.find((c) => c.name.toLowerCase() === lower)
+  );
+}
+
+/**
  * One category, chosen two ways.
  *
  * It is a single-select because the API is: `ProductListQuery.category` is one
@@ -854,7 +873,7 @@ function CategoryField({
   setSheetOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("shop.browse");
-  const current = categories.find((c) => c.name === value);
+  const current = findCategory(categories, value);
   const label = current
     ? t("categoryWithCount", { name: current.name, count: current.productCount })
     : t("allCategories");
@@ -864,14 +883,14 @@ function CategoryField({
       {/* Desktop — the platform's own select. */}
       <div className="hidden sm:block">
         <Select
-          value={value ?? ANY_CATEGORY}
+          value={current?.slug ?? ANY_CATEGORY}
           onChange={(e) => onChange(e.target.value || undefined)}
           leadingIcon="layers"
           aria-label={t("sectionCategory")}
           options={[
             { value: ANY_CATEGORY, label: t("allCategories") },
             ...categories.map((c) => ({
-              value: c.name,
+              value: c.slug,
               label: t("categoryWithCount", { name: c.name, count: c.productCount }),
             })),
           ]}
@@ -936,12 +955,12 @@ function CategoryField({
           />
           {categories.map((c) => (
             <CategoryRow
-              key={c.name}
+              key={c.id}
               label={c.name}
               count={c.productCount}
-              selected={value === c.name}
+              selected={current?.id === c.id}
               onClick={() => {
-                onChange(c.name);
+                onChange(c.slug);
                 setSheetOpen(false);
               }}
             />

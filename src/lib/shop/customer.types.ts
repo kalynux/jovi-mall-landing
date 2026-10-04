@@ -16,6 +16,7 @@
  */
 
 import type { FileDetail } from "./shop.types";
+import type { PaymentInstructions } from "./payments.api";
 
 /**
  * A resolved uploaded file - the single way the backend surfaces any file
@@ -258,8 +259,10 @@ export interface OrderItem {
   quantity: number;
   price: number;
   currency: string;
-  /** Snapshot taken at checkout — later product edits do not change it. */
-  freeDelivery: boolean;
+  /*
+   * `freeDelivery` was REMOVED on 2026-10-03 (ADR-A11): free delivery is the
+   * shop's setting, decided per vendor order — see `CustomerOrder.deliveryPayer`.
+   */
   /**
    * The product thumbnail. `null` when the product had none.
    *
@@ -282,7 +285,18 @@ export interface OrderItem {
  */
 export interface CodCollection {
   shipmentId: string;
+  /** The cash to hand over: `itemsAmount + deliveryFeeAmount`. */
   expectedAmount: number;
+  /**
+   * `delivery_fee` — the goods were paid online and only the delivery fee is
+   * cash (checkout's `cash_to_rider`, ADR-A11 W-F); `itemsAmount` is then 0.
+   * `order` (or absent, on an older API) — cash on delivery for the goods.
+   */
+  kind?: "order" | "delivery_fee";
+  /** The goods' share of `expectedAmount`. Absent before 2026-10-04. */
+  itemsAmount?: number;
+  /** The delivery fee's share of `expectedAmount` — 0 when the shop pays delivery. */
+  deliveryFeeAmount?: number;
   currency: string;
   status: "pending" | "collected" | "cancelled";
   collectedAt: string | null;
@@ -314,10 +328,57 @@ export interface OrderStore {
  * the quote and the charge cannot diverge.
  */
 export interface OrderPriceBreakdown {
+  /** The items. */
   base: number;
+  /**
+   * What the customer paid for delivery on this order (ADR-A11) — 0 when the
+   * shop delivered free, and 0 on a `cash_to_rider` order (see `deliveryCash`).
+   * Absent on an API older than 2026-10-04.
+   */
+  delivery?: number;
+  /**
+   * The delivery fee(s) handed to the rider in cash on a `cash_to_rider` order —
+   * NOT in `delivery` nor in `total`. 0 on every other order.
+   */
+  deliveryCash?: number;
   tax: number;
   discount: number;
+  /** `base + delivery` — what was charged online, or will be collected (COD). */
   total: number;
+}
+
+/** Who paid a vendor order's delivery. `vendor` is free delivery for the customer. */
+export type DeliveryPayer = "vendor" | "customer";
+
+/**
+ * Why. The first two are free for the customer; the last three mean the
+ * customer pays (`cap_fallback`: a free-delivery shop whose part of the basket
+ * was too small to carry its fee).
+ */
+export type DeliveryPayerReason =
+  | "shop_always"
+  | "shop_threshold_met"
+  | "shop_never"
+  | "threshold_not_met"
+  | "cap_fallback";
+
+/** How a customer-paid delivery fee is paid (checkout's `deliveryFeePayment`). */
+export type DeliveryFeePayment = "with_order" | "cash_to_rider";
+
+/** One parcel's customer-facing delivery fee. */
+export interface OrderDeliveryFee {
+  shipmentId: string;
+  /** What the customer paid for this parcel's delivery — 0 when the shop paid. */
+  amount: number;
+  /**
+   * The GROSS delivery money that became the customer's on this parcel (a
+   * returned parcel's unspent fee, a fee lowered after payment). Present only
+   * when > 0. It does not shrink once returned — `deliveryFeeRefund.owed` is
+   * the "still owed" figure.
+   */
+  customerFeeRefundable?: number;
+  /** `true` on a parcel whose fee goes to the rider in cash; absent otherwise. */
+  paidInCash?: boolean;
 }
 
 export interface CustomerOrder {
@@ -328,9 +389,31 @@ export interface CustomerOrder {
   store?: OrderStore;
   cartId?: string | null;
   orderType: OrderType;
+  /** What was charged online (or will be collected, COD) — delivery included. */
   total: number;
   currency: string;
   priceBreakdown?: OrderPriceBreakdown;
+  /*
+   * ── Delivery (ADR-A11, 2026-10-04) ── all optional: an older API sends none,
+   * and that must read as "nothing to say" rather than as a free delivery.
+   */
+  /** `null` on a digital order. */
+  deliveryPayer?: DeliveryPayer | null;
+  deliveryPayerReason?: DeliveryPayerReason | null;
+  /** One entry per parcel; `[]` on a digital order. */
+  deliveryFees?: OrderDeliveryFee[];
+  /** `null` on a digital order. */
+  deliveryFeePayment?: DeliveryFeePayment | null;
+  /** Cash still to hand the rider(s) on a `cash_to_rider` order; 0 otherwise. */
+  amountDueToRider?: number;
+  /** The checkout 201 only: this order's delivery fee(s) going to the rider in cash. */
+  deliveryCashToRider?: number;
+  /**
+   * Delivery money owed back: `owed` has not reached the customer yet (in flight,
+   * or waiting for our team to send it by hand), `returned` has. `null` when
+   * nothing was ever owed.
+   */
+  deliveryFeeRefund?: { owed: number; returned: number } | null;
   paymentMethod: PaymentMethodChoice;
   paymentStatus: OrderPaymentStatus;
   fulfillmentStatus: FulfillmentStatus;
@@ -533,7 +616,9 @@ export type NotificationAggregate =
   | "order"
   | "shipment"
   | "payment"
-  | "ticket";
+  | "ticket"
+  /** `account.closure_requested` (ADR-A10); `aggregateId` is the request's id. */
+  | "account";
 
 export interface CustomerNotification {
   _id: string;
@@ -722,10 +807,57 @@ export interface MergeCartResult {
   dropped: CartDroppedLine[];
 }
 
+/**
+ * A shop's free-delivery terms as the quote applies them to this basket.
+ * `null` (the whole object) for a digital-only shop.
+ */
+export interface QuoteFreeDelivery {
+  mode: "always" | "never" | "above";
+  freeAboveAmount: number | null;
+  /**
+   * How much more FROM THIS SHOP would make delivery free. `null` when delivery
+   * is already free, the shop never delivers free, or no basket size can.
+   */
+  shortfall: number | null;
+}
+
+/** Why the delivery fee cannot go to the rider in cash. */
+export type DeliveryFeeCashReason =
+  | "cash_on_delivery"
+  | "not_customer_paid"
+  | "no_delivery_fee"
+  | "agency_declines_cash";
+
+/**
+ * "Pay the items now, the delivery fee in cash to the rider" (ADR-A11 W-F).
+ * Both amounts are the server's — display them, never compute them.
+ */
+export interface DeliveryFeeCashQuote {
+  available: boolean;
+  reason: DeliveryFeeCashReason | null;
+  /** Charged online now, if chosen. */
+  amountDueOnline: number;
+  /** Cash for the rider(s), if chosen. */
+  amountDueToRider: number;
+}
+
 export interface CartQuoteVendorLine {
   vendorId: string;
   subtotal: number;
+  /** What the customer pays for THIS shop's delivery — 0 when the shop pays. */
   delivery: number;
+  /*
+   * ── ADR-A11 (2026-10-04) — optional: an older API sends none of these ──
+   */
+  /** `subtotal + delivery`. */
+  total?: number;
+  /** `vendor` (free delivery) · `customer` · `null` for a digital-only shop. */
+  deliveryPayer?: DeliveryPayer | null;
+  deliveryPayerReason?: DeliveryPayerReason | null;
+  freeDelivery?: QuoteFreeDelivery | null;
+  /** `null` for a digital shop. */
+  deliveryFeeCash?: DeliveryFeeCashQuote | null;
+  /** Internal — what a free-delivery shop pays its agencies. **Never show it.** */
   absorbedByVendor: number;
   /**
    * Whether this shop's part of the basket can carry its delivery cost
@@ -814,34 +946,152 @@ export interface AddressRegionInvalidDetails {
 /**
  * `POST /api/customer/cart/quote`.
  *
- * ⚠️ **`delivery` is 0 and `total` is the subtotal — that is the truth, not a
- * stub.** The agency's delivery fee is real and is charged, but to the *vendor*:
- * `splitOrder` computes `vendorNet = gross − commission − deliveryTotal`. Adding
- * it to the customer's total would collect it twice.
+ * ── Delivery is each shop's setting (ADR-A11, 2026-10-04) ────────────────────
  *
- * `absorbedByVendor` is what the seller pays, reported so the UI can say
- * "delivery included" and mean it. It is an **estimate** and `null` when it
- * could not be computed (a digital cart, or an agency with no pricing policy) —
- * deliberately distinct from `0`. Never add it to a total.
+ * Until then every shop paid delivery and `delivery` was always 0. Now a shop
+ * delivers free `always`, `never`, or `above` an amount of its own items, and
+ * where the customer pays, `delivery` is the real fee and **`total` already
+ * includes it** — `total` is exactly what checkout charges. Render the per-shop
+ * `perVendor[].delivery` lines and `total`; never add, subtract or sum anything
+ * here, and never show `absorbedByVendor` (it is what free-delivery shops pay
+ * their agencies — internal, and `null` for a digital cart).
+ *
+ * The quote is an estimate: `regionKnown: false` means it was priced without a
+ * drop-off region, so the fee can rise once an address is chosen. Re-quote with
+ * `deliveryAddressId`; checkout prices with the same function and is the
+ * authority.
  *
  * `tax` and `discount` are pinned zeros: there is no tax engine and no coupon
  * model. They are present so the receipt does not change shape the day either
  * arrives.
  *
- * `meetsDeliveryMinimum: false` means checkout will refuse — one shop's items
- * are too small to carry the delivery fee the vendor pays. It depends on
- * `paymentMethod`: cash on delivery is checked per agency and adds the COD fee,
- * so re-quote when the shopper switches method.
+ * `meetsDeliveryMinimum: false` means checkout will refuse one shop's items —
+ * rare since ADR-A11 (a free-delivery shop that cannot carry its fee falls back
+ * to customer-paid delivery instead). It depends on `paymentMethod`, so
+ * re-quote when the shopper switches method.
  */
 export interface CartQuote {
   currency: string;
   subtotal: number;
+  /** Σ the shops' `delivery` — already inside `total`. */
   delivery: number;
+  /** Internal. Never show it, never add it to anything. */
   absorbedByVendor: number | null;
   tax: number;
   discount: number;
+  /** `subtotal + delivery` — exactly what checkout charges. */
   total: number;
   paymentMethod: QuotePaymentMethod;
   meetsDeliveryMinimum: boolean;
+  /** `false` ⇒ priced in-region, without a drop-off; the fee may rise. Absent on an older API. */
+  regionKnown?: boolean;
+  /**
+   * Whether this checkout may pay the items online and the delivery fee in cash
+   * to the rider. Offer the choice only while `available`. Absent on an older API.
+   */
+  deliveryFeeCash?: DeliveryFeeCashQuote & {
+    /** The shops whose delivery would be paid in cash. */
+    vendorIds: string[];
+  };
   perVendor: CartQuoteVendorLine[];
+}
+
+// ─── Delivery-fee changes after checkout (ADR-A11 W-E) ───────────────────────
+
+/** What the customer may do with a proposal. Render only these. */
+export type DeliveryFeeProposalAction = "approve" | "reject" | "pay";
+
+/**
+ * A change to one parcel's delivery fee — `GET /api/customer/orders/:id/delivery-fee-proposals`.
+ *
+ * A decrease is `approved` the moment it is created (nothing to answer). An
+ * increase waits for the customer, and the parcel cannot be picked up until it
+ * is answered — and, online, paid.
+ */
+export interface DeliveryFeeProposal {
+  id: string;
+  shipmentId: string;
+  orderId: string;
+  /** `platform` is a change of delivery company made by the shop. */
+  raisedBy: "delivery_company" | "platform";
+  origin: "agency" | "change_agency" | "combined_request";
+  direction: "increase" | "decrease" | null;
+  currency: string;
+  feeBefore: number;
+  proposedFee: number;
+  /** Free text from the delivery company. Vendor/agency-written — show as is. */
+  reason: string | null;
+  status: "pending" | "approved" | "rejected" | "withdrawn";
+  /** Send back the one you displayed; a `409` means it moved. */
+  version: number;
+  /** Set once an ONLINE increase is approved: the difference to pay. */
+  topup: { amount: number; status: "awaiting_payment" | "paid"; paidAt: string | null } | null;
+  availableActions: DeliveryFeeProposalAction[];
+  respondedAt: string | null;
+  createdAt: string;
+}
+
+export interface DeliveryFeeRefundEntry {
+  amount: number;
+  status: "processing" | "completed" | "manual_required" | "failed";
+  cause: string;
+  createdAt: string;
+  settledAt: string | null;
+  /** A `completed` entry our team sent by hand. */
+  settledByHand: boolean;
+}
+
+export interface OrderDeliveryFees {
+  currency: string;
+  proposals: DeliveryFeeProposal[];
+  shipments: {
+    shipmentId: string;
+    status: string;
+    deliveryPayer: DeliveryPayer;
+    /** What the delivery company is paid. */
+    fee: number;
+    /** Online: what the customer has paid for it. COD: the cash they will hand over. */
+    customerFee: number;
+    pendingProposalId: string | null;
+  }[];
+  refunds: {
+    /** Not back with the customer yet — `awaitingManual` included. */
+    owed: number;
+    returned: number;
+    /** The part our team must send by hand: "on its way", not "owed". */
+    awaitingManual: number;
+    entries: DeliveryFeeRefundEntry[];
+  };
+}
+
+/** `POST …/delivery-fee-proposals/:proposalId/pay` — answers like `POST /payments/initiate`. */
+export interface DeliveryFeeTopupPayment {
+  transactionId: string;
+  status: string;
+  instructions?: PaymentInstructions;
+  amount: number;
+  currency: string;
+  proposalId: string;
+  message?: string;
+}
+
+// ─── Combined delivery price (ADR-A11 D-8) ───────────────────────────────────
+
+export interface CombinedDeliveryRequest {
+  id: string;
+  cartId: string;
+  agencyId: string;
+  currency: string;
+  status: "open" | "answered" | "declined" | "cancelled";
+  note: string | null;
+  shipments: { shipmentId: string; orderId: string; feeAtRequest: number }[];
+  answer: {
+    fees: { shipmentId: string; feeBefore: number; feeAfter: number; proposalId: string }[];
+    saving: number;
+    note: string | null;
+    answeredAt: string;
+  } | null;
+  declineNote: string | null;
+  createdAt: string;
+  closedAt: string | null;
 }

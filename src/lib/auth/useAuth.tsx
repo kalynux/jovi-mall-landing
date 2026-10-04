@@ -19,6 +19,10 @@ import type { AuthUser, AuthStatus, Role, AuthRoleEntity } from "./auth.types";
 import { restoreSession } from "./auth.service";
 import { logoutAndRedirect } from "./auth.service";
 import { hydrate as hydrateTokens } from "./token-store";
+import { useLocale } from "next-intl";
+import { onSessionRevoked } from "@/lib/api/client";
+import { DEFAULT_LOCALE, isLocale, localePath } from "@/i18n/routing";
+import { ACCOUNT_CLOSED_PATH } from "@/lib/shop/shop.routes";
 import { IS_NATIVE_BUILD, isNative } from "@/lib/platform";
 
 /**
@@ -245,6 +249,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     await logoutAndRedirect(to);
   }, []);
+
+  /**
+   * The server ended the session for good — `AUTH_ROLE_CLOSED` or
+   * `AUTH_ACCOUNT_CLOSED`, on any request (see `lib/api/client.ts`, which has
+   * already dropped the credential and cleared the cookies by the time this
+   * runs). No retry and no refresh: neither can change the answer.
+   *
+   * Inside the shop, the page goes to `/shop/account-closed`, which says what
+   * happened — a storefront that 403s on every tap says nothing. `?all=1` when
+   * the whole account is gone, so that screen does not offer a sign-in there is
+   * nothing to sign in to. Anywhere else (a marketing page that merely restored
+   * the session) only the state drops; yanking a reader off `/pricing` would be
+   * the wrong place to break the news.
+   */
+  const locale = useLocale();
+
+  useEffect(() => {
+    return onSessionRevoked((code) => {
+      const first = window.location.pathname.split("/")[1];
+      const rest = isLocale(first)
+        ? window.location.pathname.slice(first.length + 1) || "/"
+        : window.location.pathname;
+      const inShop = rest === "/shop" || rest.startsWith("/shop/");
+
+      if (!inShop || rest.startsWith(ACCOUNT_CLOSED_PATH)) {
+        setUser(null);
+        setRole(null);
+        setRoleEntity(null);
+        setStatus("unauthenticated");
+        return;
+      }
+
+      const target = localePath(isLocale(locale) ? locale : DEFAULT_LOCALE, ACCOUNT_CLOSED_PATH);
+      void logout(code === "AUTH_ACCOUNT_CLOSED" ? `${target}?all=1` : target);
+    });
+  }, [locale, logout]);
 
   return (
     <AuthContext.Provider value={{ user, role, role_entity, status, refresh: restore, logout }}>

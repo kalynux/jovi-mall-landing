@@ -866,7 +866,26 @@
         "MESSAGING_IDENTITY_ALREADY_LINKED": "Ce compte de messagerie est déjà relié à un autre compte Wi-Mall. Déconnectez-le là-bas d’abord, ou contactez l’assistance.",
         "MESSAGING_CONNECTION_NOT_FOUND": "Ce canal n’est pas connecté.",
         "PHONE_VERIFICATION_DELIVERY_FAILED": "Nous n'avons pas pu envoyer votre code sur WhatsApp pour le moment. Veuillez réessayer dans une minute.",
-        "AUTH_ACCOUNT_CLOSED": "Ce compte a été fermé. Il ne peut pas être rouvert, et il n'est plus possible de s'y connecter."
+        "AUTH_ACCOUNT_CLOSED": "Ce compte a été fermé. Il ne peut pas être rouvert, et il n'est plus possible de s'y connecter.",
+        "AUTH_ROLE_CLOSED": "Ce compte a été fermé et ne peut pas être rouvert. Vos autres comptes sur Wi-Mall ne sont pas concernés.",
+        "ROLE_CLOSURE_REQUEST_NOT_FOUND": "Aucune demande de fermeture n'est ouverte pour ce compte.",
+        "ROLE_CLOSURE_REQUEST_EXPIRED": "Cette demande de fermeture n'est plus ouverte. Elle a expiré ou a déjà reçu une réponse.",
+        "ROLE_CLOSURE_BLOCKED": "Certains points doivent encore être réglés avant que ce compte puisse être fermé.",
+        "ROLE_CLOSED": "Ce rôle a été fermé sur votre compte et ne peut pas être rouvert.",
+        "DELIVERY_FEE_CASH_NOT_AVAILABLE": "Le paiement des frais de livraison en espèces au livreur n’est pas disponible pour cette commande. Payez la livraison avec votre commande.",
+        "DELIVERY_FEE_PROPOSAL_NOT_FOUND": "Ce changement des frais de livraison n’existe plus.",
+        "DELIVERY_FEE_PROPOSAL_NOT_PENDING": "Ce changement des frais de livraison a déjà reçu une réponse.",
+        "DELIVERY_FEE_PROPOSAL_NOT_YOURS": "Ce n’est pas à vous de répondre à ce changement des frais de livraison.",
+        "DELIVERY_FEE_PROPOSAL_STALE": "Ce changement des frais de livraison ne peut plus s’appliquer — le colis a avancé.",
+        "DELIVERY_FEE_PROPOSAL_SETTLEMENT_CONFLICT": "Nous n’avons pas pu appliquer ces frais pour le moment. Rien n’a changé — réessayez dans un instant.",
+        "DELIVERY_FEE_PROPOSAL_VERSION_MISMATCH": "Ces frais de livraison ont changé depuis que vous les avez ouverts. Rechargez pour voir le montant actuel.",
+        "DELIVERY_FEE_PROPOSAL_ORDER_NOT_PAID": "Les frais de livraison de cette commande ne peuvent pas changer tant que son paiement n’est pas réglé.",
+        "DELIVERY_FEE_TOPUP_IN_PROGRESS": "Un paiement pour ces frais de livraison est encore en cours. Attendez qu’il se termine.",
+        "DELIVERY_FEE_TOPUP_NOT_DUE": "Rien n’est dû pour ces frais de livraison.",
+        "COMBINED_DELIVERY_REQUEST_NOT_FOUND": "Cette demande de prix groupé n’existe plus.",
+        "COMBINED_DELIVERY_REQUEST_INELIGIBLE": "Un prix groupé demande au moins deux colis avec la même société de livraison, pas encore enlevés et sans autre changement de frais en attente.",
+        "COMBINED_DELIVERY_REQUEST_ALREADY_OPEN": "Vous avez déjà demandé un prix groupé à cette société de livraison pour cette commande.",
+        "COMBINED_DELIVERY_REQUEST_NOT_OPEN": "Cette demande a déjà reçu une réponse ou a été annulée."
     },
     "checkout": {
         "errors": {
@@ -893,7 +912,8 @@
             "ORDER_BELOW_DELIVERY_MINIMUM": "Vos articles pris {from} n'atteignent pas le minimum pour la livraison. Ajoutez {amount} de plus chez ce vendeur et réessayez — rien n'a été débité.",
             "ORDER_BELOW_DELIVERY_MINIMUM_UNKNOWN": "Vos articles pris {from} n'atteignent pas le minimum pour la livraison. Ajoutez d'autres articles de ce vendeur et réessayez — rien n'a été débité.",
             "ORDER_BELOW_DELIVERY_MINIMUM_UNREACHABLE": "Vos articles pris {from} ne peuvent pas être livrés pour le moment. Retirez-les et réessayez — rien n'a été débité.",
-            "ORDER_BELOW_DELIVERY_MINIMUM_COD_UNREACHABLE": "Vos articles pris {from} ne peuvent pas être payés à la livraison. Payez en ligne, ou retirez-les — rien n'a été débité."
+            "ORDER_BELOW_DELIVERY_MINIMUM_COD_UNREACHABLE": "Vos articles pris {from} ne peuvent pas être payés à la livraison. Payez en ligne, ou retirez-les — rien n'a été débité.",
+            "DELIVERY_FEE_CASH_NOT_AVAILABLE": "Le paiement des frais de livraison en espèces n’est plus disponible pour cette commande. Rien n’a été commandé ni débité — la livraison est maintenant payée avec votre commande ; vérifiez le total et réessayez."
         }
     },
     "errorPage": {
@@ -2086,7 +2106,9 @@
                 "supportNew": "Nouveau ticket",
                 "close": "Fermer le compte",
                 "product": "Produit",
-                "store": "Boutique"
+                "store": "Boutique",
+                "closure": "Demande de fermeture",
+                "accountClosed": "Compte fermé"
             }
         },
         "query": {
@@ -2148,7 +2170,8 @@
             },
             "bargain": "Négocier",
             "moreActions": "Prix négociable — plus d’options",
-            "closeActions": "Fermer les options"
+            "closeActions": "Fermer les options",
+            "freeDeliveryFrom": "Livraison gratuite dès {amount}"
         },
         "chrome": {
             "brandHome": "Boutique Wi-Mall",
@@ -2187,6 +2210,7 @@
             "categoryWithCount": "{name} · {count}",
             "inStock": "En stock",
             "emptyTitle": "Aucun produit trouvé",
+            "emptyCategory": "Aucun produit dans cette catégorie",
             "emptyWithQuery": "Aucun résultat pour « {query} ». La recherche porte sur des mots entiers : essayez un mot complet, ou retirez un filtre.",
             "emptyNoQuery": "Essayez de retirer un filtre ou de chercher autre chose.",
             "reset": "Réinitialiser",
@@ -2222,8 +2246,7 @@
             "tabSpecs": "Caractéristiques",
             "tabPolicies": "Retours et annulation",
             "tabReviews": "Avis",
-            "deliveryFree": "Livraison gratuite pour cet article",
-            "deliveryIncluded": "Incluse — le vendeur prend la livraison en charge",
+            "deliveryFree": "Gratuite — la boutique paie la livraison",
             "shipsFrom": "Expédié depuis",
             "defaultOrigin": "Cameroun",
             "digitalDelivery": "Livraison numérique",
@@ -2247,7 +2270,7 @@
             "specSku": "Référence",
             "specTags": "Mots-clés",
             "relatedCoPurchase": "Souvent achetés ensemble",
-            "relatedSameCategory": "Autres articles de cette catégorie",
+            "relatedSameCategory": "Autres articles de ces catégories",
             "moreFromStore": "Plus de {store}",
             "replaceCartTitle": "Remplacer votre panier ?",
             "emptyCartTitle": "Cette action vide votre panier",
@@ -2325,7 +2348,9 @@
                 "telegram": "Continuer sur Telegram",
                 "telegramNote": "Appuyez sur Démarrer dans Telegram et l’assistant reprend cet article.",
                 "message": "Je voudrais négocier le prix de {item}."
-            }
+            },
+            "deliveryFreeFrom": "Gratuite dès {amount} d’achats dans cette boutique",
+            "deliveryAtCheckout": "Frais de livraison affichés au paiement"
         },
         "store": {
             "tabs": {
@@ -2360,7 +2385,9 @@
             "addFailed": "Impossible d’ajouter cet article à votre panier. Veuillez réessayer.",
             "unavailableTitle": "Cette boutique n’est pas disponible",
             "unavailableDescription": "Elle a peut-être fermé ou changé d’adresse. Parcourez la boutique pour trouver d’autres vendeurs.",
-            "loadFailed": "Impossible de charger cette boutique."
+            "loadFailed": "Impossible de charger cette boutique.",
+            "freeDelivery": "Livraison gratuite",
+            "freeDeliveryFrom": "Livraison gratuite dès {amount}"
         },
         "payMethods": {
             "mtn": "MTN Mobile Money",
@@ -2427,8 +2454,6 @@
             "orderSummary": "Récapitulatif de la commande",
             "subtotal": "Sous-total",
             "delivery": "Livraison",
-            "deliveryIncluded": "Incluse",
-            "vendorCoversDelivery": "Votre vendeur prend en charge {amount} de livraison sur cette commande.",
             "discount": "Remise",
             "discountAmount": "− {amount}",
             "tax": "Taxes",
@@ -2479,9 +2504,7 @@
             "lineStore": " · {store}",
             "subtotal": "Sous-total",
             "delivery": "Livraison",
-            "deliveryIncluded": "Incluse",
             "total": "Total",
-            "vendorCoversDelivery": "Votre vendeur prend en charge {amount} de livraison sur cette commande.",
             "multiVendorNote": "{n, plural, other {Cela devient # commandes — une par vendeur, expédiées indépendamment. Vous n'êtes débité qu'une seule fois pour l'ensemble.}}",
             "chooseAddress": "Choisissez une adresse de livraison",
             "enterValidNumber": "Saisissez un numéro mobile money valide",
@@ -2631,7 +2654,6 @@
             "breakdown": {
                 "items": "Articles",
                 "delivery": "Livraison",
-                "included": "Incluse",
                 "discount": "Remise",
                 "discountAmount": "− {amount}",
                 "tax": "Taxes",
@@ -3149,6 +3171,167 @@
             "switching": "Changement en cours…",
             "signingOut": "Déconnexion…",
             "switchFailed": "Impossible de passer à votre compte client. Déconnectez-vous, puis reconnectez-vous en tant que client."
+        },
+        "closureRequest": {
+            "description": "Un administrateur a demandé la fermeture de votre compte d'achat.",
+            "headline": "Un administrateur a demandé la fermeture de votre compte d'achat",
+            "nothingChanges": "Rien ne change tant que vous ne confirmez pas. Sans réponse de votre part, la demande expire le {date}.",
+            "reasonLabel": "Motif indiqué",
+            "consequencesTitle": "Si vous confirmez",
+            "consequences": {
+                "profile": "Votre nom, vos coordonnées et vos adresses enregistrées sont retirés de votre compte d'achat.",
+                "orders": "Vos commandes passées sont conservées comme documents commerciaux, sans votre nom ni vos coordonnées.",
+                "signOut": "Vous êtes déconnecté. Si vous avez aussi un compte professionnel sur Wi-Mall — une boutique, une agence ou un compte de livreur —, il n'est pas concerné et vous pouvez toujours vous y connecter.",
+                "final": "C'est définitif. Un compte d'achat fermé ne peut pas être rouvert."
+            },
+            "warningsTitle": "Vous renoncez à",
+            "warnings": {
+                "plan": "La durée payée restante de votre formule {plan}.",
+                "planUntil": "La durée payée restante de votre formule {plan}, valable jusqu'au {date}.",
+                "credit": "Votre solde de crédit de {amount}.",
+                "other": "Un élément payé sur ce compte."
+            },
+            "blockersTitle": "À régler d'abord",
+            "blockersIntro": "Votre compte d'achat ne peut être fermé qu'une fois ces points réglés.",
+            "blockers": {
+                "orders_in_flight": "{count, plural, one {# commande est encore en cours. Elle doit d'abord être terminée.} other {# commandes sont encore en cours. Elles doivent d'abord être terminées.}}",
+                "bookings_upcoming": "{count, plural, one {# réservation à venir doit d'abord être terminée ou annulée.} other {# réservations à venir doivent d'abord être terminées ou annulées.}}",
+                "other": "Un élément de votre compte doit encore être réglé.",
+                "seeOrders": "Voir mes commandes",
+                "seeBookings": "Voir mes réservations"
+            },
+            "typeToConfirm": "Tapez <code>{phrase}</code> pour confirmer",
+            "confirm": "Fermer mon compte d'achat",
+            "confirming": "Fermeture…",
+            "blockedHint": "Vous pourrez confirmer une fois tous les points ci-dessus réglés.",
+            "keepTitle": "Vous souhaitez garder votre compte ?",
+            "keepBody": "Dites-le ici. L'administrateur verra votre réponse, et rien ne change sur votre compte.",
+            "noteLabel": "Message pour l'administrateur (facultatif)",
+            "notePlaceholder": "Pourquoi vous souhaitez le garder",
+            "keep": "Garder mon compte",
+            "keeping": "Envoi…",
+            "empty": {
+                "title": "Aucune demande en attente",
+                "description": "Personne n'a demandé la fermeture de votre compte d'achat. Si un administrateur le fait un jour, la demande apparaîtra ici."
+            },
+            "kept": {
+                "title": "Votre compte reste ouvert",
+                "description": "Nous avons indiqué à l'administrateur que vous souhaitez garder votre compte. Rien n'a changé."
+            },
+            "gone": {
+                "title": "Cette demande n'est plus ouverte",
+                "description": "Elle a expiré, a été retirée ou a déjà reçu une réponse. Rien n'a changé sur votre compte."
+            },
+            "backToAccount": "Retour à mon compte",
+            "banner": {
+                "title": "Un administrateur a demandé la fermeture de votre compte d'achat",
+                "body": "Rien ne change tant que vous ne confirmez pas. Merci de répondre avant le {date}.",
+                "action": "Voir la demande"
+            }
+        },
+        "accountClosed": {
+            "title": "Votre compte d'achat est fermé",
+            "body": "Votre nom et vos coordonnées en ont été retirés. Vos commandes passées sont conservées comme documents commerciaux, sans vos coordonnées.",
+            "business": "Si vous avez aussi un compte professionnel sur Wi-Mall — une boutique, une agence ou un compte de livreur —, il n'est pas concerné et vous pouvez vous y connecter.",
+            "signIn": "Se connecter",
+            "allTitle": "Votre compte Wi-Mall est fermé",
+            "allBody": "Votre nom et vos coordonnées ont été retirés. Vos commandes passées sont conservées comme documents commerciaux, sans vos coordonnées. Il n'y a plus de compte auquel se connecter.",
+            "browse": "Parcourir la boutique"
+        },
+        "delivery": {
+            "line": "Livraison",
+            "lineShop": "Livraison · {shop}",
+            "free": "Gratuite",
+            "addForFree": "Ajoutez {amount} de plus {from} pour une livraison gratuite.",
+            "regionUnknown": "Prix calculé sans votre région de livraison — il peut changer une fois l’adresse choisie.",
+            "sellerOf": "Vendeur de {item}",
+            "thisSeller": "Ce vendeur",
+            "atCheckout": "Calculée au paiement",
+            "totalBeforeDelivery": "Total hors livraison",
+            "calculating": "Calcul de la livraison…",
+            "cashToRider": "Payer les frais de livraison en espèces au livreur",
+            "cashToRiderBody": "Payez {online} maintenant pour vos articles, et {cash} en espèces au livreur à l’arrivée de votre colis.",
+            "payNow": "À payer maintenant",
+            "cashForRider": "Espèces pour le livreur",
+            "riderInfo": "Préparez les <b>frais de livraison en espèces</b> pour le livreur. Le montant et votre code de livraison sont sur votre commande — donnez le code une fois votre colis en main et les frais payés.",
+            "deliveryInCash": "Livraison (espèces au livreur)",
+            "totalOnline": "Total en ligne",
+            "dueToRider": "Reste à payer au livreur en espèces",
+            "refundOwed": "Remboursement de livraison en cours",
+            "refundReturned": "Livraison remboursée",
+            "parcelFee": "Frais de livraison",
+            "parcelFeeCash": "Frais de livraison (espèces au livreur)",
+            "parcelRefundable": "Livraison à vous rembourser",
+            "riderCashTitle": "Payer {amount} en espèces pour la livraison",
+            "ofWhichDelivery": "Dont {amount} de livraison",
+            "riderCashWarning": "Vos articles sont payés. Ne donnez ce code au livreur <strong>qu’après</strong> avoir reçu votre colis et payé les frais de livraison — c’est lui qui enregistre ce paiement.",
+            "changes": {
+                "title": "Changements des frais de livraison",
+                "askIncrease": "La société de livraison demande {after} au lieu de {before} pour livrer ce colis.",
+                "movedIncrease": "La boutique a confié ce colis à une autre société de livraison, qui demande {after} au lieu de {before}.",
+                "reason": "Sa raison : <q>{reason}</q>",
+                "waitsForYou": "Votre colis ne peut pas être enlevé tant que vous n’avez pas répondu.",
+                "topupDue": "Vous avez accepté les nouveaux frais. Payez la différence de {amount} — votre colis l’attend.",
+                "declineShopPays": "Si vous refusez, la boutique paie la différence — vous ne payez rien de plus.",
+                "declineCompany": "Si vous refusez, la société peut livrer à l’ancien tarif, redemander une fois, ou renoncer — la boutique choisit alors une autre société.",
+                "accept": "Accepter {amount}",
+                "decline": "Refuser",
+                "payAmount": "Payer {amount}",
+                "declineTitle": "Refuser les nouveaux frais de livraison ?",
+                "keepDeciding": "Retour",
+                "approved": "Nouveaux frais de livraison acceptés",
+                "declined": "Nouveaux frais de livraison refusés",
+                "changedReload": "Ces frais ont changé depuis que vous les avez ouverts. Voici le montant actuel.",
+                "answerFailed": "Nous n’avons pas pu envoyer votre réponse.",
+                "refundByHand": "Notre équipe vous envoie {amount} de frais de livraison manuellement.",
+                "historyLowered": "Frais baissés de {before} à {after}",
+                "historyCombined": "Prix groupé : baissé de {before} à {after}",
+                "historyRaised": "Frais montés de {before} à {after}",
+                "historyDeclined": "Vous avez refusé un changement à {after}",
+                "historyWithdrawn": "Un changement à {after} a été retiré",
+                "historyPending": "Un changement à {after} est en cours de traitement"
+            },
+            "topup": {
+                "title": "Payer la différence de livraison",
+                "intro": "Les nouveaux frais de livraison sont de {fee}. Votre colis est enlevé dès que ce paiement est passé.",
+                "toPay": "À payer",
+                "payAmount": "Payer {amount}",
+                "starting": "Lancement du paiement…",
+                "startFailed": "Nous n’avons pas pu lancer ce paiement.",
+                "refused": "Le paiement n’est pas passé. Vous pouvez réessayer.",
+                "notDue": "Plus rien n’est dû pour cette livraison.",
+                "paid": "Paiement reçu — votre colis peut maintenant être enlevé.",
+                "stillPending": "Pas encore de confirmation. Votre commande se met à jour dès que le paiement arrive.",
+                "checkPhoneTitle": "Regardez votre téléphone",
+                "checkPhoneBody": "Validez la demande de paiement sur votre téléphone. Cet écran se met à jour une fois le paiement passé."
+            },
+            "combined": {
+                "title": "Prix de livraison groupé",
+                "intro": "Plusieurs de vos colis partent avec la même société de livraison. Vous pouvez lui demander un seul prix pour tous — elle ne peut que baisser les frais.",
+                "theCompany": "la société de livraison",
+                "ask": "Demander un prix groupé à {company}",
+                "requestTo": "{n, plural, one {# colis avec {company}} other {# colis avec {company}}}",
+                "status": {
+                    "open": "En attente",
+                    "answered": "Répondu",
+                    "declined": "Refusé",
+                    "cancelled": "Annulé"
+                },
+                "saving": "Nouveau prix appliqué — vous économisez {amount}.",
+                "theirNote": "Sa note : <q>{note}</q>",
+                "waiting": "En attente de la réponse de la société.",
+                "cancel": "Annuler la demande",
+                "confirmTitle": "Demander un prix groupé ?",
+                "confirmBody": "Nous demandons à {company} un seul prix pour vos colis de cette commande. Un nouveau prix ne peut être que plus bas, et il s’applique tout seul.",
+                "noteLabel": "Note pour la société (facultatif)",
+                "notePlaceholder": "Même rue — un seul trajet ?",
+                "send": "Envoyer la demande",
+                "notNow": "Pas maintenant",
+                "sent": "Demande envoyée à la société de livraison",
+                "sendFailed": "Nous n’avons pas pu envoyer votre demande.",
+                "cancelled": "Demande annulée",
+                "cancelFailed": "Nous n’avons pas pu annuler cette demande."
+            }
         }
     },
     "cookieNotice": {

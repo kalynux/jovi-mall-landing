@@ -96,6 +96,13 @@ export type BackendErrorCode =
      * path: both 403s there are terminal and four of the five 401s are not.
      */
     | "AUTH_ACCOUNT_CLOSED"
+    /**
+     * 403. The ROLE this session is signed in as was closed (ADR-A10,
+     * api-doc/me/role-closure.md) — the role-level twin of `AUTH_ACCOUNT_CLOSED`.
+     * The account may still hold other roles. Terminal for this session:
+     * `lib/api/client.ts` signs out on it globally and never retries.
+     */
+    | "AUTH_ROLE_CLOSED"
     // ─── Passwordless customer sign-in (api-doc/auth/magic-login.md) ───────────
     /** 401. The magic link is unknown, malformed, or already spent. */
     | "MAGIC_LINK_INVALID"
@@ -325,6 +332,30 @@ export type BackendErrorCode =
      */
     | "ORDER_BELOW_DELIVERY_MINIMUM"
     | "CANCELLATION_NOT_ALLOWED"
+    // ─── Customer-paid delivery (ADR-A11, 2026-10-04) ──────────────────────────
+    /**
+     * 422 — checkout asked `deliveryFeePayment: "cash_to_rider"` and it cannot be
+     * honoured. `details.reason`: `cash_on_delivery` · `not_customer_paid` ·
+     * `no_delivery_fee` · `agency_declines_cash` (+ `vendorId`, `agencyIds`).
+     * Nothing was created; the fix is paying delivery with the order.
+     */
+    | "DELIVERY_FEE_CASH_NOT_AVAILABLE"
+    | "DELIVERY_FEE_PROPOSAL_NOT_FOUND"
+    /** 409 — somebody else answered it first. Re-read, never retry. */
+    | "DELIVERY_FEE_PROPOSAL_NOT_PENDING"
+    | "DELIVERY_FEE_PROPOSAL_NOT_YOURS"
+    | "DELIVERY_FEE_PROPOSAL_STALE"
+    | "DELIVERY_FEE_PROPOSAL_SETTLEMENT_CONFLICT"
+    /** 409 — the figure was edited since it was shown (`details.currentVersion`). Re-read and re-show. */
+    | "DELIVERY_FEE_PROPOSAL_VERSION_MISMATCH"
+    | "DELIVERY_FEE_PROPOSAL_ORDER_NOT_PAID"
+    | "DELIVERY_FEE_TOPUP_IN_PROGRESS"
+    | "DELIVERY_FEE_TOPUP_NOT_DUE"
+    | "COMBINED_DELIVERY_REQUEST_NOT_FOUND"
+    /** 422 — fewer than two eligible parcels. `details.reason`: agency · cart · status · payer · pending · limit · too_few. */
+    | "COMBINED_DELIVERY_REQUEST_INELIGIBLE"
+    | "COMBINED_DELIVERY_REQUEST_ALREADY_OPEN"
+    | "COMBINED_DELIVERY_REQUEST_NOT_OPEN"
     // ─── Shipment ──────────────────────────────────────────────────────────────
     | "SHIPMENT_NOT_FOUND"
     | "SHIPMENT_INVALID_STATUS_TRANSITION"
@@ -576,6 +607,15 @@ export type BackendErrorCode =
     | "USER_STATUS_CONFLICT"
     | "ACCOUNT_CLOSURE_ROLE_NOT_ELIGIBLE"
     | "ACCOUNT_CLOSURE_ORDERS_IN_FLIGHT"
+    // ─── Role closure requested by an administrator (api-doc/me/role-closure.md)
+    /** 404. No pending request for the role signed in. */
+    | "ROLE_CLOSURE_REQUEST_NOT_FOUND"
+    /** 409. It expired, or was answered or withdrawn, between the read and the write. */
+    | "ROLE_CLOSURE_REQUEST_EXPIRED"
+    /** 422. Something live is attached; `details.blockers` lists it. Never retry. */
+    | "ROLE_CLOSURE_BLOCKED"
+    /** 409 from add-role: this role was closed on the account and cannot be reopened. */
+    | "ROLE_CLOSED"
     /**
      * ─── Contact change (`login_email` / `login_phone`) ──────────────────────
      *

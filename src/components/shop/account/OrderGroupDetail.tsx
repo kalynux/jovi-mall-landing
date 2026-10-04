@@ -39,6 +39,9 @@ import {
 } from "@/lib/shop/order-status";
 import { publicUrl } from "@/lib/shop/shop.types";
 import { DeliveryTracking } from "@/components/shop/account/DeliveryTracking";
+import { DeliveryFeeChanges } from "@/components/shop/account/DeliveryFeeChanges";
+import { CombinedDeliveryPanel } from "@/components/shop/account/CombinedDeliveryPanel";
+import { customerPaysDelivery, parcelFee } from "@/lib/shop/delivery";
 import { ReviewDisclosure } from "@/components/shop/account/ReviewForm";
 import { useApiResource } from "@/lib/shop/useApiResource";
 import type {
@@ -48,6 +51,7 @@ import type {
   CustomerShipmentAgent,
   CustomerShipmentAgency,
   CustomerShipmentStatus,
+  OrderDeliveryFee,
   OrderGroup,
 } from "@/lib/shop/customer.types";
 
@@ -87,6 +91,10 @@ export function OrderGroupDetail({ cartId }: { cartId: string }) {
                 onChanged={group.reload}
               />
             ))}
+
+            {/* Checkout-level: parcels from several of these orders can share
+                one delivery company. Renders nothing unless that is so. */}
+            <CombinedDeliveryPanel cartId={g.cartId} orders={g.orders} />
           </>
         )}
       </ResourceView>
@@ -355,6 +363,7 @@ export function VendorOrderCard({
   const { flash, flashError } = useToast();
   const t = useTranslations("errors");
   const tOrders = useTranslations("shop.orders");
+  const tDelivery = useTranslations("shop.delivery");
   const format = useFormatter();
 
   // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
@@ -488,14 +497,6 @@ export function VendorOrderCard({
                     · {item.variantTitle}
                   </span>
                 )}
-                {item.freeDelivery && (
-                  <span
-                    className="muted"
-                    style={{ fontSize: 11.5, display: "block", marginTop: 1 }}
-                  >
-                    {tKey("shop.ds.freeDelivery")}
-                  </span>
-                )}
               </span>
               <span style={{ fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
                 {formatMoney(item.price * item.quantity, item.currency)}
@@ -534,7 +535,12 @@ export function VendorOrderCard({
 
       {/* The receipt. `tax` and `discount` are pinned zeros server-side, so they
           are shown only if either ever becomes real — printing "Tax 0" on every
-          order is noise, but the shape is ready for the day it is not. */}
+          order is noise, but the shape is ready for the day it is not.
+
+          Delivery (ADR-A11) is the order's own `priceBreakdown.delivery`, inside
+          `total` — or, when the fee goes to the rider in cash, `deliveryCash`,
+          which is NOT in `total`. An API from before ADR-A11 sends neither, and
+          then the row is left out rather than guessed. */}
       <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: 9 }}>
         {order.priceBreakdown && (
           <>
@@ -542,16 +548,25 @@ export function VendorOrderCard({
               label={tOrders("breakdown.items")}
               value={formatMoney(order.priceBreakdown.base, order.currency)}
             />
-            {order.orderType === "physical" && (
-              <BreakdownRow
-                label={tOrders("breakdown.delivery")}
-                value={
-                  <span style={{ color: "var(--success)", fontWeight: 700 }}>
-                    {tOrders("breakdown.included")}
-                  </span>
-                }
-              />
-            )}
+            {order.orderType === "physical" &&
+              typeof order.priceBreakdown.delivery === "number" &&
+              (order.deliveryFeePayment === "cash_to_rider" ? (
+                <BreakdownRow
+                  label={tDelivery("deliveryInCash")}
+                  value={formatMoney(order.priceBreakdown.deliveryCash ?? 0, order.currency)}
+                />
+              ) : (
+                <BreakdownRow
+                  label={tOrders("breakdown.delivery")}
+                  value={
+                    order.priceBreakdown.delivery > 0 ? (
+                      formatMoney(order.priceBreakdown.delivery, order.currency)
+                    ) : (
+                      <span style={{ color: "var(--success)", fontWeight: 700 }}>{tDelivery("free")}</span>
+                    )
+                  }
+                />
+              ))}
             {order.priceBreakdown.discount > 0 && (
               <BreakdownRow
                 label={tOrders("breakdown.discount")}
@@ -578,11 +593,35 @@ export function VendorOrderCard({
             paddingTop: order.priceBreakdown ? 6 : 0,
           }}
         >
-          <span>{tOrders("breakdown.total")}</span>
+          <span>
+            {order.deliveryFeePayment === "cash_to_rider" ? tDelivery("totalOnline") : tOrders("breakdown.total")}
+          </span>
           <span style={{ fontVariantNumeric: "tabular-nums" }}>
             {formatMoney(order.total, order.currency)}
           </span>
         </div>
+
+        {/* Still to hand over in cash, and delivery money coming back — both the
+            order's own figures. `deliveryFeeRefund.owed` is the "still owed"
+            number; the per-parcel refundable amount does not shrink once paid. */}
+        {(order.amountDueToRider ?? 0) > 0 && (
+          <BreakdownRow
+            label={tDelivery("dueToRider")}
+            value={formatMoney(order.amountDueToRider ?? 0, order.currency)}
+          />
+        )}
+        {(order.deliveryFeeRefund?.owed ?? 0) > 0 && (
+          <BreakdownRow
+            label={tDelivery("refundOwed")}
+            value={formatMoney(order.deliveryFeeRefund?.owed ?? 0, order.currency)}
+          />
+        )}
+        {(order.deliveryFeeRefund?.returned ?? 0) > 0 && (
+          <BreakdownRow
+            label={tDelivery("refundReturned")}
+            value={formatMoney(order.deliveryFeeRefund?.returned ?? 0, order.currency)}
+          />
+        )}
       </div>
 
       {/* Parcels. Physical orders only — a digital order has nothing to ship. */}
@@ -594,9 +633,15 @@ export function VendorOrderCard({
           // to the order, not the parcel — the shipment read has no address of
           // any kind — so it has to come from here.
           deliveryAddress={order.deliveryAddress}
+          deliveryFees={order.deliveryFees}
+          showFees={customerPaysDelivery(order)}
+          currency={order.currency}
           onChanged={onChanged}
         />
       )}
+
+      {/* Fee changes after checkout — customer-paid delivery only. */}
+      {customerPaysDelivery(order) && <DeliveryFeeChanges order={order} onChanged={onChanged} />}
 
       {collections.map((c) => (
         <DeliveryCodeCard
@@ -779,12 +824,26 @@ export function Shipments({
   orderId,
   isCod: cod,
   deliveryAddress,
+  deliveryFees,
+  showFees = false,
+  currency = "XAF",
   onChanged,
   whenEmpty = null,
 }: {
   orderId: string;
   isCod: boolean;
   deliveryAddress?: unknown;
+  /**
+   * The order's per-parcel delivery fees (ADR-A11). Needed even when no fee is
+   * drawn: a parcel whose fee goes to the rider in cash is delivered against
+   * its code, like cash on delivery, so it must not offer "I received it" —
+   * that confirm answers `422 SHIPMENT_CONFIRMATION_NOT_ALLOWED`.
+   */
+  deliveryFees?: OrderDeliveryFee[];
+  /** Draw each parcel's fee — on a customer-paid order only. */
+  showFees?: boolean;
+  /** The order's currency — a fee entry carries none of its own. */
+  currency?: string;
   onChanged: () => void;
   /**
    * What to draw when the order has no parcels yet.
@@ -801,6 +860,7 @@ export function Shipments({
   const { flash, flashError } = useToast();
   const t = useTranslations("errors");
   const tOrders = useTranslations("shop.orders");
+  const tDelivery = useTranslations("shop.delivery");
   // Root-scoped: `SHIPMENT_LABEL` emits absolute keys, as the lib modules do.
   const tKey = useTranslations();
   const format = useFormatter();
@@ -845,6 +905,8 @@ export function Shipments({
 
       {shipments.map((shipment) => {
         const view = SHIPMENT_LABEL[shipment.status];
+        const fee = parcelFee({ deliveryFees }, shipment.id);
+        const feeInCash = fee?.paidInCash === true;
         return (
           <div
             key={shipment.id}
@@ -870,6 +932,26 @@ export function Shipments({
             </div>
 
             <Carrier agency={shipment.agency} agencyName={shipment.agencyName} agent={shipment.agent} />
+
+            {/* This parcel's delivery fee, as the order recorded it. */}
+            {showFees && fee && (
+              <div style={{ marginTop: 8, fontSize: 12.5, color: "var(--text-body)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                  <span>{feeInCash ? tDelivery("parcelFeeCash") : tDelivery("parcelFee")}</span>
+                  <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                    {fee.amount > 0 ? formatMoney(fee.amount, currency) : tDelivery("free")}
+                  </span>
+                </div>
+                {(fee.customerFeeRefundable ?? 0) > 0 && (
+                  <div className="muted" style={{ display: "flex", justifyContent: "space-between", gap: 8, marginTop: 2 }}>
+                    <span>{tDelivery("parcelRefundable")}</span>
+                    <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                      {formatMoney(fee.customerFeeRefundable ?? 0, currency)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Live position, once the carrying agent is disclosed. The panel
                 asks jovi-mall who this customer may watch before it opens a
@@ -938,7 +1020,7 @@ export function Shipments({
               </div>
             )}
 
-            {!cod && shipment.status === "out_for_delivery" && (
+            {!cod && !feeInCash && shipment.status === "out_for_delivery" && (
               <div style={{ marginTop: 12 }}>
                 <Button
                   block
@@ -1122,6 +1204,9 @@ function DeliveryCodeCard({
   const { flash, flashError } = useToast();
   const t = useTranslations("errors");
   const tCod = useTranslations("shop.orders.cod");
+  const tDelivery = useTranslations("shop.delivery");
+  /** Goods paid online; only the delivery fee is cash (ADR-A11 W-F). */
+  const feeOnly = collection.kind === "delivery_fee";
 
   // Tick the resend cooldown down to zero. Without this the button would show
   // "Wait 43s" and stay disabled forever, because nothing else re-renders this
@@ -1180,11 +1265,23 @@ function DeliveryCodeCard({
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
         <Icon name="banknote" size={18} style={{ color: "var(--brand-hover)" }} />
         <span style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text-strong)" }}>
-          {tCod("payInCash", {
-            amount: formatMoney(collection.expectedAmount, collection.currency),
-          })}
+          {feeOnly
+            ? tDelivery("riderCashTitle", {
+                amount: formatMoney(collection.expectedAmount, collection.currency),
+              })
+            : tCod("payInCash", {
+                amount: formatMoney(collection.expectedAmount, collection.currency),
+              })}
         </span>
       </div>
+      {/* The server splits the cash; this only names the delivery part of it. */}
+      {!feeOnly && (collection.deliveryFeeAmount ?? 0) > 0 && (
+        <p className="muted" style={{ fontSize: 12, margin: "-4px 0 4px" }}>
+          {tDelivery("ofWhichDelivery", {
+            amount: formatMoney(collection.deliveryFeeAmount ?? 0, collection.currency),
+          })}
+        </p>
+      )}
 
       <div
         style={{
@@ -1212,7 +1309,9 @@ function DeliveryCodeCard({
       >
         <Icon name="triangle-alert" size={15} style={{ color: "var(--warning)", flexShrink: 0, marginTop: 1 }} />
         <span>
-          {tCod.rich("warning", { strong: (chunks) => <strong>{chunks}</strong> })}
+          {feeOnly
+            ? tDelivery.rich("riderCashWarning", { strong: (chunks) => <strong>{chunks}</strong> })
+            : tCod.rich("warning", { strong: (chunks) => <strong>{chunks}</strong> })}
         </span>
       </p>
 

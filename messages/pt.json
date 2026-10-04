@@ -866,7 +866,26 @@
         "MESSAGING_IDENTITY_ALREADY_LINKED": "Essa conta de mensagens já está ligada a outra conta Wi-Mall. Desligue-a aí primeiro, ou contacte o apoio ao cliente.",
         "MESSAGING_CONNECTION_NOT_FOUND": "Esse canal não está ligado.",
         "PHONE_VERIFICATION_DELIVERY_FAILED": "Não foi possível enviar o seu código no WhatsApp neste momento. Tente novamente dentro de um minuto.",
-        "AUTH_ACCOUNT_CLOSED": "Esta conta foi fechada. Não pode ser reaberta nem usada para iniciar sessão."
+        "AUTH_ACCOUNT_CLOSED": "Esta conta foi fechada. Não pode ser reaberta nem usada para iniciar sessão.",
+        "AUTH_ROLE_CLOSED": "Esta conta foi fechada e não pode ser reaberta. As suas outras contas na Wi-Mall não são afetadas.",
+        "ROLE_CLOSURE_REQUEST_NOT_FOUND": "Não existe nenhum pedido de encerramento aberto para esta conta.",
+        "ROLE_CLOSURE_REQUEST_EXPIRED": "Este pedido de encerramento já não está aberto. Expirou ou já foi respondido.",
+        "ROLE_CLOSURE_BLOCKED": "Ainda há coisas a resolver antes de esta conta poder ser fechada.",
+        "ROLE_CLOSED": "Esta função foi fechada na sua conta e não pode ser reaberta.",
+        "DELIVERY_FEE_CASH_NOT_AVAILABLE": "Pagar a entrega em dinheiro ao estafeta não está disponível para este pedido. Pague a entrega com o seu pedido.",
+        "DELIVERY_FEE_PROPOSAL_NOT_FOUND": "Esta alteração à taxa de entrega já não existe.",
+        "DELIVERY_FEE_PROPOSAL_NOT_PENDING": "Esta alteração à taxa de entrega já teve resposta.",
+        "DELIVERY_FEE_PROPOSAL_NOT_YOURS": "Não lhe cabe responder a esta alteração à taxa de entrega.",
+        "DELIVERY_FEE_PROPOSAL_STALE": "Esta alteração à taxa de entrega já não pode ser aplicada — a encomenda já avançou.",
+        "DELIVERY_FEE_PROPOSAL_SETTLEMENT_CONFLICT": "Não conseguimos aplicar esta taxa de entrega agora. Nada mudou — tente daqui a pouco.",
+        "DELIVERY_FEE_PROPOSAL_VERSION_MISMATCH": "Esta taxa de entrega mudou desde que a abriu. Recarregue para ver a atual.",
+        "DELIVERY_FEE_PROPOSAL_ORDER_NOT_PAID": "A taxa de entrega deste pedido não pode mudar enquanto o pagamento não estiver liquidado.",
+        "DELIVERY_FEE_TOPUP_IN_PROGRESS": "Ainda há um pagamento em curso para esta taxa de entrega. Aguarde que termine.",
+        "DELIVERY_FEE_TOPUP_NOT_DUE": "Não há nada em dívida por esta taxa de entrega.",
+        "COMBINED_DELIVERY_REQUEST_NOT_FOUND": "Este pedido de preço conjunto já não existe.",
+        "COMBINED_DELIVERY_REQUEST_INELIGIBLE": "Um preço conjunto precisa de pelo menos duas encomendas com a mesma empresa de entregas, ainda não recolhidas e sem outra alteração de taxa pendente.",
+        "COMBINED_DELIVERY_REQUEST_ALREADY_OPEN": "Já pediu um preço conjunto a esta empresa de entregas para este pedido.",
+        "COMBINED_DELIVERY_REQUEST_NOT_OPEN": "Este pedido já teve resposta ou foi cancelado."
     },
     "checkout": {
         "errors": {
@@ -893,7 +912,8 @@
             "ORDER_BELOW_DELIVERY_MINIMUM": "Os seus artigos {from} estão abaixo do mínimo para entrega. Adicione mais {amount} desse vendedor e tente novamente — nada foi cobrado.",
             "ORDER_BELOW_DELIVERY_MINIMUM_UNKNOWN": "Os seus artigos {from} estão abaixo do mínimo para entrega. Adicione mais artigos desse vendedor e tente novamente — nada foi cobrado.",
             "ORDER_BELOW_DELIVERY_MINIMUM_UNREACHABLE": "Os seus artigos {from} não podem ser entregues por agora. Remova-os e tente novamente — nada foi cobrado.",
-            "ORDER_BELOW_DELIVERY_MINIMUM_COD_UNREACHABLE": "Os seus artigos {from} não podem ser pagos na entrega. Pague online ou remova-os — nada foi cobrado."
+            "ORDER_BELOW_DELIVERY_MINIMUM_COD_UNREACHABLE": "Os seus artigos {from} não podem ser pagos na entrega. Pague online ou remova-os — nada foi cobrado.",
+            "DELIVERY_FEE_CASH_NOT_AVAILABLE": "Pagar a entrega em dinheiro já não está disponível para este pedido. Nada foi encomendado nem cobrado — a entrega é agora paga com o seu pedido; verifique o total e tente de novo."
         }
     },
     "errorPage": {
@@ -2086,7 +2106,9 @@
                 "supportNew": "Novo ticket",
                 "close": "Fechar a conta",
                 "product": "Produto",
-                "store": "Loja"
+                "store": "Loja",
+                "closure": "Pedido de encerramento",
+                "accountClosed": "Conta fechada"
             }
         },
         "query": {
@@ -2148,7 +2170,8 @@
             },
             "bargain": "Negociar",
             "moreActions": "Preço negociável — mais opções",
-            "closeActions": "Fechar opções"
+            "closeActions": "Fechar opções",
+            "freeDeliveryFrom": "Entrega grátis a partir de {amount}"
         },
         "chrome": {
             "brandHome": "Loja Wi-Mall",
@@ -2187,6 +2210,7 @@
             "categoryWithCount": "{name} · {count}",
             "inStock": "Em stock",
             "emptyTitle": "Nenhum produto encontrado",
+            "emptyCategory": "Nenhum produto nesta categoria",
             "emptyWithQuery": "Sem resultados para «{query}». A pesquisa usa palavras completas: experimente uma palavra inteira ou remova um filtro.",
             "emptyNoQuery": "Experimente remover um filtro ou pesquisar outra coisa.",
             "reset": "Repor",
@@ -2222,8 +2246,7 @@
             "tabSpecs": "Características",
             "tabPolicies": "Devoluções e cancelamento",
             "tabReviews": "Avaliações",
-            "deliveryFree": "Entrega gratuita neste artigo",
-            "deliveryIncluded": "Incluída — o vendedor suporta a entrega",
+            "deliveryFree": "Grátis — a loja paga a entrega",
             "shipsFrom": "Expedido de",
             "defaultOrigin": "Camarões",
             "digitalDelivery": "Entrega digital",
@@ -2247,7 +2270,7 @@
             "specSku": "Referência",
             "specTags": "Etiquetas",
             "relatedCoPurchase": "Comprados frequentemente em conjunto",
-            "relatedSameCategory": "Mais nesta categoria",
+            "relatedSameCategory": "Mais nestas categorias",
             "moreFromStore": "Mais de {store}",
             "replaceCartTitle": "Substituir o seu carrinho?",
             "emptyCartTitle": "Isto esvazia o seu carrinho",
@@ -2325,7 +2348,9 @@
                 "telegram": "Continuar no Telegram",
                 "telegramNote": "Toque em Iniciar no Telegram e o assistente retoma este artigo.",
                 "message": "Gostaria de negociar o preço de {item}."
-            }
+            },
+            "deliveryFreeFrom": "Grátis em compras de {amount} ou mais nesta loja",
+            "deliveryAtCheckout": "Taxa de entrega indicada no pagamento"
         },
         "store": {
             "tabs": {
@@ -2360,7 +2385,9 @@
             "addFailed": "Não foi possível adicionar ao carrinho. Tente novamente.",
             "unavailableTitle": "Esta loja não está disponível",
             "unavailableDescription": "Pode ter fechado ou mudado de endereço. Explore a loja para encontrar outros vendedores.",
-            "loadFailed": "Não foi possível carregar essa loja."
+            "loadFailed": "Não foi possível carregar essa loja.",
+            "freeDelivery": "Entrega grátis",
+            "freeDeliveryFrom": "Entrega grátis a partir de {amount}"
         },
         "payMethods": {
             "mtn": "MTN Mobile Money",
@@ -2427,8 +2454,6 @@
             "orderSummary": "Resumo do pedido",
             "subtotal": "Subtotal",
             "delivery": "Entrega",
-            "deliveryIncluded": "Incluída",
-            "vendorCoversDelivery": "O seu vendedor suporta {amount} da entrega deste pedido.",
             "discount": "Desconto",
             "discountAmount": "− {amount}",
             "tax": "Impostos",
@@ -2479,9 +2504,7 @@
             "lineStore": " · {store}",
             "subtotal": "Subtotal",
             "delivery": "Entrega",
-            "deliveryIncluded": "Incluída",
             "total": "Total",
-            "vendorCoversDelivery": "O seu vendedor suporta {amount} da entrega deste pedido.",
             "multiVendorNote": "{n, plural, other {Isto torna-se # pedidos — um por vendedor, cada um com o seu envio. É cobrado uma só vez pelo conjunto.}}",
             "chooseAddress": "Escolha um endereço de entrega",
             "enterValidNumber": "Introduza um número de mobile money válido",
@@ -2631,7 +2654,6 @@
             "breakdown": {
                 "items": "Artigos",
                 "delivery": "Entrega",
-                "included": "Incluída",
                 "discount": "Desconto",
                 "discountAmount": "− {amount}",
                 "tax": "Impostos",
@@ -3149,6 +3171,167 @@
             "switching": "A mudar…",
             "signingOut": "A terminar sessão…",
             "switchFailed": "Não foi possível mudar para a sua conta de cliente. Termine a sessão e volte a entrar como cliente."
+        },
+        "closureRequest": {
+            "description": "Um administrador pediu para fechar a sua conta de compras.",
+            "headline": "Um administrador pediu para fechar a sua conta de compras",
+            "nothingChanges": "Nada muda a menos que confirme. Se não fizer nada, o pedido expira a {date}.",
+            "reasonLabel": "Motivo indicado",
+            "consequencesTitle": "Se confirmar",
+            "consequences": {
+                "profile": "O seu nome, os seus contactos e os seus endereços guardados são retirados da sua conta de compras.",
+                "orders": "Os pedidos anteriores são conservados como registos comerciais, sem o seu nome nem os seus contactos.",
+                "signOut": "A sua sessão é terminada. Se também tiver uma conta profissional na Wi-Mall — uma loja, uma agência ou uma conta de estafeta —, essa conta não é afetada e pode continuar a iniciar sessão nela.",
+                "final": "É definitivo. Uma conta de compras fechada não pode ser reaberta."
+            },
+            "warningsTitle": "Vai abdicar de",
+            "warnings": {
+                "plan": "O tempo pago que resta do seu plano {plan}.",
+                "planUntil": "O tempo pago que resta do seu plano {plan}, válido até {date}.",
+                "credit": "O seu saldo de crédito de {amount}.",
+                "other": "Algo que pagou nesta conta."
+            },
+            "blockersTitle": "Resolva isto primeiro",
+            "blockersIntro": "A sua conta de compras só pode ser fechada depois de isto estar resolvido.",
+            "blockers": {
+                "orders_in_flight": "{count, plural, one {# pedido ainda está em curso e tem de terminar primeiro.} other {# pedidos ainda estão em curso e têm de terminar primeiro.}}",
+                "bookings_upcoming": "{count, plural, one {# marcação futura tem de ser concluída ou cancelada primeiro.} other {# marcações futuras têm de ser concluídas ou canceladas primeiro.}}",
+                "other": "Ainda há algo na sua conta para resolver primeiro.",
+                "seeOrders": "Ver os meus pedidos",
+                "seeBookings": "Ver as minhas marcações"
+            },
+            "typeToConfirm": "Escreva <code>{phrase}</code> para confirmar",
+            "confirm": "Fechar a minha conta de compras",
+            "confirming": "A fechar…",
+            "blockedHint": "Poderá confirmar quando tudo o que está acima estiver resolvido.",
+            "keepTitle": "Quer manter a sua conta?",
+            "keepBody": "Diga-o aqui. O administrador vê a sua resposta e nada muda na sua conta.",
+            "noteLabel": "Nota para o administrador (opcional)",
+            "notePlaceholder": "Porque quer mantê-la",
+            "keep": "Manter a minha conta",
+            "keeping": "A enviar…",
+            "empty": {
+                "title": "Nada pendente",
+                "description": "Ninguém pediu para fechar a sua conta de compras. Se um administrador o fizer, o pedido aparece aqui."
+            },
+            "kept": {
+                "title": "A sua conta continua aberta",
+                "description": "Informámos o administrador de que quer manter a sua conta. Nada mudou."
+            },
+            "gone": {
+                "title": "Este pedido já não está aberto",
+                "description": "Expirou, foi retirado ou já foi respondido. Nada mudou na sua conta."
+            },
+            "backToAccount": "Voltar à minha conta",
+            "banner": {
+                "title": "Um administrador pediu para fechar a sua conta de compras",
+                "body": "Nada muda a menos que confirme. Responda até {date}.",
+                "action": "Ver o pedido"
+            }
+        },
+        "accountClosed": {
+            "title": "A sua conta de compras está fechada",
+            "body": "O seu nome e os seus contactos foram retirados dela. Os pedidos anteriores são conservados como registos comerciais, sem os seus dados.",
+            "business": "Se também tiver uma conta profissional na Wi-Mall — uma loja, uma agência ou uma conta de estafeta —, essa conta não é afetada e pode iniciar sessão nela.",
+            "signIn": "Iniciar sessão",
+            "allTitle": "A sua conta Wi-Mall está fechada",
+            "allBody": "O seu nome e os seus contactos foram retirados. Os pedidos anteriores são conservados como registos comerciais, sem os seus dados. Já não existe nenhuma conta onde iniciar sessão.",
+            "browse": "Explorar a loja"
+        },
+        "delivery": {
+            "line": "Entrega",
+            "lineShop": "Entrega · {shop}",
+            "free": "Grátis",
+            "addForFree": "Adicione mais {amount} {from} para ter entrega grátis.",
+            "regionUnknown": "Preço calculado sem a sua região de entrega — pode mudar quando escolher uma morada.",
+            "sellerOf": "Vendedor de {item}",
+            "thisSeller": "Este vendedor",
+            "atCheckout": "Calculada no pagamento",
+            "totalBeforeDelivery": "Total sem entrega",
+            "calculating": "A calcular a entrega…",
+            "cashToRider": "Pagar a entrega em dinheiro ao estafeta",
+            "cashToRiderBody": "Pague agora {online} pelos seus artigos, e {cash} em dinheiro ao estafeta quando a sua encomenda chegar.",
+            "payNow": "A pagar agora",
+            "cashForRider": "Dinheiro para o estafeta",
+            "riderInfo": "Tenha a <b>taxa de entrega em dinheiro</b> pronta para o estafeta. O valor e o seu código de entrega estão no seu pedido — dê o código quando tiver a encomenda e tiver pago.",
+            "deliveryInCash": "Entrega (dinheiro ao estafeta)",
+            "totalOnline": "Total online",
+            "dueToRider": "Ainda a pagar ao estafeta em dinheiro",
+            "refundOwed": "Reembolso da entrega a caminho",
+            "refundReturned": "Entrega reembolsada",
+            "parcelFee": "Taxa de entrega",
+            "parcelFeeCash": "Taxa de entrega (dinheiro ao estafeta)",
+            "parcelRefundable": "Entrega a devolver-lhe",
+            "riderCashTitle": "Pague {amount} em dinheiro pela entrega",
+            "ofWhichDelivery": "Inclui {amount} de entrega",
+            "riderCashWarning": "Os seus artigos estão pagos. Dê este código ao estafeta só <strong>depois</strong> de receber a encomenda e pagar a taxa de entrega — é o que regista esse pagamento.",
+            "changes": {
+                "title": "Alterações à taxa de entrega",
+                "askIncrease": "A empresa de entregas pede {after} em vez de {before} para entregar esta encomenda.",
+                "movedIncrease": "A loja passou esta encomenda para outra empresa de entregas, que cobra {after} em vez de {before}.",
+                "reason": "O motivo: <q>{reason}</q>",
+                "waitsForYou": "A sua encomenda não pode ser recolhida até responder.",
+                "topupDue": "Aceitou a nova taxa. Pague a diferença de {amount} — a sua encomenda aguarda-a.",
+                "declineShopPays": "Se recusar, a loja paga a diferença — não paga mais nada.",
+                "declineCompany": "Se recusar, a empresa pode entregar ao preço anterior, pedir mais uma vez ou recusar o serviço — a loja escolhe então outra empresa.",
+                "accept": "Aceitar {amount}",
+                "decline": "Recusar",
+                "payAmount": "Pagar {amount}",
+                "declineTitle": "Recusar a nova taxa de entrega?",
+                "keepDeciding": "Voltar",
+                "approved": "Nova taxa de entrega aceite",
+                "declined": "Nova taxa de entrega recusada",
+                "changedReload": "Esta taxa mudou desde que a abriu. Esta é a atual.",
+                "answerFailed": "Não conseguimos enviar a sua resposta.",
+                "refundByHand": "A nossa equipa está a enviar-lhe {amount} de entrega manualmente.",
+                "historyLowered": "Taxa baixada de {before} para {after}",
+                "historyCombined": "Preço conjunto: baixado de {before} para {after}",
+                "historyRaised": "Taxa subida de {before} para {after}",
+                "historyDeclined": "Recusou uma alteração para {after}",
+                "historyWithdrawn": "Uma alteração para {after} foi retirada",
+                "historyPending": "Uma alteração para {after} está a ser processada"
+            },
+            "topup": {
+                "title": "Pagar a diferença da entrega",
+                "intro": "A nova taxa de entrega é {fee}. A sua encomenda é recolhida assim que este pagamento passar.",
+                "toPay": "A pagar",
+                "payAmount": "Pagar {amount}",
+                "starting": "A iniciar o pagamento…",
+                "startFailed": "Não conseguimos iniciar este pagamento.",
+                "refused": "O pagamento não passou. Pode tentar de novo.",
+                "notDue": "Já não há nada em dívida por esta entrega.",
+                "paid": "Pagamento recebido — a sua encomenda já pode ser recolhida.",
+                "stillPending": "Ainda sem confirmação. O seu pedido é atualizado assim que o pagamento chegar.",
+                "checkPhoneTitle": "Veja o seu telemóvel",
+                "checkPhoneBody": "Aprove o pedido de pagamento no seu telemóvel. Este ecrã é atualizado quando passar."
+            },
+            "combined": {
+                "title": "Preço de entrega conjunto",
+                "intro": "Várias das suas encomendas seguem com a mesma empresa de entregas. Pode pedir-lhe um só preço para todas — ela só pode baixar as taxas.",
+                "theCompany": "a empresa de entregas",
+                "ask": "Pedir um preço conjunto a {company}",
+                "requestTo": "{n, plural, one {# encomenda com {company}} other {# encomendas com {company}}}",
+                "status": {
+                    "open": "Em espera",
+                    "answered": "Respondido",
+                    "declined": "Recusado",
+                    "cancelled": "Cancelado"
+                },
+                "saving": "Novo preço aplicado — poupa {amount}.",
+                "theirNote": "A nota: <q>{note}</q>",
+                "waiting": "À espera da resposta da empresa.",
+                "cancel": "Cancelar pedido",
+                "confirmTitle": "Pedir um preço conjunto?",
+                "confirmBody": "Vamos pedir a {company} um só preço para as suas encomendas deste pedido. Um novo preço só pode ser mais baixo, e aplica-se sozinho.",
+                "noteLabel": "Nota para a empresa (opcional)",
+                "notePlaceholder": "Mesma rua — uma só viagem?",
+                "send": "Enviar pedido",
+                "notNow": "Agora não",
+                "sent": "Pedido enviado à empresa de entregas",
+                "sendFailed": "Não conseguimos enviar o seu pedido.",
+                "cancelled": "Pedido cancelado",
+                "cancelFailed": "Não conseguimos cancelar este pedido."
+            }
         }
     },
     "cookieNotice": {

@@ -83,6 +83,68 @@ function throwResponseError(res: Response, body: Record<string, unknown>): never
 const MOBILE_REFRESH_PATH = "/api/auth/mobile/refresh";
 
 /**
+ * Refusals that end the session for good, wherever they arrive.
+ *
+ * `AUTH_ROLE_CLOSED` (ADR-A10, api-doc/me/role-closure.md) is any request, or
+ * a refresh, on a session opened as a role that has since been closed — by
+ * the shopper confirming an administrator's request here, or in the bot.
+ * `AUTH_ACCOUNT_CLOSED` is its whole-account twin, and the contract asks for
+ * the two to be handled alike.
+ *
+ * Neither is a verdict a retry or a refresh can change, and on the web nothing
+ * else would end it: `requireAuth` refuses the cookie but does not clear it, so
+ * the middleware keeps letting the browser into `/shop/account` and every
+ * screen there answers 403 again. Only `POST /api/auth/logout` clears it.
+ */
+const TERMINAL_SESSION_CODES: ReadonlySet<string> = new Set([
+    "AUTH_ROLE_CLOSED",
+    "AUTH_ACCOUNT_CLOSED",
+]);
+
+type SessionRevokedListener = (code: string) => void;
+
+const revokedListeners = new Set<SessionRevokedListener>();
+
+/**
+ * Be told when the server has ended the session for good. `AuthProvider` is
+ * the one subscriber: it drops its state and decides where the page goes,
+ * because only it has React context to do so. Returns the unsubscribe.
+ */
+export function onSessionRevoked(listener: SessionRevokedListener): () => void {
+    revokedListeners.add(listener);
+    return () => revokedListeners.delete(listener);
+}
+
+/**
+ * Set once and never reset in this page load. A screen that loads four
+ * resources answers four 403s at once; the session ends once, not four times.
+ */
+let revoked = false;
+
+/**
+ * Drop both halves of the credential and tell the provider — at most once.
+ *
+ * The logout goes through `send`, not `apiFetch`: it must not re-enter
+ * `request` and the check that called it. The route takes no `requireAuth`,
+ * so it answers 200 and clears the cookies even for a closed role.
+ */
+async function endSessionIfTerminal(res: Response, body: Record<string, unknown>): Promise<void> {
+    if (res.status !== 403 || revoked) return;
+    const code = (body as Partial<ApiErrorBody>)?.error?.code;
+    if (!code || !TERMINAL_SESSION_CODES.has(code)) return;
+
+    revoked = true;
+    await tokens.clear();
+    try {
+        await send("/api/auth/logout", { method: "POST" });
+    } catch {
+        // The bearer pair is already gone, which is what ends a device's
+        // session. A web cookie left behind is refused the same way next time.
+    }
+    revokedListeners.forEach((listener) => listener(code));
+}
+
+/**
  * How long one round trip may take before it is abandoned.
  *
  * There was no deadline here at all, and on a phone that is not a small gap.
@@ -250,6 +312,7 @@ async function exchangeRefreshToken(refreshToken: string): Promise<RotationOutco
      */
     if (res.status === 401 || res.status === 403) {
         await tokens.clear();
+        await endSessionIfTerminal(res, body);
         return { kind: "refused" };
     }
 
@@ -313,6 +376,10 @@ async function request(
         // "refused" falls through to the 401 below, which is exactly right: the
         // session really is over and the caller must treat it as such.
     }
+
+    // A 403 is never retried (only a 401 rotates, above), so a terminal one
+    // ends the session here and still reaches the caller as the error it is.
+    await endSessionIfTerminal(res, body);
 
     if (!res.ok) throwResponseError(res, body);
 

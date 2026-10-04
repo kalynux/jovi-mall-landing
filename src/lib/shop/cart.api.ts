@@ -129,9 +129,10 @@ export async function mergeCart(
 /**
  * `POST /api/customer/cart/quote` — what this cart will cost.
  *
- * Send `deliveryAddressId` whenever one is chosen. It is optional and no figure
- * depends on it yet, but it is **validated** with the same rule checkout
- * applies, so an address typed by hand rather than picked from
+ * Send `deliveryAddressId` whenever one is chosen. The customer-paid delivery
+ * fee's out-of-region part depends on it (ADR-A11), so `delivery` and `total`
+ * can move with the address. It is also **validated** with the same rule
+ * checkout applies, so an address typed by hand rather than picked from
  * `GET /api/geo/search` fails here (`422 ORDER_DELIVERY_ADDRESS_REQUIRED`,
  * `details.reason: "selected_address_not_geocoded"`) instead of at the pay
  * button. That is the main reason the parameter exists.

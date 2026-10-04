@@ -51,6 +51,7 @@ type Phase = "pending" | "paid" | "failed" | "cod";
 
 export default function SuccessPage() {
   const t = useTranslations("shop.checkout");
+  const tDelivery = useTranslations("shop.delivery");
   const router = useRouter();
   const [group, setGroup] = useState<string | null>(null);
   const [ussd, setUssd] = useState<string | null>(null);
@@ -70,6 +71,13 @@ export default function SuccessPage() {
   const [redirect, setRedirect] = useState<string | null>(null);
   /** Bumped when the app returns to the foreground, to restart the poll. */
   const [resumeNonce, setResumeNonce] = useState(0);
+  /**
+   * The items were paid online and the delivery fee goes to the rider in cash
+   * (ADR-A11 W-F). The amount and the delivery code live on the order, which
+   * reads them from the server — this page only says there is something to
+   * hand over.
+   */
+  const [rider, setRider] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -82,6 +90,7 @@ export default function SuccessPage() {
     setNote(params.get("note"));
     setReason(params.get("reason"));
     setRedirect(params.get("redirect"));
+    setRider(params.get("rider") === "1");
 
     if (params.get("cod") === "1") {
       setPhase("cod");
@@ -343,6 +352,27 @@ export default function SuccessPage() {
             : t.rich("success.ordersInfo", { b: (chunks) => <strong>{chunks}</strong> })}
         </p>
       </div>
+
+      {rider && phase !== "cod" && (
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 360,
+            marginTop: 10,
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-md)",
+            padding: "13px 15px",
+            textAlign: "left",
+            display: "flex",
+            gap: 10,
+          }}
+        >
+          <Icon name="banknote" size={17} style={{ color: "var(--text-muted)", flexShrink: 0, marginTop: 1 }} />
+          <p style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--text-body)", margin: 0 }}>
+            {tDelivery.rich("riderInfo", { b: (chunks) => <strong>{chunks}</strong> })}
+          </p>
+        </div>
+      )}
 
       <div
         style={{

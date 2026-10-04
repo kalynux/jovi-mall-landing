@@ -15,6 +15,7 @@ import {
 } from "@/components/shop/ds";
 import { useShopPageTitle } from "@/components/shop/ShopChrome";
 import { DeliveryMinimumNotice } from "@/components/shop/DeliveryMinimumNotice";
+import { DeliveryQuoteLines } from "@/components/shop/DeliveryQuoteLines";
 import { useCart, useToast } from "@/components/shop/providers";
 import { translateError } from "@/lib/auth/error-translator";
 import { useAuth } from "@/lib/auth/useAuth";
@@ -27,19 +28,22 @@ import type { CartQuote, CartDropReason } from "@/lib/shop/customer.types";
 /**
  * The cart.
  *
- * ── The customer is not charged for delivery ─────────────────────────────────
+ * ── Delivery is each shop's setting (ADR-A11, 2026-10-04) ────────────────────
  *
- * `POST /cart/quote` returns `delivery: 0` and `total === subtotal`, and that is
- * the truth rather than a placeholder: the agency's fee is real and *is* charged,
- * but to the **vendor** — `splitOrder` computes
- * `vendorNet = gross − commission − deliveryTotal`. Adding it to the shopper's
- * total would collect it twice. So this page says "Delivery included" and uses
- * `absorbedByVendor` only to say the seller covers it. Never add that number to
- * a total.
+ * Until then every shop paid delivery and this page said "Delivery included".
+ * Now a shop delivers free always, never, or above an amount of its own items,
+ * and where the customer pays, the quote's `total` already includes the fee. So
+ * the summary draws one delivery line per shop from `POST /cart/quote` — the fee,
+ * or "Free" — with a "add X more from this shop" hint where one applies, and the
+ * quote's `total`. Nothing is added up here, and `absorbedByVendor` (what a
+ * free-delivery shop pays its agency) is internal and never shown.
+ *
+ * Signed out there is no quote, and the fee cannot be known without one: the
+ * bottom line is then labelled as the total BEFORE delivery, never as the total.
  *
  * The flat 1 000 FCFA delivery fee and 2% "service fee" this page used to invent
- * are gone for the same reason they were removed before the API existed: showing
- * a total nobody will be charged is worse than showing the subtotal alone.
+ * are gone for good: showing a total nobody will be charged is worse than
+ * showing the subtotal alone.
  *
  * ── One cart ─────────────────────────────────────────────────────────────────
  *
@@ -80,6 +84,7 @@ export default function CartPage() {
   } = useCart();
   const { flashError } = useToast();
   const t = useTranslations("shop.cart");
+  const tDelivery = useTranslations("shop.delivery");
   /* The shared backend-code ladder, and the frozen shared vocabulary. */
   const tErrors = useTranslations("errors");
   const tKey = useTranslations();
@@ -125,8 +130,8 @@ export default function CartPage() {
   /**
    * The quote is a server computation over the *server* cart, so it is only
    * meaningful once signed in. Signed out, the subtotal below is computed from
-   * the local lines — which is the same arithmetic, because there is nothing
-   * else in the total.
+   * the local lines, and it is labelled as a total before delivery: whether a
+   * shop charges delivery, and how much, only the quote can say.
    */
   useEffect(() => {
     if (!signedIn || count === 0) {
@@ -382,25 +387,17 @@ export default function CartPage() {
 
             <Row label={t("subtotal")} value={formatMoney(subtotal, currency)} />
 
-            {!isDigital && (
-              <Row
-                label={t("delivery")}
-                value={
-                  <span style={{ color: "var(--success)", fontWeight: 700 }}>
-                    {t("deliveryIncluded")}
-                  </span>
-                }
-              />
-            )}
-
-            {/* Informational only, and never added to the total. */}
-            {quote?.absorbedByVendor ? (
-              <p className="muted" style={{ fontSize: 11.5, lineHeight: 1.5, margin: "2px 0 6px" }}>
-                {t("vendorCoversDelivery", {
-                  amount: formatMoney(quote.absorbedByVendor, currency),
-                })}
-              </p>
-            ) : null}
+            {/* One line per shop from the quote — already inside `total`.
+                Without a quote the fee is unknown, and says so. */}
+            {!isDigital &&
+              (quote ? (
+                <DeliveryQuoteLines quote={quote} lines={lines} />
+              ) : (
+                <Row
+                  label={t("delivery")}
+                  value={<span className="muted">{tDelivery("atCheckout")}</span>}
+                />
+              ))}
 
             {/* Pinned zeros server-side — shown only if either ever becomes real,
                 so the receipt does not change shape the day one does. */}
@@ -425,7 +422,7 @@ export default function CartPage() {
               }}
             >
               <span style={{ fontSize: 13.5, color: "var(--text-muted)", fontWeight: 600 }}>
-                {t("total")}
+                {!isDigital && !quote ? tDelivery("totalBeforeDelivery") : t("total")}
               </span>
               <span
                 style={{

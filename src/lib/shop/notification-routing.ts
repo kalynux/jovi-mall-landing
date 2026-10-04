@@ -68,6 +68,7 @@ import {
   bookingPath,
   bookingPayPath,
   bookingReschedulePath,
+  CLOSURE_REQUEST_PATH,
   orderGroupPath,
   orderPath,
   orderTrackingPath,
@@ -114,6 +115,8 @@ const ROUTES: { pattern: RegExp; to: (...params: string[]) => string }[] = [
   { pattern: /^shop\/account\/support\/new$/, to: () => `${TICKET_LIST}/new` },
   { pattern: /^shop\/account\/support\/([^/?#]+)$/, to: ticketPath },
   { pattern: /^pay\/([^/?#]+)$/, to: payPath },
+  // `account.closure_requested` (ADR-A10). No id: one open request per role.
+  { pattern: /^shop\/account\/closure$/, to: () => CLOSURE_REQUEST_PATH },
 
   // ── The catalogue: no notification sends these, but links to them are shared
   { pattern: /^shop\/stores\/([^/?#]+)\/products\/([^/?#]+)$/, to: productPath },
@@ -169,6 +172,9 @@ export function resolveNotificationDestination(
   if (!path && aggregate?.id) {
     if (aggregate.type === "order") return orderPath(aggregate.id);
     if (aggregate.type === "booking") return bookingPath(aggregate.id);
+    // The id is the closure REQUEST's, which no screen takes — the page reads
+    // the open request from the session.
+    if (aggregate.type === "account") return CLOSURE_REQUEST_PATH;
   }
 
   return NOTIFICATIONS;

@@ -7,6 +7,7 @@ import { useRouter } from "@/i18n/navigation";
 import { Button, ConfirmDialog, EmptyState, ProductCard, Skeleton, Tabs } from "@/components/shop/ds";
 import { useCart, useFavorites, useToast } from "@/components/shop/providers";
 import { CART_OFFLINE_MESSAGE_KEY } from "@/lib/shop/cart-errors";
+import { deliveryTermsOf } from "@/lib/shop/delivery";
 import { listProductsByIds } from "@/lib/shop/catalog.api";
 import {
   clearRecentlyViewed,
@@ -353,7 +354,8 @@ export default function SavedPage() {
                 vendorName={entry.product.store.name}
                 vendorVerified={entry.product.store.verified}
                 showVendor
-                freeDelivery={entry.product.freeDelivery}
+                category={entry.product.categories[0]?.name}
+                deliveryTerms={deliveryTermsOf(entry.product)}
                 inStock={entry.product.inStock}
 
                 negotiable={entry.product.negotiable}

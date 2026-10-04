@@ -13,6 +13,8 @@ import { isCod, paymentChip } from "@/lib/shop/order-status";
 import { orderGroupPath, orderPath, orderTrackingPath } from "@/lib/shop/shop.routes";
 import { useApiResource } from "@/lib/shop/useApiResource";
 import { Shipments, VendorOrderCard } from "@/components/shop/account/OrderGroupDetail";
+import { CombinedDeliveryPanel } from "@/components/shop/account/CombinedDeliveryPanel";
+import { customerPaysDelivery } from "@/lib/shop/delivery";
 import type { CustomerOrder } from "@/lib/shop/customer.types";
 
 /**
@@ -65,6 +67,9 @@ export function OrderDetail({ orderId }: { orderId: string }) {
           <>
             <OrderHeader order={o} />
             <VendorOrderCard order={o} onChanged={order.reload} />
+            {/* The combined-price request spans the whole checkout, and the
+                delivery-fee notifications land HERE, not on the group. */}
+            {o.cartId && customerPaysDelivery(o) && <CombinedDeliveryPanel cartId={o.cartId} />}
           </>
         )}
       </ResourceView>
@@ -255,6 +260,9 @@ export function OrderTracking({ orderId }: { orderId: string }) {
                   // second pin. It belongs to the order — the shipment read
                   // carries no address of any kind — so it comes from here.
                   deliveryAddress={o.deliveryAddress}
+                  // Only to keep "I received it" off a parcel whose fee goes to
+                  // the rider in cash — no fee is drawn on this screen.
+                  deliveryFees={o.deliveryFees}
                   onChanged={order.reload}
                   whenEmpty={
                     <EmptyState

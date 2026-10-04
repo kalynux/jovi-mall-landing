@@ -19,6 +19,7 @@ import { absoluteUrl } from "@/lib/site";
 import type { CustomerProfile } from "@/lib/shop/customer.types";
 import { LegalLink } from "@/components/legal/LegalLink";
 import type { LegalDoc } from "@/lib/legal";
+import { ClosureRequestBanner } from "@/components/shop/account/ClosureRequestBanner";
 
 interface MenuRow {
   icon: IconName;
@@ -157,6 +158,10 @@ export default function AccountPage() {
           </>
         ) : null}
       </div>
+
+      {/* Renders nothing unless an administrator has asked to close this
+          account and the request is still open (ADR-A10). */}
+      <ClosureRequestBanner />
 
       {profile.status === "error" ? (
         <ResourceError
