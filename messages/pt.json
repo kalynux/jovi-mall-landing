@@ -368,12 +368,14 @@
         "platform": "Plataforma",
         "company": "Empresa",
         "legal": "Legal",
+        "legalCentre": "Centro Jurídico",
         "about": "Sobre nós",
         "blog": "Blog",
         "careers": "Carreiras",
         "contact": "Contato",
         "privacy": "Política de Privacidade",
         "terms": "Termos de Serviço",
+        "returnsRefunds": "Devoluções e Reembolsos",
         "cookies": "Política de Cookies",
         "copyright": "Todos os direitos reservados.",
         "builtFor": "Feito para o comércio moderno. Impulsionado por Wi-Mall.",
@@ -974,8 +976,7 @@
             "about": "Sobre",
             "careers": "Carreiras",
             "contact": "Contacto",
-            "apps": "Apps",
-            "cookies": "Cookies"
+            "apps": "Apps"
         },
         "common": {
             "breadcrumbLabel": "Trilha de navegação",
@@ -1153,7 +1154,8 @@
                 "i1": "Um número de WhatsApp que você possa verificar",
                 "i2": "Seu país e uma forma de receber — é só isso que a etapa obrigatória exige",
                 "i3": "Produtos com foto, preço e uma descrição curta",
-                "i4": "Opcionalmente: uma agência de entrega para vincular, sua identidade visual, e suas próprias regras de devolução e envio"
+                "i4": "Opcionalmente: uma agência de entrega para vincular, sua identidade visual, e suas próprias regras de devolução e envio",
+                "legal": "Vender na Wi-Mall significa aceitar o <seller>Acordo de Vendedor</seller>. Consulte a <prohibited>Política de Artigos Proibidos</prohibited> antes de publicar qualquer produto."
             },
             "faqTitle": "Perguntas de vendedores",
             "cta": {
@@ -1200,7 +1202,8 @@
                 "i1": "Um número de WhatsApp que você possa verificar",
                 "i2": "Pelo menos um endereço de sede, e as regiões que pretende cobrir",
                 "i3": "Os dados de recebimento da sua agência",
-                "i4": "Sua política de entrega — o que você cobra e em que condições entrega"
+                "i4": "Sua política de entrega — o que você cobra e em que condições entrega",
+                "legal": "As agências trabalham sob o <agreement>Acordo de Parceiro de Entregas</agreement>, que você aceita no cadastro."
             },
             "faqTitle": "Perguntas de agências",
             "cta": {
@@ -1246,7 +1249,8 @@
                 "i1": "Um smartphone e um número de WhatsApp que você possa verificar",
                 "i2": "Um veículo — moto, carro, van ou caminhão — com o tipo e a cor no seu perfil",
                 "i3": "Uma agência com quem manter contrato, à qual você pode se candidatar depois do cadastro",
-                "i4": "Opcionalmente, um contato de emergência e uma foto do veículo"
+                "i4": "Opcionalmente, um contato de emergência e uma foto do veículo",
+                "legal": "Os entregadores trabalham sob o <agreement>Acordo de Parceiro de Entregas</agreement>, que você aceita no cadastro."
             },
             "faqTitle": "Perguntas de entregadores",
             "cta": {
@@ -1835,45 +1839,6 @@
                 "s4Title": "Instale e entre",
                 "s4Body": "Toque em Instalar, abra a app e entre com a sua conta Wi-Mall. Para atualizar, baixe a nova versão nesta página."
             }
-        },
-        "cookies": {
-            "metaTitle": "Política de cookies | Wi-Mall",
-            "metaDescription": "A Wi-Mall usa apenas os cookies de que precisa para funcionar: manter a sua sessão iniciada e guardar o seu carrinho e definições. Sem anúncios, sem rastreamento.",
-            "eyebrow": "Política de cookies",
-            "title": "Apenas o que a Wi-Mall precisa para funcionar",
-            "lead": "Sem anúncios. Sem rastreamento. Nada para configurar.",
-            "stored": {
-                "title": "O que guardamos",
-                "signIn": {
-                    "where": "Cookie",
-                    "title": "Manter a sessão iniciada",
-                    "body": "Dois cookies seguros lembram que tem a sessão iniciada, para não ter de entrar em cada página. São apagados quando termina a sessão."
-                },
-                "preferences": {
-                    "where": "O seu dispositivo",
-                    "title": "As suas definições",
-                    "body": "O seu idioma, o modo claro ou escuro e o indicativo do seu país, para o site ficar como o deixou."
-                },
-                "cart": {
-                    "where": "O seu dispositivo",
-                    "title": "O seu carrinho e favoritos",
-                    "body": "O que adiciona antes de iniciar sessão fica guardado no seu telemóvel, para continuar lá quando voltar."
-                }
-            },
-            "never": {
-                "title": "O que nunca fazemos",
-                "ads": "Nenhum cookie de publicidade.",
-                "tracking": "Nenhuma análise ou rastreamento que o siga pela web.",
-                "selling": "Nunca vendemos nem partilhamos o que fica guardado."
-            },
-            "more": {
-                "title": "Bom saber",
-                "google": "Os nossos formulários de contacto e de candidatura são alojados pela Google. Enquanto estão abertos, a Google pode definir os seus próprios cookies.",
-                "clear": "Pode apagar tudo a qualquer momento nas definições do navegador (limpar dados do site). A sua sessão será terminada e um carrinho guardado sem conta será esvaziado.",
-                "changes": "Se isto mudar, atualizaremos esta página e pediremos primeiro a sua autorização.",
-                "updated": "Última atualização: {date}.",
-                "contact": "Dúvidas? Contacte-nos"
-            }
         }
     },
     "forgotPassword": {
@@ -2313,6 +2278,7 @@
             "cancellationFee": "Taxa de cancelamento",
             "noCancellationValue": "Este pedido não pode ser cancelado depois de efetuado",
             "paymentFeeNote": "<b>Regra da Wi-Mall para todas as lojas:</b> um reembolso pode ser um pouco inferior ao que pagou. O serviço de pagamento fica com a sua taxa, mesmo que a encomenda não seja entregue.",
+            "platformRightsNote": "Os seus direitos ao abrigo da <link>Política de Devoluções e Reembolsos</link> da Wi-Mall aplicam-se independentemente das condições do vendedor.",
             "addedToCart": "Adicionado ao carrinho · {variant}",
             "replaceFailed": "Não foi possível substituir o seu carrinho. Esvazie-o e tente novamente.",
             "digitalLimit": "O seu carrinho já tem um produto digital. Pague esse primeiro.",
@@ -3360,7 +3326,8 @@
             "feeLine": "Recebe {net} ({gross} menos uma taxa de transferência de {percent}%).",
             "toNumber": "Para o {destination}",
             "toCard": "Para o seu cartão",
-            "contactSupport": "Contactar o apoio ao cliente"
+            "contactSupport": "Contactar o apoio ao cliente",
+            "howItWorks": "Como funcionam os reembolsos"
         }
     },
     "cookieNotice": {
@@ -3371,10 +3338,14 @@
     },
     "legal": {
         "sectionTitle": "Legal",
+        "legalCentre": "Centro Jurídico",
         "terms": "Termos de Serviço",
         "privacy": "Política de Privacidade",
+        "returnsRefunds": "Política de Devoluções e Reembolsos",
+        "cookiePolicy": "Política de Cookies",
         "signupAgreement": "Ao criar uma conta, aceita os nossos <terms>Termos de Serviço</terms> e a nossa <privacy>Política de Privacidade</privacy>.",
-        "checkoutAgreement": "Ao fazer esta encomenda, aceita os nossos <terms>Termos de Serviço</terms>.",
-        "consentLabel": "Aceito os <terms>Termos de Serviço</terms> e a <privacy>Política de Privacidade</privacy>."
+        "checkoutAgreement": "Ao fazer esta encomenda, aceita os nossos <terms>Termos de Serviço</terms> e a nossa <refunds>Política de Devoluções e Reembolsos</refunds>.",
+        "consentLabelSeller": "Aceito os <terms>Termos de Serviço</terms>, o <agreement>Acordo de Vendedor</agreement> e a <privacy>Política de Privacidade</privacy>.",
+        "consentLabelDeliveryPartner": "Aceito os <terms>Termos de Serviço</terms>, o <agreement>Acordo de Parceiro de Entregas</agreement> e a <privacy>Política de Privacidade</privacy>."
     }
 }

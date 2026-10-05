@@ -358,12 +358,13 @@ export function DataTable({
 /* ─── Links ───────────────────────────────────────────────────────────────── */
 
 /** Plain anchor styling used inside body copy and link lists. */
+/** TextLink's look, for an external link that is not a `<Link>` (a `LegalLink`). */
+export const TEXT_LINK_CLASS =
+  "font-semibold text-role underline decoration-[color-mix(in_srgb,var(--role)_45%,transparent)] underline-offset-4 transition-colors hover:decoration-[var(--role)]";
+
 export function TextLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <Link
-      href={href}
-      className="font-semibold text-role underline decoration-[color-mix(in_srgb,var(--role)_45%,transparent)] underline-offset-4 transition-colors hover:decoration-[var(--role)]"
-    >
+    <Link href={href} className={TEXT_LINK_CLASS}>
       {children}
     </Link>
   );

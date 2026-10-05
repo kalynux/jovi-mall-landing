@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
-import { LEGAL_URLS } from "./src/lib/legal";
+import { legalUrl } from "./src/lib/legal";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
@@ -106,13 +106,26 @@ const nextConfig: NextConfig = {
          * Short, permanent addresses for the legal documents, which are hosted
          * on the CDN; the URLs come from src/lib/legal.ts. Web
          * only: a static export has no server to answer a redirect.
+         *
+         * /cookies was a page of this site until the Legal Centre (2026-10-05)
+         * made the CDN's Cookie Policy the record. Its es/pt/ar copies were in
+         * the sitemap too, so they go to the English document rather than 404.
          */
         async redirects() {
           return [
-            { source: "/privacy", destination: LEGAL_URLS.privacy.en, permanent: true },
-            { source: "/terms", destination: LEGAL_URLS.terms.en, permanent: true },
-            { source: "/fr/confidentialite", destination: LEGAL_URLS.privacy.fr, permanent: true },
-            { source: "/fr/conditions", destination: LEGAL_URLS.terms.fr, permanent: true },
+            { source: "/privacy", destination: legalUrl("privacy-policy", "en"), permanent: true },
+            { source: "/terms", destination: legalUrl("terms-of-service", "en"), permanent: true },
+            { source: "/cookies", destination: legalUrl("cookie-policy", "en"), permanent: true },
+            { source: "/legal", destination: legalUrl("legal-centre", "en"), permanent: true },
+            { source: "/fr/confidentialite", destination: legalUrl("privacy-policy", "fr"), permanent: true },
+            { source: "/fr/conditions", destination: legalUrl("terms-of-service", "fr"), permanent: true },
+            { source: "/fr/cookies", destination: legalUrl("cookie-policy", "fr"), permanent: true },
+            { source: "/fr/legal", destination: legalUrl("legal-centre", "fr"), permanent: true },
+            {
+              source: "/:locale(en|es|pt|ar)/cookies",
+              destination: legalUrl("cookie-policy", "en"),
+              permanent: true,
+            },
           ];
         },
       }),

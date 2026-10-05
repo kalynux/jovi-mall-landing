@@ -368,12 +368,14 @@
         "platform": "Platform",
         "company": "Company",
         "legal": "Legal",
+        "legalCentre": "Legal Centre",
         "about": "About",
         "blog": "Blog",
         "careers": "Careers",
         "contact": "Contact",
         "privacy": "Privacy Policy",
         "terms": "Terms of Service",
+        "returnsRefunds": "Returns & Refunds",
         "cookies": "Cookie Policy",
         "copyright": "All rights reserved.",
         "builtFor": "Built for modern commerce. Powered by Wi-Mall.",
@@ -974,8 +976,7 @@
             "about": "About",
             "careers": "Careers",
             "contact": "Contact",
-            "apps": "Apps",
-            "cookies": "Cookies"
+            "apps": "Apps"
         },
         "common": {
             "breadcrumbLabel": "Breadcrumb",
@@ -1153,7 +1154,8 @@
                 "i1": "A WhatsApp number you can verify",
                 "i2": "Your country and a way to be paid out — that is the whole of the required step",
                 "i3": "Products with a photo, a price and a short description",
-                "i4": "Optionally: a delivery agency to link with, your branding, and your own return and shipping policy"
+                "i4": "Optionally: a delivery agency to link with, your branding, and your own return and shipping policy",
+                "legal": "Selling on Wi-Mall means accepting the <seller>Seller Agreement</seller>. Check the <prohibited>Prohibited Items Policy</prohibited> before you list anything."
             },
             "faqTitle": "Questions vendors ask",
             "cta": {
@@ -1200,7 +1202,8 @@
                 "i1": "A WhatsApp number you can verify",
                 "i2": "At least one headquarters address, and the regions you intend to cover",
                 "i3": "Payout details for your agency",
-                "i4": "Your delivery policy — the pricing you charge and the terms you deliver under"
+                "i4": "Your delivery policy — the pricing you charge and the terms you deliver under",
+                "legal": "Agencies deliver under the <agreement>Delivery Partner Agreement</agreement>, which you accept when you register."
             },
             "faqTitle": "Questions agencies ask",
             "cta": {
@@ -1246,7 +1249,8 @@
                 "i1": "A smartphone and a WhatsApp number you can verify",
                 "i2": "A vehicle — bike, car, van or truck — with its type and colour on your profile",
                 "i3": "An agency to hold a contract with, which you can apply to after signing up",
-                "i4": "Optionally an emergency contact, and a photo of the vehicle"
+                "i4": "Optionally an emergency contact, and a photo of the vehicle",
+                "legal": "Agents deliver under the <agreement>Delivery Partner Agreement</agreement>, which you accept when you sign up."
             },
             "faqTitle": "Questions agents ask",
             "cta": {
@@ -1835,45 +1839,6 @@
                 "s4Title": "Install and sign in",
                 "s4Body": "Tap Install, open the app and sign in with your Wi-Mall account. To update, download the new version from this page."
             }
-        },
-        "cookies": {
-            "metaTitle": "Cookie Policy | Wi-Mall",
-            "metaDescription": "Wi-Mall only uses the cookies it needs to work: keeping you signed in and remembering your cart and settings. No ads, no tracking.",
-            "eyebrow": "Cookie Policy",
-            "title": "Only what Wi-Mall needs to work",
-            "lead": "No ads. No tracking. Nothing for you to set up.",
-            "stored": {
-                "title": "What we keep",
-                "signIn": {
-                    "where": "Cookie",
-                    "title": "Keeping you signed in",
-                    "body": "Two secure cookies remember that you are signed in, so you do not have to log in on every page. They are removed when you sign out."
-                },
-                "preferences": {
-                    "where": "Your device",
-                    "title": "Your settings",
-                    "body": "Your language, light or dark mode and your country code, so the site looks the way you left it."
-                },
-                "cart": {
-                    "where": "Your device",
-                    "title": "Your cart and favourites",
-                    "body": "What you add before signing in is kept on your phone, so it is still there when you come back."
-                }
-            },
-            "never": {
-                "title": "What we never do",
-                "ads": "No advertising cookies.",
-                "tracking": "No analytics or tracking that follows you around the web.",
-                "selling": "We never sell or share what is stored."
-            },
-            "more": {
-                "title": "Good to know",
-                "google": "Our contact and careers forms are hosted by Google. While one is open, Google may set its own cookies.",
-                "clear": "You can delete all of this at any time from your browser settings (clear site data). You will be signed out and a cart saved without an account will be emptied.",
-                "changes": "If this ever changes, we will update this page and ask you first.",
-                "updated": "Last updated: {date}.",
-                "contact": "Questions? Contact us"
-            }
         }
     },
     "forgotPassword": {
@@ -2313,6 +2278,7 @@
             "cancellationFee": "Cancellation fee",
             "noCancellationValue": "This order cannot be cancelled once placed",
             "paymentFeeNote": "<b>Wi-Mall rule for all shops:</b> a refund may be a little less than what you paid. The payment service keeps its fee, even if the order is not delivered.",
+            "platformRightsNote": "Your rights under Wi-Mall's <link>Returns & Refunds Policy</link> apply whatever the seller's terms.",
             "addedToCart": "Added to cart · {variant}",
             "replaceFailed": "Could not replace your cart. Please empty it and try again.",
             "digitalLimit": "Your cart already holds a digital product. Pay for that one first.",
@@ -3360,7 +3326,8 @@
             "feeLine": "You receive {net} ({gross} minus a {percent}% transfer fee).",
             "toNumber": "To {destination}",
             "toCard": "To your card",
-            "contactSupport": "Contact support"
+            "contactSupport": "Contact support",
+            "howItWorks": "How refunds work"
         }
     },
     "cookieNotice": {
@@ -3371,10 +3338,14 @@
     },
     "legal": {
         "sectionTitle": "Legal",
+        "legalCentre": "Legal Centre",
         "terms": "Terms of Service",
         "privacy": "Privacy Policy",
+        "returnsRefunds": "Returns & Refunds Policy",
+        "cookiePolicy": "Cookie Policy",
         "signupAgreement": "By creating an account, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
-        "checkoutAgreement": "By placing this order, you agree to our <terms>Terms of Service</terms>.",
-        "consentLabel": "I agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>."
+        "checkoutAgreement": "By placing this order, you agree to our <terms>Terms of Service</terms> and <refunds>Returns & Refunds Policy</refunds>.",
+        "consentLabelSeller": "I agree to the <terms>Terms of Service</terms>, the <agreement>Seller Agreement</agreement> and the <privacy>Privacy Policy</privacy>.",
+        "consentLabelDeliveryPartner": "I agree to the <terms>Terms of Service</terms>, the <agreement>Delivery Partner Agreement</agreement> and the <privacy>Privacy Policy</privacy>."
     }
 }

@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Link, usePathname } from "@/i18n/navigation";
+import { usePathname } from "@/i18n/navigation";
+import { LegalLink } from "@/components/legal/LegalLink";
 import { cn } from "@/lib/utils";
 import { IS_NATIVE_BUILD } from "@/lib/platform";
 import { useHydrated } from "@/lib/use-hydrated";
@@ -37,7 +38,7 @@ export default function CookieNotice() {
   const hydrated = useHydrated();
   const [dismissed, setDismissed] = useState(false);
 
-  if (IS_NATIVE_BUILD || !hydrated || dismissed || pathname === "/cookies" || alreadySeen()) {
+  if (IS_NATIVE_BUILD || !hydrated || dismissed || alreadySeen()) {
     return null;
   }
 
@@ -66,9 +67,9 @@ export default function CookieNotice() {
     >
       <p className="text-xs leading-relaxed text-[var(--text-secondary)] sm:text-sm">
         {t("text")}{" "}
-        <Link href="/cookies" className="font-semibold text-primary-600 underline underline-offset-2 hover:text-primary-700">
+        <LegalLink doc="cookie-policy" className="font-semibold text-primary-600 underline underline-offset-2 hover:text-primary-700">
           {t("learnMore")}
-        </Link>
+        </LegalLink>
       </p>
       <button
         type="button"

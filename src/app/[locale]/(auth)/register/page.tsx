@@ -216,7 +216,7 @@ function RegisterFormContent() {
         )}
 
         {/* ── Step 2: Registration form (non-customer roles only) ─────────── */}
-        {step === "form" && (
+        {step === "form" && selectedRole !== "customer" && (
           <motion.form
             key="form"
             {...stepMotion}
@@ -426,6 +426,7 @@ function RegisterFormContent() {
 
             <TermsConsentField
               id="register-terms"
+              role={selectedRole}
               registration={register("terms_accepted")}
               error={errors.terms_accepted?.message}
             />

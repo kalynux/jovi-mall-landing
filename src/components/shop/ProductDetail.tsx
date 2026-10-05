@@ -34,6 +34,7 @@ import { recordView } from "@/lib/shop/saved.api";
 import { ProductReviews } from "@/components/shop/ProductReviews";
 import { BookingPanel } from "@/components/shop/BookingPanel";
 import { BargainButton } from "@/components/shop/BargainButton";
+import { LegalLink } from "@/components/legal/LegalLink";
 import { BARGAIN_ENABLED } from "@/lib/shop/bargain";
 import type {
   CancellationPolicy,
@@ -931,6 +932,23 @@ function PolicyBlock({ store }: { store: Product["store"] }) {
     </Notice>
   );
 
+  // A seller's terms add to the Returns & Refunds Policy, never cut into it —
+  // so this line also sits under a shop that published none.
+  const rightsNote = (
+    <p className="muted" style={{ fontSize: 13, lineHeight: 1.55, margin: 0 }}>
+      {t.rich("platformRightsNote", {
+        link: (chunks) => (
+          <LegalLink
+            doc="returns-refunds-policy"
+            style={{ color: "var(--brand)", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 2 }}
+          >
+            {chunks}
+          </LegalLink>
+        ),
+      })}
+    </p>
+  );
+
   if (!returnPolicy && !cancellationPolicy) {
     return (
       <div>
@@ -939,7 +957,8 @@ function PolicyBlock({ store }: { store: Product["store"] }) {
           title={t("noPolicyTitle")}
           description={t("noPolicyDescription", { store: store.name })}
         />
-        <div style={{ marginTop: 18 }}>{feeNote}</div>
+        <div style={{ marginTop: 18 }}>{rightsNote}</div>
+        <div style={{ marginTop: 14 }}>{feeNote}</div>
       </div>
     );
   }
@@ -948,7 +967,8 @@ function PolicyBlock({ store }: { store: Product["store"] }) {
     <div>
       {returnPolicy && <ReturnTerms policy={returnPolicy} />}
       {cancellationPolicy && <CancellationTerms policy={cancellationPolicy} />}
-      <div style={{ marginTop: 22 }}>{feeNote}</div>
+      <div style={{ marginTop: 18 }}>{rightsNote}</div>
+      <div style={{ marginTop: 14 }}>{feeNote}</div>
     </div>
   );
 }

@@ -14,8 +14,10 @@ import {
   Prose,
   RelatedLinks,
   Section,
+  TEXT_LINK_CLASS,
   TextLink,
 } from "@/components/marketing/parts";
+import { LegalLink } from "@/components/legal/LegalLink";
 import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, localePath } from "@/i18n/routing";
@@ -112,6 +114,15 @@ export default async function AgenciesPage({ params }: PageProps) {
 
         <Section title={t("agencies.start.title")} tone="subtle">
           <CheckList items={start} columns={1} />
+          <p className="mt-6 text-sm leading-relaxed text-[var(--text-secondary)]">
+            {t.rich("agencies.start.legal", {
+                agreement: (chunks) => (
+                  <LegalLink doc="delivery-partner-agreement" className={TEXT_LINK_CLASS}>
+                    {chunks}
+                  </LegalLink>
+                ),
+              })}
+          </p>
         </Section>
 
         <Section title={t("agencies.faqTitle")}>

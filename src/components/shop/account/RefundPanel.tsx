@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { Badge, Button, Icon } from "@/components/shop/ds";
+import { LegalLink } from "@/components/legal/LegalLink";
 import { useRouter } from "@/i18n/navigation";
 import { isolateLtr } from "@/lib/bidi";
 import { formatAmount, formatMoney } from "@/lib/shop/format";
@@ -130,6 +131,22 @@ export function RefundPanel({ refund, style }: { refund: CustomerRefund; style?:
           </Button>
         </div>
       )}
+
+      <LegalLink
+        doc="returns-refunds-policy"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 4,
+          marginTop: 10,
+          fontSize: 12.5,
+          fontWeight: 600,
+          color: "var(--brand)",
+        }}
+      >
+        {t("howItWorks")}
+        <Icon name="external-link" size={13} />
+      </LegalLink>
     </section>
   );
 }

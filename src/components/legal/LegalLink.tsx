@@ -7,7 +7,7 @@ import { openExternal } from "@/lib/native/links";
 import { IS_NATIVE_BUILD } from "@/lib/platform";
 
 /**
- * A link to the Privacy Policy or the Terms, in the UI's language.
+ * A link to one of the Legal Centre's documents, in the UI's language.
  *
  * A real `<a target="_blank">` on the web. In the app the click goes through
  * `openExternal` instead — a Custom Tab on Android, which is a real browser, so
@@ -49,37 +49,56 @@ export function LegalLink({
 
 const AGREEMENT_LINK = "font-semibold underline underline-offset-2 hover:text-primary-600";
 
+/** The `t.rich` tag for a document, styled as an inline agreement link. */
+function agreementLink(doc: LegalDoc) {
+  function AgreementLink(chunks: ReactNode) {
+    return (
+      <LegalLink doc={doc} className={AGREEMENT_LINK}>
+        {chunks}
+      </LegalLink>
+    );
+  }
+  return AgreementLink;
+}
+
 /**
- * The required "I agree to the Terms of Service and Privacy Policy" checkbox
- * for vendor, agency and agent sign-up (and add-role). Customers never see it:
+ * The business roles that must accept, and the agreement each one signs on top
+ * of the Terms and the Privacy Policy.
+ */
+const ROLE_AGREEMENT = {
+  vendor: { doc: "seller-agreement", label: "consentLabelSeller" },
+  agency: { doc: "delivery-partner-agreement", label: "consentLabelDeliveryPartner" },
+  agent: { doc: "delivery-partner-agreement", label: "consentLabelDeliveryPartner" },
+} as const satisfies Record<string, { doc: LegalDoc; label: string }>;
+
+export type ConsentRole = keyof typeof ROLE_AGREEMENT;
+
+/**
+ * The required "I agree to the Terms of Service, the Seller Agreement and the
+ * Privacy Policy" checkbox for vendor, agency and agent sign-up (and add-role),
+ * naming the agreement of the role being taken on. Customers never see it:
  * they register through the bot.
+ *
+ * The backend stores only that the user accepted (`terms_accepted: true`),
+ * never which documents, so the wording can follow the Legal Centre freely.
  *
  * The links sit inside the label, which is safe: a click on an interactive
  * descendant of a label does not toggle its control.
  */
 export function TermsConsentField({
   id,
+  role,
   registration,
   error,
 }: {
   id: string;
+  role: ConsentRole;
   registration: UseFormRegisterReturn;
   error?: string;
 }) {
   const t = useTranslations("legal");
   const errorId = `${id}-error`;
-  const links = {
-    terms: (chunks: ReactNode) => (
-      <LegalLink doc="terms" className={AGREEMENT_LINK}>
-        {chunks}
-      </LegalLink>
-    ),
-    privacy: (chunks: ReactNode) => (
-      <LegalLink doc="privacy" className={AGREEMENT_LINK}>
-        {chunks}
-      </LegalLink>
-    ),
-  };
+  const { doc, label } = ROLE_AGREEMENT[role];
 
   return (
     <div className="flex flex-col gap-1">
@@ -93,7 +112,11 @@ export function TermsConsentField({
           {...registration}
         />
         <label htmlFor={id} className="cursor-pointer text-xs leading-relaxed text-[var(--text-secondary)]">
-          {t.rich("consentLabel", links)}
+          {t.rich(label, {
+            terms: agreementLink("terms-of-service"),
+            agreement: agreementLink(doc),
+            privacy: agreementLink("privacy-policy"),
+          })}
         </label>
       </div>
       {error && (
@@ -107,8 +130,8 @@ export function TermsConsentField({
 
 /**
  * "By creating an account, you agree to our Terms of Service and Privacy
- * Policy." — or the checkout's shorter terms-only line. Sits under the button
- * it describes.
+ * Policy." — or the checkout's "Terms of Service and Returns & Refunds Policy"
+ * line. Sits under the button it describes.
  */
 export function LegalAgreement({
   kind,
@@ -120,25 +143,21 @@ export function LegalAgreement({
   style?: CSSProperties;
 }) {
   const t = useTranslations("legal");
-  const links = {
-    terms: (chunks: ReactNode) => (
-      <LegalLink doc="terms" className={AGREEMENT_LINK}>
-        {chunks}
-      </LegalLink>
-    ),
-    privacy: (chunks: ReactNode) => (
-      <LegalLink doc="privacy" className={AGREEMENT_LINK}>
-        {chunks}
-      </LegalLink>
-    ),
-  };
 
   return (
     <p
       className={className ?? "text-center text-xs leading-relaxed text-[var(--text-muted)]"}
       style={style}
     >
-      {kind === "signup" ? t.rich("signupAgreement", links) : t.rich("checkoutAgreement", links)}
+      {kind === "signup"
+        ? t.rich("signupAgreement", {
+            terms: agreementLink("terms-of-service"),
+            privacy: agreementLink("privacy-policy"),
+          })
+        : t.rich("checkoutAgreement", {
+            terms: agreementLink("terms-of-service"),
+            refunds: agreementLink("returns-refunds-policy"),
+          })}
     </p>
   );
 }

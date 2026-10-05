@@ -259,6 +259,7 @@ function AddRoleContent() {
 
               <TermsConsentField
                 id="add-role-terms"
+                role={selectedRole}
                 registration={register("terms_accepted")}
                 error={errors.terms_accepted?.message}
               />

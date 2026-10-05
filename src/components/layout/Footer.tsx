@@ -73,10 +73,14 @@ export default function Footer() {
     {
       label: t("legal"),
       links: [
-        // Hosted on the CDN in English and French; see lib/legal.ts.
-        { label: t("privacy"), href: legalUrl("privacy", locale) },
-        { label: t("terms"), href: legalUrl("terms", locale) },
-        { label: t("cookies"), href: "/cookies" },
+        // The Legal Centre on the CDN, in English and French; see lib/legal.ts.
+        // The hub leads: it links the documents not listed here (the seller
+        // and delivery-partner agreements, prohibited items).
+        { label: t("legalCentre"), href: legalUrl("legal-centre", locale) },
+        { label: t("terms"), href: legalUrl("terms-of-service", locale) },
+        { label: t("privacy"), href: legalUrl("privacy-policy", locale) },
+        { label: t("returnsRefunds"), href: legalUrl("returns-refunds-policy", locale) },
+        { label: t("cookies"), href: legalUrl("cookie-policy", locale) },
       ],
     },
   ];

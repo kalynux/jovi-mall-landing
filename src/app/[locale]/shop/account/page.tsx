@@ -337,16 +337,19 @@ export default function AccountPage() {
       >
         {(
           [
-            { doc: "terms", icon: "file-text" },
-            { doc: "privacy", icon: "shield-check" },
-          ] satisfies { doc: LegalDoc; icon: IconName }[]
+            { doc: "legal-centre", label: "legalCentre", icon: "scale" },
+            { doc: "terms-of-service", label: "terms", icon: "file-text" },
+            { doc: "privacy-policy", label: "privacy", icon: "shield-check" },
+            { doc: "returns-refunds-policy", label: "returnsRefunds", icon: "undo-2" },
+            { doc: "cookie-policy", label: "cookiePolicy", icon: "cookie" },
+          ] as const satisfies readonly { doc: LegalDoc; label: string; icon: IconName }[]
         ).map((row) => (
           <LegalLink key={row.doc} doc={row.doc} style={MENU_ROW_STYLE}>
             <Icon name={row.icon} size={19} style={{ color: "var(--text-muted)" }} />
             <span
               style={{ flex: 1, fontSize: 14.5, fontWeight: 600, color: "var(--text-strong)" }}
             >
-              {tLegal(row.doc)}
+              {tLegal(row.label)}
             </span>
             <Icon name="external-link" size={17} style={{ color: "var(--text-subtle)" }} />
           </LegalLink>
