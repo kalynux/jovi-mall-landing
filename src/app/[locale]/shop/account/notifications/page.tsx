@@ -55,6 +55,18 @@ const AGGREGATE_ICON: Record<NotificationAggregate, IconName> = {
   account: "user-x",
 };
 
+/**
+ * Refund rows get their own glyph whatever their aggregate (2026-10-05): the
+ * eleven `order.refund.*` / `booking.refund.*` steps, the card-refund
+ * `order.refunded` / `booking.refunded`, and the legacy `booking.refund.pending`
+ * still sitting in older inboxes. Their buttons open the existing order and
+ * booking pages, which `notification-routing.ts` already resolves.
+ */
+function iconFor(n: CustomerNotification): IconName {
+  if (/^(order|booking)\.(refund\.|refunded$)/.test(n.type)) return "hand-coins";
+  return AGGREGATE_ICON[n.aggregateType] ?? "bell";
+}
+
 export default function NotificationsPage() {
   const t = useTranslations("shop.notifications");
   // The header bar already resolves this screen's title from the route; passing
@@ -211,7 +223,7 @@ function NotificationRow({
 }) {
   const format = useFormatter();
   const t = useTranslations("shop.notifications");
-  const icon = AGGREGATE_ICON[n.aggregateType] ?? "bell";
+  const icon = iconFor(n);
 
   return (
     <AccountCard

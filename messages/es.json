@@ -2171,6 +2171,8 @@
             "bargain": "Negociar",
             "moreActions": "Precio negociable: más opciones",
             "closeActions": "Cerrar opciones",
+            "actionsTitle": "Opciones",
+            "addToCart": "Añadir al carrito",
             "freeDeliveryFrom": "Envío gratis desde {amount}"
         },
         "chrome": {
@@ -2232,6 +2234,9 @@
         },
         "product": {
             "backToShop": "Volver a la tienda",
+            "shareDialogTitle": "Compartir {product}",
+            "linkCopied": "Enlace del producto copiado",
+            "shareFailed": "No se pudo compartir el enlace",
             "holidayNotice": "<b>{store} está de vacaciones.</b> Puedes pedir igualmente: el vendedor enviará cuando vuelva a abrir.",
             "imageAria": "Imagen {n}",
             "serviceRateNote": "{unit} · se cobra por el tiempo realmente reservado",
@@ -3107,7 +3112,6 @@
             "when": "Cuándo",
             "price": "Precio",
             "yourNote": "Tu nota",
-            "refundByHand": "Tu reembolso se está tramitando a mano y todavía no ha llegado. Hemos abierto un ticket de soporte para seguirlo.",
             "stillToPay": "Queda por pagar: {amount}",
             "settledAbove": "La cita se cerró en {final}, por encima de los {quoted} presupuestados. Puedes pagarlo aquí, o arreglarlo directamente con el vendedor.",
             "payBalance": "Pagar el saldo",
@@ -3121,7 +3125,7 @@
             "confirmCancelTitle": "¿Cancelar esta reserva?",
             "confirmCancelAction": "Cancelarla",
             "keepIt": "Mantenerla",
-            "confirmCancelPaid": "Si la política del vendedor lo permite, se te devolverá el pago. Algunos métodos de pago hay que reembolsarlos a mano, lo que tarda más.",
+            "confirmCancelPaid": "Si la política del vendedor lo permite, se te devolverá el pago: íntegro a una tarjeta, o por transferencia al número que pagó, menos una comisión de transferencia.",
             "confirmCancelUnpaid": "La política de cancelación la fija el vendedor, así que puede no permitirse cerca de la cita.",
             "cancelWindowPassed": "El plazo de cancelación que fija el vendedor para esta reserva ya ha pasado.",
             "notCancellable": "Esta reserva ya no se puede cancelar.",
@@ -3332,6 +3336,31 @@
                 "cancelled": "Solicitud cancelada",
                 "cancelFailed": "No pudimos cancelar esta solicitud."
             }
+        },
+        "refund": {
+            "title": "Reembolso",
+            "status": {
+                "requested": "Reembolso solicitado: te avisaremos cuando se envíe",
+                "waiting_for_cash": "Reembolso aprobado: esperando a que la empresa de reparto entregue tu dinero",
+                "sending": "Reembolso en camino al {destination}",
+                "sendingNoDestination": "Reembolso en camino",
+                "in_progress": "Reembolso en curso",
+                "completed": "Reembolsado",
+                "completedOn": "Reembolsado el {date}",
+                "declined": "Reembolso rechazado: contacta con soporte si crees que es un error"
+            },
+            "badge": {
+                "requested": "Reembolso solicitado",
+                "waiting_for_cash": "Reembolso aprobado",
+                "sending": "Reembolso en camino",
+                "in_progress": "Reembolso en curso",
+                "completed": "Reembolso completado",
+                "declined": "Reembolso rechazado"
+            },
+            "feeLine": "Recibes {net} ({gross} menos una comisión de transferencia del {percent} %).",
+            "toNumber": "Al {destination}",
+            "toCard": "A tu tarjeta",
+            "contactSupport": "Contactar con soporte"
         }
     },
     "cookieNotice": {

@@ -41,6 +41,7 @@ import { publicUrl } from "@/lib/shop/shop.types";
 import { DeliveryTracking } from "@/components/shop/account/DeliveryTracking";
 import { DeliveryFeeChanges } from "@/components/shop/account/DeliveryFeeChanges";
 import { CombinedDeliveryPanel } from "@/components/shop/account/CombinedDeliveryPanel";
+import { RefundPanel } from "@/components/shop/account/RefundPanel";
 import { customerPaysDelivery, parcelFee } from "@/lib/shop/delivery";
 import { ReviewDisclosure } from "@/components/shop/account/ReviewForm";
 import { useApiResource } from "@/lib/shop/useApiResource";
@@ -623,6 +624,12 @@ export function VendorOrderCard({
           />
         )}
       </div>
+
+      {/* The order's refund request, from `refund` alone — independent of the
+          delivery-fee rows above and of the payment chip, which stays `paid`
+          after a partial refund. Here, inside the shared card, so the group
+          screen and the single-order screen both show it. */}
+      {order.refund && <RefundPanel refund={order.refund} style={{ marginTop: 12 }} />}
 
       {/* Parcels. Physical orders only — a digital order has nothing to ship. */}
       {order.orderType === "physical" && (

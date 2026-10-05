@@ -39,6 +39,17 @@ export function formatMoney(amount: number, currency: string): string {
   );
 }
 
+/**
+ * A bare amount, grouped like the money above but with no currency — for a
+ * figure quoted inside a sentence that already names the currency once (the
+ * refund fee line: "4 900 FCFA (5 000 minus a 2% transfer fee)"). Isolated for
+ * the same reason as `formatXAF`.
+ */
+export function formatAmount(amount: number): string {
+  const value = Math.round(Number(amount) || 0);
+  return isolateLtr(value.toLocaleString("fr-FR").replace(GROUP_SEP, " "));
+}
+
 /** Discount percentage from a compare-at price, rounded. */
 export function discountPct(price: number, compareAt?: number | null): number | null {
   if (!compareAt || compareAt <= price) return null;

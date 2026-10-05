@@ -29,6 +29,7 @@ import { availabilityLabelKey, unavailableLabelKey } from "@/lib/shop/availabili
 import { discountPct, formatMoney } from "@/lib/shop/format";
 import { tapFeedback } from "@/lib/native/haptics";
 import { categoryPath, productPathFor, storePath } from "@/lib/shop/shop.routes";
+import { useProductShare } from "@/components/shop/useProductShare";
 import { recordView } from "@/lib/shop/saved.api";
 import { ProductReviews } from "@/components/shop/ProductReviews";
 import { BookingPanel } from "@/components/shop/BookingPanel";
@@ -110,6 +111,7 @@ export function ProductDetail({
   const { addItem, productType, count } = useCart();
   const { isFavorite, toggle } = useFavorites();
   const { flash } = useToast();
+  const shareProduct = useProductShare();
   const t = useTranslations("shop.product");
   const tDs = useTranslations("shop.ds");
   const tCommon = useTranslations("shop.common");
@@ -595,6 +597,13 @@ export function ProductDetail({
               label={tDs("saveToFavorites")}
               className="order-1 sm:order-3"
             />
+            <IconButton
+              icon="share-2"
+              variant="surface"
+              onClick={() => shareProduct(p)}
+              label={tCommon("share")}
+              className="order-1 sm:order-3"
+            />
             <div className="order-2 w-full min-w-0 sm:w-auto sm:flex-1">
               {isService ? (
                 <BookingPanel product={p} />
@@ -784,6 +793,7 @@ export function ProductDetail({
                   negotiable={item.negotiable}
                   productId={item.id}
                   href={productPathFor(item)}
+                  shareable={item}
                 />
               </div>
             ))}
@@ -816,6 +826,7 @@ export function ProductDetail({
                   negotiable={item.negotiable}
                   productId={item.id}
                   href={productPathFor(item)}
+                  shareable={item}
                 />
               </div>
             ))}

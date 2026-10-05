@@ -2171,6 +2171,8 @@
             "bargain": "Bargain",
             "moreActions": "Price negotiable — more options",
             "closeActions": "Close options",
+            "actionsTitle": "Options",
+            "addToCart": "Add to cart",
             "freeDeliveryFrom": "Free delivery from {amount}"
         },
         "chrome": {
@@ -2232,6 +2234,9 @@
         },
         "product": {
             "backToShop": "Back to shop",
+            "shareDialogTitle": "Share {product}",
+            "linkCopied": "Product link copied",
+            "shareFailed": "Could not share the link",
             "holidayNotice": "<b>{store} is on holiday.</b> You can still order — the seller will dispatch when they reopen.",
             "imageAria": "Image {n}",
             "serviceRateNote": "{unit} · charged for the time actually booked",
@@ -3107,7 +3112,6 @@
             "when": "When",
             "price": "Price",
             "yourNote": "Your note",
-            "refundByHand": "Your refund is being processed by hand and has not arrived yet. We have opened a support ticket to track it.",
             "stillToPay": "{amount} still to pay",
             "settledAbove": "The appointment settled at {final}, above the {quoted} quoted. You can pay it here, or settle with the seller directly.",
             "payBalance": "Pay the balance",
@@ -3121,7 +3125,7 @@
             "confirmCancelTitle": "Cancel this booking?",
             "confirmCancelAction": "Cancel it",
             "keepIt": "Keep it",
-            "confirmCancelPaid": "If the seller's policy allows it, your payment will be refunded. Some payment methods have to be refunded by hand, which takes longer.",
+            "confirmCancelPaid": "If the seller's policy allows it, your payment will be refunded: in full to a card, or by transfer to the number that paid, minus a transfer fee.",
             "confirmCancelUnpaid": "The seller sets the cancellation policy, so this may not be allowed close to the appointment.",
             "cancelWindowPassed": "The seller's cancellation window for this booking has passed.",
             "notCancellable": "This booking can no longer be cancelled.",
@@ -3332,6 +3336,31 @@
                 "cancelled": "Request cancelled",
                 "cancelFailed": "We couldn't cancel this request."
             }
+        },
+        "refund": {
+            "title": "Refund",
+            "status": {
+                "requested": "Refund requested — we'll tell you when it's sent",
+                "waiting_for_cash": "Refund approved — waiting for the delivery company to hand over your cash",
+                "sending": "Refund on its way to {destination}",
+                "sendingNoDestination": "Refund on its way",
+                "in_progress": "Refund in progress",
+                "completed": "Refunded",
+                "completedOn": "Refunded on {date}",
+                "declined": "Refund declined — contact support if you think this is a mistake"
+            },
+            "badge": {
+                "requested": "Refund requested",
+                "waiting_for_cash": "Refund approved",
+                "sending": "Refund on its way",
+                "in_progress": "Refund in progress",
+                "completed": "Refund completed",
+                "declined": "Refund declined"
+            },
+            "feeLine": "You receive {net} ({gross} minus a {percent}% transfer fee).",
+            "toNumber": "To {destination}",
+            "toCard": "To your card",
+            "contactSupport": "Contact support"
         }
     },
     "cookieNotice": {

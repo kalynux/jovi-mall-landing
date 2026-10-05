@@ -366,6 +366,7 @@ export default function SavedPage() {
                 }
                 onQuickAdd={() => void quickAdd(entry.productId)}
                 href={productPathFor(entry.product)}
+                shareable={entry.product}
               />
             ) : (
               <UnavailableEntry

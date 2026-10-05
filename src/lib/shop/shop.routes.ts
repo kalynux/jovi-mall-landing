@@ -19,7 +19,8 @@
  */
 
 import { IS_NATIVE_BUILD } from "@/lib/platform";
-import { isLocale } from "@/i18n/routing";
+import { DEFAULT_LOCALE, isLocale } from "@/i18n/routing";
+import { SITE_URL } from "@/lib/site";
 
 export const SHOP_ROOT = "/shop";
 
@@ -206,6 +207,41 @@ export function storePath(storeSlug: string): string {
  */
 export function categoryPath(slug: string): string {
   return `${SHOP_ROOT}?category=${encodeURIComponent(slug)}`;
+}
+
+/**
+ * ── Links meant for someone else ─────────────────────────────────────────────
+ *
+ * A Share button must hand over the **website's** address, on both targets.
+ * `window.location.href` is that address on the web and `https://localhost/…`
+ * inside the app — the WebView's own origin, which opens nothing on the phone
+ * it is sent to. And the in-app *path* is the wrong shape too: `/shop/p?…` is a
+ * file in the app bundle, not a page on the site.
+ *
+ * So these ignore `IS_NATIVE_BUILD` and always build the nested web path on
+ * `SITE_URL`. A recipient with the app installed still lands in it: Android App
+ * Links hand the URL over, and `matchStorefrontPath` re-shapes it.
+ *
+ * The sharer's locale is kept, as the web's address bar always kept it — the
+ * person you send a link to most likely reads the language you do. English goes
+ * unprefixed, as it does on the site (not as it does in the app).
+ */
+function publicShopUrl(locale: string, path: string): string {
+  const prefix = isLocale(locale) && locale !== DEFAULT_LOCALE ? `/${locale}` : "";
+  return `${SITE_URL}${prefix}${path}`;
+}
+
+export function productShareUrl(
+  locale: string,
+  product: { slug: string; store: { slug: string } },
+): string {
+  return publicShopUrl(locale, `${SHOP_ROOT}/stores/${product.store.slug}/products/${product.slug}`);
+}
+
+/** `type` keeps a shared "Digital" tab opening on that tab, as the old URL did. */
+export function storeShareUrl(locale: string, storeSlug: string, type?: string): string {
+  const query = type ? `?type=${encodeURIComponent(type)}` : "";
+  return publicShopUrl(locale, `${SHOP_ROOT}/stores/${storeSlug}${query}`);
 }
 
 /** A product row from any list already carries `store.slug`, so this needs no join. */

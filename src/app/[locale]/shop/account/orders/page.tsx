@@ -10,6 +10,7 @@ import {
   ResourceView,
 } from "@/components/shop/account/AccountShell";
 import { Badge, Button, EmptyState, Icon } from "@/components/shop/ds";
+import { RefundBadge } from "@/components/shop/account/RefundPanel";
 import { formatMoney } from "@/lib/shop/format";
 import { listOrderGroups } from "@/lib/shop/orders.api";
 import { groupPaymentChip, fulfillmentChip, isCod } from "@/lib/shop/order-status";
@@ -105,6 +106,10 @@ function OrderGroupRow({ group }: { group: OrderGroup }) {
   const tKey = useTranslations();
   const payment = groupPaymentChip(group.paymentStatus);
   const hasCod = group.orders.some(isCod);
+  // The first order in the group with a refund request. The history list is not
+  // documented to carry `refund` (only the group and single reads are), so this
+  // chip appears only if the API sends it here too.
+  const refund = group.orders.find((o) => o.refund)?.refund ?? null;
 
   return (
     <Link href={orderGroupPath(group.cartId)} style={{ textDecoration: "none" }}>
@@ -137,6 +142,7 @@ function OrderGroupRow({ group }: { group: OrderGroup }) {
               {t("cashOnDelivery")}
             </Badge>
           )}
+          {refund && <RefundBadge refund={refund} />}
           {/* One chip per distinct fulfilment state across the group's orders —
               a two-vendor order where one shipped and one has not should say so
               rather than pick a winner. */}

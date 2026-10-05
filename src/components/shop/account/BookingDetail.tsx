@@ -24,6 +24,7 @@ import {
   bookingPayPath,
   bookingReschedulePath,
 } from "@/lib/shop/shop.routes";
+import { RefundPanel } from "./RefundPanel";
 import { ReviewDisclosure } from "./ReviewForm";
 
 /**
@@ -78,8 +79,22 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
     setConfirmCancel(false);
     setBusy(true);
     try {
-      await cancelBooking(bookingId);
-      booking.reload();
+      // The cancel answers with the booking and its `refund` block, so the
+      // refund status renders straight from the response. Merged over the
+      // detail read rather than replacing it: only that read populates
+      // `product` and `vendor`.
+      const cancelled = await cancelBooking(bookingId);
+      const current = booking.data;
+      booking.set(
+        current
+          ? {
+              ...current,
+              ...cancelled,
+              product: cancelled.product ?? current.product,
+              vendor: cancelled.vendor ?? current.vendor,
+            }
+          : cancelled,
+      );
     } catch (err) {
       const code = err instanceof ApiError ? err.code : undefined;
       flash(
@@ -180,13 +195,10 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
         )}
       </dl>
 
-      {/* `refund_pending` is not `refunded` — the gateway could not return the
-          money automatically and a person is completing the payout. Saying
-          "refunded" here would tell a customer they have been repaid when they
-          have not. */}
-      {b.paymentStatus === "refund_pending" && (
-        <p style={{ fontSize: 13.5, margin: "0 0 12px" }}>{t("refundByHand")}</p>
-      )}
+      {/* Where the money is, from the booking's `refund` block alone. It is on
+          the cancel response too, so it shows the moment a paid booking is
+          cancelled rather than after a reload. */}
+      {b.refund && <RefundPanel refund={b.refund} style={{ marginBottom: 12 }} />}
 
       {bal && bal.outstanding > 0 && (
         <div

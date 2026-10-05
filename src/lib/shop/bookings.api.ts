@@ -28,6 +28,7 @@
 import { apiFetch, apiFetchList } from "@/lib/api/client";
 import type { ListMeta } from "./shop.types";
 import type { ChargeRequest, InitiatePaymentResponse } from "./payments.api";
+import type { CustomerRefund } from "./refund";
 
 /**
  * One bookable interval.
@@ -58,11 +59,11 @@ export type BookingStatus = "pending" | "confirmed" | "completed" | "no-show" | 
 /**
  * 🔴 `refund_pending` is **not** `refunded`.
  *
- * It means money is owed back but the gateway could not return it
- * automatically — cash bookings, and payments carried by an aggregator with no
- * refund endpoint — so a human completes the payout from a support ticket. **The
- * customer does not have their money yet**, and a UI that renders the two the
- * same way tells them they have been repaid when they have not.
+ * Since 2026-10-05 it means a refund request is waiting for the team — usually
+ * because no paying number is on record to send a transfer to. **The customer
+ * does not have their money yet**, and a UI that renders the two the same way
+ * tells them they have been repaid when they have not. The booking's `refund`
+ * block carries the detail.
  */
 export type BookingPaymentStatus =
   | "unpaid"
@@ -109,6 +110,13 @@ export interface Booking {
   requiresPayment: boolean;
   externalCalendarEventId?: string | null;
   metadata?: Record<string, unknown>;
+  /**
+   * The latest refund request (2026-10-05) — on the list, the single read and
+   * the cancel response — or `null`. `waiting_for_cash` never applies to a
+   * booking. Optional only for an API older than the field. See
+   * `lib/shop/refund.ts`.
+   */
+  refund?: CustomerRefund | null;
   /** Populated on the detail read. */
   product?: { id: string; title: string; slug?: string } | null;
   vendor?: { id: string; name: string } | null;
@@ -313,10 +321,12 @@ export async function getBooking(id: string): Promise<Booking> {
  * carry `cancellable` and `deadline`. A `completed` or `no-show` booking is
  * `409 BOOKING_NOT_CANCELLABLE` instead.
  *
- * If the booking was paid, cancelling refunds it where the gateway supports
- * refunds; otherwise `paymentStatus` becomes `refund_pending` and a support
- * ticket is raised for a manual payout. **The cancellation succeeds either
- * way** — a refund problem never keeps the appointment on the books.
+ * If the booking was paid, cancelling refunds it — a card in full, mobile money
+ * by transfer to the paying number minus the transfer fee — and the response is
+ * the booking **with its `refund` block**: usually `sending` or `completed`
+ * straight away, `requested` when no paying number is on record. **The
+ * cancellation succeeds either way** — a refund problem never keeps the
+ * appointment on the books.
  */
 export async function cancelBooking(id: string, reason?: string): Promise<Booking> {
   return apiFetch<Booking>(`/api/customer/bookings/${encodeURIComponent(id)}/cancel`, {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 
 import { useCallback, useEffect, useState } from "react";
 import { isNetworkError } from "@/lib/errors/is-network-error";
@@ -22,7 +22,7 @@ import { deliveryTermsOf, promisesFreeDelivery } from "@/lib/shop/delivery";
 import { formatMoney } from "@/lib/shop/format";
 import { useShopPageTitle } from "@/components/shop/ShopChrome";
 import { resolveQuickAdd } from "@/lib/shop/quick-add";
-import { productPathFor, storePath } from "@/lib/shop/shop.routes";
+import { productPathFor, storePath, storeShareUrl } from "@/lib/shop/shop.routes";
 import { openApp } from "@/lib/native/links";
 import { shareLink } from "@/lib/native/share";
 import type { ListMeta, ProductListItem, ProductType, Store } from "@/lib/shop/shop.types";
@@ -67,6 +67,7 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
   const tKey = useTranslations();
   // The shopper's locale, not the browser's — see LOCALISATION.md §6.
   const format = useFormatter();
+  const locale = useLocale();
   const router = useRouter();
   const { addItem } = useCart();
   const { isFavorite, toggle, syncGrid } = useFavorites();
@@ -157,6 +158,7 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
       onToggleFavorite={() => toggle(item.id)}
       onQuickAdd={() => void quickAdd(item)}
       href={productPathFor(item)}
+      shareable={item}
     />
   );
 
@@ -291,7 +293,8 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
               onClick={() => {
                 void shareLink({
                   title: store.name,
-                  url: window.location.href,
+                  // Not `window.location.href` — that is `https://localhost/…` in the app.
+                  url: storeShareUrl(locale, store.slug, activeType),
                   dialogTitle: t("shareDialogTitle", { store: store.name }),
                 }).then((outcome) => {
                   if (outcome === "copied") flash(t("linkCopied"));

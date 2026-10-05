@@ -4,6 +4,7 @@ import { useFormatter, useTranslations } from "next-intl";
 
 import { useRouter } from "@/i18n/navigation";
 import { Badge, EmptyState, Skeleton } from "@/components/shop/ds";
+import { RefundBadge } from "@/components/shop/account/RefundPanel";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import { useApiResource } from "@/lib/shop/useApiResource";
 import { formatMoney } from "@/lib/shop/format";
@@ -105,6 +106,7 @@ function BookingRow({ booking, onOpen }: { booking: Booking; onOpen: () => void 
             {tKey(pay.labelKey)}
           </Badge>
         )}
+        {booking.refund && <RefundBadge refund={booking.refund} />}
       </div>
 
       <div style={{ fontWeight: 700, fontSize: 14.5 }}>

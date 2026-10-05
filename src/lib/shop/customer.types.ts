@@ -17,6 +17,7 @@
 
 import type { FileDetail } from "./shop.types";
 import type { PaymentInstructions } from "./payments.api";
+import type { CustomerRefund } from "./refund";
 
 /**
  * A resolved uploaded file - the single way the backend surfaces any file
@@ -414,6 +415,13 @@ export interface CustomerOrder {
    * nothing was ever owed.
    */
   deliveryFeeRefund?: { owed: number; returned: number } | null;
+  /**
+   * The order's latest refund request (2026-10-05), or `null` when none was ever
+   * requested. Independent of `deliveryFeeRefund` and of `paymentStatus` — see
+   * `lib/shop/refund.ts`. Documented on the group and single reads; optional
+   * because an older API, and the history list, may not send it.
+   */
+  refund?: CustomerRefund | null;
   paymentMethod: PaymentMethodChoice;
   paymentStatus: OrderPaymentStatus;
   fulfillmentStatus: FulfillmentStatus;

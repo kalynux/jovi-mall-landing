@@ -284,6 +284,7 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
       productId={product.id}
       onQuickAdd={() => void quickAdd(product)}
       href={productPathFor(product)}
+      shareable={product}
     />
   );
 

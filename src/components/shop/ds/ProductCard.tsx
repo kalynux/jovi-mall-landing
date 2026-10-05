@@ -15,7 +15,11 @@ import { promisesFreeDelivery } from "@/lib/shop/delivery";
 import { discountPct, formatMoney } from "@/lib/shop/format";
 import { defaultVariant } from "@/lib/shop/quick-add";
 import { useReducedMotionSafe } from "@/lib/reduced-motion";
+import { tapFeedback } from "@/lib/native/haptics";
+import { useProductShare } from "@/components/shop/useProductShare";
 import { Badge } from "./Badge";
+import { ProductActionsSheet, type ProductAction } from "./ProductActionsSheet";
+import { useLongPress, type LongPressSource } from "./useLongPress";
 import { Icon, type IconName } from "./Icon";
 import { PriceDisplay } from "./PriceDisplay";
 import { VerifiedBadge } from "./VerifiedBadge";
@@ -85,7 +89,20 @@ export interface ProductCardProps {
    */
   href?: string;
   onClick?: () => void;
+  /**
+   * The slugs the public link is built from — pass the product row itself.
+   * Puts Share in the press-and-hold menu; without it the menu has no Share.
+   * Not derived from `href`, which is the app's own path shape in the app build.
+   */
+  shareable?: { slug: string; store: { slug: string } };
 }
+
+/** The verb the hold menu leads with — "Add to cart", where the corner says "+". */
+const menuQuickAction: Record<ProductType, { icon: IconName; labelKey: string }> = {
+  physical: { icon: "shopping-cart", labelKey: "addToCart" },
+  digital: { icon: "zap", labelKey: "buyNow" },
+  service: { icon: "calendar-clock", labelKey: "book" },
+};
 
 /**
  * What the corner button does, per type — and it is three different things, so
@@ -216,12 +233,12 @@ function CornerButton({
  * variant turns out not negotiable or sold out, Bargain is not offered.
  */
 function BargainCorner({
-  productId,
+  bargain,
   type,
   onQuickAdd,
   direction,
 }: {
-  productId: string;
+  bargain: CardBargain;
   type: ProductType;
   onQuickAdd?: () => void;
   direction: "up" | "left";
@@ -229,37 +246,8 @@ function BargainCorner({
   const t = useTranslations("shop.ds");
   const reduceMotion = useReducedMotionSafe();
   const [open, setOpen] = useState(false);
-  const [lookup, setLookup] = useState<
-    | { state: "idle" | "loading" | "none" }
-    | { state: "ready"; variantId: string; label: string }
-  >({ state: "idle" });
   const root = useRef<HTMLDivElement>(null);
-
-  const { start, sheet } = useBargain({
-    productId,
-    variantId: lookup.state === "ready" ? lookup.variantId : undefined,
-    itemLabel: lookup.state === "ready" ? lookup.label : "",
-  });
-
-  const resolveVariant = () => {
-    // A failed lookup ("none") is retried on the next open; a found one is kept.
-    if (lookup.state === "loading" || lookup.state === "ready") return;
-    setLookup({ state: "loading" });
-    getProductById(productId)
-      .then((product) => {
-        const variant = product && defaultVariant(product);
-        if (!product || !variant?.negotiable || !variant.inStock) {
-          setLookup({ state: "none" });
-          return;
-        }
-        setLookup({
-          state: "ready",
-          variantId: variant.id,
-          label: product.variants.length > 1 ? `${product.title} — ${variant.name}` : product.title,
-        });
-      })
-      .catch(() => setLookup({ state: "none" }));
-  };
+  const { start, offered, resolve: resolveVariant } = bargain;
 
   // A tap anywhere else, or Escape, folds the menu back.
   useEffect(() => {
@@ -283,7 +271,7 @@ function BargainCorner({
     tone: "brand" | "light";
     run: (() => void) | null;
   }[] = [];
-  if (lookup.state !== "none") {
+  if (offered) {
     actions.push({
       key: "bargain",
       label: t("bargain"),
@@ -354,13 +342,63 @@ function BargainCorner({
           setOpen(!open);
         }}
       />
-      {sheet}
     </div>
   );
 }
 
+/**
+ * The card's Bargain, shared by the corner menu above and the press-and-hold
+ * sheet — one lookup and one channel sheet per card, whichever opened it.
+ *
+ * `resolve` is the lookup the corner's note explains; call it when a menu
+ * opens, never on the Bargain tap itself. `offered` is false once the lookup
+ * has said no (or with the feature off); `start` is null until it has said yes.
+ */
+interface CardBargain {
+  resolve: () => void;
+  offered: boolean;
+  start: (() => void) | null;
+  sheet: ReactNode;
+}
+
+function useCardBargain(productId: string | undefined, enabled: boolean): CardBargain {
+  const [lookup, setLookup] = useState<
+    | { state: "idle" | "loading" | "none" }
+    | { state: "ready"; variantId: string; label: string }
+  >({ state: "idle" });
+
+  const { start, sheet } = useBargain({
+    productId: productId ?? "",
+    variantId: enabled && lookup.state === "ready" ? lookup.variantId : undefined,
+    itemLabel: lookup.state === "ready" ? lookup.label : "",
+  });
+
+  const resolve = () => {
+    // A failed lookup ("none") is retried on the next open; a found one is kept.
+    if (!enabled || !productId || lookup.state === "loading" || lookup.state === "ready") return;
+    setLookup({ state: "loading" });
+    getProductById(productId)
+      .then((product) => {
+        const variant = product && defaultVariant(product);
+        if (!product || !variant?.negotiable || !variant.inStock) {
+          setLookup({ state: "none" });
+          return;
+        }
+        setLookup({
+          state: "ready",
+          variantId: variant.id,
+          label: product.variants.length > 1 ? `${product.title} — ${variant.name}` : product.title,
+        });
+      })
+      .catch(() => setLookup({ state: "none" }));
+  };
+
+  return { resolve, offered: enabled && lookup.state !== "none", start, sheet };
+}
+
 export function ProductCard(props: ProductCardProps) {
   const t = useTranslations("shop.ds");
+  const tCommon = useTranslations("shop.common");
   // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
   const tKey = useTranslations();
   const {
@@ -386,7 +424,97 @@ export function ProductCard(props: ProductCardProps) {
     onQuickAdd,
     href,
     onClick,
+    shareable,
   } = props;
+
+  const reduceMotion = useReducedMotionSafe();
+  const shareProduct = useProductShare();
+  const canBargain = Boolean(inStock && negotiable && BARGAIN_ENABLED && productId);
+  const bargain = useCardBargain(productId, canBargain);
+
+  /**
+   * ── Press and hold: the card's action menu ──────────────────────────────────
+   *
+   * Add to cart, Bargain, Share and Save, in that order — each only when this
+   * card can actually do it. Every one of them is also reachable without the
+   * gesture (the corner button, the heart, the product page), which is what
+   * makes a hidden gesture acceptable: it is a shortcut, never the only way.
+   */
+  const [actionsOpen, setActionsOpen] = useState(false);
+  /**
+   * The finger that opened the menu is still down when it appears, and on
+   * some phones lifting it lands a tap on the scrim that just slid under it —
+   * which closed the menu the moment it opened. So closing waits until that
+   * finger is up, plus a beat for the click that follows.
+   */
+  const closeBlockedUntil = useRef(0);
+
+  const openActions = (source: LongPressSource) => {
+    if (source === "pointer") {
+      closeBlockedUntil.current = Infinity;
+      const released = () => {
+        closeBlockedUntil.current = Date.now() + 350;
+        window.removeEventListener("pointerup", released);
+        window.removeEventListener("pointercancel", released);
+      };
+      window.addEventListener("pointerup", released);
+      window.addEventListener("pointercancel", released);
+    }
+    bargain.resolve();
+    void tapFeedback();
+    setActionsOpen(true);
+  };
+  const closeActions = () => {
+    if (Date.now() >= closeBlockedUntil.current) setActionsOpen(false);
+  };
+
+  /** Each row closes the menu first, then acts — synchronously, inside the tap. */
+  const act = (run: () => void) => () => {
+    setActionsOpen(false);
+    run();
+  };
+
+  const menu: ProductAction[] = [];
+  if (inStock && onQuickAdd) {
+    menu.push({
+      key: "quick",
+      icon: menuQuickAction[type].icon,
+      label: t(menuQuickAction[type].labelKey),
+      onPress: act(onQuickAdd),
+      primary: true,
+    });
+  }
+  if (bargain.offered) {
+    const startBargain = bargain.start;
+    menu.push({
+      key: "bargain",
+      icon: "handshake",
+      label: t("bargain"),
+      onPress: startBargain ? act(startBargain) : null,
+    });
+  }
+  if (shareable) {
+    menu.push({
+      key: "share",
+      icon: "share-2",
+      label: tCommon("share"),
+      onPress: act(() => shareProduct({ title, ...shareable })),
+    });
+  }
+  if (onToggleFavorite) {
+    menu.push({
+      key: "save",
+      icon: "heart",
+      label: t(favorite ? "removeFromFavorites" : "saveToFavorites"),
+      onPress: act(() => {
+        void tapFeedback();
+        onToggleFavorite();
+      }),
+      active: favorite,
+    });
+  }
+
+  const hold = useLongPress(menu.length > 0 ? openActions : null);
 
   // Suppressed on a price band: the compare-at belongs to the default variant,
   // so a "-20%" badge over "from 24 000" claims a discount on prices it does
@@ -532,9 +660,9 @@ export function ProductCard(props: ProductCardProps) {
           </span>
         </div>
       )}
-      {inStock && negotiable && BARGAIN_ENABLED && productId ? (
+      {canBargain ? (
         <BargainCorner
-          productId={productId}
+          bargain={bargain}
           type={type}
           onQuickAdd={onQuickAdd}
           direction={layout === "list" ? "left" : "up"}
@@ -593,14 +721,31 @@ export function ProductCard(props: ProductCardProps) {
       </>
     );
 
+  // The card sinks a little under a held finger — the cue that holding does
+  // something, and that letting go now would not open the product.
+  const pressedStyle: CSSProperties =
+    hold.pressing && !reduceMotion
+      ? { transform: "scale(0.97)", transition: "transform 300ms var(--ease-out)" }
+      : {};
+
   return (
     <CardShell
       href={href}
       onClick={onClick}
       className={layout === "list" ? "ds-card lift" : "fadein lift ds-card"}
-      style={layout === "list" ? listShell : gridShell}
+      style={{ ...(layout === "list" ? listShell : gridShell), ...hold.style, ...pressedStyle }}
+      handlers={hold.handlers}
     >
       {body}
+      {menu.length > 0 && (
+        <ProductActionsSheet
+          open={actionsOpen}
+          onClose={closeActions}
+          product={{ title, image, price, compareAt, currency, priceRange }}
+          actions={menu}
+        />
+      )}
+      {bargain.sheet}
     </CardShell>
   );
 }
@@ -617,17 +762,19 @@ function CardShell({
   onClick,
   className,
   style,
+  handlers,
   children,
 }: {
   href?: string;
   onClick?: () => void;
   className: string;
   style: CSSProperties;
+  handlers: ReturnType<typeof useLongPress>["handlers"];
   children: ReactNode;
 }) {
   if (href) {
     return (
-      <Link href={href} onClick={onClick} className={className} style={style}>
+      <Link href={href} onClick={onClick} className={className} style={style} {...handlers}>
         {children}
       </Link>
     );
@@ -635,10 +782,14 @@ function CardShell({
 
   return (
     <div
+      {...handlers}
       onClick={onClick}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && onClick?.()}
+      onKeyDown={(e) => {
+        handlers.onKeyDown?.(e);
+        if (e.key === "Enter") onClick?.();
+      }}
       className={className}
       style={style}
     >

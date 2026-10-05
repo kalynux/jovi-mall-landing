@@ -2171,6 +2171,8 @@
             "bargain": "Négocier",
             "moreActions": "Prix négociable — plus d’options",
             "closeActions": "Fermer les options",
+            "actionsTitle": "Options",
+            "addToCart": "Ajouter au panier",
             "freeDeliveryFrom": "Livraison gratuite dès {amount}"
         },
         "chrome": {
@@ -2232,6 +2234,9 @@
         },
         "product": {
             "backToShop": "Retour à la boutique",
+            "shareDialogTitle": "Partager {product}",
+            "linkCopied": "Lien du produit copié",
+            "shareFailed": "Impossible de partager le lien",
             "holidayNotice": "<b>{store} est en congé.</b> Vous pouvez toujours commander — le vendeur expédiera à sa réouverture.",
             "imageAria": "Image {n}",
             "serviceRateNote": "{unit} · facturé selon le temps réellement réservé",
@@ -3107,7 +3112,6 @@
             "when": "Quand",
             "price": "Prix",
             "yourNote": "Votre note",
-            "refundByHand": "Votre remboursement est traité manuellement et n'est pas encore arrivé. Nous avons ouvert un ticket d'assistance pour le suivre.",
             "stillToPay": "Reste à payer : {amount}",
             "settledAbove": "Le rendez-vous a été clôturé à {final}, au-dessus des {quoted} annoncés. Vous pouvez payer ici, ou régler directement avec le vendeur.",
             "payBalance": "Payer le solde",
@@ -3121,7 +3125,7 @@
             "confirmCancelTitle": "Annuler cette réservation ?",
             "confirmCancelAction": "L'annuler",
             "keepIt": "La garder",
-            "confirmCancelPaid": "Si la politique du vendeur le permet, votre paiement sera remboursé. Certains moyens de paiement doivent être remboursés manuellement, ce qui prend plus de temps.",
+            "confirmCancelPaid": "Si la politique du vendeur le permet, votre paiement sera remboursé : en totalité sur une carte, ou par transfert au numéro qui a payé, moins des frais de transfert.",
             "confirmCancelUnpaid": "C'est le vendeur qui fixe la politique d'annulation : cela peut être refusé juste avant le rendez-vous.",
             "cancelWindowPassed": "Le délai d'annulation fixé par le vendeur pour cette réservation est dépassé.",
             "notCancellable": "Cette réservation ne peut plus être annulée.",
@@ -3332,6 +3336,31 @@
                 "cancelled": "Demande annulée",
                 "cancelFailed": "Nous n’avons pas pu annuler cette demande."
             }
+        },
+        "refund": {
+            "title": "Remboursement",
+            "status": {
+                "requested": "Remboursement demandé — nous vous préviendrons à l'envoi",
+                "waiting_for_cash": "Remboursement approuvé — en attente de l'argent remis par la société de livraison",
+                "sending": "Remboursement en route vers le {destination}",
+                "sendingNoDestination": "Remboursement en route",
+                "in_progress": "Remboursement en cours",
+                "completed": "Remboursé",
+                "completedOn": "Remboursé le {date}",
+                "declined": "Remboursement refusé — contactez l'assistance si vous pensez qu'il s'agit d'une erreur"
+            },
+            "badge": {
+                "requested": "Remboursement demandé",
+                "waiting_for_cash": "Remboursement approuvé",
+                "sending": "Remboursement en route",
+                "in_progress": "Remboursement en cours",
+                "completed": "Remboursement effectué",
+                "declined": "Remboursement refusé"
+            },
+            "feeLine": "Vous recevez {net} ({gross} moins des frais de transfert de {percent} %).",
+            "toNumber": "Vers le {destination}",
+            "toCard": "Sur votre carte",
+            "contactSupport": "Contacter l'assistance"
         }
     },
     "cookieNotice": {
