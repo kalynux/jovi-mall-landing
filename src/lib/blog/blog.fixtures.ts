@@ -446,8 +446,8 @@ export const BLOG_ARTICLES: Article[] = [
           ),
           ol(
             [strong("Payment is taken and held."), txt(" The customer pays at order time and the funds sit in escrow. They are not yours yet, and they are not the platform's either.")],
-            [strong("The order completes."), txt(" Either the customer confirms delivery, or it auto-confirms after seven days — so a customer who simply never taps anything does not strand your money indefinitely.")],
-            [strong("A hold period runs."), txt(" Seven days after completion, which is the window in which a dispute would realistically surface.")],
+            [strong("The order completes."), txt(" Either the customer confirms delivery, or it auto-confirms a few days after delivery — so a customer who simply never taps anything does not strand your money indefinitely.")],
+            [strong("A hold period runs."), txt(" It starts at delivery and lasts a few days: the window in which the customer can still report a problem, and a problem reported in it keeps the money on hold until it is settled.")],
             [strong("You request the payout."), txt(" The balance is then available to withdraw to the payout details you set during onboarding.")]
           ),
           p(
@@ -480,7 +480,7 @@ export const BLOG_ARTICLES: Article[] = [
             {
               question: "How long until I can withdraw money from a sale?",
               answer:
-                "Funds are held in escrow until the order completes — on customer confirmation, or automatically after seven days — and then held a further seven days before the balance becomes requestable.",
+                "Funds are held from payment and through a hold of a few days that starts at delivery — the window in which the customer can still report a problem. After it, the balance becomes requestable.",
             },
             {
               question: "Is commission taken from the delivery fee too?",
@@ -490,7 +490,7 @@ export const BLOG_ARTICLES: Article[] = [
             {
               question: "What happens if a customer never confirms delivery?",
               answer:
-                "The order auto-confirms seven days after delivery so that the payout timeline is not blocked by a customer who simply stops responding.",
+                "The order auto-confirms a few days after delivery so that the payout timeline is not blocked by a customer who simply stops responding.",
             }
           ),
           cta(
@@ -567,8 +567,8 @@ export const BLOG_ARTICLES: Article[] = [
           ),
           ol(
             [strong("Le paiement est prélevé et conservé."), txt(" Le client paie au moment de la commande et les fonds sont placés sous séquestre. Ils ne sont pas encore à vous, ni à la plateforme.")],
-            [strong("La commande se termine."), txt(" Soit le client confirme la livraison, soit elle se confirme automatiquement au bout de sept jours — un client qui ne clique jamais sur rien ne bloque donc pas votre argent indéfiniment.")],
-            [strong("Une période de rétention court."), txt(" Sept jours après la clôture, ce qui correspond au délai pendant lequel un litige apparaîtrait réellement.")],
+            [strong("La commande se termine."), txt(" Soit le client confirme la livraison, soit elle se confirme automatiquement quelques jours après la livraison — un client qui ne clique jamais sur rien ne bloque donc pas votre argent indéfiniment.")],
+            [strong("Une période de rétention court."), txt(" Elle commence à la livraison et dure quelques jours : c'est le délai pendant lequel le client peut encore signaler un problème, et un problème signalé maintient l'argent en attente jusqu'à son règlement.")],
             [strong("Vous demandez le versement."), txt(" Le solde est alors disponible vers les coordonnées renseignées à l'inscription.")]
           ),
           p(
@@ -601,7 +601,7 @@ export const BLOG_ARTICLES: Article[] = [
             {
               question: "Sous combien de temps puis-je retirer l'argent d'une vente ?",
               answer:
-                "Les fonds restent sous séquestre jusqu'à la clôture de la commande — sur confirmation du client, ou automatiquement au bout de sept jours — puis sept jours supplémentaires avant que le solde ne devienne demandable.",
+                "Les fonds sont retenus dès le paiement, puis pendant une rétention de quelques jours qui commence à la livraison — le délai pendant lequel le client peut encore signaler un problème. Ensuite, le solde devient demandable.",
             },
             {
               question: "La commission s'applique-t-elle aussi aux frais de livraison ?",

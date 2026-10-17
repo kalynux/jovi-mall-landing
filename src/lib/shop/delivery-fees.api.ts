@@ -10,7 +10,9 @@
  *     company → it waits for the customer: approve or decline. An approved
  *     ONLINE increase is a top-up payment, and the parcel waits for it;
  *   - the customer asks for a COMBINED price on several parcels one company
- *     carries → the company may only lower fees, applied like any decrease.
+ *     carries → the company may only lower fees, applied like any decrease;
+ *   - the customer PROPOSES a fee of their own on one parcel, higher or lower
+ *     (ADR-A12) → the company accepts or declines, and the parcel waits.
  *
  * Every figure is the server's. Nothing here computes a fee, a difference or a
  * total — the screens render what these reads return.
@@ -87,6 +89,57 @@ export async function payDeliveryFeeTopup(
     { method: "POST", body: JSON.stringify(charge) },
   );
   return "data" in body && body.success === false ? body.data : (body as DeliveryFeeTopupPayment);
+}
+
+// ─── The customer's own fee proposal (ADR-A12, 2026-10-14) ───────────────────
+//
+// On a parcel whose delivery the customer pays, the customer may name a fee of
+// their own — higher or lower — and the delivery company accepts or declines.
+// The parcel is not picked up until it answers. An accepted higher fee on an
+// online order is paid through `payDeliveryFeeTopup` above; declining to pay it
+// is `rejectDeliveryFee`, which takes the proposal back.
+
+/**
+ * POST /api/customer/orders/:id/shipments/:shipmentId/delivery-fee-proposals.
+ * `proposedFee` is a whole amount in the order's currency; `reason` 3–500
+ * characters, shown to the delivery company. `422 …_NOT_PAYER` on a parcel the
+ * shop pays for, `…_LIMIT_REACHED` after two on one parcel.
+ */
+export async function proposeDeliveryFee(
+  orderId: string,
+  shipmentId: string,
+  input: { proposedFee: number; reason: string },
+): Promise<DeliveryFeeProposal> {
+  return apiFetch<DeliveryFeeProposal>(
+    `/api/customer/orders/${encodeURIComponent(orderId)}/shipments/${encodeURIComponent(shipmentId)}/delivery-fee-proposals`,
+    { method: "POST", body: JSON.stringify(input) },
+  );
+}
+
+/**
+ * Change your own unanswered proposal. Send only what changed, plus the
+ * `version` on screen — every edit bumps it, and a stale one answers `409`.
+ */
+export async function editDeliveryFeeProposal(
+  orderId: string,
+  proposalId: string,
+  input: { proposedFee?: number; reason?: string; version: number },
+): Promise<DeliveryFeeProposal> {
+  return apiFetch<DeliveryFeeProposal>(`${orderBase(orderId)}/${encodeURIComponent(proposalId)}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+/** Take your own unanswered proposal back. The fee stays; the parcel can be picked up. */
+export async function withdrawDeliveryFeeProposal(
+  orderId: string,
+  proposalId: string,
+): Promise<DeliveryFeeProposal> {
+  return apiFetch<DeliveryFeeProposal>(
+    `${orderBase(orderId)}/${encodeURIComponent(proposalId)}/withdraw`,
+    { method: "POST" },
+  );
 }
 
 /** GET …/groups/:cartId/combined-delivery-requests — newest first. */

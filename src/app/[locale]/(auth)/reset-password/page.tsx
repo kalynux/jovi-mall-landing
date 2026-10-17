@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import AuthCard from "@/components/auth/AuthCard";
+import PasswordInput from "@/components/auth/PasswordInput";
 import { resetPassword } from "@/lib/auth/auth.api";
 import { ResetPasswordSchema, type ResetPasswordFormValues } from "@/lib/auth/auth.schemas";
 import { ApiError } from "@/lib/auth/auth.types";
@@ -113,11 +114,9 @@ function ResetPasswordContent() {
           <label htmlFor="password" className="text-xs font-semibold text-[var(--text-secondary)]">
             {t("passwordLabel")}
           </label>
-          <input
+          <PasswordInput
             id="password"
-            type="password"
             autoComplete="new-password"
-            className="field"
             aria-invalid={Boolean(errors.password)}
             aria-describedby="password-rules"
             {...register("password")}
@@ -136,11 +135,9 @@ function ResetPasswordContent() {
           <label htmlFor="confirm" className="text-xs font-semibold text-[var(--text-secondary)]">
             {t("confirmLabel")}
           </label>
-          <input
+          <PasswordInput
             id="confirm"
-            type="password"
             autoComplete="new-password"
-            className="field"
             aria-invalid={Boolean(errors.confirm)}
             {...register("confirm")}
           />

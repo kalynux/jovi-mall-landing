@@ -4,7 +4,16 @@ import { useFormatter, useTranslations } from "next-intl";
 
 import { useCallback, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
-import { Avatar, Badge, Button, ConfirmDialog, Skeleton } from "@/components/shop/ds";
+import {
+  Avatar,
+  Badge,
+  Button,
+  ConfirmDialog,
+  Icon,
+  Skeleton,
+  VerifiedBadge,
+  type VerifiedKind,
+} from "@/components/shop/ds";
 import { useToast } from "@/components/shop/providers";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import { useApiResource } from "@/lib/shop/useApiResource";
@@ -19,9 +28,12 @@ import {
   MAX_TICKET_ATTACHMENTS,
   TICKET_STATUS_LABEL,
   ticketTypeLabelKey,
+  type TicketActor,
   type TicketAttachment,
   type TicketNote,
 } from "@/lib/shop/tickets.api";
+import { joinedRoleOf, ticketRoleLabelKey } from "@/lib/shop/ticket-parties";
+import { heldPurchaseOf } from "@/lib/shop/protection";
 import { fileUnavailableReason, publicUrl } from "@/lib/shop/shop.types";
 import { TICKET_LIST } from "@/lib/shop/shop.routes";
 
@@ -39,6 +51,15 @@ import { TICKET_LIST } from "@/lib/shop/shop.routes";
  * Status is likewise not a free choice. A `waiting_on_<role>` value is only
  * accepted when a participant with that role is on the ticket, and an unchanged
  * status is a `400`, so the only transition offered is closing.
+ *
+ * ── Who is on it ────────────────────────────────────────────────────────────
+ *
+ * A ticket about an order is followed by the order's seller, delivery company
+ * and courier as well as support (2026-10-09), and any of them may reply. So
+ * nothing here may assume the other side is support: every reply is labelled
+ * from its own `author`, and the people on the ticket are listed from
+ * `followers` as each response delivers it — a courier joins when they accept
+ * the delivery, so that list is never kept between loads.
  */
 export function TicketDetail({ ticketId }: { ticketId: string }) {
   // ⚠ BOTH TRANSLATORS ARE BOUND HERE, ABOVE THE GUARDS BELOW, AND THAT
@@ -58,7 +79,8 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
   const tKey = useTranslations();
   const router = useRouter();
   const { flash } = useToast();
-  const { status: authStatus } = useAuthGuard();
+  const { status: authStatus, user } = useAuthGuard();
+  const selfId = user?.id ?? null;
 
   const ticket = useApiResource(() => getTicket(ticketId), [ticketId, authStatus]);
   const notes = useApiResource(() => listTicketNotes(ticketId), [ticketId, authStatus]);
@@ -174,6 +196,9 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
     tone: "neutral" as const,
   };
   const isClosed = t.status === "closed" || t.status === "resolved";
+  // Wi-Mall Protection: while this is `true` the request is what keeps the
+  // seller's payment on hold, and closing it as the customer releases it.
+  const holding = t.holds_earnings === true && !isClosed;
 
   return (
     <div className="mx-auto max-w-[760px] px-4 py-6 sm:px-6">
@@ -216,6 +241,33 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
         )}
       </header>
 
+      {holding && (
+        <div
+          role="note"
+          style={{
+            display: "flex",
+            gap: 9,
+            alignItems: "flex-start",
+            border: "1px solid var(--warning-border)",
+            background: "var(--warning-bg)",
+            borderRadius: "var(--radius-lg)",
+            padding: "12px 14px",
+            marginBottom: 16,
+          }}
+        >
+          <Icon
+            name="hourglass"
+            size={17}
+            style={{ color: "var(--warning)", flexShrink: 0, marginTop: 2 }}
+          />
+          <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.5, color: "var(--text-body)" }}>
+            {tKey(`shop.protection.ticketBanner.${heldPurchaseOf(t.entity_type)}`)}
+          </p>
+        </div>
+      )}
+
+      <Participants people={t.followers ?? []} selfId={selfId} />
+
       <Attachments
         items={attachments.data ?? []}
         busy={busy}
@@ -223,7 +275,7 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
         onPick={attach}
       />
 
-      <Conversation notes={notes.data ?? []} />
+      <Conversation notes={notes.data ?? []} selfId={selfId} />
 
       {isClosed ? (
         /* Two whole sentences rather than one with the status dropped into it.
@@ -263,16 +315,19 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
         </div>
       )}
 
+      {/* Closing is the customer's one way to end a request, and on a request
+          that holds the seller's payment it is also what releases it — so that
+          is the thing the dialog has to say, in place of the usual reassurance. */}
       <ConfirmDialog
         open={confirmClose}
-        title={tSupport("confirmCloseTitle")}
+        title={holding ? tKey("shop.protection.confirmClose.title") : tSupport("confirmCloseTitle")}
         tone="warning"
-        icon="circle-check-big"
+        icon={holding ? "hand-coins" : "circle-check-big"}
         confirmLabel={tSupport("confirmCloseAction")}
         onConfirm={() => void close()}
         onCancel={() => setConfirmClose(false)}
       >
-        {tSupport("confirmCloseBody")}
+        {holding ? tKey("shop.protection.confirmClose.body") : tSupport("confirmCloseBody")}
       </ConfirmDialog>
     </div>
   );
@@ -363,8 +418,113 @@ function Attachments({
   );
 }
 
-function Conversation({ notes }: { notes: TicketNote[] }) {
+/**
+ * The name and the role to print for one person on a ticket.
+ *
+ * The backend answers an actor it could not resolve with the capitalised role
+ * as the name (`"Vendor"`), and a seller with no shop name with `""`. Neither is
+ * a name, so in both cases the translated role stands in for it and is not
+ * repeated beside itself.
+ */
+function describeActor(
+  actor: TicketActor | null,
+  role: string,
+  isSelf: boolean,
+  tKey: (key: string) => string,
+): { name: string; role: string | null; verified: VerifiedKind | null } {
+  const roleKey = ticketRoleLabelKey(role, isSelf);
+  const roleLabel = roleKey ? tKey(roleKey) : null;
+  const raw = actor?.name?.trim() ?? "";
+  const unresolved = raw === "" || raw.toLowerCase() === role;
+  const badged = role === "vendor" || role === "agency" || role === "agent";
+
+  return {
+    name: unresolved ? (roleLabel ?? raw) : raw,
+    role: unresolved ? null : roleLabel,
+    verified: badged && actor?.verified === true ? role : null,
+  };
+}
+
+/**
+ * Who is on the ticket, each with the part they play.
+ *
+ * Drawn from the `followers` of the response in hand and nothing else. Hidden
+ * while the customer is the only one on it — a ticket that is not about an order
+ * has nobody else to name until support picks it up.
+ */
+function Participants({ people, selfId }: { people: TicketActor[]; selfId: string | null }) {
   const t = useTranslations("shop.support");
+  const tKey = useTranslations();
+
+  if (people.length < 2) return null;
+
+  return (
+    <section style={{ marginBottom: 16 }}>
+      <div className="ds-overline" style={{ marginBottom: 8 }}>
+        {t("participants")}
+      </div>
+      <ul
+        style={{
+          listStyle: "none",
+          padding: 0,
+          margin: 0,
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 8,
+        }}
+      >
+        {people.map((person) => {
+          const isSelf = person.role === "customer" && person.user_id === selfId;
+          const who = describeActor(person, person.role, isSelf, tKey);
+          return (
+            <li
+              key={`${person.user_id}:${person.role}`}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                minWidth: 0,
+                maxWidth: "100%",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--radius-lg)",
+                padding: "6px 12px 6px 6px",
+              }}
+            >
+              <Avatar name={who.name} src={publicUrl(person.avatar) ?? undefined} size={28} />
+              <span style={{ minWidth: 0 }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {who.name}
+                  </span>
+                  {who.verified && (
+                    <VerifiedBadge kind={who.verified} size={14} style={{ flexShrink: 0 }} />
+                  )}
+                </span>
+                {who.role && (
+                  <span className="muted" style={{ display: "block", fontSize: 12 }}>
+                    {who.role}
+                  </span>
+                )}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+function Conversation({ notes, selfId }: { notes: TicketNote[]; selfId: string | null }) {
+  const t = useTranslations("shop.support");
+  const tKey = useTranslations();
   const format = useFormatter();
 
   if (notes.length === 0) {
@@ -376,43 +536,96 @@ function Conversation({ notes }: { notes: TicketNote[] }) {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      {notes.map((note) => (
-        <div
-          key={note.id}
-          style={{
-            border: "1px solid var(--border)",
-            borderRadius: "var(--radius-lg)",
-            padding: 12,
-            // A system note is the platform narrating, not a person replying.
-            background: note.is_system_note ? "var(--surface-2)" : undefined,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-            {!note.is_system_note && (
+    <ol
+      style={{
+        listStyle: "none",
+        padding: 0,
+        margin: 0,
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+      }}
+    >
+      {notes.map((note) => {
+        const when = format.dateTime(new Date(note.created_at), {
+          day: "numeric",
+          month: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        // A system note is the platform recording that something happened —
+        // someone joined, the ticket was closed — so it is a line on the
+        // timeline between the messages, never a message with an author. This
+        // test comes first: such a note carries `author.role: "admin"`.
+        if (note.is_system_note) {
+          const joined = joinedRoleOf(note.content);
+          const rule = { flex: "1 1 12px", minWidth: 12, height: 1, background: "var(--border)" };
+          return (
+            <li
+              key={note.id}
+              className="muted"
+              style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12.5 }}
+            >
+              <span aria-hidden style={rule} />
+              <span style={{ minWidth: 0, textAlign: "center", lineHeight: 1.4 }}>
+                {joined ? t("joined", { role: joined }) : note.content}
+                <span style={{ whiteSpace: "nowrap" }}> · {when}</span>
+              </span>
+              <span aria-hidden style={rule} />
+            </li>
+          );
+        }
+
+        const isSelf = note.author_role === "customer" && note.author_user_id === selfId;
+        const who = describeActor(note.author, note.author?.role ?? note.author_role, isSelf, tKey);
+        return (
+          <li
+            key={note.id}
+            style={{
+              border: "1px solid var(--border)",
+              borderRadius: "var(--radius-lg)",
+              padding: 12,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
               <Avatar
-                name={note.author?.name ?? t("supportAuthor")}
+                name={who.name}
                 src={publicUrl(note.author?.avatar) ?? undefined}
                 size={22}
               />
-            )}
-            <span style={{ fontSize: 13, fontWeight: 700 }}>
-              {note.is_system_note
-                ? t("systemAuthor")
-                : (note.author?.name ?? t("supportAuthor"))}
-            </span>
-            <span className="muted" style={{ marginLeft: "auto", fontSize: 12 }}>
-              {format.dateTime(new Date(note.created_at), {
-                day: "numeric",
-                month: "short",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </span>
-          </div>
-          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>{note.content}</p>
-        </div>
-      ))}
-    </div>
+              <span
+                style={{
+                  minWidth: 0,
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  gap: "2px 6px",
+                }}
+              >
+                <span style={{ fontSize: 13, fontWeight: 700, overflowWrap: "anywhere" }}>
+                  {who.name}
+                </span>
+                {who.verified && <VerifiedBadge kind={who.verified} size={14} />}
+                {who.role && (
+                  <Badge size="sm" tone="neutral">
+                    {who.role}
+                  </Badge>
+                )}
+              </span>
+              <span
+                className="muted"
+                style={{ marginLeft: "auto", flexShrink: 0, fontSize: 12, whiteSpace: "nowrap" }}
+              >
+                {when}
+              </span>
+            </div>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, overflowWrap: "anywhere" }}>
+              {note.content}
+            </p>
+          </li>
+        );
+      })}
+    </ol>
   );
 }

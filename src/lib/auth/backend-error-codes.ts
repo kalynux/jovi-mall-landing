@@ -349,6 +349,17 @@ export type BackendErrorCode =
     /** 409 — the figure was edited since it was shown (`details.currentVersion`). Re-read and re-show. */
     | "DELIVERY_FEE_PROPOSAL_VERSION_MISMATCH"
     | "DELIVERY_FEE_PROPOSAL_ORDER_NOT_PAID"
+    // ─── The customer proposes a fee (ADR-A12, 2026-10-14) ─────────────────────
+    /** 422 — the shop pays this parcel's delivery (`details.deliveryPayer`). The button never shows there. */
+    | "DELIVERY_FEE_PROPOSAL_NOT_PAYER"
+    /** 422 — picked up already, or not yet with a delivery company. Re-read. */
+    | "DELIVERY_FEE_PROPOSAL_WINDOW_CLOSED"
+    /** 409 — a fee change already waits on this parcel, the customer's or the company's. Re-read. */
+    | "DELIVERY_FEE_PROPOSAL_ALREADY_PENDING"
+    /** 422 — two proposals on this parcel already (withdrawn ones do not count). Hide the button. */
+    | "DELIVERY_FEE_PROPOSAL_LIMIT_REACHED"
+    /** 422 — the amount is the current fee, or an edit changes nothing. */
+    | "DELIVERY_FEE_PROPOSAL_NO_CHANGE"
     | "DELIVERY_FEE_TOPUP_IN_PROGRESS"
     | "DELIVERY_FEE_TOPUP_NOT_DUE"
     | "COMBINED_DELIVERY_REQUEST_NOT_FOUND"
@@ -786,9 +797,18 @@ export type BackendErrorCode =
     /**
      * 422 (2026-10-02) — a shop in the cart has switched cash on delivery off.
      * `details`: `{ vendorId }`. Raised by a COD checkout only, before the agency
-     * rules below; the cart quote cannot predict it (backend gap G-10).
+     * rules below. Predicted by the cart quote since 2026-10-03
+     * (`cashOnDelivery.reason: "vendor_not_accepted"`).
      */
     | "COD_VENDOR_NOT_ACCEPTED"
+    /**
+     * 422 (2026-10-10) — an administrator switched cash on delivery off for this
+     * customer's ACCOUNT. No `details`, and the reason is never sent. Raised by
+     * a COD checkout, before any shop or agency rule; the cart quote predicts it
+     * (`cashOnDelivery.reason: "customer_restricted"`). No change to the basket
+     * helps: offer online payment and point at support.
+     */
+    | "COD_CUSTOMER_RESTRICTED"
     | "COD_AGENCY_NOT_SUPPORTED"
     | "COD_ORDER_AMOUNT_EXCEEDS_LIMIT"
     | "COD_COLLECTION_NOT_FOUND"

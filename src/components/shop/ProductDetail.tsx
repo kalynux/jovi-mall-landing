@@ -35,6 +35,7 @@ import { ProductReviews } from "@/components/shop/ProductReviews";
 import { BookingPanel } from "@/components/shop/BookingPanel";
 import { BargainButton } from "@/components/shop/BargainButton";
 import { LegalLink } from "@/components/legal/LegalLink";
+import { ProtectionLine } from "@/components/shop/ProtectionLine";
 import { BARGAIN_ENABLED } from "@/lib/shop/bargain";
 import type {
   CancellationPolicy,
@@ -758,7 +759,7 @@ export function ProductDetail({
               )}
             </div>
           )}
-          {tab === "policies" && <PolicyBlock store={store} />}
+          {tab === "policies" && <PolicyBlock store={store} service={isService} />}
           {tab === "reviews" && <ProductReviews productId={p.id} rating={p.rating} />}
         </div>
       </div>
@@ -920,7 +921,7 @@ function LanguageNote({ contentLanguage, locale }: { contentLanguage: string; lo
  * sentence server-side in one language for a five-locale storefront. `null`
  * means the vendor configured none — no defaults are invented, here or there.
  */
-function PolicyBlock({ store }: { store: Product["store"] }) {
+function PolicyBlock({ store, service }: { store: Product["store"]; service: boolean }) {
   const t = useTranslations("shop.product");
   const { returnPolicy, cancellationPolicy } = store.policies;
 
@@ -949,6 +950,16 @@ function PolicyBlock({ store }: { store: Product["store"] }) {
     </p>
   );
 
+  // Wi-Mall Protection is the platform's too: the time to report a problem,
+  // whatever the shop's own terms say.
+  const protectionNote = (
+    <ProtectionLine
+      service={service}
+      className="muted"
+      style={{ fontSize: 13, lineHeight: 1.55, margin: 0 }}
+    />
+  );
+
   if (!returnPolicy && !cancellationPolicy) {
     return (
       <div>
@@ -958,6 +969,7 @@ function PolicyBlock({ store }: { store: Product["store"] }) {
           description={t("noPolicyDescription", { store: store.name })}
         />
         <div style={{ marginTop: 18 }}>{rightsNote}</div>
+        <div style={{ marginTop: 10 }}>{protectionNote}</div>
         <div style={{ marginTop: 14 }}>{feeNote}</div>
       </div>
     );
@@ -968,6 +980,7 @@ function PolicyBlock({ store }: { store: Product["store"] }) {
       {returnPolicy && <ReturnTerms policy={returnPolicy} />}
       {cancellationPolicy && <CancellationTerms policy={cancellationPolicy} />}
       <div style={{ marginTop: 18 }}>{rightsNote}</div>
+      <div style={{ marginTop: 10 }}>{protectionNote}</div>
       <div style={{ marginTop: 14 }}>{feeNote}</div>
     </div>
   );

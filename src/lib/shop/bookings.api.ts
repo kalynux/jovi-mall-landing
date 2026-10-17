@@ -28,6 +28,7 @@
 import { apiFetch, apiFetchList } from "@/lib/api/client";
 import type { ListMeta } from "./shop.types";
 import type { ChargeRequest, InitiatePaymentResponse } from "./payments.api";
+import type { CustomerProtection } from "./protection";
 import type { CustomerRefund } from "./refund";
 
 /**
@@ -117,6 +118,14 @@ export interface Booking {
    * `lib/shop/refund.ts`.
    */
   refund?: CustomerRefund | null;
+  /**
+   * Wi-Mall Protection (2026-10-10) — on the list, the single read, the cancel
+   * and the reschedule. A booking's window opens when the seller marks the
+   * service completed; one completed before that date may read `not_started`
+   * with no dates. It replaces the raw `earningsPause` object these reads used
+   * to carry, which is no longer sent. See `lib/shop/protection.ts`.
+   */
+  protection?: CustomerProtection;
   /** Populated on the detail read. */
   product?: { id: string; title: string; slug?: string } | null;
   vendor?: { id: string; name: string } | null;

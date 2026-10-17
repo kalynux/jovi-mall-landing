@@ -2,13 +2,22 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 
-import { useCallback, useState } from "react";
+import { Suspense, useCallback, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
-import { Button, Select, Skeleton } from "@/components/shop/ds";
+import { Button, Icon, Select, Skeleton } from "@/components/shop/ds";
 import { useToast } from "@/components/shop/providers";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import { useApiResource } from "@/lib/shop/useApiResource";
-import { ticketPath } from "@/lib/shop/shop.routes";
+import { getBooking, listBookings } from "@/lib/shop/bookings.api";
+import { getOrder } from "@/lib/shop/orders.api";
+import {
+  DEFAULT_TICKET_TYPE,
+  heldPurchaseOf,
+  ticketPrefillOf,
+  type CustomerProtection,
+} from "@/lib/shop/protection";
+import { TICKET_LIST, ticketPath } from "@/lib/shop/shop.routes";
 import {
   maxBytesFor,
   uploadAttachments,
@@ -22,7 +31,7 @@ import {
   missingRequiredInfo,
   TICKET_TYPE_GROUPS,
   ticketTypeLabelKey,
-  type TicketEntityType,
+  type Ticket,
   type TicketImportance,
   type TicketType,
 } from "@/lib/shop/tickets.api";
@@ -36,17 +45,29 @@ const MAX_FILES = 5;
 /**
  * What a customer can file a ticket about.
  *
- * `ORDER` and `PRODUCT` are pickers backed by the reference lookups, so the id
- * is always one the backend will resolve. `OTHER` needs no id at all — the
- * backend defaults it. The remaining entity types (`SHIPMENT`, `USER`,
- * `VENDOR`, …) are omitted: they take an id with **no existence check**, so
- * offering a free-text field for one is offering a way to file an unresolvable
- * ticket.
+ * `ORDER` and `PRODUCT` are pickers backed by the reference lookups, and
+ * `BOOKING` by the customer's own bookings, so the id is always one the backend
+ * will resolve. `OTHER` needs no id at all — the backend defaults it. The
+ * remaining entity types (`SHIPMENT`, `USER`, `VENDOR`, …) are omitted: they
+ * take an id with **no existence check**, so offering a free-text field for one
+ * is offering a way to file an unresolvable ticket.
  *
  * Values only: the labels live in `shop.support.subjects.*`, because a module
  * constant is evaluated once at import time and has no locale to read.
  */
-const SUBJECTS = ["ORDER", "PRODUCT", "OTHER"] as const;
+const SUBJECTS = ["ORDER", "BOOKING", "PRODUCT", "OTHER"] as const;
+type Subject = (typeof SUBJECTS)[number];
+
+/**
+ * What to say once a ticket exists, when there is something to say.
+ *
+ * `holds_earnings` on the response is the fact: `true` means this request put
+ * the seller's payment on hold. `false` on an order or booking whose protection
+ * has `ended` means the seller was already paid — that needs saying too, and it
+ * must not promise a refund. Every other ticket goes straight to its thread, as
+ * before.
+ */
+type Sent = { ticket: Ticket; outcome: "on_hold" | "after_protection" };
 
 /** Likewise — the labels are `shop.support.importance.*`. */
 const IMPORTANCE: TicketImportance[] = ["low", "medium", "high", "critical"];
@@ -67,8 +88,31 @@ const IMPORTANCE: TicketImportance[] = ["low", "medium", "high", "critical"];
  * `importance` is worth choosing carefully because it is **immutable after
  * creation** — there is no endpoint to change it, on this namespace or any
  * other.
+ *
+ * ── Opened from an order or a booking ────────────────────────────────────────
+ *
+ * "Report a problem" arrives with `?about=ORDER&id=…` (or `BOOKING`), and the
+ * form starts on that record and on a problem type. The type is what decides
+ * whether the request holds the seller's payment (Wi-Mall Protection), so the
+ * default for every subject is a problem type — never `INVOICE_REQUEST` or
+ * `ADDRESS_CHANGE`, which hold nothing.
  */
 export default function NewTicketPage() {
+  // `useSearchParams()` suspends during prerender — see `ShopBrowserClient`.
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-[680px] px-4 py-6 sm:px-6">
+          <Skeleton height={280} />
+        </div>
+      }
+    >
+      <NewTicketForm />
+    </Suspense>
+  );
+}
+
+function NewTicketForm() {
   const t = useTranslations("shop.support");
   // Root-scoped: the lib modules emit absolute keys (`shop.support.types.…`,
   // and the optgroup names, which live in `shop.common`).
@@ -78,25 +122,47 @@ export default function NewTicketPage() {
   const { flash } = useToast();
   const { status: authStatus } = useAuthGuard();
 
-  const [entityType, setEntityType] = useState<TicketEntityType>("ORDER");
-  const [entityId, setEntityId] = useState("");
-  const [type, setType] = useState<TicketType>("ORDER_ISSUE");
+  // Read once: the form owns these from here on, and a later change to the
+  // query string must not overwrite what the customer has picked.
+  const searchParams = useSearchParams();
+  const [prefill] = useState(() => ticketPrefillOf(searchParams));
+
+  const [entityType, setEntityType] = useState<Subject>(prefill?.entityType ?? "ORDER");
+  const [entityId, setEntityId] = useState(prefill?.entityId ?? "");
+  const [type, setType] = useState<TicketType>(
+    DEFAULT_TICKET_TYPE[prefill?.entityType ?? "ORDER"],
+  );
   const [importance, setImportance] = useState<TicketImportance>("medium");
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
-  const [trackingNumber, setTrackingNumber] = useState("");
+  // `null` until the customer types one: the chosen order's own number stands
+  // in, which matters because the seller's policy may require it.
+  const [typedTracking, setTypedTracking] = useState<string | null>(null);
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [missing, setMissing] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState<Sent | null>(null);
 
   const orders = useApiResource(
     () => (entityType === "ORDER" ? listTicketOrderRefs({ limit: 50 }) : Promise.resolve(null)),
+    [entityType, authStatus],
+  );
+  const bookings = useApiResource(
+    () => (entityType === "BOOKING" ? listBookings({ limit: 50 }) : Promise.resolve(null)),
     [entityType, authStatus],
   );
   const products = useApiResource(
     () => (entityType === "PRODUCT" ? listTicketProductRefs({ limit: 50 }) : Promise.resolve(null)),
     [entityType, authStatus],
   );
+
+  const orderTracking =
+    entityType === "ORDER"
+      ? (orders.data?.data
+          .find((o) => o.id === entityId)
+          ?.shipments.find((s) => s.trackingNumber)?.trackingNumber ?? "")
+      : "";
+  const trackingNumber = typedTracking ?? orderTracking;
 
   const needsTracking = missing.includes("tracking_number");
   const needsMedia = missing.includes("product_photo_video");
@@ -153,6 +219,24 @@ export default function NewTicketPage() {
         trackingNumber: trackingNumber.trim() || undefined,
         attachments: files.map((f) => f.id),
       });
+      if (ticket.holds_earnings) {
+        setSent({ ticket, outcome: "on_hold" });
+        return;
+      }
+      // Nothing was put on hold. On an order or a booking that is either
+      // because the protection is over — worth saying — or because there was
+      // never anything to hold, which is not. The read is best-effort: the
+      // ticket exists either way.
+      const protection: CustomerProtection | undefined =
+        entityType === "ORDER"
+          ? (await getOrder(entityId).catch(() => null))?.protection
+          : entityType === "BOOKING"
+            ? (await getBooking(entityId).catch(() => null))?.protection
+            : undefined;
+      if (protection?.status === "ended") {
+        setSent({ ticket, outcome: "after_protection" });
+        return;
+      }
       router.replace(ticketPath(ticket.id));
     } catch (err) {
       const gaps = missingRequiredInfo(err);
@@ -190,6 +274,42 @@ export default function NewTicketPage() {
     );
   }
 
+  if (sent) {
+    const held = sent.outcome === "on_hold";
+    return (
+      <div className="mx-auto max-w-[680px] px-4 py-6 sm:px-6">
+        <div
+          role="status"
+          style={{
+            display: "flex",
+            gap: 10,
+            alignItems: "flex-start",
+            border: `1px solid var(--${held ? "success-border" : "border"})`,
+            background: held ? "var(--success-bg)" : undefined,
+            borderRadius: "var(--radius-lg)",
+            padding: 14,
+          }}
+        >
+          <Icon
+            name={held ? "shield-check" : "circle-check-big"}
+            size={19}
+            style={{ color: `var(--${held ? "success" : "text-muted"})`, flexShrink: 0, marginTop: 1 }}
+          />
+          <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.5, color: "var(--text-body)" }}>
+            {held
+              ? tKey("shop.protection.sent.onHold")
+              : tKey(`shop.protection.sent.afterProtection.${heldPurchaseOf(sent.ticket.entity_type)}`)}
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+          <Button onClick={() => router.replace(ticketPath(sent.ticket.id))}>
+            {tKey("shop.protection.viewRequest")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const needsEntity = entityType !== "OTHER";
   const valid =
     subject.trim().length > 0 &&
@@ -207,8 +327,11 @@ export default function NewTicketPage() {
           <Select
             value={entityType}
             onChange={(e) => {
-              setEntityType(e.target.value as TicketEntityType);
+              const next = e.target.value as Subject;
+              setEntityType(next);
               setEntityId("");
+              setType(DEFAULT_TICKET_TYPE[next]);
+              setTypedTracking(null);
               setMissing([]);
             }}
             options={SUBJECTS.map((value) => ({ value, label: t(`subjects.${value}`) }))}
@@ -223,16 +346,19 @@ export default function NewTicketPage() {
               <Select
                 value={entityId}
                 onChange={(e) => {
-                  const id = e.target.value;
-                  setEntityId(id);
-                  // The picker is also where a tracking number comes from, which
-                  // matters because the seller's policy may require one.
-                  const order = orders.data?.data.find((o) => o.id === id);
-                  const tracked = order?.shipments.find((s) => s.trackingNumber);
-                  if (tracked?.trackingNumber) setTrackingNumber(tracked.trackingNumber);
+                  setEntityId(e.target.value);
+                  // The picker is also where a tracking number comes from —
+                  // back to the newly chosen order's own.
+                  setTypedTracking(null);
                 }}
                 options={[
                   { value: "", label: t("chooseOrder") },
+                  // Opened from an order the lookup's first page does not
+                  // reach: it still has to be the selected option.
+                  ...(prefill?.entityType === "ORDER" &&
+                  !orders.data?.data.some((o) => o.id === prefill.entityId)
+                    ? [{ value: prefill.entityId, label: t("thisOrder") }]
+                    : []),
                   ...(orders.data?.data ?? []).map((o) => ({
                     value: o.id,
                     // An order number and a date, not a sentence — the vendor's
@@ -243,6 +369,42 @@ export default function NewTicketPage() {
                       year: "numeric",
                     })}`,
                   })),
+                ]}
+              />
+            )}
+          </Field>
+        )}
+
+        {entityType === "BOOKING" && (
+          <Field label={t("whichBooking")}>
+            {bookings.status === "loading" ? (
+              <Skeleton height={40} />
+            ) : (
+              <Select
+                value={entityId}
+                onChange={(e) => setEntityId(e.target.value)}
+                options={[
+                  { value: "", label: t("chooseBooking") },
+                  ...(prefill?.entityType === "BOOKING" &&
+                  !bookings.data?.data.some((b) => b.id === prefill.entityId)
+                    ? [{ value: prefill.entityId, label: t("thisBooking") }]
+                    : []),
+                  ...(bookings.data?.data ?? []).map((b) => {
+                    // The reference to quote, then when — the list read does
+                    // not populate the service's name. `bookingNumber` is null
+                    // on bookings older than the field.
+                    const when = format.dateTime(new Date(b.startAt), {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+                    return {
+                      value: b.id,
+                      label: b.bookingNumber ? `${b.bookingNumber} · ${when}` : when,
+                    };
+                  }),
                 ]}
               />
             )}
@@ -320,7 +482,7 @@ export default function NewTicketPage() {
               className="field"
               maxLength={120}
               value={trackingNumber}
-              onChange={(e) => setTrackingNumber(e.target.value)}
+              onChange={(e) => setTypedTracking(e.target.value)}
             />
           </Field>
         )}
@@ -361,7 +523,7 @@ export default function NewTicketPage() {
           <Button disabled={!valid || busy} onClick={() => void submit()}>
             {busy ? tKey("shop.common.sending") : t("openTicket")}
           </Button>
-          <Button variant="ghost" onClick={() => router.push("/shop/account/support")}>
+          <Button variant="ghost" onClick={() => router.push(TICKET_LIST)}>
             {tKey("shop.common.cancel")}
           </Button>
         </div>

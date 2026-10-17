@@ -151,6 +151,11 @@ export interface TicketActor {
   name: string;
   /** A resolved file object, or `null`. Never a URL string. */
   avatar: FileDetail | null;
+  /**
+   * Present on `vendor` and `agent` actors only; absent on every other role and
+   * on an actor the backend could not resolve. Absent means no badge.
+   */
+  verified?: boolean;
 }
 
 /**
@@ -222,7 +227,26 @@ export interface Ticket {
   /** `null` on almost every ticket — see {@link TicketAdmin}. */
   assigned_admin: TicketAdmin | null;
   priority_locked: boolean;
-  followers: TicketActor[];
+  /**
+   * `true` while this request keeps the seller's payment for the purchase on
+   * hold (2026-10-10). Set at creation when the ticket is a problem report
+   * about the customer's own order, shipment or booking and the money has not
+   * been released yet; cleared when the customer or an administrator ends the
+   * request. Closing it as the customer **releases the payment** — confirm
+   * first. Optional for an API older than the field. See
+   * `lib/shop/protection.ts`.
+   */
+  holds_earnings?: boolean;
+  /**
+   * Everyone on the ticket. Since 2026-10-09 a ticket about an order carries the
+   * order's seller, delivery company and courier as well as the customer, and a
+   * courier joins when they accept the delivery — so the list **changes while
+   * the ticket is open**. Read it from the response each time; never keep a copy.
+   *
+   * ⚠ Only the single-ticket reads (create, detail) carry it. The list endpoint
+   * omits the field entirely.
+   */
+  followers?: TicketActor[];
   createdAt: string;
   updatedAt: string;
 }
@@ -235,8 +259,21 @@ export interface TicketNote {
   content: string;
   /** Lowercase here. The attachment endpoint uses uppercase — see below. */
   visibility: "public" | "private";
+  /**
+   * `true` when the platform wrote the note ("User added as follower…",
+   * "Ticket closed"). It is an event on the timeline, not a message.
+   *
+   * ⚠ Test this BEFORE reading the author: a system note is stored with
+   * `author_role: "admin"` and a zero user id, so its `author` resolves to
+   * `{ role: "admin", name: "Admin" }` and would otherwise read as a reply from
+   * support.
+   */
   is_system_note: boolean;
   author_user_id: string;
+  /**
+   * Who wrote it. A public reply may come from `admin`, `vendor`, `agency` or
+   * `agent` (2026-10-09) — never assume support.
+   */
   author_role: string;
   author: TicketActor | null;
   visible_to_user_ids: string[];

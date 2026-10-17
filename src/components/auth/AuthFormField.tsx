@@ -1,5 +1,6 @@
 "use client";
 import { forwardRef, useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import InfoTooltip from "@/components/ui/InfoTooltip";
@@ -61,6 +62,7 @@ const AuthFormField = forwardRef<HTMLInputElement, AuthFormFieldProps>(
     const isPassword = type === "password";
     const isFloating = variant === "floating";
     const [visible, setVisible] = useState(false);
+    const t = useTranslations("auth");
 
     const toggleVisible = useCallback(() => setVisible((v) => !v), []);
 
@@ -180,7 +182,7 @@ const AuthFormField = forwardRef<HTMLInputElement, AuthFormFieldProps>(
                 type="button"
                 tabIndex={0}
                 onClick={toggleVisible}
-                aria-label={visible ? "Hide password" : "Show password"}
+                aria-label={visible ? t("hidePassword") : t("showPassword")}
                 aria-controls={fieldId}
                 className={cn(
                   "absolute inset-y-0 end-0 flex w-11 items-center justify-center rounded-e-2xl",
@@ -250,7 +252,7 @@ const AuthFormField = forwardRef<HTMLInputElement, AuthFormFieldProps>(
               type="button"
               tabIndex={0}
               onClick={toggleVisible}
-              aria-label={visible ? "Hide password" : "Show password"}
+              aria-label={visible ? t("hidePassword") : t("showPassword")}
               aria-controls={fieldId}
               className={cn(
                 "absolute inset-y-0 right-0 flex items-center justify-center",

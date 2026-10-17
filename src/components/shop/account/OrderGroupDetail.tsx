@@ -41,6 +41,7 @@ import { publicUrl } from "@/lib/shop/shop.types";
 import { DeliveryTracking } from "@/components/shop/account/DeliveryTracking";
 import { DeliveryFeeChanges } from "@/components/shop/account/DeliveryFeeChanges";
 import { CombinedDeliveryPanel } from "@/components/shop/account/CombinedDeliveryPanel";
+import { ProtectionNotice } from "@/components/shop/account/ProtectionNotice";
 import { RefundPanel } from "@/components/shop/account/RefundPanel";
 import { customerPaysDelivery, parcelFee } from "@/lib/shop/delivery";
 import { ReviewDisclosure } from "@/components/shop/account/ReviewForm";
@@ -630,6 +631,19 @@ export function VendorOrderCard({
           after a partial refund. Here, inside the shared card, so the group
           screen and the single-order screen both show it. */}
       {order.refund && <RefundPanel refund={order.refund} style={{ marginTop: 12 }} />}
+
+      {/* Wi-Mall Protection, from `protection` alone: the deadline to report a
+          problem once the order is delivered, "payment on hold" after a report,
+          the after-protection message once the window is over. Nothing before
+          delivery. An order nobody has confirmed is confirmed for the customer
+          when the window closes, so the notice says that too. */}
+      <ProtectionNotice
+        protection={order.protection}
+        about="ORDER"
+        id={order.id}
+        autoConfirms={!confirmedAt}
+        style={{ marginTop: 12 }}
+      />
 
       {/* Parcels. Physical orders only — a digital order has nothing to ship. */}
       {order.orderType === "physical" && (

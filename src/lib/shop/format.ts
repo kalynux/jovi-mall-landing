@@ -40,6 +40,14 @@ export function formatMoney(amount: number, currency: string): string {
 }
 
 /**
+ * The currency as `formatMoney` prints it — FCFA for XAF — for a field that
+ * takes a bare amount and names the currency beside it.
+ */
+export function currencyLabel(currency: string): string {
+  return !currency || currency.toUpperCase() === "XAF" ? "FCFA" : currency.toUpperCase();
+}
+
+/**
  * A bare amount, grouped like the money above but with no currency — for a
  * figure quoted inside a sentence that already names the currency once (the
  * refund fee line: "4 900 FCFA (5 000 minus a 2% transfer fee)"). Isolated for

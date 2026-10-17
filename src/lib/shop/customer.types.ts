@@ -17,6 +17,7 @@
 
 import type { FileDetail } from "./shop.types";
 import type { PaymentInstructions } from "./payments.api";
+import type { CustomerProtection } from "./protection";
 import type { CustomerRefund } from "./refund";
 
 /**
@@ -422,6 +423,14 @@ export interface CustomerOrder {
    * because an older API, and the history list, may not send it.
    */
   refund?: CustomerRefund | null;
+  /**
+   * Wi-Mall Protection (2026-10-10): the window in which a problem can still be
+   * settled out of this order's money, and whether the seller's payment is on
+   * hold. On the single read and each order of the group read. Optional for an
+   * older API, and for the history list, which does not carry it. See
+   * `lib/shop/protection.ts`.
+   */
+  protection?: CustomerProtection;
   paymentMethod: PaymentMethodChoice;
   paymentStatus: OrderPaymentStatus;
   fulfillmentStatus: FulfillmentStatus;
@@ -951,6 +960,35 @@ export interface AddressRegionInvalidDetails {
   allowedRegions: AllowedRegion[];
 }
 
+/** Why checkout would refuse this basket as cash on delivery. */
+export type CashOnDeliveryReason =
+  | "vendor_not_accepted"
+  | "agency_not_supported"
+  | "order_amount_exceeds_limit"
+  | "digital_items"
+  /** An administrator switched it off for this ACCOUNT (2026-10-10). */
+  | "customer_restricted";
+
+/**
+ * Would checkout accept this basket as cash on delivery? Answered on every
+ * quote, whatever `paymentMethod` was sent (`api-doc/customer/cart.md`
+ * § `cashOnDelivery`). A boolean, a reason and shop ids — never a "why".
+ */
+export interface CashOnDeliveryQuote {
+  available: boolean;
+  /**
+   * The FIRST refusal. `null` with `available: false` means the rules could not
+   * be checked; a value outside the union is one the backend added since — both
+   * are still "unavailable".
+   */
+  reason: CashOnDeliveryReason | (string & {}) | null;
+  /**
+   * Every shop that refuses, as `perVendor[].vendorId`. Always empty for
+   * `digital_items` and `customer_restricted`, which are not about a shop.
+   */
+  vendorIds: string[];
+}
+
 /**
  * `POST /api/customer/cart/quote`.
  *
@@ -1001,13 +1039,18 @@ export interface CartQuote {
     /** The shops whose delivery would be paid in cash. */
     vendorIds: string[];
   };
+  /** Offer cash on delivery only while `available`. Absent on an older API. */
+  cashOnDelivery?: CashOnDeliveryQuote;
   perVendor: CartQuoteVendorLine[];
 }
 
 // ─── Delivery-fee changes after checkout (ADR-A11 W-E) ───────────────────────
 
-/** What the customer may do with a proposal. Render only these. */
-export type DeliveryFeeProposalAction = "approve" | "reject" | "pay";
+/**
+ * What the customer may do with a proposal. Render only these. `withdraw` and
+ * `edit` appear on the customer's OWN proposal only (ADR-A12, 2026-10-14).
+ */
+export type DeliveryFeeProposalAction = "approve" | "reject" | "pay" | "withdraw" | "edit";
 
 /**
  * A change to one parcel's delivery fee — `GET /api/customer/orders/:id/delivery-fee-proposals`.
@@ -1020,14 +1063,22 @@ export interface DeliveryFeeProposal {
   id: string;
   shipmentId: string;
   orderId: string;
-  /** `platform` is a change of delivery company made by the shop. */
-  raisedBy: "delivery_company" | "platform";
-  origin: "agency" | "change_agency" | "combined_request";
+  /**
+   * `platform` is a change of delivery company made by the shop; `you` is the
+   * customer's own proposal to the delivery company (ADR-A12, 2026-10-14).
+   */
+  raisedBy: "delivery_company" | "platform" | "you";
+  origin: "agency" | "change_agency" | "combined_request" | "payer";
+  /**
+   * Your own proposal: the delivery company said yes. Higher and paid online,
+   * it still waits for `topup`. Absent on an API from before ADR-A12.
+   */
+  acceptedByDeliveryCompany?: boolean;
   direction: "increase" | "decrease" | null;
   currency: string;
   feeBefore: number;
   proposedFee: number;
-  /** Free text from the delivery company. Vendor/agency-written — show as is. */
+  /** Free text — the delivery company's, or the customer's own on a `you` proposal. Show as is. */
   reason: string | null;
   status: "pending" | "approved" | "rejected" | "withdrawn";
   /** Send back the one you displayed; a `409` means it moved. */

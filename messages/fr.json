@@ -425,6 +425,8 @@
         "agencyNamePlaceholder": "Nom de votre agence de livraison",
         "passwordPlaceholder": "",
         "newPasswordPlaceholder": "Min. 8 caractères",
+        "showPassword": "Afficher le mot de passe",
+        "hidePassword": "Masquer le mot de passe",
         "forgotPasswordAria": "Mot de passe oublié — le réinitialiser",
         "signIn": "Se connecter",
         "signingIn": "Connexion",
@@ -631,6 +633,7 @@
         "PAYMENT_ORDER_ALREADY_PAID": "Cette commande a déjà été payée.",
         "PAYMENT_ORDER_IS_COD": "Cette commande est payée en espèces à la livraison — il n’y a rien à payer en ligne.",
         "COD_VENDOR_NOT_ACCEPTED": "Ce vendeur n’accepte pas le paiement à la livraison. Payez en ligne, ou retirez ses articles pour garder le paiement à la livraison sur le reste.",
+        "COD_CUSTOMER_RESTRICTED": "Le paiement à la livraison n’est pas disponible sur votre compte. Payez en ligne, ou contactez l’assistance.",
         "PAYMENT_OPERATOR_UNDETERMINED": "Nous n’avons pas pu déterminer l’opérateur de ce numéro. Le mobile money fonctionne avec les numéros MTN et Orange au Cameroun.",
         "PAYMENT_CURRENCY_NOT_SUPPORTED": "Ce moyen de paiement ne peut pas être utilisé pour cette devise.",
         "PAYMENT_OTP_NOT_REQUIRED": "Ce paiement ne demande pas de code. Vérifiez la demande de paiement sur votre téléphone.",
@@ -882,6 +885,11 @@
         "DELIVERY_FEE_PROPOSAL_SETTLEMENT_CONFLICT": "Nous n’avons pas pu appliquer ces frais pour le moment. Rien n’a changé — réessayez dans un instant.",
         "DELIVERY_FEE_PROPOSAL_VERSION_MISMATCH": "Ces frais de livraison ont changé depuis que vous les avez ouverts. Rechargez pour voir le montant actuel.",
         "DELIVERY_FEE_PROPOSAL_ORDER_NOT_PAID": "Les frais de livraison de cette commande ne peuvent pas changer tant que son paiement n’est pas réglé.",
+        "DELIVERY_FEE_PROPOSAL_NOT_PAYER": "La boutique paie la livraison de ce colis : ce n’est pas à vous d’en changer les frais.",
+        "DELIVERY_FEE_PROPOSAL_WINDOW_CLOSED": "Les frais de livraison de ce colis ne peuvent plus changer — il a été enlevé, ou aucune société de livraison ne l’a encore pris en charge.",
+        "DELIVERY_FEE_PROPOSAL_ALREADY_PENDING": "Un changement des frais de ce colis attend déjà une réponse.",
+        "DELIVERY_FEE_PROPOSAL_LIMIT_REACHED": "Vous avez déjà proposé des frais deux fois pour ce colis.",
+        "DELIVERY_FEE_PROPOSAL_NO_CHANGE": "Ce montant correspond aux frais de livraison actuels. Saisissez-en un autre.",
         "DELIVERY_FEE_TOPUP_IN_PROGRESS": "Un paiement pour ces frais de livraison est encore en cours. Attendez qu’il se termine.",
         "DELIVERY_FEE_TOPUP_NOT_DUE": "Rien n’est dû pour ces frais de livraison.",
         "COMBINED_DELIVERY_REQUEST_NOT_FOUND": "Cette demande de prix groupé n’existe plus.",
@@ -905,6 +913,7 @@
             "COD_ORDER_AMOUNT_EXCEEDS_LIMIT": "Cette commande est trop importante pour le paiement à la livraison. Veuillez payer en ligne.",
             "COD_AGENCY_NOT_SUPPORTED": "Le transporteur de cette commande ne gère pas le paiement à la livraison. Veuillez payer en ligne.",
             "COD_VENDOR_NOT_ACCEPTED": "Vos articles pris {from} ne peuvent pas être payés à la livraison : le vendeur ne l'accepte pas. Payez en ligne, ou retirez ses articles pour garder le paiement à la livraison sur le reste — rien n'a été débité.",
+            "COD_CUSTOMER_RESTRICTED": "Le paiement à la livraison n’est pas disponible sur votre compte. Rien n’a été commandé ni débité — payez en ligne, ou contactez l’assistance.",
             "ORDER_NO_DELIVERY_AGENCY": "L'un de ces articles n'a aucun service de livraison disponible actuellement. Retirez-le et réessayez.",
             "NEGOTIATION_LOCK_INVALID": "Un prix convenu par chat est introuvable, donc rien n'a été commandé. Retirez cet article ou ajoutez-le à son prix normal, puis réessayez.",
             "NEGOTIATION_LOCK_EXPIRED": "Un prix convenu par chat a expiré, donc rien n'a été commandé. Écrivez au vendeur pour en convenir d'un nouveau, ou ajoutez l'article à son prix normal.",
@@ -1400,7 +1409,7 @@
                 },
                 "vendorPayout": {
                     "q": "Quand suis-je payé ?",
-                    "a": "Votre net sur une commande est retenu dès que le paiement du client est confirmé. Il devient retirable une fois la commande terminée — le client confirme la livraison, ou elle se confirme automatiquement sept jours après — puis après une fenêtre de rétention de sept jours. À partir de là, vous demandez le versement de votre solde disponible. Le registre montre le brut, la commission, les frais de livraison et votre net pour chaque commande, donc le chiffre n'est jamais un mystère."
+                    "a": "Votre net sur une commande est retenu dès que le paiement du client est confirmé. Il devient retirable après une retenue de quelques jours qui commence à la livraison : c'est la période de Protection Wi-Mall, pendant laquelle le client peut encore signaler un problème. Un problème signalé pendant cette période maintient le paiement en attente jusqu'à la clôture de la demande. À partir de là, vous demandez le versement de votre solde disponible. Le registre montre le brut, la commission, les frais de livraison et votre net pour chaque commande, donc le chiffre n'est jamais un mystère."
                 },
                 "agencyEarn": {
                     "q": "Comment une agence de livraison gagne-t-elle de l'argent ?",
@@ -2397,6 +2406,15 @@
             "redirectBody": "Votre paiement se poursuit sur une page sécurisée. Revenez ici une fois terminé.",
             "redirectOpen": "Ouvrir la page de paiement"
         },
+        "codUnavailable": {
+            "customer_restricted": "Le paiement à la livraison n’est pas disponible sur votre compte. Payez en ligne, ou <support>contactez l’assistance</support>.",
+            "vendor_not_accepted": "Un vendeur de votre panier n’accepte pas le paiement à la livraison. Payez en ligne.",
+            "agency_not_supported": "Le transporteur de cette commande ne gère pas le paiement à la livraison. Payez en ligne.",
+            "order_amount_exceeds_limit": "Cette commande est trop importante pour le paiement à la livraison. Payez en ligne.",
+            "digital_items": "Le paiement à la livraison n’est pas disponible pour les produits numériques.",
+            "unknown": "Le paiement à la livraison n’est pas disponible pour cette commande. Payez en ligne.",
+            "removeToKeep": "Ou retirez vos articles pris {from} pour garder le paiement à la livraison sur le reste."
+        },
         "meta": {
             "shopTitle": "Boutique — Wi-Mall",
             "shopDescription": "Parcourez les produits de vendeurs africains vérifiés sur Wi-Mall — mode, maison, cours en ligne, e-books et services. Achetez depuis votre WhatsApp.",
@@ -2984,14 +3002,15 @@
             "tabClosed": "Terminés",
             "newTicket": "Nouveau",
             "emptyOpenTitle": "Aucun ticket en cours",
-            "emptyOpenDescription": "Si un problème survient avec une commande, ouvrez un ticket et nous l'examinerons.",
+            "emptyOpenDescription": "Si un problème survient avec une commande, ouvrez un ticket. Le vendeur, la société de livraison et notre assistance peuvent tous vous y répondre.",
             "emptyClosedTitle": "Rien de terminé pour l'instant",
             "emptyClosedDescription": "Les tickets que vous fermez seront conservés ici.",
             "about": "De quoi s'agit-il ?",
             "subjects": {
                 "ORDER": "Une commande",
                 "PRODUCT": "Un produit",
-                "OTHER": "Autre chose"
+                "OTHER": "Autre chose",
+                "BOOKING": "Une réservation"
             },
             "whichOrder": "Quelle commande ?",
             "chooseOrder": "Choisissez une commande",
@@ -3035,13 +3054,25 @@
             "attachments": "Pièces jointes",
             "fileLocked": "verrouillé — limite de stockage dépassée",
             "noReplies": "Aucune réponse pour l'instant.",
-            "systemAuthor": "Système",
-            "supportAuthor": "Assistance",
+            "participants": "Sur ce ticket",
+            "roles": {
+                "self": "Vous",
+                "customer": "Client",
+                "vendor": "Vendeur",
+                "agency": "Société de livraison",
+                "agent": "Livreur",
+                "admin": "Assistance Wi-Mall"
+            },
+            "joined": "{role, select, vendor {Le vendeur a rejoint ce ticket} agency {La société de livraison a rejoint ce ticket} agent {Le livreur a rejoint ce ticket} admin {L’assistance Wi-Mall a rejoint ce ticket} other {Une personne a rejoint ce ticket}}",
             "sendFailed": "Impossible d'envoyer ce message. Veuillez réessayer.",
             "attachFailed": "Impossible de joindre ce fichier.",
             "attachmentLimit": "Un ticket peut contenir {n} pièces jointes.",
             "closeFailed": "Impossible de fermer ce ticket.",
-            "replyCharCount": "{n}/{max}"
+            "replyCharCount": "{n}/{max}",
+            "whichBooking": "Quelle réservation ?",
+            "chooseBooking": "Choisissez une réservation",
+            "thisOrder": "Cette commande",
+            "thisBooking": "Cette réservation"
         },
         "reviews": {
             "emptyTitle": "Aucun avis pour l'instant",
@@ -3301,6 +3332,47 @@
                 "sendFailed": "Nous n’avons pas pu envoyer votre demande.",
                 "cancelled": "Demande annulée",
                 "cancelFailed": "Nous n’avons pas pu annuler cette demande."
+            },
+            "propose": {
+                "rowOne": "Frais de livraison : {fee}",
+                "rowMany": "Colis {n} · frais de livraison : {fee}",
+                "button": "Proposer d’autres frais",
+                "sheetTitle": "Proposer des frais de livraison",
+                "editTitle": "Modifier votre proposition",
+                "intro": "Indiquez les frais qui vous semblent justes — plus hauts ou plus bas. La société de livraison les accepte ou les refuse, et votre colis n’est pas enlevé tant qu’elle n’a pas répondu.",
+                "currentFee": "Frais actuels",
+                "amountLabel": "Vos frais ({currency})",
+                "amountInvalid": "Saisissez un montant entier, par exemple 1 000.",
+                "amountSame": "Ce sont les frais actuels. Saisissez un autre montant.",
+                "reasonLabel": "Pourquoi ?",
+                "reasonPlaceholder": "Par exemple : j’habite à deux rues du dépôt.",
+                "reasonHint": "La société de livraison verra ce message.",
+                "reasonCount": "{n}/{max}",
+                "reasonTooShort": "Écrivez au moins {min} caractères.",
+                "nothingChanged": "Modifiez d’abord le montant ou la raison.",
+                "send": "Envoyer la proposition",
+                "sending": "Envoi…",
+                "save": "Enregistrer",
+                "saving": "Enregistrement…",
+                "sent": "Proposition envoyée à la société de livraison",
+                "saved": "Proposition modifiée",
+                "failed": "Nous n’avons pas pu envoyer votre proposition.",
+                "ownTitle": "Vous avez proposé {after} au lieu de {before}.",
+                "ownReason": "Votre raison : <q>{reason}</q>",
+                "waiting": "En attente de la société de livraison — votre colis attend sa réponse.",
+                "acceptedPay": "Acceptée — payez {amount} pour que votre colis puisse être enlevé.",
+                "edit": "Modifier",
+                "withdraw": "Retirer",
+                "withdrawTitle": "Retirer votre proposition ?",
+                "withdrawBody": "Les frais restent de {before}, et votre colis peut être enlevé.",
+                "keep": "La garder",
+                "withdrawn": "Proposition retirée — les frais restent inchangés",
+                "declineTitle": "Refuser les frais plus élevés ?",
+                "declineBody": "Cela retire votre proposition. Les frais restent de {before}, et votre colis peut être enlevé.",
+                "takenBack": "Proposition retirée — les frais restent inchangés",
+                "historyAccepted": "Votre proposition de {after} a été acceptée (au lieu de {before})",
+                "historyDeclined": "La société de livraison a refusé vos {after} — les frais sont restés de {before}",
+                "historyWithdrawn": "Vous avez retiré votre proposition de {after}"
             }
         },
         "refund": {
@@ -3328,6 +3400,41 @@
             "toCard": "Sur votre carte",
             "contactSupport": "Contacter l'assistance",
             "howItWorks": "Comment fonctionnent les remboursements"
+        },
+        "protection": {
+            "title": "Protection Wi-Mall",
+            "active": {
+                "order": "Protection Wi-Mall : signalez tout problème concernant cette commande avant le <b>{date}</b>. D'ici là, nous conservons le paiement du vendeur et pouvons régler le problème pour vous.",
+                "booking": "Protection Wi-Mall : signalez tout problème concernant cette réservation avant le <b>{date}</b>. D'ici là, nous conservons le paiement du vendeur et pouvons régler le problème pour vous."
+            },
+            "autoConfirm": "Sans signalement de votre part, cette commande sera confirmée automatiquement le {date}.",
+            "onHold": "Vous avez signalé un problème. Le paiement du vendeur est suspendu jusqu'à la clôture de votre demande.",
+            "ended": {
+                "order": "La Protection Wi-Mall a pris fin le {date}. Le vendeur a été payé : nous ne pouvons plus rembourser cette commande nous-mêmes. Contactez d'abord le vendeur ; vous pouvez toujours nous envoyer une demande.",
+                "booking": "La Protection Wi-Mall a pris fin le {date}. Le vendeur a été payé : nous ne pouvons plus rembourser cette réservation nous-mêmes. Contactez d'abord le vendeur ; vous pouvez toujours nous envoyer une demande."
+            },
+            "reportProblem": "Signaler un problème",
+            "viewRequest": "Voir votre demande",
+            "policy": "Politique de retours",
+            "sent": {
+                "onHold": "Demande envoyée. Le paiement du vendeur est suspendu pendant que nous l'examinons.",
+                "afterProtection": {
+                    "order": "Demande envoyée. La période de protection de cette commande est terminée : le vendeur a déjà été payé. Nous transmettons votre demande.",
+                    "booking": "Demande envoyée. La période de protection de cette réservation est terminée : le vendeur a déjà été payé. Nous transmettons votre demande."
+                }
+            },
+            "ticketBanner": {
+                "order": "Le paiement du vendeur pour cette commande est suspendu tant que cette demande est ouverte.",
+                "booking": "Le paiement du vendeur pour cette réservation est suspendu tant que cette demande est ouverte."
+            },
+            "confirmClose": {
+                "title": "Clôturer cette demande ?",
+                "body": "Le paiement du vendeur sera libéré."
+            },
+            "line": {
+                "delivery": "Protection Wi-Mall : vous disposez d'un délai limité après la livraison pour signaler un problème. <link>Politique de retours</link>",
+                "service": "Protection Wi-Mall : vous disposez d'un délai limité après la prestation pour signaler un problème. <link>Politique de retours</link>"
+            }
         }
     },
     "cookieNotice": {

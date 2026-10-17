@@ -322,6 +322,19 @@ export function ticketPath(ticketId: string): string {
   return `${TICKET_LIST}/${encodeURIComponent(ticketId)}`;
 }
 
+/** The new-ticket form. Static, so it is in every build. */
+export const TICKET_NEW = `${TICKET_LIST}/new`;
+
+/**
+ * The new-ticket form, opened about one order or one booking — the "Report a
+ * problem" button. The form reads the pair back with `ticketPrefillOf`
+ * (`lib/shop/protection.ts`) and starts on a problem type, which is what lets
+ * the request put the seller's payment on hold.
+ */
+export function reportProblemPath(about: "ORDER" | "BOOKING", id: string): string {
+  return `${TICKET_NEW}?about=${about}&id=${encodeURIComponent(id)}`;
+}
+
 /**
  * The four booking screens differ only by their last segment, so they are one
  * function — the alternative is the same target branch written four times, and

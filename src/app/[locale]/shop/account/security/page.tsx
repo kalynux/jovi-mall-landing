@@ -25,6 +25,7 @@ import {
 } from "@/lib/me/phone-verification.api";
 import { changePassword, PASSWORD_RULES, passwordMeetsPolicy } from "@/lib/me/password.api";
 import { IS_NATIVE_BUILD } from "@/lib/platform";
+import PasswordInput from "@/components/auth/PasswordInput";
 
 /**
  * Sign-in details: the email and phone the account is resolved by, and the
@@ -609,17 +610,13 @@ function PasswordSection() {
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }}>
-          <input
-            className="field"
-            type="password"
+          <PasswordInput
             autoComplete="current-password"
             placeholder={t("password.current")}
             value={oldPassword}
             onChange={(e) => setOld(e.target.value)}
           />
-          <input
-            className="field"
-            type="password"
+          <PasswordInput
             autoComplete="new-password"
             placeholder={t("password.new")}
             value={newPassword}

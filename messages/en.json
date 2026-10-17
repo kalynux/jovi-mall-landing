@@ -420,6 +420,8 @@
         "agencyNamePlaceholder": "Your delivery agency name",
         "passwordPlaceholder": "••••••••",
         "newPasswordPlaceholder": "Min. 8 characters",
+        "showPassword": "Show password",
+        "hidePassword": "Hide password",
         "forgotPassword": "Forgot password?",
         "forgotPasswordAria": "Forgot password — reset it",
         "signIn": "Sign in",
@@ -631,6 +633,7 @@
         "PAYMENT_ORDER_ALREADY_PAID": "This order has already been paid.",
         "PAYMENT_ORDER_IS_COD": "This order is paid in cash on delivery — there is nothing to pay online.",
         "COD_VENDOR_NOT_ACCEPTED": "This seller doesn't accept cash on delivery. Pay online, or remove their items to keep cash on delivery for the rest.",
+        "COD_CUSTOMER_RESTRICTED": "Cash on delivery is not available on your account. Pay online, or contact support.",
         "PAYMENT_OPERATOR_UNDETERMINED": "We could not tell which mobile network this number is on. Mobile money works on MTN and Orange numbers in Cameroon.",
         "PAYMENT_CURRENCY_NOT_SUPPORTED": "This payment method cannot be used for this currency.",
         "PAYMENT_OTP_NOT_REQUIRED": "This payment does not need a code. Check your phone for the payment prompt.",
@@ -882,6 +885,11 @@
         "DELIVERY_FEE_PROPOSAL_SETTLEMENT_CONFLICT": "We couldn't apply this delivery fee right now. Nothing changed — try again in a moment.",
         "DELIVERY_FEE_PROPOSAL_VERSION_MISMATCH": "This delivery fee changed since you opened it. Reload to see the current one.",
         "DELIVERY_FEE_PROPOSAL_ORDER_NOT_PAID": "The delivery fee on this order can't change while its payment isn't settled.",
+        "DELIVERY_FEE_PROPOSAL_NOT_PAYER": "The shop pays this parcel's delivery, so its fee isn't yours to change.",
+        "DELIVERY_FEE_PROPOSAL_WINDOW_CLOSED": "This parcel's delivery fee can't change any more — it has been picked up, or no delivery company has it yet.",
+        "DELIVERY_FEE_PROPOSAL_ALREADY_PENDING": "A fee change on this parcel is already waiting for an answer.",
+        "DELIVERY_FEE_PROPOSAL_LIMIT_REACHED": "You've already proposed a fee twice on this parcel.",
+        "DELIVERY_FEE_PROPOSAL_NO_CHANGE": "That amount is the current delivery fee. Enter a different one.",
         "DELIVERY_FEE_TOPUP_IN_PROGRESS": "A payment for this delivery fee is still in progress. Wait for it to finish.",
         "DELIVERY_FEE_TOPUP_NOT_DUE": "Nothing is owed for this delivery fee.",
         "COMBINED_DELIVERY_REQUEST_NOT_FOUND": "This combined-price request no longer exists.",
@@ -905,6 +913,7 @@
             "COD_ORDER_AMOUNT_EXCEEDS_LIMIT": "This order is too large for cash on delivery. Please pay online instead.",
             "COD_AGENCY_NOT_SUPPORTED": "The courier for this order does not handle cash on delivery. Please pay online instead.",
             "COD_VENDOR_NOT_ACCEPTED": "Your items {from} can't be paid cash on delivery — the seller doesn't accept it. Pay online, or remove their items to keep cash on delivery for the rest. Nothing was charged.",
+            "COD_CUSTOMER_RESTRICTED": "Cash on delivery is not available on your account. Nothing was ordered and nothing was charged — pay online, or contact support.",
             "ORDER_NO_DELIVERY_AGENCY": "One of these items has no delivery service available right now. Remove it and try again.",
             "NEGOTIATION_LOCK_INVALID": "A price you agreed in chat could not be found, so nothing was ordered. Remove that item or add it at its normal price, then try again.",
             "NEGOTIATION_LOCK_EXPIRED": "A price you agreed in chat has expired, so nothing was ordered. Message the seller to agree a new one, or add the item at its normal price.",
@@ -1400,7 +1409,7 @@
                 },
                 "vendorPayout": {
                     "q": "When do I get paid?",
-                    "a": "Your net on an order is held the moment the customer's payment settles. It becomes withdrawable once the order completes — the customer confirms delivery, or it auto-confirms seven days after delivery — plus a seven-day hold window after that. From there you request a payout of your available balance. The ledger shows the gross, the commission, the delivery fee and your net for every order, so the figure is never a mystery."
+                    "a": "Your net on an order is held the moment the customer's payment settles. It becomes withdrawable after a hold of a few days that starts when the order is delivered: the Wi-Mall Protection window, in which the customer can still report a problem. A problem reported in that window keeps the payment on hold until the request is closed. From there you request a payout of your available balance. The ledger shows the gross, the commission, the delivery fee and your net for every order, so the figure is never a mystery."
                 },
                 "agencyEarn": {
                     "q": "How does a delivery agency make money?",
@@ -2397,6 +2406,15 @@
             "redirectBody": "Your payment continues on a secure page. Come back here when you’re done.",
             "redirectOpen": "Open the payment page"
         },
+        "codUnavailable": {
+            "customer_restricted": "Cash on delivery is not available on your account. Pay online, or <support>contact support</support>.",
+            "vendor_not_accepted": "A seller in your cart doesn't accept cash on delivery. Pay online.",
+            "agency_not_supported": "The courier for this order doesn't handle cash on delivery. Pay online.",
+            "order_amount_exceeds_limit": "This order is too large for cash on delivery. Pay online.",
+            "digital_items": "Cash on delivery is not available for digital products.",
+            "unknown": "Cash on delivery is not available for this order. Pay online.",
+            "removeToKeep": "Or remove your items {from} to keep cash on delivery for the rest."
+        },
         "meta": {
             "shopTitle": "Shop — Wi-Mall",
             "shopDescription": "Browse products from verified African vendors on Wi-Mall — fashion, home, digital courses, e-books and services. Shop from your WhatsApp.",
@@ -2984,14 +3002,15 @@
             "tabClosed": "Closed",
             "newTicket": "New",
             "emptyOpenTitle": "No open tickets",
-            "emptyOpenDescription": "If something goes wrong with an order, open a ticket and we will look into it.",
+            "emptyOpenDescription": "If something goes wrong with an order, open a ticket. The seller, the delivery company and our support team can all answer you there.",
             "emptyClosedTitle": "Nothing closed yet",
             "emptyClosedDescription": "Tickets you close will be kept here.",
             "about": "What is this about?",
             "subjects": {
                 "ORDER": "An order",
                 "PRODUCT": "A product",
-                "OTHER": "Something else"
+                "OTHER": "Something else",
+                "BOOKING": "A booking"
             },
             "whichOrder": "Which order?",
             "chooseOrder": "Choose an order",
@@ -3035,13 +3054,25 @@
             "attachments": "Attachments",
             "fileLocked": "locked — over the storage limit",
             "noReplies": "No replies yet.",
-            "systemAuthor": "System",
-            "supportAuthor": "Support",
+            "participants": "On this ticket",
+            "roles": {
+                "self": "You",
+                "customer": "Customer",
+                "vendor": "Seller",
+                "agency": "Delivery company",
+                "agent": "Courier",
+                "admin": "Wi-Mall support"
+            },
+            "joined": "{role, select, vendor {The seller joined this ticket} agency {The delivery company joined this ticket} agent {The courier joined this ticket} admin {Wi-Mall support joined this ticket} other {Someone joined this ticket}}",
             "sendFailed": "Could not send that. Please try again.",
             "attachFailed": "Could not attach that file.",
             "attachmentLimit": "A ticket can hold {n} attachments.",
             "closeFailed": "Could not close that ticket.",
-            "replyCharCount": "{n}/{max}"
+            "replyCharCount": "{n}/{max}",
+            "whichBooking": "Which booking?",
+            "chooseBooking": "Choose a booking",
+            "thisOrder": "This order",
+            "thisBooking": "This booking"
         },
         "reviews": {
             "emptyTitle": "No reviews yet",
@@ -3301,6 +3332,47 @@
                 "sendFailed": "We couldn't send your request.",
                 "cancelled": "Request cancelled",
                 "cancelFailed": "We couldn't cancel this request."
+            },
+            "propose": {
+                "rowOne": "Delivery fee: {fee}",
+                "rowMany": "Parcel {n} · delivery fee: {fee}",
+                "button": "Propose a different fee",
+                "sheetTitle": "Propose a delivery fee",
+                "editTitle": "Change your proposal",
+                "intro": "Name the fee you think is fair — higher or lower. The delivery company accepts or declines it, and your parcel isn't picked up until it answers.",
+                "currentFee": "Current fee",
+                "amountLabel": "Your fee ({currency})",
+                "amountInvalid": "Enter a whole amount, for example 1 000.",
+                "amountSame": "That's the current fee. Enter a different amount.",
+                "reasonLabel": "Why?",
+                "reasonPlaceholder": "For example: I live two streets from the depot.",
+                "reasonHint": "The delivery company sees this.",
+                "reasonCount": "{n}/{max}",
+                "reasonTooShort": "Write at least {min} characters.",
+                "nothingChanged": "Change the amount or the reason first.",
+                "send": "Send proposal",
+                "sending": "Sending…",
+                "save": "Save changes",
+                "saving": "Saving…",
+                "sent": "Proposal sent to the delivery company",
+                "saved": "Proposal updated",
+                "failed": "We couldn't send your proposal.",
+                "ownTitle": "You proposed {after} instead of {before}.",
+                "ownReason": "Your reason: <q>{reason}</q>",
+                "waiting": "Waiting for the delivery company — your parcel waits for its answer.",
+                "acceptedPay": "Accepted — pay {amount} so your parcel can be collected.",
+                "edit": "Edit",
+                "withdraw": "Withdraw",
+                "withdrawTitle": "Withdraw your proposal?",
+                "withdrawBody": "The fee stays {before}, and your parcel can be picked up.",
+                "keep": "Keep it",
+                "withdrawn": "Proposal withdrawn — the fee stays as it was",
+                "declineTitle": "Decline the higher fee?",
+                "declineBody": "This takes your proposal back. The fee stays {before}, and your parcel can be collected.",
+                "takenBack": "Proposal taken back — the fee stays as it was",
+                "historyAccepted": "Your proposal of {after} was accepted (was {before})",
+                "historyDeclined": "The delivery company declined your {after} — the fee stayed {before}",
+                "historyWithdrawn": "You withdrew your proposal of {after}"
             }
         },
         "refund": {
@@ -3328,6 +3400,41 @@
             "toCard": "To your card",
             "contactSupport": "Contact support",
             "howItWorks": "How refunds work"
+        },
+        "protection": {
+            "title": "Wi-Mall Protection",
+            "active": {
+                "order": "Wi-Mall Protection: report any problem with this order before <b>{date}</b>. Until then we hold the seller's payment and can settle it for you.",
+                "booking": "Wi-Mall Protection: report any problem with this booking before <b>{date}</b>. Until then we hold the seller's payment and can settle it for you."
+            },
+            "autoConfirm": "If you report nothing, this order is confirmed automatically on {date}.",
+            "onHold": "You reported a problem. The seller's payment is on hold until your request is closed.",
+            "ended": {
+                "order": "Wi-Mall Protection ended on {date}. The seller has been paid, so we can no longer refund this order ourselves. Contact the seller first; you can still send us a request.",
+                "booking": "Wi-Mall Protection ended on {date}. The seller has been paid, so we can no longer refund this booking ourselves. Contact the seller first; you can still send us a request."
+            },
+            "reportProblem": "Report a problem",
+            "viewRequest": "View your request",
+            "policy": "Returns policy",
+            "sent": {
+                "onHold": "Request sent. The seller's payment is on hold while we look into it.",
+                "afterProtection": {
+                    "order": "Request sent. The protection period for this order is over, so the seller has already been paid. We will pass your request on.",
+                    "booking": "Request sent. The protection period for this booking is over, so the seller has already been paid. We will pass your request on."
+                }
+            },
+            "ticketBanner": {
+                "order": "The seller's payment for this order is on hold while this request is open.",
+                "booking": "The seller's payment for this booking is on hold while this request is open."
+            },
+            "confirmClose": {
+                "title": "Close this request?",
+                "body": "The seller's payment will be released."
+            },
+            "line": {
+                "delivery": "Wi-Mall Protection: you have a limited time after delivery to report a problem. <link>Returns policy</link>",
+                "service": "Wi-Mall Protection: you have a limited time after the service to report a problem. <link>Returns policy</link>"
+            }
         }
     },
     "cookieNotice": {

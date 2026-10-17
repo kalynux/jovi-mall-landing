@@ -425,6 +425,8 @@
         "agencyNamePlaceholder": "Nome da sua agência de entrega",
         "passwordPlaceholder": "",
         "newPasswordPlaceholder": "Mín. 8 caracteres",
+        "showPassword": "Mostrar a palavra-passe",
+        "hidePassword": "Ocultar a palavra-passe",
         "forgotPasswordAria": "Esqueceu-se da palavra-passe — redefinir",
         "signIn": "Entrar",
         "signingIn": "Entrando…",
@@ -631,6 +633,7 @@
         "PAYMENT_ORDER_ALREADY_PAID": "Este pedido já foi pago.",
         "PAYMENT_ORDER_IS_COD": "Este pedido é pago em dinheiro na entrega — não há nada a pagar online.",
         "COD_VENDOR_NOT_ACCEPTED": "Este vendedor não aceita pagamento na entrega. Pague online ou remova esses artigos para manter o pagamento na entrega no resto.",
+        "COD_CUSTOMER_RESTRICTED": "O pagamento na entrega não está disponível na sua conta. Pague online ou contacte o apoio ao cliente.",
         "PAYMENT_OPERATOR_UNDETERMINED": "Não conseguimos identificar a operadora deste número. O mobile money funciona com números MTN e Orange nos Camarões.",
         "PAYMENT_CURRENCY_NOT_SUPPORTED": "Este método de pagamento não pode ser usado para esta moeda.",
         "PAYMENT_OTP_NOT_REQUIRED": "Este pagamento não precisa de código. Verifique o pedido de pagamento no seu telemóvel.",
@@ -882,6 +885,11 @@
         "DELIVERY_FEE_PROPOSAL_SETTLEMENT_CONFLICT": "Não conseguimos aplicar esta taxa de entrega agora. Nada mudou — tente daqui a pouco.",
         "DELIVERY_FEE_PROPOSAL_VERSION_MISMATCH": "Esta taxa de entrega mudou desde que a abriu. Recarregue para ver a atual.",
         "DELIVERY_FEE_PROPOSAL_ORDER_NOT_PAID": "A taxa de entrega deste pedido não pode mudar enquanto o pagamento não estiver liquidado.",
+        "DELIVERY_FEE_PROPOSAL_NOT_PAYER": "A loja paga a entrega desta encomenda, por isso não lhe cabe alterar a taxa.",
+        "DELIVERY_FEE_PROPOSAL_WINDOW_CLOSED": "A taxa de entrega desta encomenda já não pode mudar — já foi recolhida ou ainda nenhuma empresa de entregas a tem.",
+        "DELIVERY_FEE_PROPOSAL_ALREADY_PENDING": "Já há uma alteração à taxa desta encomenda à espera de resposta.",
+        "DELIVERY_FEE_PROPOSAL_LIMIT_REACHED": "Já propôs uma taxa duas vezes para esta encomenda.",
+        "DELIVERY_FEE_PROPOSAL_NO_CHANGE": "Esse valor é a taxa de entrega atual. Introduza outro.",
         "DELIVERY_FEE_TOPUP_IN_PROGRESS": "Ainda há um pagamento em curso para esta taxa de entrega. Aguarde que termine.",
         "DELIVERY_FEE_TOPUP_NOT_DUE": "Não há nada em dívida por esta taxa de entrega.",
         "COMBINED_DELIVERY_REQUEST_NOT_FOUND": "Este pedido de preço conjunto já não existe.",
@@ -905,6 +913,7 @@
             "COD_ORDER_AMOUNT_EXCEEDS_LIMIT": "Este pedido é demasiado grande para pagamento na entrega. Pague online.",
             "COD_AGENCY_NOT_SUPPORTED": "A transportadora deste pedido não aceita pagamento na entrega. Pague online.",
             "COD_VENDOR_NOT_ACCEPTED": "Os seus artigos {from} não podem ser pagos na entrega: o vendedor não aceita. Pague online ou remova esses artigos para manter o pagamento na entrega no resto — nada foi cobrado.",
+            "COD_CUSTOMER_RESTRICTED": "O pagamento na entrega não está disponível na sua conta. Nada foi encomendado nem cobrado — pague online ou contacte o apoio ao cliente.",
             "ORDER_NO_DELIVERY_AGENCY": "Um destes artigos não tem serviço de entrega disponível neste momento. Remova-o e tente novamente.",
             "NEGOTIATION_LOCK_INVALID": "Não encontrámos um preço acordado por chat, por isso nada foi encomendado. Remova esse artigo ou adicione-o ao preço normal e tente novamente.",
             "NEGOTIATION_LOCK_EXPIRED": "Um preço acordado por chat expirou, por isso nada foi encomendado. Escreva ao vendedor para acordar um novo, ou adicione o artigo ao preço normal.",
@@ -1400,7 +1409,7 @@
                 },
                 "vendorPayout": {
                     "q": "Quando eu recebo?",
-                    "a": "Seu líquido de um pedido é retido no momento em que o pagamento do cliente é confirmado. Ele fica disponível para saque quando o pedido é concluído — o cliente confirma a entrega, ou ela se confirma sozinha sete dias depois — mais uma janela de retenção de sete dias. A partir daí, você solicita o saque do saldo disponível. O extrato mostra o bruto, a comissão, a taxa de entrega e o seu líquido em cada pedido, então o número nunca é um mistério."
+                    "a": "Seu líquido de um pedido é retido no momento em que o pagamento do cliente é confirmado. Ele fica disponível para saque após uma retenção de alguns dias que começa na entrega: é o período de Proteção Wi-Mall, durante o qual o cliente ainda pode comunicar um problema. Um problema comunicado nesse período mantém o pagamento retido até o pedido de apoio ser fechado. A partir daí, você solicita o saque do saldo disponível. O extrato mostra o bruto, a comissão, a taxa de entrega e o seu líquido em cada pedido, então o número nunca é um mistério."
                 },
                 "agencyEarn": {
                     "q": "Como uma agência de entrega ganha dinheiro?",
@@ -2397,6 +2406,15 @@
             "redirectBody": "O seu pagamento continua numa página segura. Volte aqui quando terminar.",
             "redirectOpen": "Abrir a página de pagamento"
         },
+        "codUnavailable": {
+            "customer_restricted": "O pagamento na entrega não está disponível na sua conta. Pague online ou <support>contacte o apoio ao cliente</support>.",
+            "vendor_not_accepted": "Um vendedor do seu cesto não aceita pagamento na entrega. Pague online.",
+            "agency_not_supported": "A transportadora deste pedido não aceita pagamento na entrega. Pague online.",
+            "order_amount_exceeds_limit": "Este pedido é demasiado grande para pagamento na entrega. Pague online.",
+            "digital_items": "O pagamento na entrega não está disponível para produtos digitais.",
+            "unknown": "O pagamento na entrega não está disponível para este pedido. Pague online.",
+            "removeToKeep": "Ou remova os seus artigos {from} para manter o pagamento na entrega no resto."
+        },
         "meta": {
             "shopTitle": "Loja — Wi-Mall",
             "shopDescription": "Explore produtos de vendedores africanos verificados na Wi-Mall — moda, casa, cursos digitais, e-books e serviços. Compre a partir do seu WhatsApp.",
@@ -2984,14 +3002,15 @@
             "tabClosed": "Fechados",
             "newTicket": "Novo",
             "emptyOpenTitle": "Sem tickets abertos",
-            "emptyOpenDescription": "Se algo correr mal com um pedido, abra um ticket e nós vamos analisá-lo.",
+            "emptyOpenDescription": "Se algo correr mal com um pedido, abra um ticket. O vendedor, a empresa de entregas e o nosso apoio podem responder-lhe aí.",
             "emptyClosedTitle": "Ainda não fechou nada",
             "emptyClosedDescription": "Os tickets que fechar ficam guardados aqui.",
             "about": "Sobre o que é?",
             "subjects": {
                 "ORDER": "Um pedido",
                 "PRODUCT": "Um produto",
-                "OTHER": "Outro assunto"
+                "OTHER": "Outro assunto",
+                "BOOKING": "Uma reserva"
             },
             "whichOrder": "Que pedido?",
             "chooseOrder": "Escolha um pedido",
@@ -3035,13 +3054,25 @@
             "attachments": "Anexos",
             "fileLocked": "bloqueado — acima do limite de armazenamento",
             "noReplies": "Ainda sem respostas.",
-            "systemAuthor": "Sistema",
-            "supportAuthor": "Apoio",
+            "participants": "Neste ticket",
+            "roles": {
+                "self": "Você",
+                "customer": "Cliente",
+                "vendor": "Vendedor",
+                "agency": "Empresa de entregas",
+                "agent": "Estafeta",
+                "admin": "Apoio Wi-Mall"
+            },
+            "joined": "{role, select, vendor {O vendedor juntou-se a este ticket} agency {A empresa de entregas juntou-se a este ticket} agent {O estafeta juntou-se a este ticket} admin {O apoio Wi-Mall juntou-se a este ticket} other {Alguém se juntou a este ticket}}",
             "sendFailed": "Não foi possível enviar. Tente novamente.",
             "attachFailed": "Não foi possível anexar esse ficheiro.",
             "attachmentLimit": "Um ticket pode ter {n} anexos.",
             "closeFailed": "Não foi possível fechar esse ticket.",
-            "replyCharCount": "{n}/{max}"
+            "replyCharCount": "{n}/{max}",
+            "whichBooking": "Que reserva?",
+            "chooseBooking": "Escolha uma reserva",
+            "thisOrder": "Este pedido",
+            "thisBooking": "Esta reserva"
         },
         "reviews": {
             "emptyTitle": "Ainda sem avaliações",
@@ -3301,6 +3332,47 @@
                 "sendFailed": "Não conseguimos enviar o seu pedido.",
                 "cancelled": "Pedido cancelado",
                 "cancelFailed": "Não conseguimos cancelar este pedido."
+            },
+            "propose": {
+                "rowOne": "Taxa de entrega: {fee}",
+                "rowMany": "Encomenda {n} · taxa de entrega: {fee}",
+                "button": "Propor outra taxa",
+                "sheetTitle": "Propor uma taxa de entrega",
+                "editTitle": "Alterar a sua proposta",
+                "intro": "Indique a taxa que lhe parece justa — mais alta ou mais baixa. A empresa de entregas aceita-a ou recusa-a, e a sua encomenda não é recolhida até ela responder.",
+                "currentFee": "Taxa atual",
+                "amountLabel": "A sua taxa ({currency})",
+                "amountInvalid": "Introduza um valor inteiro, por exemplo 1 000.",
+                "amountSame": "Essa é a taxa atual. Introduza outro valor.",
+                "reasonLabel": "Porquê?",
+                "reasonPlaceholder": "Por exemplo: moro a duas ruas do armazém.",
+                "reasonHint": "A empresa de entregas vai ver isto.",
+                "reasonCount": "{n}/{max}",
+                "reasonTooShort": "Escreva pelo menos {min} caracteres.",
+                "nothingChanged": "Altere primeiro o valor ou o motivo.",
+                "send": "Enviar proposta",
+                "sending": "A enviar…",
+                "save": "Guardar alterações",
+                "saving": "A guardar…",
+                "sent": "Proposta enviada à empresa de entregas",
+                "saved": "Proposta atualizada",
+                "failed": "Não conseguimos enviar a sua proposta.",
+                "ownTitle": "Propôs {after} em vez de {before}.",
+                "ownReason": "O seu motivo: <q>{reason}</q>",
+                "waiting": "À espera da empresa de entregas — a sua encomenda aguarda a resposta.",
+                "acceptedPay": "Aceite — pague {amount} para que a sua encomenda possa ser recolhida.",
+                "edit": "Editar",
+                "withdraw": "Retirar",
+                "withdrawTitle": "Retirar a sua proposta?",
+                "withdrawBody": "A taxa continua a ser {before} e a sua encomenda pode ser recolhida.",
+                "keep": "Manter",
+                "withdrawn": "Proposta retirada — a taxa mantém-se",
+                "declineTitle": "Recusar a taxa mais alta?",
+                "declineBody": "Isto retira a sua proposta. A taxa continua a ser {before} e a sua encomenda pode ser recolhida.",
+                "takenBack": "Proposta retirada — a taxa mantém-se",
+                "historyAccepted": "A sua proposta de {after} foi aceite (era {before})",
+                "historyDeclined": "A empresa de entregas recusou os seus {after} — a taxa ficou em {before}",
+                "historyWithdrawn": "Retirou a sua proposta de {after}"
             }
         },
         "refund": {
@@ -3328,6 +3400,41 @@
             "toCard": "Para o seu cartão",
             "contactSupport": "Contactar o apoio ao cliente",
             "howItWorks": "Como funcionam os reembolsos"
+        },
+        "protection": {
+            "title": "Proteção Wi-Mall",
+            "active": {
+                "order": "Proteção Wi-Mall: comunique qualquer problema com esta encomenda até <b>{date}</b>. Até essa data, retemos o pagamento do vendedor e podemos resolver o problema por si.",
+                "booking": "Proteção Wi-Mall: comunique qualquer problema com esta reserva até <b>{date}</b>. Até essa data, retemos o pagamento do vendedor e podemos resolver o problema por si."
+            },
+            "autoConfirm": "Se não comunicar nada, esta encomenda será confirmada automaticamente a {date}.",
+            "onHold": "Comunicou um problema. O pagamento do vendedor fica suspenso até o seu pedido de apoio ser fechado.",
+            "ended": {
+                "order": "A Proteção Wi-Mall terminou a {date}. O vendedor já foi pago, pelo que já não podemos reembolsar esta encomenda nós próprios. Contacte primeiro o vendedor; pode ainda enviar-nos um pedido de apoio.",
+                "booking": "A Proteção Wi-Mall terminou a {date}. O vendedor já foi pago, pelo que já não podemos reembolsar esta reserva nós próprios. Contacte primeiro o vendedor; pode ainda enviar-nos um pedido de apoio."
+            },
+            "reportProblem": "Comunicar um problema",
+            "viewRequest": "Ver o seu pedido de apoio",
+            "policy": "Política de Devoluções",
+            "sent": {
+                "onHold": "Pedido enviado. O pagamento do vendedor fica suspenso enquanto o analisamos.",
+                "afterProtection": {
+                    "order": "Pedido enviado. O período de proteção desta encomenda terminou, pelo que o vendedor já foi pago. Vamos encaminhar o seu pedido.",
+                    "booking": "Pedido enviado. O período de proteção desta reserva terminou, pelo que o vendedor já foi pago. Vamos encaminhar o seu pedido."
+                }
+            },
+            "ticketBanner": {
+                "order": "O pagamento do vendedor relativo a esta encomenda está suspenso enquanto este pedido de apoio estiver aberto.",
+                "booking": "O pagamento do vendedor relativo a esta reserva está suspenso enquanto este pedido de apoio estiver aberto."
+            },
+            "confirmClose": {
+                "title": "Fechar este pedido de apoio?",
+                "body": "O pagamento do vendedor será libertado."
+            },
+            "line": {
+                "delivery": "Proteção Wi-Mall: tem um prazo limitado após a entrega para comunicar um problema. <link>Política de Devoluções</link>",
+                "service": "Proteção Wi-Mall: tem um prazo limitado após o serviço para comunicar um problema. <link>Política de Devoluções</link>"
+            }
         }
     },
     "cookieNotice": {

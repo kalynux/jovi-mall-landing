@@ -68,6 +68,7 @@ import {
   PackageCheck,
   PackageOpen,
   PackageX,
+  Pencil,
   Phone,
   Play,
   Plus,
@@ -189,6 +190,7 @@ const ICONS = {
   // `Palmtree` is lucide's deprecated alias for this glyph; the current export
   // is `TreePalm`, and the shop's holiday notice asks for the old name.
   palmtree: TreePalm,
+  pencil: Pencil,
   phone: Phone,
   play: Play,
   plus: Plus,

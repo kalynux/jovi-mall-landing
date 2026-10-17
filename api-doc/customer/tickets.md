@@ -10,7 +10,7 @@ Support ticketing for **customers**. Same ticketing engine as the other roles �
 - **Response envelope**: standard `{ success, data, meta?, message? }` — see [../README.md](../README.md#4--the-response-envelope).
 
 > **Shared reference.** Payloads, enums, follower system and visibility rules are documented in
-> vendor/tickets.md (`backend/jovi-mall/api-doc/vendor/tickets.md` — not mirrored in this repository); the **authoritative enum values** are in
+> [vendor/tickets.md](../vendor/tickets.md); the **authoritative enum values** are in
 > agency/tickets.md (`backend/jovi-mall/api-doc/agency/tickets.md` — not mirrored in this repository). This page lists the exact **customer** route set and the
 > customer-specific restrictions.
 
@@ -18,7 +18,7 @@ Support ticketing for **customers**. Same ticketing engine as the other roles �
 > `{ name, job_title, department, avatar_url }`, and it is **`null` until a wi-admin
 > administrator takes the ticket**, which is the state almost every ticket is in.
 > `avatar_url` is **reserved and always `null`** — draw the initials from `name`. Full shape
-> and the reasoning: vendor/tickets.md (`backend/jovi-mall/api-doc/vendor/tickets.md #populated--enriched-references` — not mirrored in this repository).
+> and the reasoning: [vendor/tickets.md](../vendor/tickets.md#populated--enriched-references).
 
 > [!IMPORTANT]
 > **A ticket and a ticket note are identified by `id`, not `_id`** — on every endpoint on this
@@ -73,6 +73,17 @@ POST /api/customer/tickets
 { "success": true, "data": { "id": "664tkt...", "subject": "Order arrived damaged", "status": "open", "...": "..." } }
 ```
 
+### A problem report puts the seller's payment on hold (2026-10-10)
+
+A ticket about the customer's **own** order, shipment or booking, of a problem type, opened
+while that purchase's money is still held (3 days after delivery, `EARNINGS_HOLD_DAYS`), pauses
+the purchase's earnings until the ticket ends. The ticket then carries **`holds_earnings: true`**
+and a public system note says so. After the money was released the ticket is created the same
+way and holds nothing. Resolving or closing it as the customer lifts the hold; the seller
+changing its status does not. The deadline to show comes from `protection` on the order
+([orders.md](./orders.md)). Full rules, the list of types and the per-app notes:
+[FRONTEND-CHANGELOG-wi-mall-protection.md](../FRONTEND-CHANGELOG-wi-mall-protection.md).
+
 ## Possible error codes
 
 | `error.code` | Status | When |
@@ -83,5 +94,5 @@ POST /api/customer/tickets
 | `NOT_FOUND` | 404 | Ticket id not found / not the customer's |
 
 ## Related
-- vendor/tickets.md (`backend/jovi-mall/api-doc/vendor/tickets.md` — not mirrored in this repository) — full payload & enum reference
+- [vendor/tickets.md](../vendor/tickets.md) — full payload & enum reference
 - [./orders.md](./orders.md) · [./profile.md](./profile.md)

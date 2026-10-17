@@ -24,6 +24,7 @@ import {
   bookingPayPath,
   bookingReschedulePath,
 } from "@/lib/shop/shop.routes";
+import { ProtectionNotice } from "./ProtectionNotice";
 import { RefundPanel } from "./RefundPanel";
 import { ReviewDisclosure } from "./ReviewForm";
 
@@ -199,6 +200,17 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
           the cancel response too, so it shows the moment a paid booking is
           cancelled rather than after a reload. */}
       {b.refund && <RefundPanel refund={b.refund} style={{ marginBottom: 12 }} />}
+
+      {/* Wi-Mall Protection, from `protection` alone. A booking's window opens
+          when the seller marks the service completed; one completed before
+          2026-10-10 can read `not_started` with no dates, and then this draws
+          nothing. */}
+      <ProtectionNotice
+        protection={b.protection}
+        about="BOOKING"
+        id={b.id}
+        style={{ marginBottom: 12 }}
+      />
 
       {bal && bal.outstanding > 0 && (
         <div

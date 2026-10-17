@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Badge, Button, Icon, Skeleton } from "@/components/shop/ds";
 import { useCart } from "@/components/shop/providers";
@@ -15,16 +15,19 @@ import {
 import { usePaymentOptions } from "@/components/shop/usePaymentOptions";
 import { useSavedPayment } from "@/components/shop/useSavedPayment";
 import { useChargeRefusal } from "@/components/shop/useChargeRefusal";
+import { CodUnavailableNotice } from "@/components/shop/CodUnavailableNotice";
 import { DeliveryMinimumNotice, fromShop } from "@/components/shop/DeliveryMinimumNotice";
 import { DeliveryQuoteLines } from "@/components/shop/DeliveryQuoteLines";
 import { RegionPicker } from "@/components/shop/RegionPicker";
 import { LegalAgreement } from "@/components/legal/LegalLink";
+import { ProtectionLine } from "@/components/shop/ProtectionLine";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import { ApiError } from "@/lib/auth/auth.types";
 import { isNetworkError } from "@/lib/errors/is-network-error";
 import { lookupMessage, translateError } from "@/lib/auth/error-translator";
 import { useTranslations } from "next-intl";
 import { quoteCart } from "@/lib/shop/cart.api";
+import { codRefusalFromError, codRefusalOf, type CodRefusal } from "@/lib/shop/cash-on-delivery";
 import { checkout } from "@/lib/shop/orders.api";
 import { updateAddress } from "@/lib/shop/addresses.api";
 import { regionInvalidDetails, withRegion } from "@/lib/shop/address-region";
@@ -67,6 +70,13 @@ import type {
  * off in between must be caught while the form still exists — after step 1
  * there is no cart left to keep. An empty list is "online payment is
  * unavailable", and cash on delivery stays where the cart allows it.
+ *
+ * Cash on delivery is asked too. Every quote carries `cashOnDelivery` — would
+ * checkout accept this basket, for this account, as cash on delivery? While it
+ * says no the row is not offered and `CodUnavailableNotice` says why. Checkout
+ * can still refuse (`422 COD_*`) when something changed in between: nothing was
+ * created, so the basket stays, the form falls back to the online rows and the
+ * same notice appears. It is never retried.
  *
  * ── Two failures worth catching early ────────────────────────────────────────
  *
@@ -157,24 +167,39 @@ export default function CheckoutPage() {
   const [cashToRider, setCashToRider] = useState(false);
   /** Bumped to re-quote when checkout refuses what the last quote offered. */
   const [quoteNonce, setQuoteNonce] = useState(0);
+  /** A checkout refused as cash on delivery. Held until a quote gives its own verdict. */
+  const [refusedAtCheckout, setRefusedAtCheckout] = useState<CodRefusal | null>(null);
+  /**
+   * Set when a refused checkout triggers its own re-quote: that quote answering
+   * must not clear the refusal the shopper is still reading.
+   */
+  const keepError = useRef(false);
 
   const isDigital = productType === "digital";
   const online = usePaymentOptions(status === "authenticated");
   const refusal = useChargeRefusal(online.applyOffered);
   /**
+   * Why cash on delivery is not on offer, or `null` while it is. The quote's
+   * verdict first; a stale quote that still says yes does not outrank a
+   * checkout that has just said no.
+   */
+  const codRefused = codRefusalOf(quote) ?? refusedAtCheckout;
+  const codOffered = !isDigital && codRefused === null;
+  /**
    * What `/options` lists, then cash on delivery — which is dropped for a
    * digital cart: there is nothing to hand over, and the backend refuses it
-   * with `COD_NOT_AVAILABLE_FOR_DIGITAL`. `null` until `/options` answers —
-   * unless it failed outright, when cash on delivery needs no answer from it.
+   * with `COD_NOT_AVAILABLE_FOR_DIGITAL` — and while `codRefused`. `null`
+   * until `/options` answers — unless it failed outright, when cash on
+   * delivery needs no answer from it.
    *
    * Memoised because the picker takes it as an effect dependency — a fresh
    * array literal every render would re-run the operator auto-select on every
    * keystroke, for a list that changes only with its inputs.
    */
   const payOptions = useMemo(() => {
-    if (online.options === null) return online.failed && !isDigital ? [COD] : null;
-    return isDigital ? online.options : [...online.options, COD];
-  }, [online.options, online.failed, isDigital]);
+    if (online.options === null) return online.failed && codOffered ? [COD] : null;
+    return codOffered ? [...online.options, COD] : online.options;
+  }, [online.options, online.failed, codOffered]);
   const onlineUnavailable = online.options?.length === 0;
   // Digital orders have nothing to deliver, so the backend ignores the address
   // entirely for them — asking would be a step with no purpose.
@@ -234,10 +259,14 @@ export default function CheckoutPage() {
       .then((result) => {
         if (cancelled) return;
         setQuote(result);
-        setError(null);
+        // The server's current word replaces what a refused checkout said.
+        if (result.cashOnDelivery) setRefusedAtCheckout(null);
+        if (keepError.current) keepError.current = false;
+        else setError(null);
       })
       .catch((err: unknown) => {
         if (cancelled) return;
+        keepError.current = false;
         setQuote(null);
         // The one error worth reporting from a quote: the address cannot be
         // routed to. Everything else is a soft failure — checkout re-quotes.
@@ -388,8 +417,15 @@ export default function CheckoutPage() {
       // A carrying company stopped taking the fee in cash since the quote (or
       // the basket changed). Nothing was created: fall back to paying delivery
       // with the order, and re-quote so the screen shows what is on offer now.
-      if (err instanceof ApiError && err.code === "DELIVERY_FEE_CASH_NOT_AVAILABLE") {
-        setCashToRider(false);
+      const feeCashGone = err instanceof ApiError && err.code === "DELIVERY_FEE_CASH_NOT_AVAILABLE";
+      if (feeCashGone) setCashToRider(false);
+      // Refused as cash on delivery — the account, a shop or a delivery company
+      // changed since the quote. Nothing was created and a retry cannot pass:
+      // the row goes, the form falls back to the online ones, the basket stays.
+      const codRefusal = codRefusalFromError(err);
+      if (codRefusal) setRefusedAtCheckout(codRefusal);
+      if (feeCashGone || codRefusal) {
+        keepError.current = true;
         setQuoteNonce((n) => n + 1);
       }
       // The backend names the saved address it checked — the chosen one, or the
@@ -639,8 +675,9 @@ export default function CheckoutPage() {
       {online.failed ? (
         <OptionsLoadFailed onRetry={online.reload} />
       ) : (
-        onlineUnavailable && <OnlinePaymentUnavailable withCod={!isDigital} />
+        onlineUnavailable && <OnlinePaymentUnavailable withCod={codOffered} />
       )}
+      {!isDigital && codRefused && <CodUnavailableNotice refused={codRefused} lines={lines} />}
       {option && payOptions && payOptions.length > 0 && (
         <PaymentMethodPicker
           key={payForm.formKey}
@@ -811,6 +848,9 @@ export default function CheckoutPage() {
         </div>
         {/* Under the pay button, as the order is what the Terms bind. */}
         <LegalAgreement kind="checkout" />
+        {/* And what the order comes with: the time to report a problem. A cart
+            holds goods and downloads — a service is booked and paid elsewhere. */}
+        <ProtectionLine className="mt-1.5 text-center text-xs leading-relaxed text-[var(--text-muted)]" />
       </div>
     </div>
   );
