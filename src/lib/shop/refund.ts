@@ -4,10 +4,13 @@
  *
  * ── Render it, never work it out ─────────────────────────────────────────────
  *
- * Every number comes from the block. A mobile-money refund is sent back by
- * transfer minus a fee (2% by default, but an administrator sets it), so the
- * app never multiplies anything: `netAmount` is what the customer receives,
- * `grossAmount` and `feePercent` are only there to explain the difference.
+ * Every number comes from the block. Since 2026-10-22 a refund can lose two
+ * fees — the payment provider's, kept when the customer paid, and the transfer
+ * fee to send it back — each only where it happened, and none when the seller
+ * cancelled a paid order (the seller pays them). Administrators set the rates,
+ * so the app never multiplies anything: `netAmount` is what the customer
+ * receives, and `lines` (or, from an older API, `grossAmount` and
+ * `feePercent`) only explain the difference.
  *
  * ── "Failed" does not exist here ─────────────────────────────────────────────
  *
@@ -37,14 +40,45 @@ export type RefundStatus =
 /** `null` while the team has not decided how to send it. */
 export type RefundChannel = "card_refund" | "payout" | "external";
 
+/** The line codes the API documents (2026-10-22); copy lives in `shop.refund.lines.*`. */
+export type RefundLineCode =
+  | "refund_amount"
+  | "payment_fee"
+  | "transfer_fee"
+  | "fees_paid_by_seller"
+  | "you_receive";
+
+export interface RefundLine {
+  /** Switch on this for the copy; a code the app does not know falls back to `label`. */
+  code: RefundLineCode | (string & {});
+  /** The API's English label. */
+  label: string;
+  /** Signed: a fee is negative, `fees_paid_by_seller` is 0 (a note, not money). */
+  amount: number;
+  /** The percent behind a fee line, else `null`. */
+  percent: number | null;
+}
+
 export interface CustomerRefund {
   status: RefundStatus;
-  /** What the refund is worth, before the transfer fee. */
+  /** What the refund is worth, before any fee. */
   grossAmount: number;
-  /** The transfer fee kept; 0 for a card refund. */
+  /** Everything deducted (payment fee + transfer fee since 2026-10-22); 0 when the seller pays. */
   feeAmount: number;
-  /** For the copy only ("minus a 2% transfer fee"); 0 for a card refund. */
+  /** The TRANSFER fee percent; 0 for a card refund. */
   feePercent: number;
+  /** 🆕 2026-10-22 — kept by the payment provider when the customer paid; 0 for cash on delivery. */
+  paymentFee?: number;
+  paymentFeePercent?: number;
+  /** 🆕 2026-10-22 — to send the money back; 0 for a card refund. */
+  transferFee?: number;
+  /** 🆕 2026-10-22 — `seller` when the seller cancelled after payment: the customer receives everything. */
+  feesPaidBy?: "customer" | "seller";
+  /**
+   * 🆕 2026-10-22 — the refund line by line, adding up: refund − fees = you
+   * receive. Optional until the backend that sends it is deployed.
+   */
+  lines?: RefundLine[];
   /** ⭐ What the customer receives — the amount to show. */
   netAmount: number;
   currency: string;
@@ -84,9 +118,24 @@ export const REFUND_CHIP: Record<RefundStatus, { tone: Tone; icon: IconName }> =
 };
 
 /**
- * Whether to print the fee line. Only the API's own `feeAmount` decides — a
- * card refund carries 0 and must never mention a fee.
+ * The lines to list under the refund, or `null` when they would say nothing
+ * the headline amount does not. The API only sends a fee line where that fee
+ * happened (no transfer line on a card refund, no payment line on cash on
+ * delivery) and a `fees_paid_by_seller` note when the seller carries them, so
+ * the list is rendered as sent — never filtered, re-ordered or summed here.
+ */
+export function refundLines(refund: CustomerRefund): RefundLine[] | null {
+  const lines = refund.lines;
+  if (!lines?.length) return null;
+  const explains = lines.some((l) => l.code !== "refund_amount" && l.code !== "you_receive");
+  return explains ? lines : null;
+}
+
+/**
+ * Whether to print the one-sentence fee line — the fallback for a block with
+ * no `lines` (an API from before 2026-10-22). Only the API's own `feeAmount`
+ * decides, and a card refund back then never carried a fee.
  */
 export function refundHasFee(refund: CustomerRefund): boolean {
-  return refund.channel !== "card_refund" && refund.feeAmount > 0;
+  return !refund.lines?.length && refund.channel !== "card_refund" && refund.feeAmount > 0;
 }

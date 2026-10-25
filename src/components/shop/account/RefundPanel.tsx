@@ -10,8 +10,10 @@ import { formatAmount, formatMoney } from "@/lib/shop/format";
 import {
   REFUND_CHIP,
   refundHasFee,
+  refundLines,
   refundStatusOf,
   type CustomerRefund,
+  type RefundLine,
 } from "@/lib/shop/refund";
 
 /** The new-ticket form — a declined refund carries no reason, so this is the way forward. */
@@ -25,9 +27,11 @@ const SUPPORT_NEW = "/shop/account/support/new";
  * partial refund) and not from `deliveryFeeRefund` (the delivery-fee ledger,
  * which keeps its own rows). See `lib/shop/refund.ts`.
  *
- * The amount is `netAmount`: what reaches the customer. The fee line explains
- * why it is less than `grossAmount`, using the API's numbers verbatim — nothing
- * here subtracts or multiplies. A card refund has no fee and never mentions one.
+ * The amount is `netAmount`: what reaches the customer. Under it, the API's
+ * `lines` explain why it is less than the refund — refund, payment provider
+ * fee, transfer fee, you receive — or say the seller pays the fees. They are
+ * shown verbatim: nothing here subtracts or multiplies. An API without `lines`
+ * (before 2026-10-22) gets the one-sentence fee line instead.
  */
 export function RefundPanel({ refund, style }: { refund: CustomerRefund; style?: CSSProperties }) {
   const t = useTranslations("shop.refund");
@@ -39,6 +43,24 @@ export function RefundPanel({ refund, style }: { refund: CustomerRefund; style?:
   // The masked number is Latin digits and bullets: isolated so an Arabic
   // sentence around it cannot reorder it, the same way money is.
   const masked = refund.destinationMasked ? isolateLtr(refund.destinationMasked) : null;
+  const lines = refundLines(refund);
+
+  // Copy by `code`; a code this build does not know shows the API's English label.
+  const lineLabel = (line: RefundLine): string => {
+    switch (line.code) {
+      case "refund_amount":
+      case "fees_paid_by_seller":
+      case "you_receive":
+        return t(`lines.${line.code}`);
+      case "payment_fee":
+      case "transfer_fee":
+        return line.percent === null
+          ? line.label
+          : t(`lines.${line.code}`, { percent: String(line.percent) });
+      default:
+        return line.label;
+    }
+  };
 
   const headline =
     status === "sending"
@@ -102,6 +124,42 @@ export function RefundPanel({ refund, style }: { refund: CustomerRefund; style?:
           {headline}
         </p>
       </div>
+
+      {status !== "declined" && lines && (
+        <div style={{ marginTop: 10, fontSize: 12.5, lineHeight: 1.45, color: "var(--text-body)" }}>
+          {lines.map((line, i) => {
+            const total = line.code === "you_receive";
+            const note = line.code === "fees_paid_by_seller";
+            return (
+              <div
+                key={`${line.code}-${i}`}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "baseline",
+                  gap: 12,
+                  padding: "3px 0",
+                  ...(total && {
+                    borderTop: "1px solid var(--border)",
+                    marginTop: 4,
+                    paddingTop: 7,
+                    fontWeight: 800,
+                    color: "var(--text-strong)",
+                  }),
+                  ...(note && { color: "var(--success)", fontWeight: 600 }),
+                }}
+              >
+                <span style={{ minWidth: 0 }}>{lineLabel(line)}</span>
+                {!note && (
+                  <span style={{ fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
+                    {formatMoney(line.amount, refund.currency)}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {status !== "declined" && refundHasFee(refund) && (
         <p className="muted" style={{ fontSize: 12.5, lineHeight: 1.5, margin: "6px 0 0" }}>

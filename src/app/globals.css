@@ -430,32 +430,6 @@ html.dark,
     .cta-row > * { width: auto; }
   }
 
-  /* ─── Unpurchasable plan tiers ────────────────────────────────────────────
-     A tier the catalog defines but will not sell. Greyed and hatched like a
-     zebra crossing, so "you cannot buy this yet" is legible before the badge
-     is read.
-
-     `filter` here is safe ONLY because an inactive card renders no CTA and
-     therefore hosts no dialog: a filtered ancestor re-bases `position: fixed`
-     onto itself. If a control is ever added to these cards, drop the filter
-     rather than portalling around it. */
-  .plan-unavailable {
-    position: relative;
-    overflow: hidden;
-    filter: grayscale(0.85);
-  }
-  .plan-unavailable::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background-image: repeating-linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--text-muted) 14%, transparent) 0 6px,
-      transparent 6px 16px
-    );
-  }
-
   /* Gradient text (recoloured to brand green) */
   .text-gradient {
     background: linear-gradient(135deg, #068554 0%, #0DA06B 50%, #22BD82 100%);

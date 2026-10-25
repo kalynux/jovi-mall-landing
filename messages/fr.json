@@ -1016,8 +1016,7 @@
                 "credits": "crédits inclus",
                 "openShipments": "livraisons ouvertes à la fois",
                 "concurrentDeliveries": "livraisons à la fois"
-            },
-            "unavailable": "Pas en vente"
+            }
         },
         "facts": {
             "products": "{count, plural, one {{n} produit} other {{n} produits}}",
@@ -1110,8 +1109,7 @@
                 "title": "L'offre gratuite ne demande aucun moyen de paiement",
                 "body": "Installez votre catalogue, voyez ce qui se vend, et ne montez de palier que lorsque le calcul de la commission vous y invite.",
                 "finePrint": "Les offres gratuites n'expirent jamais. Les périodes payées ({paidTerm}) ne se renouvellent pas automatiquement."
-            },
-            "unsoldTierNote": "Les paliers indiqués comme non en vente sont affichés à leur prix catalogue mais ne peuvent pas être achetés ici aujourd'hui. L'offre gratuite reste toujours disponible."
+            }
         },
         "vendors": {
             "metaTitle": "Vendre sur WhatsApp sans site web — Wi-Mall pour les vendeurs",
@@ -3396,6 +3394,13 @@
                 "declined": "Remboursement refusé"
             },
             "feeLine": "Vous recevez {net} ({gross} moins des frais de transfert de {percent} %).",
+            "lines": {
+                "refund_amount": "Remboursement",
+                "payment_fee": "Frais du prestataire de paiement, retenus lors de votre paiement ({percent} %)",
+                "transfer_fee": "Frais de transfert pour vous renvoyer l'argent ({percent} %)",
+                "fees_paid_by_seller": "Les frais sont payés par le vendeur",
+                "you_receive": "Vous recevez"
+            },
             "toNumber": "Vers le {destination}",
             "toCard": "Sur votre carte",
             "contactSupport": "Contacter l'assistance",

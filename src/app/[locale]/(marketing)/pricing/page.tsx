@@ -96,7 +96,6 @@ export default async function PricingPage({ params }: PageProps) {
   const copy: PlanCopy = {
     free: t("plans.free"),
     perTerm: (days: number) => t("plans.perTerm", { days }),
-    unavailable: t("plans.unavailable"),
     cta: t("plans.cta"),
     unlimited: t("plans.unlimited"),
     limitLabels: {
@@ -179,7 +178,6 @@ export default async function PricingPage({ params }: PageProps) {
 
       {ROLE_SECTIONS.map(({ role, anchor, accent }, i) => {
         const plans = plansByRole[role];
-        const hasUnsoldTier = plans.some((plan) => !plan.is_active);
 
         return (
           <Section
@@ -200,9 +198,6 @@ export default async function PricingPage({ params }: PageProps) {
             </div>
             <div className="mt-6 max-w-2xl space-y-2 text-sm leading-relaxed text-[var(--text-muted)]">
               <p>{t(`pricing.${role}.note`)}</p>
-              {/* Only claimed when the catalog actually withholds a tier — the
-                  moment they go on sale, the sentence disappears on its own. */}
-              {hasUnsoldTier && <p>{t("pricing.unsoldTierNote")}</p>}
             </div>
           </Section>
         );

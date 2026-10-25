@@ -1016,8 +1016,7 @@
                 "credits": "créditos incluídos",
                 "openShipments": "entregas abertas ao mesmo tempo",
                 "concurrentDeliveries": "entregas por vez"
-            },
-            "unavailable": "Não está à venda"
+            }
         },
         "facts": {
             "products": "{count, plural, one {{n} produto} other {{n} produtos}}",
@@ -1110,8 +1109,7 @@
                 "title": "O plano gratuito não pede meio de pagamento",
                 "body": "Monte seu catálogo, veja o que vende, e só suba de plano quando a conta da comissão disser que vale a pena.",
                 "finePrint": "Planos gratuitos nunca expiram. Períodos pagos ({paidTerm}) não se renovam automaticamente."
-            },
-            "unsoldTierNote": "Os planos marcados como não estando à venda aparecem pelo preço de catálogo mas não podem ser comprados aqui hoje. O plano gratuito está sempre disponível."
+            }
         },
         "vendors": {
             "metaTitle": "Venda no WhatsApp sem site — Wi-Mall para vendedores",
@@ -3396,6 +3394,13 @@
                 "declined": "Reembolso recusado"
             },
             "feeLine": "Recebe {net} ({gross} menos uma taxa de transferência de {percent}%).",
+            "lines": {
+                "refund_amount": "Reembolso",
+                "payment_fee": "Taxa do prestador de pagamento, retida quando pagou ({percent}%)",
+                "transfer_fee": "Taxa de transferência para lhe devolver o dinheiro ({percent}%)",
+                "fees_paid_by_seller": "As taxas são pagas pelo vendedor",
+                "you_receive": "Recebe"
+            },
             "toNumber": "Para o {destination}",
             "toCard": "Para o seu cartão",
             "contactSupport": "Contactar o apoio ao cliente",

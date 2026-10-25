@@ -1,6 +1,6 @@
 import type { Role, UiRole } from "./auth.types";
 import { IS_NATIVE_BUILD } from "@/lib/platform";
-import { localePath, type Locale } from "@/i18n/routing";
+import { DEFAULT_LOCALE, isLocale, localePath, type Locale } from "@/i18n/routing";
 
 // ─── Subdomain Map ──────────────────────────────────────────────────────────
 /**
@@ -76,7 +76,40 @@ export function isRole(value: unknown): value is Role {
     return typeof value === "string" && value in ROLE_SUBDOMAIN_MAP;
 }
 
+/**
+ * Can this browser hand an `agent.wi-mall.com` link to the installed Wi-Agent app?
+ *
+ * **`agent.wi-mall.com` is not a website.** It is the nginx stack in
+ * `frontend/agent-host/`, which serves the Android App Links file and answers
+ * every other path with a 404. An Android phone with the app installed never
+ * sees that 404 — the OS opens the app instead — which is why sign-in "worked"
+ * on mobile while a desktop browser landed on an error page. iOS cannot be
+ * routed there either: there is no Apple association file yet (no Team ID),
+ * and the APK cannot be installed on an iPhone anyway.
+ */
+function agentHostOpensApp(): boolean {
+    return typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
+}
+
+/**
+ * The Wi-Agent card on /apps — download, install steps, store status — in the
+ * language being read. `<html lang>` rather than the pathname: an English page
+ * has no prefix to read, and the layout always sets `lang`.
+ */
+function agentAppPage(): string {
+    const lang = typeof document !== "undefined" ? document.documentElement.lang : "";
+    return `${localePath(isLocale(lang) ? lang : DEFAULT_LOCALE, "/apps")}#agent`;
+}
+
 export function getRoleUrl(role: Role, path = ""): string {
+    // Before the native and dev branches: there is no agent web app on any
+    // origin, so anywhere the App Link cannot fire, the agent is sent to get
+    // the app rather than to a 404. The native shop app has no /apps page of
+    // its own, so it opens the website's.
+    if (role === "agent" && !agentHostOpensApp()) {
+        return IS_NATIVE_BUILD ? `https://${ROLE_SUBDOMAIN_MAP.customer}${agentAppPage()}` : agentAppPage();
+    }
+
     if (IS_NATIVE_BUILD) {
         if (role === "customer") return path || "/shop";
         return `https://${ROLE_SUBDOMAIN_MAP[role]}${path || ""}`;

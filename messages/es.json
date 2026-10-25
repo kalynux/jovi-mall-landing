@@ -1016,8 +1016,7 @@
                 "credits": "créditos incluidos",
                 "openShipments": "entregas abiertas a la vez",
                 "concurrentDeliveries": "entregas a la vez"
-            },
-            "unavailable": "No está a la venta"
+            }
         },
         "facts": {
             "products": "{count, plural, one {{n} producto} other {{n} productos}}",
@@ -1110,8 +1109,7 @@
                 "title": "El plan gratuito no pide método de pago",
                 "body": "Monta tu catálogo, mira qué se vende, y sube de nivel solo cuando la cuenta de la comisión lo aconseje.",
                 "finePrint": "Los planes gratuitos nunca caducan. Los periodos de pago ({paidTerm}) no se renuevan automáticamente."
-            },
-            "unsoldTierNote": "Los niveles marcados como no disponibles para la venta aparecen a su precio de catálogo pero hoy no se pueden comprar aquí. El plan gratuito está siempre disponible."
+            }
         },
         "vendors": {
             "metaTitle": "Vende por WhatsApp sin página web — Wi-Mall para vendedores",
@@ -3396,6 +3394,13 @@
                 "declined": "Reembolso rechazado"
             },
             "feeLine": "Recibes {net} ({gross} menos una comisión de transferencia del {percent} %).",
+            "lines": {
+                "refund_amount": "Reembolso",
+                "payment_fee": "Comisión del proveedor de pago, retenida cuando pagaste ({percent} %)",
+                "transfer_fee": "Comisión de transferencia para devolverte el dinero ({percent} %)",
+                "fees_paid_by_seller": "Las comisiones las paga el vendedor",
+                "you_receive": "Recibes"
+            },
             "toNumber": "Al {destination}",
             "toCard": "A tu tarjeta",
             "contactSupport": "Contactar con soporte",

@@ -13,10 +13,10 @@ import { PLAN_LIMITS, type LimitSpec, type PublicPlan } from "@/lib/marketing/pl
  * not use a field still carries it as `null`, and reading that as "unlimited"
  * would print "unlimited commission" on every agency card.
  *
- * A tier with `is_active: false` renders without a buy link and with a neutral
- * "not available yet" badge. The flag means both "not launched" and "withdrawn
- * from sale" and the catalog does not distinguish them, so the copy says the one
- * thing that is true either way: you cannot buy it here.
+ * A tier with `is_active: false` is not rendered at all — `PlanGrid` drops it.
+ * Its price and limits are a draft that can still change before launch, and a
+ * greyed card would hand buyers that draft as an estimate. Filtering here, not
+ * in the page, keeps any future caller from showing one by accident.
  */
 
 export type PlanCopy = {
@@ -29,7 +29,6 @@ export type PlanCopy = {
    * real ICU message, not a token swapped into a fixed sentence.
    */
   perTerm: (days: number) => string;
-  unavailable: string;
   cta: string;
   unlimited: string;
 };
@@ -89,14 +88,8 @@ export function PlanCard({
         "card relative flex flex-col p-6 transition-all duration-300",
         highlight
           ? "border-2 border-role-soft shadow-lg lg:scale-[1.03]"
-          : "hover:-translate-y-1 hover:border-role-soft hover:shadow-md",
-        // A tier the catalog will not sell reads as struck out before the badge
-        // is: desaturated, with a hatched overlay. See .plan-unavailable in
-        // globals.css — it also explains why the filter there is safe only
-        // while these cards carry no CTA.
-        !plan.is_active && "plan-unavailable"
+          : "hover:-translate-y-1 hover:border-role-soft hover:shadow-md"
       )}
-      aria-disabled={!plan.is_active || undefined}
     >
       {highlight && (
         // The one tier that gets to shout: a brand-gradient crown strip over the
@@ -106,10 +99,7 @@ export function PlanCard({
           className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-600 via-primary-500 to-primary-400"
         />
       )}
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="font-display text-lg font-bold text-[var(--text-primary)]">{plan.name}</h3>
-        {!plan.is_active && <span className="tag tag-muted shrink-0">{copy.unavailable}</span>}
-      </div>
+      <h3 className="font-display text-lg font-bold text-[var(--text-primary)]">{plan.name}</h3>
 
       <p
         className={cn(
@@ -158,19 +148,17 @@ export function PlanCard({
         ))}
       </ul>
 
-      {plan.is_active && (
-        // `plan.role` is already the role this card sells, so the button can
-        // resolve itself: a signed-in vendor reading the vendor plans gets
-        // their dashboard rather than a second registration.
-        <RoleCtaButton
-          role={plan.role}
-          fallbackLabel={copy.cta}
-          variant={highlight ? "primary" : "secondary"}
-          size="sm"
-          className="mt-7"
-          dataAttrs={{ "data-plan-role": plan.role, "data-plan-code": plan.code }}
-        />
-      )}
+      {/* `plan.role` is already the role this card sells, so the button can
+          resolve itself: a signed-in vendor reading the vendor plans gets
+          their dashboard rather than a second registration. */}
+      <RoleCtaButton
+        role={plan.role}
+        fallbackLabel={copy.cta}
+        variant={highlight ? "primary" : "secondary"}
+        size="sm"
+        className="mt-7"
+        dataAttrs={{ "data-plan-role": plan.role, "data-plan-code": plan.code }}
+      />
     </div>
   );
 }
@@ -188,16 +176,19 @@ export function PlanGrid({
   formatPrice: (value: number, currency: string) => string;
   highlightCode?: string;
 }) {
+  const onSale = plans.filter((plan) => plan.is_active);
+  if (onSale.length === 0) return null;
+
   return (
     <div
       className={cn(
         "grid gap-5",
-        plans.length === 1 && "max-w-sm",
-        plans.length === 2 && "sm:grid-cols-2",
-        plans.length >= 3 && "lg:grid-cols-3"
+        onSale.length === 1 && "max-w-sm",
+        onSale.length === 2 && "sm:grid-cols-2",
+        onSale.length >= 3 && "lg:grid-cols-3"
       )}
     >
-      {plans.map((plan) => (
+      {onSale.map((plan) => (
         <PlanCard
           key={plan.code}
           plan={plan}

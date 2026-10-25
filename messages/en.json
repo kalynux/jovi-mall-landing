@@ -1016,8 +1016,7 @@
                 "credits": "credits included",
                 "openShipments": "deliveries open at once",
                 "concurrentDeliveries": "deliveries at a time"
-            },
-            "unavailable": "Not on sale"
+            }
         },
         "facts": {
             "products": "{count, plural, one {{n} product} other {{n} products}}",
@@ -1110,8 +1109,7 @@
                 "title": "The free tier needs no payment method",
                 "body": "Set your catalogue up, see what sells, and move up a tier only when the commission maths says you should.",
                 "finePrint": "Free tiers never expire. Paid terms run for {paidTerm} and do not auto-renew."
-            },
-            "unsoldTierNote": "Tiers marked as not on sale are listed at their catalogue price but cannot be bought here today. The free tier is always available."
+            }
         },
         "vendors": {
             "metaTitle": "Sell on WhatsApp without a website — Wi-Mall for vendors",
@@ -3396,6 +3394,13 @@
                 "declined": "Refund declined"
             },
             "feeLine": "You receive {net} ({gross} minus a {percent}% transfer fee).",
+            "lines": {
+                "refund_amount": "Refund",
+                "payment_fee": "Payment provider fee, kept when you paid ({percent}%)",
+                "transfer_fee": "Transfer fee to send the money back ({percent}%)",
+                "fees_paid_by_seller": "Fees are paid by the seller",
+                "you_receive": "You receive"
+            },
             "toNumber": "To {destination}",
             "toCard": "To your card",
             "contactSupport": "Contact support",

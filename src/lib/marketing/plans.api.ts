@@ -159,8 +159,9 @@ async function getJson<T>(path: string): Promise<T> {
 
 /**
  * Active tiers by default. `includeInactive` also returns the tiers that are
- * priced in the catalog but not on sale — which is what lets /pricing show them
- * without keeping a second, drifting list of "coming soon" prices in the repo.
+ * priced in the catalog but not on sale. Those are never shown (`PlanGrid` drops
+ * them, since their figures are still a draft), but plan-facts looks plans up by
+ * code and must not throw because one was taken off sale.
  */
 export async function fetchPlans(options?: {
   role?: PlanRole;
