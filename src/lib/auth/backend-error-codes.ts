@@ -755,6 +755,20 @@ export type BackendErrorCode =
     | "BOOKING_INVALID_SLOT_ID"
     | "BOOKING_NOT_RESCHEDULABLE"
     | "BOOKING_SLOT_FULL"
+    /** 422. A group class takes one slot per booking. */
+    | "BOOKING_MULTI_SLOT_NOT_SUPPORTED"
+    /** 422. The vendor comes to the customer, and no `addressId` was sent. */
+    | "BOOKING_ADDRESS_REQUIRED"
+    /** 404. `addressId` is not one of the customer's saved addresses. */
+    | "BOOKING_ADDRESS_NOT_FOUND"
+    /** 422. The vendor removed the address this service happens at. */
+    | "BOOKING_LOCATION_UNAVAILABLE"
+    /** 409. A new time is already waiting for an answer. */
+    | "BOOKING_PROPOSAL_PENDING"
+    /** 404. Nothing open to accept, decline or withdraw (or it lapsed). */
+    | "BOOKING_PROPOSAL_NOT_FOUND"
+    /** 403. Answering your own request, or withdrawing the vendor's. */
+    | "BOOKING_PROPOSAL_NOT_YOURS"
     // ─── Availability rules (service products) ─────────────────────────────────
     | "AVAILABILITY_PRODUCT_NOT_FOUND"
     | "AVAILABILITY_RULE_NOT_FOUND"

@@ -43,6 +43,7 @@ import type {
   Product,
   ProductListItem,
   ReturnPolicy,
+  ServiceTerms,
 } from "@/lib/shop/shop.types";
 import { publicUrl } from "@/lib/shop/shop.types";
 
@@ -493,6 +494,27 @@ export function ProductDetail({
                 <p className="muted" style={{ fontSize: 12.5, marginTop: 4 }}>
                   {t("serviceRateNote", { unit: variant.service.priceUnit })}
                 </p>
+                {/* Where it happens. Never an address: none is public. */}
+                {variant.service.locationKind && (
+                  <p
+                    style={{
+                      fontSize: 13.5,
+                      fontWeight: 700,
+                      marginTop: 8,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      color: "var(--text-strong)",
+                    }}
+                  >
+                    <Icon
+                      name={SERVICE_PLACE_ICON[variant.service.locationKind]}
+                      size={15}
+                      style={{ color: "var(--brand)", flexShrink: 0 }}
+                    />
+                    {t(`where.${variant.service.locationKind}`)}
+                  </p>
+                )}
               </div>
             ) : (
               <PriceDisplay
@@ -606,7 +628,14 @@ export function ProductDetail({
               label={tCommon("share")}
               className="order-1 sm:order-3"
             />
-            <div className="order-2 w-full min-w-0 sm:w-auto sm:flex-1">
+            {/* A service's booking calendar takes the whole row at every
+                width — beside two icon buttons it would be squeezed into
+                what is left of the line. */}
+            <div
+              className={
+                isService ? "order-2 w-full min-w-0" : "order-2 w-full min-w-0 sm:w-auto sm:flex-1"
+              }
+            >
               {isService ? (
                 <BookingPanel product={p} />
               ) : (
@@ -721,6 +750,13 @@ export function ProductDetail({
                     unit: variant.service.priceUnit,
                   })}
                 />
+                {variant.service.locationKind && (
+                  <InfoRow
+                    icon={SERVICE_PLACE_ICON[variant.service.locationKind]}
+                    label={t("whereLabel")}
+                    value={t(`whereHint.${variant.service.locationKind}`)}
+                  />
+                )}
                 {variant.service.bufferAfterMinutes > 0 && (
                   <InfoRow
                     icon="hourglass"
@@ -1111,6 +1147,12 @@ function Notice({
     </div>
   );
 }
+
+const SERVICE_PLACE_ICON: Record<NonNullable<ServiceTerms["locationKind"]>, IconName> = {
+  vendor_address: "store",
+  customer_address: "navigation",
+  online: "monitor-smartphone",
+};
 
 function InfoRow({ icon, label, value }: { icon: IconName; label: string; value: string }) {
   return (

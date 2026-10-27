@@ -1,0 +1,374 @@
+/*
+  The booking calendar — see BookingCalendar.tsx.
+
+  Laid out by the PANEL's width, not the viewport's: the product page puts the
+  panel full-width below `lg` and in a half-width column from `lg` up, so a
+  768px tablet has a wider panel than a 1024px laptop. `.bk-cal` is the query
+  container; under 540px it is the phone flow (month, then the day), from
+  540px the month and the day sit side by side. Measured panel widths: 288 at
+  a 320 phone, 358 at 390, 720 at 768, 472 at 1024, 560 at 1440.
+*/
+
+.bk-cal {
+  container-type: inline-size;
+  container-name: bk-cal;
+  min-width: 0;
+}
+
+.bk-cal-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
+/* Wraps as whole units: in a narrow column the month drops under the label
+   rather than both breaking mid-phrase. */
+.bk-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 8px;
+  margin-bottom: 8px;
+  min-width: 0;
+}
+
+.bk-head .ds-overline {
+  white-space: nowrap;
+}
+
+.bk-month-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-strong);
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+/* ── Month ─────────────────────────────────────────────────────────────── */
+
+.bk-weekdays,
+.bk-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.bk-weekdays {
+  margin-bottom: 4px;
+}
+
+.bk-weekdays span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-subtle);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.bk-day {
+  position: relative;
+  min-width: 0;
+  height: 46px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 0;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--text-strong);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: var(--transition-colors);
+}
+
+.bk-day:hover:not(:disabled) {
+  border-color: var(--brand);
+}
+
+.bk-day:focus-visible,
+.bk-block:focus-visible,
+.bk-day-summary:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.bk-day:disabled {
+  background: transparent;
+  color: var(--text-subtle);
+  cursor: default;
+}
+
+.bk-day[data-today="true"]:not([data-selected="true"]) {
+  border-color: var(--border);
+}
+
+.bk-day[data-selected="true"] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-on);
+}
+
+.bk-day-num {
+  font-size: 15px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.bk-day-month {
+  font-size: 9.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+[dir="rtl"] .bk-day-month {
+  text-transform: none;
+}
+
+.bk-day-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--brand);
+}
+
+.bk-day[data-selected="true"] .bk-day-dot {
+  background: var(--brand-on);
+}
+
+/* Phone flow: once a day is chosen the month folds into one line. */
+.bk-cal[data-has-day="true"] .bk-month {
+  display: none;
+}
+
+.bk-cal[data-has-day="false"] .bk-times {
+  display: none;
+}
+
+.bk-day-summary {
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-strong);
+  font-family: var(--font-sans);
+  text-align: start;
+  cursor: pointer;
+}
+
+.bk-day-summary svg {
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
+.bk-day-summary-date {
+  flex: 1;
+  min-width: 0;
+  font-size: 14.5px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.bk-day-summary-change {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--brand-hover);
+}
+
+/* ── Day ───────────────────────────────────────────────────────────────── */
+
+.bk-hint {
+  margin: -2px 0 10px;
+  font-size: 12.5px;
+  color: var(--text-muted, var(--text-subtle));
+}
+
+.bk-timeline {
+  position: relative;
+  max-height: 360px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-inline-end: 2px;
+}
+
+.bk-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: stretch;
+  gap: 10px;
+  padding: 3px 0;
+}
+
+/* A run is one continuous block: no gap between its rows. */
+.bk-row[data-state="run-mid"],
+.bk-row[data-state="run-last"] {
+  padding-top: 0;
+}
+
+.bk-row[data-state="run-first"],
+.bk-row[data-state="run-mid"] {
+  padding-bottom: 0;
+}
+
+.bk-time {
+  align-self: start;
+  padding-top: 13px;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted, var(--text-subtle));
+  white-space: nowrap;
+}
+
+.bk-row[data-state^="run"] .bk-time {
+  color: var(--brand-hover);
+}
+
+.bk-block {
+  min-width: 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-body);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: start;
+  cursor: pointer;
+  transition: var(--transition-colors);
+}
+
+.bk-block:hover:not(:disabled) {
+  border-color: var(--brand);
+}
+
+.bk-block:disabled {
+  cursor: not-allowed;
+}
+
+.bk-block[data-state="taken"] {
+  border-style: dashed;
+  background: var(--surface-2);
+  color: var(--text-subtle);
+}
+
+.bk-block[data-state="reach"] {
+  border-style: dashed;
+  border-color: var(--brand);
+  color: var(--brand-hover);
+}
+
+.bk-block-reach {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+}
+
+.bk-block[data-state^="run"] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-on);
+}
+
+.bk-block[data-state="run-first"] {
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.bk-block[data-state="run-mid"] {
+  border-radius: 0;
+  border-top-color: color-mix(in srgb, var(--brand-on) 25%, var(--brand));
+}
+
+.bk-block[data-state="run-last"] {
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
+  border-top-color: color-mix(in srgb, var(--brand-on) 25%, var(--brand));
+}
+
+.bk-block-range {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* A break in the shop's grid — lunch, or somebody else's appointment. */
+.bk-gap {
+  height: 14px;
+  margin-inline-start: 62px;
+  background-image: radial-gradient(circle, var(--border) 1.5px, transparent 1.6px);
+  background-size: 8px 8px;
+  background-position: center;
+  background-repeat: repeat-x;
+}
+
+.bk-times-empty {
+  height: 100%;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-subtle);
+  font-size: 13.5px;
+  text-align: center;
+}
+
+/* ── Tablet and up: the month and the day side by side ─────────────────── */
+
+@container bk-cal (min-width: 540px) {
+  .bk-cal-grid {
+    grid-template-columns: minmax(250px, 1fr) minmax(220px, 1fr);
+    gap: 20px;
+    align-items: start;
+  }
+
+  .bk-cal[data-has-day="true"] .bk-month {
+    display: block;
+  }
+
+  .bk-cal[data-has-day="false"] .bk-times {
+    display: block;
+  }
+
+  .bk-day-summary {
+    display: none;
+  }
+
+  .bk-day {
+    height: 44px;
+  }
+
+  .bk-timeline {
+    max-height: 340px;
+  }
+
+  .bk-times {
+    min-height: 100%;
+    padding-inline-start: 20px;
+    border-inline-start: 1px solid var(--border-subtle, var(--border));
+  }
+}

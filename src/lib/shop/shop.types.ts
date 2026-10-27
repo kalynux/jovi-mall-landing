@@ -307,6 +307,13 @@ export interface ServiceTerms {
   /** An English convenience label ("per 1 h 30 min"). Not localized. */
   priceUnit: string;
   priceFrom: number;
+  /**
+   * Where it happens (2026-10-26): `vendor_address` · `customer_address` (the
+   * vendor comes to the customer, who picks a saved address when booking) ·
+   * `online`. `null` when the vendor did not say; absent on an older API. No
+   * address is public.
+   */
+  locationKind?: "vendor_address" | "customer_address" | "online" | null;
 }
 
 export interface Variant {
