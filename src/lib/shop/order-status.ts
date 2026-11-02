@@ -15,6 +15,7 @@ import type {
   OrderGroup,
   OrderPaymentStatus,
 } from "./customer.types";
+import { ordersOwingOnline, paidOnlinePart } from "./partial-payment";
 
 type Tone = "brand" | "neutral" | "success" | "warning" | "danger" | "info";
 
@@ -101,6 +102,11 @@ export const fulfillmentChip = (s: FulfillmentStatus): StatusChip => FULFILLMENT
 export const paymentChip = (s: OrderPaymentStatus): StatusChip => PAYMENT[s] ?? UNKNOWN;
 export const groupPaymentChip = (s: GroupPaymentStatus): StatusChip => GROUP_PAYMENT[s] ?? UNKNOWN;
 
+/**
+ * Cash changes hands at the door, against a delivery code. Also true of a partial
+ * order, so this answers how a parcel is delivered, not how an order is paid:
+ * anything that SAYS how it is paid reads `partialPayment` first.
+ */
 export const isCod = (order: CustomerOrder): boolean =>
   order.paymentMethod === "cash_on_delivery";
 
@@ -148,8 +154,12 @@ export const payableTotal = (group: OrderGroup): number =>
  *
  * Note the COD test runs over *every* order rather than the payable ones, which
  * is what the server does — a group is COD or it is not.
+ *
+ * The one exception comes first, as it does on the server: a partial checkout
+ * reads cash on delivery and its online part is still owed.
  */
 export function canPayGroup(group: OrderGroup): boolean {
+  if (ordersOwingOnline(group).length > 0) return true;
   if (group.orders.some(isCod)) return false;
   return payableOrders(group).length > 0;
 }
@@ -161,8 +171,13 @@ export function canPayGroup(group: OrderGroup): boolean {
  * only, and unpaid only. A *paid* order needs the vendor refund flow instead —
  * this endpoint performs no refund. The vendor's own cancellation policy can
  * still refuse, which is why the failure is surfaced rather than swallowed.
+ *
+ * A partial order whose online part is paid is a paid order here, whatever its
+ * status reads: the platform holds the customer's money, and the server answers
+ * `422 ORDER_CANCEL_REQUIRES_REFUND`.
  */
 export function canCancel(order: CustomerOrder): boolean {
+  if (paidOnlinePart(order)) return false;
   const preShipment =
     order.fulfillmentStatus === "pending" || order.fulfillmentStatus === "processing";
   const unpaid =

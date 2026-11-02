@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { BottomSheet, Button, Icon, Skeleton } from "@/components/shop/ds";
@@ -14,6 +14,7 @@ import {
 import { usePaymentOptions } from "@/components/shop/usePaymentOptions";
 import { useSavedPayment } from "@/components/shop/useSavedPayment";
 import { useChargeRefusal } from "@/components/shop/useChargeRefusal";
+import { PartialAmountField, PartialPaymentWarning, useRefusedAmount } from "@/components/shop/PartialPayment";
 import { PayLinkShare } from "./PayLinkShare";
 import { translateError } from "@/lib/auth/error-translator";
 import { formatMoney } from "@/lib/shop/format";
@@ -21,6 +22,12 @@ import { cardPagePath } from "@/lib/shop/pay-link.api";
 import { initiatePayment, isSettledFailure, nextPaymentStep } from "@/lib/shop/payments.api";
 import { rememberPaymentAttempt } from "@/lib/shop/payment-attempts";
 import { payableOrders, payableTotal } from "@/lib/shop/order-status";
+import {
+  isAlreadyPaid,
+  ordersOwingOnline,
+  parsePartialAmount,
+  partialLimitsOfOrders,
+} from "@/lib/shop/partial-payment";
 import type { OrderGroup } from "@/lib/shop/customer.types";
 
 /**
@@ -66,6 +73,15 @@ import type { OrderGroup } from "@/lib/shop/customer.types";
  * order, not on how it is paid, so a mobile-money attempt left `PENDING` here
  * makes the mint refuse with `PAYMENT_LINK_NOT_APPLICABLE`. `PayLinkShare`
  * says so in the shopper's own terms rather than retrying.
+ *
+ * ── A partial order names its own amount ─────────────────────────────────────
+ *
+ * Its online part is whatever the shopper chooses between the orders' limits,
+ * so this is also where "finish paying" and "try a different amount" happen. The
+ * return-fee warning stays on screen above the method. `409 PAYMENT_ORDER_ALREADY_PAID`
+ * here means the part went through, so it goes to the success screen. And a charge
+ * still live keeps its amount whatever is sent, which the answer cannot tell us,
+ * so the sheet says so up front.
  */
 export function PayGroupSheet({
   group,
@@ -79,6 +95,7 @@ export function PayGroupSheet({
   const router = useRouter();
   const t = useTranslations("shop.pay.sheet");
   const tErrors = useTranslations("errors");
+  const tPartial = useTranslations("shop.partialPayment");
   /**
    * Loaded only once the sheet opens.
    *
@@ -93,21 +110,36 @@ export function PayGroupSheet({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const orders = payableOrders(group);
-  const amount = payableTotal(group);
+  const owing = useMemo(() => ordersOwingOnline(group), [group]);
+  /** Set on a partial order still owing its online part; `null` on every other. */
+  const limits = useMemo(() => (owing.length > 0 ? partialLimitsOfOrders(owing) : null), [owing]);
+  /** What the amount field holds. `null` until edited, so it opens on the minimum. */
+  const [partInput, setPartInput] = useState<string | null>(null);
+  const partValue = partInput ?? String(limits?.minimumAmount ?? "");
+  /** The amount to charge, or `null` while what is typed cannot be. */
+  const partAmount = useMemo(() => (limits ? parsePartialAmount(partValue, limits) : null), [limits, partValue]);
+
+  const orders = limits ? owing : payableOrders(group);
+  const amount = limits ? (partAmount ?? limits.minimumAmount) : payableTotal(group);
   // The payable orders' own currency, not the group's: they are the ones being
   // charged. A group cannot legitimately mix currencies — checkout guarantees
   // it and the server re-checks — so the first is the group's.
   const currency = orders[0]?.currency ?? group.currency;
+  const refusedAmount = useRefusedAmount(currency);
+  const partial = limits !== null;
 
   const pay = useCallback(async () => {
     const charge = option ? chargeRequest(option, phone) : null;
-    if (!charge) return;
+    if (!charge || (partial && partAmount === null)) return;
     setError(null);
     setBusy(true);
 
     try {
-      const payment = await initiatePayment({ cartId: group.cartId, ...charge });
+      const payment = await initiatePayment({
+        cartId: group.cartId,
+        ...charge,
+        ...(partial && partAmount !== null ? { amount: partAmount } : {}),
+      });
 
       // Write the transaction id down before leaving. It is returned exactly
       // once, and the order screen's "Check payment" needs it to force a
@@ -120,6 +152,7 @@ export function PayGroupSheet({
         group: group.cartId,
         transaction: payment.transactionId,
       });
+      if (partial) params.set("partial", "1");
       const step = nextPaymentStep(payment.instructions);
       // A card is confirmed on the hosted page, not waited for here.
       if (!isSettledFailure(payment.status) && step.kind === "card") {
@@ -148,14 +181,21 @@ export function PayGroupSheet({
       // tap during navigation.
       router.push(`/shop/checkout/success?${params}`);
     } catch (err) {
+      // The online part went through, here or from another device.
+      if (partial && isAlreadyPaid(err)) {
+        router.push(`/shop/checkout/success?${new URLSearchParams({ group: group.cartId, paid: "1", partial: "1" })}`);
+        return;
+      }
       setBusy(false);
       // Nothing was charged on a provider refusal; the form is left as it is.
-      setError(refusal(err) ?? translateError(tErrors, err, t("startFailed")));
+      setError(
+        refusal(err) ?? (partial ? refusedAmount(err) : null) ?? translateError(tErrors, err, t("startFailed"))
+      );
     }
-  }, [group.cartId, option, phone, router, t, tErrors, refusal]);
+  }, [group.cartId, option, phone, partial, partAmount, refusedAmount, router, t, tErrors, refusal]);
 
   const phoneOk = option !== null && paymentReady(option, phone);
-  const canPay = payForm.ready && phoneOk && !busy;
+  const canPay = payForm.ready && phoneOk && (!partial || partAmount !== null) && !busy;
   const cardListed = payOptions.options?.some((o) => o.provider === "CARD") ?? false;
 
   return (
@@ -189,7 +229,16 @@ export function PayGroupSheet({
             elevated
             leadingIcon="lock"
             disabled={!canPay}
-            title={option && !phoneOk ? t("enterValidNumber") : undefined}
+            title={
+              limits && partAmount === null
+                ? tPartial("amountHint", {
+                    min: formatMoney(limits.minimumAmount, currency),
+                    max: formatMoney(limits.maximumAmount, currency),
+                  })
+                : option && !phoneOk
+                  ? t("enterValidNumber")
+                  : undefined
+            }
             onClick={() => void pay()}
           >
             {busy ? t("starting") : t("payAmount", { amount: formatMoney(amount, currency) })}
@@ -198,7 +247,11 @@ export function PayGroupSheet({
       }
     >
       <p className="muted" style={{ fontSize: 13, lineHeight: 1.55, margin: "0 0 16px" }}>
-        {orders.length === group.orderCount ? t("intro") : t("partialIntro", { n: orders.length })}
+        {partial
+          ? tPartial("sheetIntro")
+          : orders.length === group.orderCount
+            ? t("intro")
+            : t("partialIntro", { n: orders.length })}
       </p>
 
       {error && (
@@ -223,6 +276,22 @@ export function PayGroupSheet({
           <p style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--text-body)", margin: 0 }}>
             {error}
           </p>
+        </div>
+      )}
+
+      {limits && (
+        <div style={{ marginBottom: 16 }}>
+          <PartialAmountField
+            limits={limits}
+            value={partValue}
+            onChange={setPartInput}
+            currency={currency}
+            disabled={busy}
+          />
+          <p className="muted" style={{ fontSize: 12, lineHeight: 1.5, margin: "6px 0 0" }}>
+            {tPartial("liveChargeNote")}
+          </p>
+          <PartialPaymentWarning style={{ marginTop: 12 }} />
         </div>
       )}
 
@@ -258,12 +327,13 @@ export function PayGroupSheet({
             merely a sharing one: it mints the link against a `CARD` charge,
             which the server refuses while cards are off — so offering it then
             would be a button that can only fail. */}
-      {cardListed && (
+      {cardListed && (!partial || partAmount !== null) && (
         <PayLinkShare
           cartId={group.cartId}
           amount={amount}
           currency={currency}
           reference={orders[0]?.orderNumber}
+          chargeAmount={partAmount ?? undefined}
           onUnavailable={payOptions.applyOffered}
         />
       )}

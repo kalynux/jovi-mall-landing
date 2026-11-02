@@ -13,6 +13,7 @@ import { Badge, Button, EmptyState, Icon } from "@/components/shop/ds";
 import { RefundBadge } from "@/components/shop/account/RefundPanel";
 import { formatMoney } from "@/lib/shop/format";
 import { listOrderGroups } from "@/lib/shop/orders.api";
+import { owesOnlinePart, paidOnlinePart } from "@/lib/shop/partial-payment";
 import { groupPaymentChip, fulfillmentChip, isCod } from "@/lib/shop/order-status";
 import { useApiResource } from "@/lib/shop/useApiResource";
 import type { ListMeta } from "@/lib/api/client";
@@ -102,10 +103,15 @@ export default function OrdersPage() {
 function OrderGroupRow({ group }: { group: OrderGroup }) {
   const format = useFormatter();
   const t = useTranslations("shop.orders");
+  const tPartial = useTranslations("shop.partialPayment");
   // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
   const tKey = useTranslations();
   const payment = groupPaymentChip(group.paymentStatus);
-  const hasCod = group.orders.some(isCod);
+  // A partial order reads `cash_on_delivery` too, and one owing its online part
+  // owes money NOW: it must never be labelled "pay on delivery".
+  const owesPart = group.orders.some(owesOnlinePart);
+  const restInCash = !owesPart && group.paymentStatus !== "paid" && group.orders.some(paidOnlinePart);
+  const hasCod = group.orders.some((o) => isCod(o) && !o.partialPayment);
   // The first order in the group with a refund request. The history list is not
   // documented to carry `refund` (only the group and single reads are), so this
   // chip appears only if the API sends it here too.
@@ -137,6 +143,16 @@ function OrderGroupRow({ group }: { group: OrderGroup }) {
           <Badge size="sm" tone={payment.tone} icon={payment.icon}>
             {tKey(payment.labelKey)}
           </Badge>
+          {owesPart && (
+            <Badge size="sm" tone="warning" icon="wallet">
+              {tPartial("owedBadge")}
+            </Badge>
+          )}
+          {restInCash && (
+            <Badge size="sm" tone="neutral" icon="banknote">
+              {tPartial("restInCashBadge")}
+            </Badge>
+          )}
           {hasCod && (
             <Badge size="sm" tone="neutral" icon="banknote">
               {t("cashOnDelivery")}

@@ -37,6 +37,12 @@ import {
   pendingCollections,
   type StatusChip,
 } from "@/lib/shop/order-status";
+import {
+  ordersOwingOnline,
+  owesOnlinePart,
+  paidOnlinePart,
+  partialCashOf,
+} from "@/lib/shop/partial-payment";
 import { publicUrl } from "@/lib/shop/shop.types";
 import { DeliveryTracking } from "@/components/shop/account/DeliveryTracking";
 import { DeliveryFeeChanges } from "@/components/shop/account/DeliveryFeeChanges";
@@ -136,6 +142,7 @@ function GroupSummary({
   const format = useFormatter();
   const t = useTranslations("errors");
   const tOrders = useTranslations("shop.orders");
+  const tPartial = useTranslations("shop.partialPayment");
   const { flash } = useToast();
   const [paying, setPaying] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -155,6 +162,14 @@ function GroupSummary({
   const payment = groupPaymentChip(group.paymentStatus);
   const payable = canPayGroup(group);
   const due = payableTotal(group);
+  /** The online part of a partial checkout is owed: there is no one figure to pay yet. */
+  const owesPart = ordersOwingOnline(group).length > 0;
+  // Across shops, because the shopper paid ONE amount and each card shows only its share.
+  const paidOnline = group.orders.reduce((sum, o) => sum + (o.partialPayment?.amountPaidOnline ?? 0), 0);
+  const cashDue = group.orders.reduce((sum, o) => {
+    const cash = partialCashOf(o);
+    return cash?.kind === "due" ? sum + cash.amount : sum;
+  }, 0);
 
   const check = useCallback(async () => {
     setChecking(true);
@@ -191,7 +206,11 @@ function GroupSummary({
 
       const remaining = payableTotal(next);
 
-      if (remaining === 0) {
+      // Paid, with cash still to come: not "nothing left to pay".
+      if (owesPart && next.orders.some(paidOnlinePart)) {
+        await forgetPaymentAttempt(group.cartId);
+        flash(tPartial("received"));
+      } else if (remaining === 0) {
         await forgetPaymentAttempt(group.cartId);
         // The whole payable block — this note included — is gone on the next
         // render, so the good news has to be said somewhere that outlives it.
@@ -200,7 +219,7 @@ function GroupSummary({
             ? tOrders("paymentReceived")
             : tOrders("nothingLeftToPay"),
         );
-      } else if (remaining < due) {
+      } else if (!owesPart && remaining < due) {
         setChecked({
           tone: "info",
           // The amount goes in as a VALUE, keeping the bidi isolate marks
@@ -223,7 +242,7 @@ function GroupSummary({
     } finally {
       setChecking(false);
     }
-  }, [due, flash, group.cartId, group.currency, onRefreshed, t, tOrders]);
+  }, [due, flash, group.cartId, group.currency, onRefreshed, owesPart, t, tOrders, tPartial]);
 
   return (
     <>
@@ -257,6 +276,15 @@ function GroupSummary({
           </p>
         )}
 
+        {group.orderCount > 1 && paidOnline > 0 && (
+          <div style={{ marginTop: 10 }}>
+            <BreakdownRow label={tPartial("paidOnline")} value={formatMoney(paidOnline, group.currency)} />
+            {cashDue > 0 && (
+              <BreakdownRow label={tPartial("balanceDue")} value={formatMoney(cashDue, group.currency)} />
+            )}
+          </div>
+        )}
+
         {/* Unpaid, and payable. Checkout writes the orders before it charges
             anything, so this is the ordinary state after a declined prompt —
             not an error, and the copy says so.
@@ -275,7 +303,7 @@ function GroupSummary({
             }}
           >
             <p style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--text-body)", margin: "0 0 10px" }}>
-              {tOrders("unpaidHeld")}
+              {owesPart ? tPartial("unpaidNote") : tOrders("unpaidHeld")}
             </p>
             <Button
               block
@@ -283,7 +311,7 @@ function GroupSummary({
               disabled={checking}
               onClick={() => setPaying(true)}
             >
-              {tOrders("payAmount", { amount: formatMoney(due, group.currency) })}
+              {owesPart ? tPartial("finishPaying") : tOrders("payAmount", { amount: formatMoney(due, group.currency) })}
             </Button>
 
             {/* Secondary, and deliberately so: to a shopper who has not paid
@@ -366,6 +394,7 @@ export function VendorOrderCard({
   const t = useTranslations("errors");
   const tOrders = useTranslations("shop.orders");
   const tDelivery = useTranslations("shop.delivery");
+  const tPartial = useTranslations("shop.partialPayment");
   const format = useFormatter();
 
   // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
@@ -389,6 +418,9 @@ export function VendorOrderCard({
   const payment = paymentChip(order.paymentStatus);
   const cod = isCod(order);
   const collections = pendingCollections(order);
+  const partial = order.partialPayment ?? null;
+  const owesPart = owesOnlinePart(order);
+  const partialCash = partialCashOf(order);
 
   const onCancel = useCallback(async () => {
     setBusy(true);
@@ -455,10 +487,26 @@ export function VendorOrderCard({
         <Badge size="sm" tone={payment.tone} icon={payment.icon}>
           {tKey(payment.labelKey)}
         </Badge>
-        {cod && (
-          <Badge size="sm" tone="neutral" icon="banknote">
-            {tOrders("cashOnDelivery")}
-          </Badge>
+        {/* `paymentMethod` reads cash on delivery on a partial order too, and one
+            owing its online part must never say "pay on delivery". */}
+        {partial ? (
+          owesPart ? (
+            <Badge size="sm" tone="warning" icon="wallet">
+              {tPartial("owedBadge")}
+            </Badge>
+          ) : (
+            partialCash?.kind === "due" && (
+              <Badge size="sm" tone="neutral" icon="banknote">
+                {tPartial("restInCashBadge")}
+              </Badge>
+            )
+          )
+        ) : (
+          cod && (
+            <Badge size="sm" tone="neutral" icon="banknote">
+              {tOrders("cashOnDelivery")}
+            </Badge>
+          )
         )}
       </div>
 
@@ -602,6 +650,31 @@ export function VendorOrderCard({
             {formatMoney(order.total, order.currency)}
           </span>
         </div>
+
+        {/* A partial order: what the online part may be while it is owed, then what
+            was paid and what is left in cash. The cash per parcel is the delivery
+            code's card below, from `expectedAmount`. */}
+        {owesPart && partial?.minimumAmount != null && partial.maximumAmount != null && (
+          <BreakdownRow
+            label={tPartial("dueOnline")}
+            value={tPartial("range", {
+              min: formatMoney(partial.minimumAmount, order.currency),
+              max: formatMoney(partial.maximumAmount, order.currency),
+            })}
+          />
+        )}
+        {paidOnlinePart(order) && (
+          <BreakdownRow
+            label={tPartial("paidOnline")}
+            value={formatMoney(partial?.amountPaidOnline ?? 0, order.currency)}
+          />
+        )}
+        {partialCash && (
+          <BreakdownRow
+            label={partialCash.kind === "due" ? tPartial("balanceDue") : tPartial("paidInCash")}
+            value={formatMoney(partialCash.amount, order.currency)}
+          />
+        )}
 
         {/* Still to hand over in cash, and delivery money coming back — both the
             order's own figures. `deliveryFeeRefund.owed` is the "still owed"
@@ -1226,8 +1299,11 @@ function DeliveryCodeCard({
   const t = useTranslations("errors");
   const tCod = useTranslations("shop.orders.cod");
   const tDelivery = useTranslations("shop.delivery");
+  const tPartial = useTranslations("shop.partialPayment");
   /** Goods paid online; only the delivery fee is cash (ADR-A11 W-F). */
   const feeOnly = collection.kind === "delivery_fee";
+  /** A partial order's online part on this parcel, already off `expectedAmount`. */
+  const prepaid = collection.prepaidAmount ?? 0;
 
   // Tick the resend cooldown down to zero. Without this the button would show
   // "Wait 43s" and stay disabled forever, because nothing else re-renders this
@@ -1296,7 +1372,14 @@ function DeliveryCodeCard({
         </span>
       </div>
       {/* The server splits the cash; this only names the delivery part of it. */}
-      {!feeOnly && (collection.deliveryFeeAmount ?? 0) > 0 && (
+      {prepaid > 0 && (
+        <p className="muted" style={{ fontSize: 12, margin: "-4px 0 4px" }}>
+          {tPartial("prepaidOnParcel", { amount: formatMoney(prepaid, collection.currency) })}
+        </p>
+      )}
+      {/* "Of which delivery" cannot be said of a part-paid figure: the fee can be
+          larger than the cash left. */}
+      {!feeOnly && prepaid === 0 && (collection.deliveryFeeAmount ?? 0) > 0 && (
         <p className="muted" style={{ fontSize: 12, margin: "-4px 0 4px" }}>
           {tDelivery("ofWhichDelivery", {
             amount: formatMoney(collection.deliveryFeeAmount ?? 0, collection.currency),

@@ -29,7 +29,7 @@ const SUPPORT_NEW = "/shop/account/support/new";
  *
  * The amount is `netAmount`: what reaches the customer. Under it, the API's
  * `lines` explain why it is less than the refund — refund, payment provider
- * fee, transfer fee, you receive — or say the seller pays the fees. They are
+ * fee, transfer fee, you receive — or say the seller or the delivery company pays the fees. They are
  * shown verbatim: nothing here subtracts or multiplies. An API without `lines`
  * (before 2026-10-22) gets the one-sentence fee line instead.
  */
@@ -50,6 +50,7 @@ export function RefundPanel({ refund, style }: { refund: CustomerRefund; style?:
     switch (line.code) {
       case "refund_amount":
       case "fees_paid_by_seller":
+      case "fees_paid_by_delivery_company":
       case "you_receive":
         return t(`lines.${line.code}`);
       case "payment_fee":
@@ -129,7 +130,7 @@ export function RefundPanel({ refund, style }: { refund: CustomerRefund; style?:
         <div style={{ marginTop: 10, fontSize: 12.5, lineHeight: 1.45, color: "var(--text-body)" }}>
           {lines.map((line, i) => {
             const total = line.code === "you_receive";
-            const note = line.code === "fees_paid_by_seller";
+            const note = line.code === "fees_paid_by_seller" || line.code === "fees_paid_by_delivery_company";
             return (
               <div
                 key={`${line.code}-${i}`}

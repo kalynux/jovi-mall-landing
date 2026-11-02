@@ -67,6 +67,7 @@ export function PayLinkShare({
   amount,
   currency,
   reference,
+  chargeAmount,
   onUnavailable,
 }: {
   cartId: string;
@@ -74,10 +75,17 @@ export function PayLinkShare({
   currency: string;
   /** The order reference, so the shared message is recognisable. */
   reference?: string | null;
+  /**
+   * A partial order's online part, sent as `amount`. The message then names no
+   * figure: a charge already live keeps its own amount whatever is sent, and the
+   * page shows the real one. Absent on any other order, which takes no `amount`.
+   */
+  chargeAmount?: number;
   /** Cards were switched off after the sheet loaded: the fresh `details.offered`. */
   onUnavailable: (offered: PaymentProvider[] | null) => void;
 }) {
   const t = useTranslations("shop.pay.share");
+  const tPartial = useTranslations("shop.partialPayment");
   const tErrors = useTranslations("errors");
   /* The expiry is a wall-clock time, formatted in the app's locale rather than
      the browser's — `toLocaleTimeString(undefined, …)` reads the latter. */
@@ -104,7 +112,12 @@ export function PayLinkShare({
     try {
       // Card, for the reason in the header note. A card entry lists no
       // `channel` fields, so nothing is invented here to satisfy the shape.
-      const payment = await initiatePayment({ cartId, provider: "CARD", channel: {} });
+      const payment = await initiatePayment({
+        cartId,
+        provider: "CARD",
+        channel: {},
+        ...(chargeAmount !== undefined ? { amount: chargeAmount } : {}),
+      });
 
       const minted = await mintPayLink(payment.transactionId);
       const url = payLinkUrl(minted);
@@ -115,9 +128,14 @@ export function PayLinkShare({
         // who ordered and a bare link asking for card details is exactly the
         // shape of a scam. The reference is what lets them match it to the
         // message that asked them to pay.
-        text: reference
-          ? t("shareTextWithReference", { amount: formatMoney(amount, currency), reference })
-          : t("shareText", { amount: formatMoney(amount, currency) }),
+        text:
+          chargeAmount !== undefined
+            ? reference
+              ? tPartial("shareTextWithReference", { reference })
+              : tPartial("shareText")
+            : reference
+              ? t("shareTextWithReference", { amount: formatMoney(amount, currency), reference })
+              : t("shareText", { amount: formatMoney(amount, currency) }),
         url,
         dialogTitle: t("shareDialogTitle"),
       });
@@ -142,7 +160,7 @@ export function PayLinkShare({
     } finally {
       setBusy(false);
     }
-  }, [cartId, amount, currency, reference, flash, t, tErrors, refusal]);
+  }, [cartId, amount, chargeAmount, currency, reference, flash, t, tPartial, tErrors, refusal]);
 
   return (
     <div

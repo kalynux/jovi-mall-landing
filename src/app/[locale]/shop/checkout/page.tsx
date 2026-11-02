@@ -16,6 +16,12 @@ import { usePaymentOptions } from "@/components/shop/usePaymentOptions";
 import { useSavedPayment } from "@/components/shop/useSavedPayment";
 import { useChargeRefusal } from "@/components/shop/useChargeRefusal";
 import { CodUnavailableNotice } from "@/components/shop/CodUnavailableNotice";
+import {
+  PartialAmountField,
+  PartialPaymentNotice,
+  PartialPaymentWarning,
+  useRefusedAmount,
+} from "@/components/shop/PartialPayment";
 import { DeliveryMinimumNotice, fromShop } from "@/components/shop/DeliveryMinimumNotice";
 import { DeliveryQuoteLines } from "@/components/shop/DeliveryQuoteLines";
 import { RegionPicker } from "@/components/shop/RegionPicker";
@@ -29,6 +35,14 @@ import { useTranslations } from "next-intl";
 import { quoteCart } from "@/lib/shop/cart.api";
 import { codRefusalFromError, codRefusalOf, type CodRefusal } from "@/lib/shop/cash-on-delivery";
 import { checkout } from "@/lib/shop/orders.api";
+import {
+  isAlreadyPaid,
+  parsePartialAmount,
+  partialOfferOf,
+  partialRefusalFromError,
+  partialRefusalOf,
+  type PartialRefusalReason,
+} from "@/lib/shop/partial-payment";
 import { updateAddress } from "@/lib/shop/addresses.api";
 import { regionInvalidDetails, withRegion } from "@/lib/shop/address-region";
 import { getProfile } from "@/lib/shop/profile.api";
@@ -118,6 +132,20 @@ import type {
  * quote, `deliveryFeePayment: "cash_to_rider"` on checkout). Both amounts are the
  * quote's. The field is sent only when chosen, so an API that predates it never
  * sees a key it does not know.
+ *
+ * ── Pay part now (2026-11-01) ────────────────────────────────────────────────
+ *
+ * Off until every shop in the basket opts in, and then a row of its own on an
+ * online method: a provider is what takes the part paid now. Each quote says
+ * whether it is on offer (`partialPayment`), whatever method was sent. While it
+ * is chosen the order is priced as cash on delivery, so the quote is asked as
+ * that and the screen uses `partialPayment.total`.
+ *
+ * The orders are placed as `cash_on_delivery` with `partialPayment: true`, and
+ * `initiate` then carries one `amount` for the whole checkout. From there a failed
+ * charge leaves real orders waiting for their online part, so the shopper retries
+ * from the order, with a different amount if they want. `409 PAYMENT_ORDER_ALREADY_PAID`
+ * means the part went through.
  */
 
 function addressLine(address: SavedAddress): string {
@@ -150,6 +178,7 @@ export default function CheckoutPage() {
   const tMinimum = useTranslations("shop.deliveryMinimum");
   const tDelivery = useTranslations("shop.delivery");
   const tProvider = useTranslations("shop.payProvider");
+  const tPartial = useTranslations("shop.partialPayment");
 
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [addressId, setAddressId] = useState<string | null>(null);
@@ -165,6 +194,16 @@ export default function CheckoutPage() {
   const [fixingRegion, setFixingRegion] = useState(false);
   /** The shopper chose to hand the delivery fee to the rider in cash. */
   const [cashToRider, setCashToRider] = useState(false);
+  /** The shopper chose "pay part now". Kept through a change of row; in effect on an online one. */
+  const [partChosen, setPartChosen] = useState(false);
+  /** What the amount field holds. `null` until edited, so it follows the quote's minimum. */
+  const [partInput, setPartInput] = useState<string | null>(null);
+  /**
+   * A checkout refused as partial. Unlike cash on delivery's this outlives the
+   * re-quote, because the option would otherwise come straight back into the same
+   * refusal; choosing another address is what can change the answer.
+   */
+  const [partRefused, setPartRefused] = useState<PartialRefusalReason | null>(null);
   /** Bumped to re-quote when checkout refuses what the last quote offered. */
   const [quoteNonce, setQuoteNonce] = useState(0);
   /** A checkout refused as cash on delivery. Held until a quote gives its own verdict. */
@@ -174,6 +213,7 @@ export default function CheckoutPage() {
    * must not clear the refusal the shopper is still reading.
    */
   const keepError = useRef(false);
+  const partPanel = useRef<HTMLDivElement>(null);
 
   const isDigital = productType === "digital";
   const online = usePaymentOptions(status === "authenticated");
@@ -216,6 +256,19 @@ export default function CheckoutPage() {
   const payForm = useSavedPayment(payOptions, status === "authenticated");
   const { option, phone } = payForm;
   const isCod = option?.isCod === true;
+  /** Read from any quote: this verdict does not depend on the method the quote was asked for. */
+  const partOffer = useMemo(() => (partRefused ? null : partialOfferOf(quote)), [partRefused, quote]);
+  const payPart = partChosen && !isCod && partOffer !== null;
+  /** The amount to charge, or `null` while what is typed cannot be. */
+  const partAmount = useMemo(
+    () => (payPart && partOffer ? parsePartialAmount(partInput ?? String(partOffer.minimumAmount), partOffer) : null),
+    [payPart, partOffer, partInput]
+  );
+  /** Said once, to a shopper who had chosen it and lost it. See `PartialPaymentNotice`. */
+  const partGone = partChosen && !isCod && !partOffer ? (partRefused ?? partialRefusalOf(quote)) : null;
+  /** What the order will be placed as: a partial order is cash on delivery with a prepaid part. */
+  const orderMethod = isCod || payPart ? "cash_on_delivery" : "online";
+  const refusedAmount = useRefusedAmount(quote?.currency ?? "XAF");
 
   /* ── Saved addresses ───────────────────────────────────────────────────── */
 
@@ -254,7 +307,7 @@ export default function CheckoutPage() {
     // until the new quote answers.
     quoteCart(
       needsAddress && addressId ? addressId : undefined,
-      isCod ? "cash_on_delivery" : "online"
+      orderMethod
     )
       .then((result) => {
         if (cancelled) return;
@@ -278,7 +331,7 @@ export default function CheckoutPage() {
     return () => {
       cancelled = true;
     };
-  }, [status, addressId, count, needsAddress, isCod, tCheckout, quoteNonce]);
+  }, [status, addressId, count, needsAddress, orderMethod, tCheckout, quoteNonce]);
 
   /**
    * The cash-for-delivery offer, from a quote for the method on screen. Priced
@@ -313,6 +366,7 @@ export default function CheckoutPage() {
 
   const placeOrder = useCallback(async () => {
     if (!option) return;
+    if (payPart && partAmount === null) return;
     const charge = chargeRequest(option, phone);
     setError(null);
     setRegionFix(null);
@@ -337,9 +391,10 @@ export default function CheckoutPage() {
 
     try {
       const result = await checkout({
-        paymentMethod: isCod ? "cash_on_delivery" : "online",
+        paymentMethod: orderMethod,
         ...(needsAddress && addressId ? { deliveryAddressId: addressId } : {}),
         ...(payDeliveryInCash ? { deliveryFeePayment: "cash_to_rider" as const } : {}),
+        ...(payPart ? { partialPayment: true } : {}),
       });
 
       // The cart is cleared server-side on success; drop the local mirror so the
@@ -352,7 +407,11 @@ export default function CheckoutPage() {
         return;
       }
 
-      const payment = await initiatePayment({ cartId: result.cartId, ...charge });
+      const payment = await initiatePayment({
+        cartId: result.cartId,
+        ...charge,
+        ...(payPart && partAmount !== null ? { amount: partAmount } : {}),
+      });
 
       // The one moment this id is knowable — nothing on the order side ever
       // returns it. The order screen's "Check payment" reads it back to force a
@@ -366,6 +425,8 @@ export default function CheckoutPage() {
       // The delivery fee is still to hand over in cash; the success screen
       // says so, and the order carries the amount and the delivery code.
       if (payDeliveryInCash) params.set("rider", "1");
+      // And so is the rest of a partial order.
+      if (payPart) params.set("partial", "1");
       // The answer decides the next screen — never which company carries the
       // money. A card goes to the hosted page that confirms it; a code step or
       // a page to open is shown by the success screen, which also polls.
@@ -403,9 +464,17 @@ export default function CheckoutPage() {
       // fresh `/options`. (Staying here fell through to the empty-cart
       // redirect and dropped the shopper on /shop/cart with nothing said.)
       if (placedGroup) {
+        if (payPart && isAlreadyPaid(err)) {
+          router.push(`/shop/checkout/success?${new URLSearchParams({ group: placedGroup, paid: "1", partial: "1" })}`);
+          return;
+        }
         const params = new URLSearchParams({ group: placedGroup, failed: "1" });
         if (payDeliveryInCash) params.set("rider", "1");
-        params.set("reason", refusal(err) ?? translateError(tErrors, err, tCheckout("GENERIC")));
+        if (payPart) params.set("partial", "1");
+        // A refused amount is our rule, not something the provider said.
+        const amountProblem = payPart ? refusedAmount(err) : null;
+        if (amountProblem) params.set("ours", "1");
+        params.set("reason", amountProblem ?? refusal(err) ?? translateError(tErrors, err, tCheckout("GENERIC")));
         router.push(`/shop/checkout/success?${params}`);
         return;
       }
@@ -413,7 +482,15 @@ export default function CheckoutPage() {
       // Checkout is atomic, so nothing was created — but the cart may have
       // changed server-side, so re-read it rather than leaving a stale view.
       void refresh();
-      setError(checkoutError(tCheckout, tErrors, err, tMinimum, lines));
+      // Refused as a partial order: nothing was created and the row goes, so it is
+      // said as that, even where the code is one of cash on delivery's.
+      const partRefusal = payPart ? partialRefusalFromError(err) : null;
+      if (partRefusal) setPartRefused(partRefusal);
+      setError(
+        partRefusal
+          ? tCheckout("PARTIAL_PAYMENT_NOT_AVAILABLE")
+          : checkoutError(tCheckout, tErrors, err, tMinimum, lines)
+      );
       // A carrying company stopped taking the fee in cash since the quote (or
       // the basket changed). Nothing was created: fall back to paying delivery
       // with the order, and re-quote so the screen shows what is on offer now.
@@ -424,7 +501,7 @@ export default function CheckoutPage() {
       // the row goes, the form falls back to the online ones, the basket stays.
       const codRefusal = codRefusalFromError(err);
       if (codRefusal) setRefusedAtCheckout(codRefusal);
-      if (feeCashGone || codRefusal) {
+      if (feeCashGone || codRefusal || partRefusal) {
         keepError.current = true;
         setQuoteNonce((n) => n + 1);
       }
@@ -439,6 +516,10 @@ export default function CheckoutPage() {
     tProvider,
     refusal,
     isCod,
+    orderMethod,
+    payPart,
+    partAmount,
+    refusedAmount,
     payDeliveryInCash,
     needsAddress,
     addressId,
@@ -511,7 +592,8 @@ export default function CheckoutPage() {
   if (status !== "authenticated" || count === 0) return null;
 
   const currency = quote?.currency ?? lines[0]?.currency ?? "XAF";
-  const total = quote?.total ?? lines.reduce((sum, l) => sum + l.price * l.qty, 0);
+  // A partial order is priced as cash on delivery, and the offer carries that price.
+  const total = (payPart && partOffer ? partOffer.total : quote?.total) ?? lines.reduce((sum, l) => sum + l.price * l.qty, 0);
   /**
    * Without a quote a physical cart's delivery is unknown, so the local sum is
    * only a total BEFORE delivery — labelled as one, and kept off the pay button,
@@ -519,18 +601,25 @@ export default function CheckoutPage() {
    */
   const totalKnown = quote !== null || isDigital;
   /** What the pay button charges now: the items only when the fee goes to the rider. */
-  const dueNow = payDeliveryInCash && cashOffer ? cashOffer.amountDueOnline : total;
+  const dueNow =
+    payPart && partOffer
+      ? (partAmount ?? partOffer.minimumAmount)
+      : payDeliveryInCash && cashOffer
+        ? cashOffer.amountDueOnline
+        : total;
   const phoneOk = option !== null && paymentReady(option, phone);
   const addressOk = !needsAddress || Boolean(addressId);
   // Only a quote for the method on screen counts: a switch to COD re-quotes,
   // and until it answers the online verdict must not unblock the button.
   const shortOfMinimum =
     quote !== null &&
-    quote.paymentMethod === (isCod ? "cash_on_delivery" : "online") &&
+    quote.paymentMethod === orderMethod &&
     quote.meetsDeliveryMinimum === false;
+  // The amount can be charged, and the delivery lines above it are priced as what is being placed.
+  const partOk = !payPart || (partAmount !== null && quote?.paymentMethod === "cash_on_delivery");
   // `totalKnown` joins the gate since delivery can cost something: an order is
   // never placed against a total the screen did not show.
-  const canPay = phoneOk && addressOk && totalKnown && !shortOfMinimum && !placing;
+  const canPay = phoneOk && addressOk && totalKnown && !shortOfMinimum && partOk && !placing;
 
   return (
     <div className="mx-auto max-w-[760px] px-4 py-6 sm:px-6">
@@ -614,6 +703,8 @@ export default function CheckoutPage() {
                   key={address._id}
                   onClick={() => {
                     setAddressId(address._id);
+                    // A refusal as a partial order was about the previous drop-off too.
+                    setPartRefused(null);
                     // The region refusal was about the previous choice.
                     if (regionFix && regionFix.addressId !== address._id) setRegionFix(null);
                   }}
@@ -701,6 +792,72 @@ export default function CheckoutPage() {
         <p className="muted" style={{ fontSize: 12.5, marginBottom: 20, lineHeight: 1.5 }}>
           {t("codNote")}
         </p>
+      )}
+
+      {partGone && <PartialPaymentNotice reason={partGone} />}
+
+      {/* Part online now, the rest in cash at the door — offered only while the
+          quote says every shop accepts it, and on an online row, because a provider
+          takes the part paid now. Choosing it rules out cash for the delivery fee. */}
+      {partOffer && option && !isCod && (
+        <div
+          ref={partPanel}
+          style={{
+            padding: 13,
+            marginBottom: 20,
+            scrollMarginTop: 12,
+            borderRadius: "var(--radius-md)",
+            background: "var(--surface)",
+            border: payPart ? "1.5px solid var(--brand)" : "1.5px solid var(--border)",
+          }}
+        >
+          <label
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 11,
+              cursor: placing ? "default" : "pointer",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={payPart}
+              disabled={placing}
+              onChange={(e) => {
+                setPartChosen(e.target.checked);
+                if (!e.target.checked) return;
+                setCashToRider(false);
+                // The warning opens below the fold on a phone, and the pay button
+                // is sticky: bring it on screen, so it is read before paying.
+                requestAnimationFrame(() => partPanel.current?.scrollIntoView({ block: "start" }));
+              }}
+              style={{ marginTop: 3, accentColor: "var(--brand)", width: 16, height: 16, flexShrink: 0 }}
+            />
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: "block", fontWeight: 700, fontSize: 14, color: "var(--text-strong)" }}>
+                {tPartial("optionTitle")}
+              </span>
+              <span className="muted" style={{ display: "block", fontSize: 12.5, lineHeight: 1.5, marginTop: 2 }}>
+                {tPartial("optionBody", {
+                  min: formatMoney(partOffer.minimumAmount, currency),
+                  max: formatMoney(partOffer.maximumAmount, currency),
+                })}
+              </span>
+            </span>
+          </label>
+          {payPart && (
+            <div style={{ marginTop: 12 }}>
+              <PartialAmountField
+                limits={partOffer}
+                value={partInput ?? String(partOffer.minimumAmount)}
+                onChange={setPartInput}
+                currency={currency}
+                disabled={placing}
+              />
+              <PartialPaymentWarning style={{ marginTop: 12 }} />
+            </div>
+          )}
+        </div>
       )}
 
       {/* Items online now, the delivery fee in cash to the rider — offered only
@@ -792,6 +949,12 @@ export default function CheckoutPage() {
               <SummaryRow label={tDelivery("cashForRider")} value={formatMoney(cashOffer.amountDueToRider, currency)} />
             </>
           )}
+          {payPart && partAmount !== null && (
+            <>
+              <SummaryRow label={tDelivery("payNow")} value={formatMoney(partAmount, currency)} />
+              <SummaryRow label={tPartial("cashAtDelivery")} value={formatMoney(total - partAmount, currency)} />
+            </>
+          )}
         </div>
       </div>
 
@@ -813,7 +976,7 @@ export default function CheckoutPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 11.5, color: "var(--text-muted)", fontWeight: 600 }}>
-              {payDeliveryInCash ? tDelivery("payNow") : totalKnown ? t("total") : tDelivery("totalBeforeDelivery")}
+              {payDeliveryInCash || payPart ? tDelivery("payNow") : totalKnown ? t("total") : tDelivery("totalBeforeDelivery")}
             </div>
             <div style={{ fontSize: 20, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
               {formatMoney(dueNow, currency)}
@@ -832,6 +995,11 @@ export default function CheckoutPage() {
                   ? t("enterValidNumber")
                   : shortOfMinimum
                     ? tMinimum("buttonHint")
+                    : payPart && partOffer && partAmount === null
+                      ? tPartial("amountHint", {
+                          min: formatMoney(partOffer.minimumAmount, currency),
+                          max: formatMoney(partOffer.maximumAmount, currency),
+                        })
                     : !totalKnown
                       ? tDelivery("calculating")
                       : undefined

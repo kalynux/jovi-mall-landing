@@ -64,6 +64,9 @@ const AGGREGATE_ICON: Record<NotificationAggregate, IconName> = {
  */
 function iconFor(n: CustomerNotification): IconName {
   if (/^(order|booking)\.(refund\.|refunded$)/.test(n.type)) return "hand-coins";
+  // A partial order's online part arrived. Money, though its aggregate is the
+  // order; its title and body are the API's, and its button is an order link.
+  if (n.type === "order.prepayment.received") return "wallet";
   return AGGREGATE_ICON[n.aggregateType] ?? "bell";
 }
 

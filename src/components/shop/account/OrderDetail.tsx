@@ -10,6 +10,7 @@ import { Badge, Button, EmptyState, Icon, VerifiedBadge } from "@/components/sho
 import { Link, useRouter } from "@/i18n/navigation";
 import { getOrder } from "@/lib/shop/orders.api";
 import { isCod, paymentChip } from "@/lib/shop/order-status";
+import { owesOnlinePart } from "@/lib/shop/partial-payment";
 import { orderGroupPath, orderPath, orderTrackingPath } from "@/lib/shop/shop.routes";
 import { useApiResource } from "@/lib/shop/useApiResource";
 import { Shipments, VendorOrderCard } from "@/components/shop/account/OrderGroupDetail";
@@ -89,6 +90,7 @@ function OrderHeader({ order }: { order: CustomerOrder }) {
   const router = useRouter();
   const t = useTranslations("shop.orders");
   const tTracking = useTranslations("shop.tracking");
+  const tPartial = useTranslations("shop.partialPayment");
   // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
   const tKey = useTranslations();
   const payment = paymentChip(order.paymentStatus);
@@ -104,11 +106,15 @@ function OrderHeader({ order }: { order: CustomerOrder }) {
    * subtly different way to pay.
    *
    * COD is excluded for the reason the group screen excludes it: cash is settled
-   * at the door, and `initiate` refuses with `422 PAYMENT_ORDER_IS_COD`.
+   * at the door, and `initiate` refuses with `422 PAYMENT_ORDER_IS_COD`. A partial
+   * order reads as COD and still owes its online part, which is one amount for the
+   * whole checkout, so it takes the same route.
    */
+  const owesPart = owesOnlinePart(order);
   const unpaid =
-    !isCod(order) &&
-    (order.paymentStatus === "AWAITING_PAYMENT" || order.paymentStatus === "pending");
+    owesPart ||
+    (!isCod(order) &&
+      (order.paymentStatus === "AWAITING_PAYMENT" || order.paymentStatus === "pending"));
 
   // Resolved once, so the two places that need it are not each re-proving that
   // `cartId` is present. Null is a legitimate answer — see the note below.
@@ -163,10 +169,10 @@ function OrderHeader({ order }: { order: CustomerOrder }) {
               margin: "0 0 10px",
             }}
           >
-            {t("unpaidOnGroup")}
+            {owesPart ? tPartial("unpaidOnGroup") : t("unpaidOnGroup")}
           </p>
           <Button block leadingIcon="wallet" onClick={() => router.push(groupHref)}>
-            {t("goToPayment")}
+            {owesPart ? tPartial("finishPaying") : t("goToPayment")}
           </Button>
         </div>
       )}

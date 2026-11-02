@@ -110,6 +110,14 @@ const LINED: Record<string, CustomerRefund> = {
     feesPaidBy: "seller",
     lines: [line("refund_amount", 10000), line("fees_paid_by_seller", 0), line("you_receive", 10000)],
   },
+  deliveryCompany: {
+    ...MOMO,
+    grossAmount: 6000,
+    feeAmount: 0,
+    netAmount: 6000,
+    feesPaidBy: "delivery_company",
+    lines: [line("refund_amount", 6000), line("fees_paid_by_delivery_company", 0), line("you_receive", 6000)],
+  },
 };
 
 test("the lines are shown as sent, and they add up to what the customer receives", () => {
@@ -131,6 +139,12 @@ test("a seller-paid refund lists the note and the full amount", () => {
   const lines = refundLines(LINED.seller)!;
   assert.ok(lines.some((l) => l.code === "fees_paid_by_seller"));
   assert.equal(lines.at(-1)!.amount, 10000);
+});
+
+test("a refund the delivery company pays for lists its note and the full amount", () => {
+  const lines = refundLines(LINED.deliveryCompany)!;
+  assert.ok(lines.some((l) => l.code === "fees_paid_by_delivery_company"));
+  assert.equal(lines.at(-1)!.amount, 6000);
 });
 
 test("lines replace the one-sentence fee line", () => {

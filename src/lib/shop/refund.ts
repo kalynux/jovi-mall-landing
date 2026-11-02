@@ -46,6 +46,8 @@ export type RefundLineCode =
   | "payment_fee"
   | "transfer_fee"
   | "fees_paid_by_seller"
+  /** 🆕 2026-11-01 — a partial order's parcel came back through the delivery company's fault. */
+  | "fees_paid_by_delivery_company"
   | "you_receive";
 
 export interface RefundLine {
@@ -53,7 +55,7 @@ export interface RefundLine {
   code: RefundLineCode | (string & {});
   /** The API's English label. */
   label: string;
-  /** Signed: a fee is negative, `fees_paid_by_seller` is 0 (a note, not money). */
+  /** Signed: a fee is negative, the two `fees_paid_by_*` are 0 (a note, not money). */
   amount: number;
   /** The percent behind a fee line, else `null`. */
   percent: number | null;
@@ -72,8 +74,12 @@ export interface CustomerRefund {
   paymentFeePercent?: number;
   /** 🆕 2026-10-22 — to send the money back; 0 for a card refund. */
   transferFee?: number;
-  /** 🆕 2026-10-22 — `seller` when the seller cancelled after payment: the customer receives everything. */
-  feesPaidBy?: "customer" | "seller";
+  /**
+   * 🆕 2026-10-22 — `seller` when the seller cancelled after payment, and since
+   * 2026-11-01 `delivery_company` when a partial order's parcel came back through
+   * its fault: either way the customer receives everything.
+   */
+  feesPaidBy?: "customer" | "seller" | "delivery_company";
   /**
    * 🆕 2026-10-22 — the refund line by line, adding up: refund − fees = you
    * receive. Optional until the backend that sends it is deployed.
@@ -121,7 +127,8 @@ export const REFUND_CHIP: Record<RefundStatus, { tone: Tone; icon: IconName }> =
  * The lines to list under the refund, or `null` when they would say nothing
  * the headline amount does not. The API only sends a fee line where that fee
  * happened (no transfer line on a card refund, no payment line on cash on
- * delivery) and a `fees_paid_by_seller` note when the seller carries them, so
+ * delivery) and a `fees_paid_by_seller` or `fees_paid_by_delivery_company` note
+ * when one of them carries them, so
  * the list is rendered as sent — never filtered, re-ordered or summed here.
  */
 export function refundLines(refund: CustomerRefund): RefundLine[] | null {

@@ -39,11 +39,18 @@ import type {
  * only while the quote's `deliveryFeeCash.available` is true — otherwise
  * `422 DELIVERY_FEE_CASH_NOT_AVAILABLE` and nothing is created. Omitted means
  * `with_order`.
+ *
+ * `partialPayment: true` with `paymentMethod: "cash_on_delivery"` creates orders
+ * that wait for their online part, paid next at `POST /api/payments/initiate` with
+ * an `amount` — see `partial-payment.ts`. `422 PARTIAL_PAYMENT_NOT_AVAILABLE`, or
+ * one of the `COD_*` codes, and nothing is created. It cannot be combined with
+ * `cash_to_rider`.
  */
 export async function checkout(input: {
   paymentMethod?: "online" | "cash_on_delivery";
   deliveryAddressId?: string;
   deliveryFeePayment?: DeliveryFeePayment;
+  partialPayment?: boolean;
 }): Promise<CheckoutResult> {
   return apiFetch<CheckoutResult>("/api/customer/orders/checkout", {
     method: "POST",
@@ -100,8 +107,8 @@ export async function listOrderShipments(orderId: string): Promise<CustomerShipm
 /**
  * POST /api/customer/orders/:id/cancel
  *
- * Only pre-shipment (`pending`/`processing`) **and** unpaid orders. A paid order
- * returns `422 ORDER_CANCEL_REQUIRES_REFUND` — this endpoint performs no refund.
+ * Only pre-shipment (`pending`/`processing`) **and** unpaid orders. A paid order,
+ * or a partial one whose online part is paid, returns `422 ORDER_CANCEL_REQUIRES_REFUND` — this endpoint performs no refund.
  * The vendor's cancellation policy can also refuse it (`CANCELLATION_NOT_ALLOWED`).
  */
 export async function cancelOrder(

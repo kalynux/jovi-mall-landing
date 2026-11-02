@@ -52,6 +52,7 @@ type Phase = "pending" | "paid" | "failed" | "cod";
 export default function SuccessPage() {
   const t = useTranslations("shop.checkout");
   const tDelivery = useTranslations("shop.delivery");
+  const tPartial = useTranslations("shop.partialPayment");
   const router = useRouter();
   const [group, setGroup] = useState<string | null>(null);
   const [ussd, setUssd] = useState<string | null>(null);
@@ -78,6 +79,13 @@ export default function SuccessPage() {
    * hand over.
    */
   const [rider, setRider] = useState(false);
+  /**
+   * The charge was a partial order's online part (2026-11-01), so whatever it
+   * came to, cash is still owed at the door. The figures live on the order.
+   */
+  const [partial, setPartial] = useState(false);
+  /** `reason` is this app's sentence, so it is not introduced as the provider's. */
+  const [reasonIsOurs, setReasonIsOurs] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -91,9 +99,17 @@ export default function SuccessPage() {
     setReason(params.get("reason"));
     setRedirect(params.get("redirect"));
     setRider(params.get("rider") === "1");
+    setPartial(params.get("partial") === "1");
+    setReasonIsOurs(params.get("ours") === "1");
 
     if (params.get("cod") === "1") {
       setPhase("cod");
+      return;
+    }
+    // `initiate` said this was already paid (`409 PAYMENT_ORDER_ALREADY_PAID`):
+    // good news, with no fresh transaction to poll.
+    if (params.get("paid") === "1") {
+      setPhase("paid");
       return;
     }
     // The gateway already refused, on the `initiate` response itself. Polling
@@ -266,9 +282,11 @@ export default function SuccessPage() {
             textAlign: "left",
           }}
         >
-          <p className="ds-overline" style={{ marginBottom: 6 }}>
-            {t("success.providerSaid")}
-          </p>
+          {!reasonIsOurs && (
+            <p className="ds-overline" style={{ marginBottom: 6 }}>
+              {t("success.providerSaid")}
+            </p>
+          )}
           <p style={{ fontSize: 13, lineHeight: 1.55, color: "var(--text-body)", margin: 0 }}>
             {reason}
           </p>
@@ -370,6 +388,29 @@ export default function SuccessPage() {
           <Icon name="banknote" size={17} style={{ color: "var(--text-muted)", flexShrink: 0, marginTop: 1 }} />
           <p style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--text-body)", margin: 0 }}>
             {tDelivery.rich("riderInfo", { b: (chunks) => <strong>{chunks}</strong> })}
+          </p>
+        </div>
+      )}
+
+      {partial && phase !== "cod" && (
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 360,
+            marginTop: 10,
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-md)",
+            padding: "13px 15px",
+            textAlign: "left",
+            display: "flex",
+            gap: 10,
+          }}
+        >
+          <Icon name="banknote" size={17} style={{ color: "var(--text-muted)", flexShrink: 0, marginTop: 1 }} />
+          <p style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--text-body)", margin: 0 }}>
+            {phase === "failed"
+              ? tPartial("retryInfo")
+              : tPartial.rich("successInfo", { b: (chunks) => <strong>{chunks}</strong> })}
           </p>
         </div>
       )}

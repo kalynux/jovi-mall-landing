@@ -895,7 +895,12 @@
         "COMBINED_DELIVERY_REQUEST_NOT_FOUND": "Cette demande de prix groupé n’existe plus.",
         "COMBINED_DELIVERY_REQUEST_INELIGIBLE": "Un prix groupé demande au moins deux colis avec la même société de livraison, pas encore enlevés et sans autre changement de frais en attente.",
         "COMBINED_DELIVERY_REQUEST_ALREADY_OPEN": "Vous avez déjà demandé un prix groupé à cette société de livraison pour cette commande.",
-        "COMBINED_DELIVERY_REQUEST_NOT_OPEN": "Cette demande a déjà reçu une réponse ou a été annulée."
+        "COMBINED_DELIVERY_REQUEST_NOT_OPEN": "Cette demande a déjà reçu une réponse ou a été annulée.",
+        "PARTIAL_PAYMENT_NOT_AVAILABLE": "Le paiement en partie en ligne et en partie en espèces n’est pas disponible pour cette commande.",
+        "PARTIAL_PAYMENT_AMOUNT_REQUIRED": "Indiquez combien vous voulez payer en ligne maintenant.",
+        "PARTIAL_PAYMENT_AMOUNT_OUT_OF_RANGE": "Ce montant est en dehors de ce qui peut être payé en ligne pour cette commande.",
+        "PARTIAL_PAYMENT_NOT_APPLICABLE": "Cette commande ne se paie pas en plusieurs parties : aucun montant ne peut être choisi.",
+        "ORDER_CANCEL_REQUIRES_REFUND": "Cette commande a été payée : elle ne peut donc pas être annulée ici. Contactez le support pour demander un remboursement."
     },
     "checkout": {
         "errors": {
@@ -924,7 +929,8 @@
             "ORDER_BELOW_DELIVERY_MINIMUM_UNKNOWN": "Vos articles pris {from} n'atteignent pas le minimum pour la livraison. Ajoutez d'autres articles de ce vendeur et réessayez — rien n'a été débité.",
             "ORDER_BELOW_DELIVERY_MINIMUM_UNREACHABLE": "Vos articles pris {from} ne peuvent pas être livrés pour le moment. Retirez-les et réessayez — rien n'a été débité.",
             "ORDER_BELOW_DELIVERY_MINIMUM_COD_UNREACHABLE": "Vos articles pris {from} ne peuvent pas être payés à la livraison. Payez en ligne, ou retirez-les — rien n'a été débité.",
-            "DELIVERY_FEE_CASH_NOT_AVAILABLE": "Le paiement des frais de livraison en espèces n’est plus disponible pour cette commande. Rien n’a été commandé ni débité — la livraison est maintenant payée avec votre commande ; vérifiez le total et réessayez."
+            "DELIVERY_FEE_CASH_NOT_AVAILABLE": "Le paiement des frais de livraison en espèces n’est plus disponible pour cette commande. Rien n’a été commandé ni débité — la livraison est maintenant payée avec votre commande ; vérifiez le total et réessayez.",
+            "PARTIAL_PAYMENT_NOT_AVAILABLE": "Le paiement d’une partie maintenant n’est plus disponible pour cette commande. Rien n’a été commandé ni débité. Choisissez un autre moyen de paiement."
         }
     },
     "errorPage": {
@@ -3567,7 +3573,8 @@
                 "payment_fee": "Frais du prestataire de paiement, retenus lors de votre paiement ({percent} %)",
                 "transfer_fee": "Frais de transfert pour vous renvoyer l'argent ({percent} %)",
                 "fees_paid_by_seller": "Les frais sont payés par le vendeur",
-                "you_receive": "Vous recevez"
+                "you_receive": "Vous recevez",
+                "fees_paid_by_delivery_company": "Les frais sont payés par la société de livraison"
             },
             "toNumber": "Vers le {destination}",
             "toCard": "Sur votre carte",
@@ -3608,6 +3615,46 @@
                 "delivery": "Protection Wi-Mall : vous disposez d'un délai limité après la livraison pour signaler un problème. <link>Politique de retours</link>",
                 "service": "Protection Wi-Mall : vous disposez d'un délai limité après la prestation pour signaler un problème. <link>Politique de retours</link>"
             }
+        },
+        "partialPayment": {
+            "optionTitle": "Payer une partie maintenant",
+            "optionBody": "Payez entre {min} et {max} en ligne maintenant, et le reste en espèces à la livraison.",
+            "amountLabel": "Montant à payer maintenant ({currency})",
+            "amountHint": "Entre {min} et {max}",
+            "cashLater": "Vous payez ensuite {amount} en espèces à la livraison.",
+            "cashAtDelivery": "En espèces à la livraison",
+            "warningTitle": "Avant de payer",
+            "warningBody": "Si vous refusez le colis, si vous êtes absent ou injoignable et qu’il est retourné, les frais de retour de la société de livraison sont retenus sur ce que vous avez payé, et le reste vous est remboursé, moins les frais de paiement et de transfert. Si le vendeur ou la société de livraison est en faute, vous récupérez tout ce que vous avez payé.",
+            "warningReview": "Chaque remboursement est d’abord examiné par une personne : il n’est donc pas immédiat.",
+            "unavailable": {
+                "digital_items": "Le paiement d’une partie maintenant n’est pas disponible pour les produits numériques.",
+                "customer_restricted": "Le paiement d’une partie maintenant n’est pas disponible sur votre compte. Choisissez un autre moyen de paiement, ou <support>contactez le support</support>.",
+                "vendor_not_accepted": "Un vendeur de votre panier n’accepte pas le paiement d’une partie maintenant. Choisissez un autre moyen de paiement.",
+                "agency_not_supported": "La société de livraison de cette commande n’accepte pas le paiement d’une partie maintenant. Choisissez un autre moyen de paiement.",
+                "order_amount_exceeds_limit": "Cette commande est trop élevée pour le paiement d’une partie maintenant. Choisissez un autre moyen de paiement.",
+                "order_too_small": "Cette commande est trop petite pour le paiement d’une partie maintenant. Choisissez un autre moyen de paiement.",
+                "below_delivery_minimum": "Cette commande n’atteint pas le minimum de livraison du vendeur pour le paiement d’une partie maintenant. Choisissez un autre moyen de paiement.",
+                "unknown": "Le paiement d’une partie maintenant n’est pas disponible pour cette commande. Choisissez un autre moyen de paiement."
+            },
+            "sheetIntro": "Votre commande attend votre part : rien n’est préparé ni envoyé avant son paiement. Le reste se paie en espèces à la livraison.",
+            "liveChargeNote": "Si une demande de paiement d’un essai précédent est encore sur votre téléphone, c’est elle et son montant qui comptent. Un nouveau montant s’applique une fois qu’elle a échoué.",
+            "owedBadge": "Part en ligne à payer",
+            "restInCashBadge": "Reste en espèces à la livraison",
+            "unpaidNote": "Cette commande attend votre part du paiement. Rien n’est préparé ni envoyé avant son paiement, et elle est annulée automatiquement si elle reste impayée.",
+            "unpaidOnGroup": "Cette commande attend votre part du paiement. Un seul paiement couvre tout le panier : il se fait donc sur la commande dont celle-ci fait partie.",
+            "finishPaying": "Terminer le paiement",
+            "dueOnline": "À payer en ligne",
+            "range": "{min} à {max}",
+            "paidOnline": "Payé en ligne",
+            "balanceDue": "Solde à payer en espèces",
+            "paidInCash": "Payé en espèces",
+            "prepaidOnParcel": "{amount} déjà payés en ligne pour ce colis.",
+            "received": "Paiement reçu. Le reste se paie en espèces à la livraison.",
+            "successInfo": "<b>Le reste se paie en espèces à la livraison.</b> Le montant et votre code de livraison sont sur votre commande.",
+            "retryInfo": "Vous pouvez réessayer avec un autre montant. Si votre part reste impayée, la commande est annulée automatiquement.",
+            "amountOutOfRange": "Le montant doit être compris entre {min} et {max}.",
+            "shareText": "Merci de payer ma commande Wi-Mall. Le montant est sur la page :",
+            "shareTextWithReference": "Merci de payer la commande {reference} sur Wi-Mall. Le montant est sur la page :"
         }
     },
     "cookieNotice": {

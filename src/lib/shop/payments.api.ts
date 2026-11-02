@@ -190,9 +190,16 @@ export function nextPaymentStep(instructions: PaymentInstructions | undefined): 
  * so at checkout, and `initiatePaymentForCart` already filters to the orders
  * that are still payable — so one cancelled order inside a group does not need
  * a per-order call to avoid being re-charged.
+ *
+ * `amount` is a partial checkout's online part, and only that: required there
+ * (`422 PARTIAL_PAYMENT_AMOUNT_REQUIRED`), inside its limits
+ * (`422 PARTIAL_PAYMENT_AMOUNT_OUT_OF_RANGE`) and refused anywhere else
+ * (`422 PARTIAL_PAYMENT_NOT_APPLICABLE`). ⚠ While a charge is live this hands back
+ * THAT charge whatever amount is sent, and the answer does not say which amount
+ * it holds — a new amount applies only once the live one has failed.
  */
 export async function initiatePayment(
-  input: { cartId: string } & ChargeRequest
+  input: { cartId: string; amount?: number } & ChargeRequest
 ): Promise<InitiatePaymentResponse> {
   return apiFetch<InitiatePaymentResponse>("/api/payments/initiate", {
     method: "POST",

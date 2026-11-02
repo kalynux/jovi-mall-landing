@@ -895,7 +895,12 @@
         "COMBINED_DELIVERY_REQUEST_NOT_FOUND": "Esta solicitud de precio conjunto ya no existe.",
         "COMBINED_DELIVERY_REQUEST_INELIGIBLE": "Un precio conjunto necesita al menos dos paquetes con la misma empresa de reparto, aún sin recoger y sin otro cambio de coste pendiente.",
         "COMBINED_DELIVERY_REQUEST_ALREADY_OPEN": "Ya pediste un precio conjunto a esta empresa de reparto para este pedido.",
-        "COMBINED_DELIVERY_REQUEST_NOT_OPEN": "Esta solicitud ya fue respondida o cancelada."
+        "COMBINED_DELIVERY_REQUEST_NOT_OPEN": "Esta solicitud ya fue respondida o cancelada.",
+        "PARTIAL_PAYMENT_NOT_AVAILABLE": "Pagar una parte en línea y otra en efectivo no está disponible para este pedido.",
+        "PARTIAL_PAYMENT_AMOUNT_REQUIRED": "Indica cuánto quieres pagar en línea ahora.",
+        "PARTIAL_PAYMENT_AMOUNT_OUT_OF_RANGE": "Ese importe está fuera de lo que se puede pagar en línea para este pedido.",
+        "PARTIAL_PAYMENT_NOT_APPLICABLE": "Este pedido no se paga por partes, así que no se puede elegir un importe.",
+        "ORDER_CANCEL_REQUIRES_REFUND": "Este pedido ya está pagado, así que no se puede cancelar aquí. Contacta con soporte para pedir un reembolso."
     },
     "checkout": {
         "errors": {
@@ -924,7 +929,8 @@
             "ORDER_BELOW_DELIVERY_MINIMUM_UNKNOWN": "Tus artículos {from} no alcanzan el mínimo para el envío. Añade más artículos de ese vendedor e inténtalo de nuevo — no se ha cobrado nada.",
             "ORDER_BELOW_DELIVERY_MINIMUM_UNREACHABLE": "Tus artículos {from} no se pueden enviar por ahora. Quítalos e inténtalo de nuevo — no se ha cobrado nada.",
             "ORDER_BELOW_DELIVERY_MINIMUM_COD_UNREACHABLE": "Tus artículos {from} no se pueden pagar contra entrega. Paga en línea o quítalos — no se ha cobrado nada.",
-            "DELIVERY_FEE_CASH_NOT_AVAILABLE": "Pagar el envío en efectivo ya no está disponible para este pedido. No se ha pedido ni cobrado nada — ahora el envío se paga con tu pedido; revisa el total y vuelve a intentarlo."
+            "DELIVERY_FEE_CASH_NOT_AVAILABLE": "Pagar el envío en efectivo ya no está disponible para este pedido. No se ha pedido ni cobrado nada — ahora el envío se paga con tu pedido; revisa el total y vuelve a intentarlo.",
+            "PARTIAL_PAYMENT_NOT_AVAILABLE": "Pagar una parte ahora ya no está disponible para este pedido. No se ha pedido ni cobrado nada. Elige otra forma de pago."
         }
     },
     "errorPage": {
@@ -3567,7 +3573,8 @@
                 "payment_fee": "Comisión del proveedor de pago, retenida cuando pagaste ({percent} %)",
                 "transfer_fee": "Comisión de transferencia para devolverte el dinero ({percent} %)",
                 "fees_paid_by_seller": "Las comisiones las paga el vendedor",
-                "you_receive": "Recibes"
+                "you_receive": "Recibes",
+                "fees_paid_by_delivery_company": "Las comisiones las paga la empresa de entrega"
             },
             "toNumber": "Al {destination}",
             "toCard": "A tu tarjeta",
@@ -3608,6 +3615,46 @@
                 "delivery": "Protección Wi-Mall: tienes un plazo limitado tras la entrega para informar de un problema. <link>Política de devoluciones</link>",
                 "service": "Protección Wi-Mall: tienes un plazo limitado tras el servicio para informar de un problema. <link>Política de devoluciones</link>"
             }
+        },
+        "partialPayment": {
+            "optionTitle": "Pagar una parte ahora",
+            "optionBody": "Paga entre {min} y {max} en línea ahora, y el resto en efectivo en la entrega.",
+            "amountLabel": "Importe a pagar ahora ({currency})",
+            "amountHint": "Entre {min} y {max}",
+            "cashLater": "Después pagas {amount} en efectivo en la entrega.",
+            "cashAtDelivery": "En efectivo en la entrega",
+            "warningTitle": "Antes de pagar",
+            "warningBody": "Si rechazas el paquete, estás ausente o no se te puede localizar y se devuelve, la tarifa de devolución de la empresa de entrega se descuenta de lo que pagaste, y el resto se reembolsa menos las comisiones de pago y de transferencia. Si la culpa es del vendedor o de la empresa de entrega, recuperas todo lo que pagaste.",
+            "warningReview": "Cada reembolso lo revisa primero una persona, así que no es inmediato.",
+            "unavailable": {
+                "digital_items": "Pagar una parte ahora no está disponible para productos digitales.",
+                "customer_restricted": "Pagar una parte ahora no está disponible en tu cuenta. Elige otra forma de pago o <support>contacta con soporte</support>.",
+                "vendor_not_accepted": "Un vendedor de tu carrito no acepta pagar una parte ahora. Elige otra forma de pago.",
+                "agency_not_supported": "La empresa de entrega de este pedido no acepta pagar una parte ahora. Elige otra forma de pago.",
+                "order_amount_exceeds_limit": "Este pedido es demasiado grande para pagar una parte ahora. Elige otra forma de pago.",
+                "order_too_small": "Este pedido es demasiado pequeño para pagar una parte ahora. Elige otra forma de pago.",
+                "below_delivery_minimum": "Este pedido no alcanza el mínimo de entrega del vendedor para pagar una parte ahora. Elige otra forma de pago.",
+                "unknown": "Pagar una parte ahora no está disponible para este pedido. Elige otra forma de pago."
+            },
+            "sheetIntro": "Tu pedido espera tu parte: no se prepara ni se envía nada hasta que esté pagada. El resto se paga en efectivo en la entrega.",
+            "liveChargeNote": "Si aún tienes en el teléfono una solicitud de pago de un intento anterior, cuentan esa solicitud y su importe. Un importe nuevo se aplica cuando haya fallado.",
+            "owedBadge": "Parte en línea por pagar",
+            "restInCashBadge": "Resto en efectivo en la entrega",
+            "unpaidNote": "Este pedido espera tu parte del pago. No se prepara ni se envía nada hasta que esté pagada, y se cancela automáticamente si sigue sin pagar.",
+            "unpaidOnGroup": "Este pedido espera tu parte del pago. Un solo pago cubre toda la cesta, así que se hace en el pedido al que pertenece este.",
+            "finishPaying": "Terminar de pagar",
+            "dueOnline": "A pagar en línea",
+            "range": "{min} a {max}",
+            "paidOnline": "Pagado en línea",
+            "balanceDue": "Saldo a pagar en efectivo",
+            "paidInCash": "Pagado en efectivo",
+            "prepaidOnParcel": "{amount} ya pagados en línea por este paquete.",
+            "received": "Pago recibido. El resto se paga en efectivo en la entrega.",
+            "successInfo": "<b>El resto se paga en efectivo en la entrega.</b> El importe y tu código de entrega están en tu pedido.",
+            "retryInfo": "Puedes volver a intentarlo con otro importe. Si tu parte sigue sin pagar, el pedido se cancela automáticamente.",
+            "amountOutOfRange": "El importe debe estar entre {min} y {max}.",
+            "shareText": "Por favor, paga mi pedido de Wi-Mall. El importe está en la página:",
+            "shareTextWithReference": "Por favor, paga el pedido {reference} en Wi-Mall. El importe está en la página:"
         }
     },
     "cookieNotice": {

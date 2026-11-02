@@ -287,7 +287,7 @@ export interface OrderItem {
  */
 export interface CodCollection {
   shipmentId: string;
-  /** The cash to hand over: `itemsAmount + deliveryFeeAmount`. */
+  /** The cash to hand over: `itemsAmount + deliveryFeeAmount − prepaidAmount`. */
   expectedAmount: number;
   /**
    * `delivery_fee` — the goods were paid online and only the delivery fee is
@@ -299,6 +299,8 @@ export interface CodCollection {
   itemsAmount?: number;
   /** The delivery fee's share of `expectedAmount` — 0 when the shop pays delivery. */
   deliveryFeeAmount?: number;
+  /** What a partial order already paid online for this parcel. Not in the cash; 0 otherwise. */
+  prepaidAmount?: number;
   currency: string;
   status: "pending" | "collected" | "cancelled";
   collectedAt: string | null;
@@ -383,6 +385,25 @@ export interface OrderDeliveryFee {
   paidInCash?: boolean;
 }
 
+/**
+ * Paid part online, part in cash (2026-11-01). `null` on every other order, and
+ * the only thing that tells one from plain cash on delivery: `paymentMethod`
+ * reads `cash_on_delivery` on both. See `lib/shop/partial-payment.ts`.
+ *
+ * A row of the orders list carries only `paidAt`; the group and single reads
+ * carry all of it.
+ */
+export interface OrderPartialPayment {
+  /** `null` while the online part is owed (`paymentStatus` is `AWAITING_PAYMENT`). */
+  paidAt: string | null;
+  minimumAmount?: number;
+  maximumAmount?: number;
+  /** 0 until `paidAt`. */
+  amountPaidOnline?: number;
+  /** `total − amountPaidOnline` for the order's whole life. "Still due" is `partialCashOf`. */
+  balanceDue?: number;
+}
+
 export interface CustomerOrder {
   id: string;
   orderNumber: string;
@@ -434,6 +455,8 @@ export interface CustomerOrder {
   paymentMethod: PaymentMethodChoice;
   paymentStatus: OrderPaymentStatus;
   fulfillmentStatus: FulfillmentStatus;
+  /** Optional for an older API; absent reads like `null`. */
+  partialPayment?: OrderPartialPayment | null;
   itemCount?: number;
   /** Geocoded and frozen at checkout, so editing a saved address never rewrites it. */
   deliveryAddress?: unknown | null;
@@ -484,6 +507,8 @@ export interface OrderCompletion {
 export interface CheckoutResult {
   cartId: string;
   paymentMethod: PaymentMethodChoice;
+  /** A partial checkout's limits, as the orders were created; `null` on any other. */
+  partialPayment?: { minimumAmount: number; maximumAmount: number } | null;
   orders: CustomerOrder[];
 }
 
@@ -989,6 +1014,34 @@ export interface CashOnDeliveryQuote {
   vendorIds: string[];
 }
 
+/** Why this basket cannot be paid part online. Checkout refuses for the same ones. */
+export type PartialPaymentReason =
+  | "digital_items"
+  | "customer_restricted"
+  | "vendor_not_accepted"
+  | "agency_not_supported"
+  | "order_amount_exceeds_limit"
+  | "order_too_small"
+  | "below_delivery_minimum";
+
+/**
+ * Could this basket be paid part online, the rest in cash at the door? On every
+ * quote, whatever `paymentMethod` was sent, and priced as cash on delivery.
+ * One vendor that refuses makes it unavailable for the whole basket.
+ */
+export interface PartialPaymentQuote {
+  available: boolean;
+  /** The first refusal. A value outside the union, or `null`, is still "unavailable". */
+  reason: PartialPaymentReason | (string & {}) | null;
+  /** The vendors that refuse. Empty for `digital_items` and `customer_restricted`. */
+  vendorIds: string[];
+  /** The whole checkout's limits: ONE amount between them, also across several vendors. */
+  minimumAmount: number;
+  maximumAmount: number;
+  /** The basket as a partial order. Use it rather than the quote's `total` while this is chosen. */
+  total: number;
+}
+
 /**
  * `POST /api/customer/cart/quote`.
  *
@@ -1041,6 +1094,8 @@ export interface CartQuote {
   };
   /** Offer cash on delivery only while `available`. Absent on an older API. */
   cashOnDelivery?: CashOnDeliveryQuote;
+  /** Offer "pay part now" only while `available`. Absent on an older API. */
+  partialPayment?: PartialPaymentQuote;
   perVendor: CartQuoteVendorLine[];
 }
 

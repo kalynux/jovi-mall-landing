@@ -895,7 +895,12 @@
         "COMBINED_DELIVERY_REQUEST_NOT_FOUND": "This combined-price request no longer exists.",
         "COMBINED_DELIVERY_REQUEST_INELIGIBLE": "A combined price needs at least two parcels with the same delivery company that haven't been picked up yet and have no other fee change pending.",
         "COMBINED_DELIVERY_REQUEST_ALREADY_OPEN": "You've already asked this delivery company for a combined price on this order.",
-        "COMBINED_DELIVERY_REQUEST_NOT_OPEN": "This request has already been answered or cancelled."
+        "COMBINED_DELIVERY_REQUEST_NOT_OPEN": "This request has already been answered or cancelled.",
+        "PARTIAL_PAYMENT_NOT_AVAILABLE": "Paying part online and part in cash is not available for this order.",
+        "PARTIAL_PAYMENT_AMOUNT_REQUIRED": "Say how much you want to pay online now.",
+        "PARTIAL_PAYMENT_AMOUNT_OUT_OF_RANGE": "That amount is outside what can be paid online for this order.",
+        "PARTIAL_PAYMENT_NOT_APPLICABLE": "This order is not paid in parts, so an amount cannot be chosen.",
+        "ORDER_CANCEL_REQUIRES_REFUND": "This order has been paid, so it can’t be cancelled here. Contact support to ask for a refund."
     },
     "checkout": {
         "errors": {
@@ -924,7 +929,8 @@
             "ORDER_BELOW_DELIVERY_MINIMUM_UNKNOWN": "Your items {from} are below the minimum for delivery. Add more from that seller and try again — nothing was charged.",
             "ORDER_BELOW_DELIVERY_MINIMUM_UNREACHABLE": "Your items {from} can't be delivered right now. Remove them and try again — nothing was charged.",
             "ORDER_BELOW_DELIVERY_MINIMUM_COD_UNREACHABLE": "Your items {from} can't be paid cash on delivery. Pay online instead, or remove them — nothing was charged.",
-            "DELIVERY_FEE_CASH_NOT_AVAILABLE": "Paying the delivery fee in cash isn't available for this order any more. Nothing was ordered and nothing was charged — delivery is now paid with your order; check the total and try again."
+            "DELIVERY_FEE_CASH_NOT_AVAILABLE": "Paying the delivery fee in cash isn't available for this order any more. Nothing was ordered and nothing was charged — delivery is now paid with your order; check the total and try again.",
+            "PARTIAL_PAYMENT_NOT_AVAILABLE": "Paying part now isn’t available for this order any more. Nothing was ordered and nothing was charged. Choose another way to pay."
         }
     },
     "errorPage": {
@@ -3567,7 +3573,8 @@
                 "payment_fee": "Payment provider fee, kept when you paid ({percent}%)",
                 "transfer_fee": "Transfer fee to send the money back ({percent}%)",
                 "fees_paid_by_seller": "Fees are paid by the seller",
-                "you_receive": "You receive"
+                "you_receive": "You receive",
+                "fees_paid_by_delivery_company": "Fees are paid by the delivery company"
             },
             "toNumber": "To {destination}",
             "toCard": "To your card",
@@ -3608,6 +3615,46 @@
                 "delivery": "Wi-Mall Protection: you have a limited time after delivery to report a problem. <link>Returns policy</link>",
                 "service": "Wi-Mall Protection: you have a limited time after the service to report a problem. <link>Returns policy</link>"
             }
+        },
+        "partialPayment": {
+            "optionTitle": "Pay part now",
+            "optionBody": "Pay between {min} and {max} online now, and the rest in cash at delivery.",
+            "amountLabel": "Amount to pay now ({currency})",
+            "amountHint": "Between {min} and {max}",
+            "cashLater": "You then pay {amount} in cash at delivery.",
+            "cashAtDelivery": "In cash at delivery",
+            "warningTitle": "Before you pay",
+            "warningBody": "If you refuse the parcel, are absent or cannot be reached and it comes back, the delivery company’s return fee is kept from what you paid, and the rest is refunded minus the payment and transfer fees. If the seller or the delivery company is at fault, you get back everything you paid.",
+            "warningReview": "Every refund is reviewed by a person first, so it is not instant.",
+            "unavailable": {
+                "digital_items": "Paying part now is not available for digital products.",
+                "customer_restricted": "Paying part now is not available on your account. Choose another way to pay, or <support>contact support</support>.",
+                "vendor_not_accepted": "A seller in your cart does not accept paying part now. Choose another way to pay.",
+                "agency_not_supported": "The delivery company for this order does not accept paying part now. Choose another way to pay.",
+                "order_amount_exceeds_limit": "This order is too large for paying part now. Choose another way to pay.",
+                "order_too_small": "This order is too small for paying part now. Choose another way to pay.",
+                "below_delivery_minimum": "This order is below the seller’s delivery minimum for paying part now. Choose another way to pay.",
+                "unknown": "Paying part now is not available for this order. Choose another way to pay."
+            },
+            "sheetIntro": "Your order waits for your part: nothing is prepared or sent until it is paid. The rest is paid in cash at delivery.",
+            "liveChargeNote": "If a payment prompt from an earlier try is still on your phone, that prompt and its amount count. A new amount applies once it has failed.",
+            "owedBadge": "Online part to pay",
+            "restInCashBadge": "Rest in cash at delivery",
+            "unpaidNote": "This order is waiting for your part of the payment. Nothing is prepared or sent until it is paid, and it is cancelled automatically if it stays unpaid.",
+            "unpaidOnGroup": "This order is waiting for your part of the payment. One payment covers the whole basket, so it happens on the order this one belongs to.",
+            "finishPaying": "Finish paying",
+            "dueOnline": "To pay online",
+            "range": "{min} to {max}",
+            "paidOnline": "Paid online",
+            "balanceDue": "Balance due in cash",
+            "paidInCash": "Paid in cash",
+            "prepaidOnParcel": "{amount} already paid online for this parcel.",
+            "received": "Payment received. The rest is paid in cash at delivery.",
+            "successInfo": "<b>The rest is paid in cash at delivery.</b> The amount and your delivery code are on your order.",
+            "retryInfo": "You can try again with a different amount. If your part stays unpaid, the order is cancelled automatically.",
+            "amountOutOfRange": "The amount must be between {min} and {max}.",
+            "shareText": "Please pay for my Wi-Mall order. The amount is on the page:",
+            "shareTextWithReference": "Please pay for order {reference} on Wi-Mall. The amount is on the page:"
         }
     },
     "cookieNotice": {
