@@ -487,6 +487,13 @@
             "body": "Tu cuenta aún no tiene el rol de {role}. Inicia sesión con tu rol habitual y después añade el rol de {role}.",
             "action": "Elegir tu rol habitual",
             "pickerSubtitle": "Elige el rol con el que sueles iniciar sesión. Justo después podrás añadir el rol de {role}."
+        },
+        "referral": {
+            "customerHint": "Envía el mensaje que se abre sin cambiarlo: es lo que vincula tu nueva cuenta a esta invitación. En Telegram, toca Iniciar.",
+            "agentLabel": "Tu código de referido",
+            "agentFormBody": "Si te registras en la app Wi-Agent en lugar de aquí, introduce este código durante el registro.",
+            "agentAppBody": "Introduce este código durante el registro en la app Wi-Agent.",
+            "agentAppLink": "Obtener la app Wi-Agent"
         }
     },
     "authMe": {
@@ -900,7 +907,18 @@
         "PARTIAL_PAYMENT_AMOUNT_REQUIRED": "Indica cuánto quieres pagar en línea ahora.",
         "PARTIAL_PAYMENT_AMOUNT_OUT_OF_RANGE": "Ese importe está fuera de lo que se puede pagar en línea para este pedido.",
         "PARTIAL_PAYMENT_NOT_APPLICABLE": "Este pedido no se paga por partes, así que no se puede elegir un importe.",
-        "ORDER_CANCEL_REQUIRES_REFUND": "Este pedido ya está pagado, así que no se puede cancelar aquí. Contacta con soporte para pedir un reembolso."
+        "ORDER_CANCEL_REQUIRES_REFUND": "Este pedido ya está pagado, así que no se puede cancelar aquí. Contacta con soporte para pedir un reembolso.",
+        "REFERRAL_PROGRAM_DISABLED": "El programa de referidos no está abierto en este momento.",
+        "REFERRAL_ALREADY_APPLIED": "Ya has solicitado unirte al programa de referidos.",
+        "REFERRAL_REAPPLY_NOT_ALLOWED": "No puedes volver a solicitarlo por ahora.",
+        "REFERRAL_PARTNER_NOT_FOUND": "Aún no has solicitado unirte al programa de referidos.",
+        "REFERRAL_BALANCE_FROZEN": "Tu saldo de referidos está congelado, así que no se puede retirar nada por ahora.",
+        "REFERRAL_PAYOUT_METHOD_MANAGED_ELSEWHERE": "Este número de cobro se gestiona en otra app de Wi-Mall.",
+        "EARNINGS_PAYOUT_METHOD_MISSING": "Primero añade un número de cobro.",
+        "EARNINGS_PAYOUT_ALREADY_PENDING": "Ya se está procesando un retiro.",
+        "EARNINGS_PAYOUT_NO_AVAILABLE_BALANCE": "No hay nada disponible para retirar.",
+        "EARNINGS_PAYOUT_BELOW_MINIMUM": "Tu saldo está por debajo del retiro mínimo.",
+        "ACCOUNT_CLOSURE_REFERRAL_BALANCE": "Debes retirar o saldar tu saldo de referidos antes de poder cerrar esta cuenta."
     },
     "checkout": {
         "errors": {
@@ -2086,7 +2104,8 @@
                 "product": "Producto",
                 "store": "Tienda",
                 "closure": "Solicitud de cierre",
-                "accountClosed": "Cuenta cerrada"
+                "accountClosed": "Cuenta cerrada",
+                "referrals": "Referidos"
             }
         },
         "query": {
@@ -2858,7 +2877,9 @@
                 "seeOrders": "Ver mis pedidos",
                 "roleNotEligible": "Esta cuenta también se usa como: {roles}. Primero hay que cerrar eso, y por ahora solo nuestro equipo de soporte puede hacerlo.",
                 "contactSupport": "Contactar con soporte",
-                "alreadyClosed": "Esta cuenta ya se ha cerrado."
+                "alreadyClosed": "Esta cuenta ya se ha cerrado.",
+                "referralBalance": "Aún tienes saldo de referidos. Retíralo o sáldalo primero y luego podrás cerrar tu cuenta.",
+                "seeReferrals": "Ver mis referidos"
             }
         },
         "addresses": {
@@ -3623,9 +3644,6 @@
             "amountHint": "Entre {min} y {max}",
             "cashLater": "Después pagas {amount} en efectivo en la entrega.",
             "cashAtDelivery": "En efectivo en la entrega",
-            "warningTitle": "Antes de pagar",
-            "warningBody": "Si rechazas el paquete, estás ausente o no se te puede localizar y se devuelve, la tarifa de devolución de la empresa de entrega se descuenta de lo que pagaste, y el resto se reembolsa menos las comisiones de pago y de transferencia. Si la culpa es del vendedor o de la empresa de entrega, recuperas todo lo que pagaste.",
-            "warningReview": "Cada reembolso lo revisa primero una persona, así que no es inmediato.",
             "unavailable": {
                 "digital_items": "Pagar una parte ahora no está disponible para productos digitales.",
                 "customer_restricted": "Pagar una parte ahora no está disponible en tu cuenta. Elige otra forma de pago o <support>contacta con soporte</support>.",
@@ -3655,6 +3673,173 @@
             "amountOutOfRange": "El importe debe estar entre {min} y {max}.",
             "shareText": "Por favor, paga mi pedido de Wi-Mall. El importe está en la página:",
             "shareTextWithReference": "Por favor, paga el pedido {reference} en Wi-Mall. El importe está en la página:"
+        },
+        "referrals": {
+            "loadError": "No hemos podido cargar tu página de referidos.",
+            "closedTitle": "El programa de referidos no está abierto",
+            "closedBody": "No puedes solicitarlo ahora mismo. Vuelve más tarde.",
+            "reviewingTitle": "Estamos revisando tu solicitud",
+            "reviewingBody": "Esta página muestra la decisión en cuanto se toma.",
+            "reviewingBodyDated": "Enviaste tu solicitud el {date}. Esta página muestra la decisión en cuanto se toma.",
+            "pausedNotice": "El programa está cerrado por ahora, así que los nuevos registros con tu enlace no se cuentan.",
+            "introTitle": "Gana invitando a personas a Wi-Mall",
+            "introLead": "Solicita ser socio. Una vez aprobado, recibes un enlace personal para compartir.",
+            "how": {
+                "title": "Cómo funciona",
+                "link": "Cuando alguien crea una cuenta nueva de Wi-Mall con tu enlace, queda vinculada a ti durante un tiempo limitado.",
+                "earn": "Ganas un porcentaje de la comisión que Wi-Mall recibe en los pedidos en los que participa esa persona. Sale de la comisión de Wi-Mall y nunca es un porcentaje del valor del pedido.",
+                "who": "Los vendedores, los clientes y las agencias generan recompensas. Un repartidor puede ser referido, pero sus propias entregas no generan nada.",
+                "when": "Una recompensa se gana cuando Wi-Mall recibe su comisión, lo que ocurre después de la entrega y, en los pedidos en efectivo, cuando el dinero ha llegado a Wi-Mall. Por eso un pedido hecho antes de la fecha de fin de un referido puede no generar nada.",
+                "wait": "{days, plural, =0 {Una recompensa se puede retirar en cuanto se gana.} one {Una recompensa se puede retirar # día después de ganarla.} other {Una recompensa se puede retirar # días después de ganarla.}}",
+                "refund": "Una recompensa baja si el pedido se reembolsa. Los reembolsos posteriores pueden dejarte con una deuda, que las siguientes recompensas pagan primero.",
+                "minimum": "El retiro mínimo es de {amount}, y se retira todo el saldo disponible.",
+                "rates": "Tu tasa, y cuánto tiempo genera cada referido, aparecen aquí cuando te aprueban.",
+                "more": "Más detalles"
+            },
+            "application": {
+                "motivationLabel": "¿Por qué quieres ser socio? (opcional)",
+                "motivationPlaceholder": "Por ejemplo, conozco muchas tiendas en mi ciudad",
+                "termsLabel": "He leído y acepto las <terms>Condiciones para socios</terms>.",
+                "submit": "Enviar solicitud",
+                "submitting": "Enviando…",
+                "sent": "Solicitud enviada",
+                "error": "No hemos podido enviar tu solicitud."
+            },
+            "status": {
+                "reason": "Motivo: {reason}",
+                "canApplyAgain": "Puedes volver a solicitarlo a continuación.",
+                "rejected": {
+                    "title": "Tu solicitud no fue aceptada",
+                    "body": "No tienes enlace de referido."
+                },
+                "suspended": {
+                    "title": "Tu colaboración está suspendida",
+                    "body": "Tu enlace no genera nada por ahora: quienes lo usan se registran con normalidad. Las recompensas que ya ganaste siguen registradas."
+                },
+                "terminated": {
+                    "title": "Tu colaboración ha terminado",
+                    "body": "Tu enlace ya no genera nada: quienes lo usan se registran con normalidad. Las recompensas que ya ganaste siguen registradas."
+                }
+            },
+            "share": {
+                "title": "Tu enlace de referido",
+                "code": "Tu código",
+                "link": "Enlace para compartir",
+                "message": "Únete a Wi-Mall con mi enlace:",
+                "whatsapp": "Enviar por WhatsApp",
+                "telegram": "Enviar por Telegram",
+                "nativeTitle": "Comparte tu enlace de referido",
+                "copyFailed": "No se pudo copiar. Selecciónalo y cópialo a mano.",
+                "chatTitle": "Para quienes compran en el chat",
+                "chatBody": "Estos enlaces abren nuestro bot con tu código en el primer mensaje. Si la persona lo borra antes de enviarlo, el referido se pierde.",
+                "whatsappLink": "Enlace de WhatsApp",
+                "telegramLink": "Enlace de Telegram"
+            },
+            "terms": {
+                "title": "Lo que ganas",
+                "vendor": "Vendedores referidos",
+                "customer": "Clientes referidos",
+                "agency": "Agencias referidas",
+                "line": "{rate} de la comisión de Wi-Mall durante {months, plural, one {# mes} other {# meses}}"
+            },
+            "balances": {
+                "title": "Tu saldo",
+                "available": "Disponible para retirar",
+                "pending": "En periodo de espera",
+                "requested": "En proceso de pago",
+                "reserve": "En reserva",
+                "owes": "Debes {amount} tras un reembolso. Las siguientes recompensas pagan esto primero, y no se puede retirar nada hasta saldarlo."
+            },
+            "destination": {
+                "title": "Adónde va tu dinero",
+                "add": "Añadir un número de dinero móvil",
+                "change": "Cambiar",
+                "managed": {
+                    "vendor": "Este número se gestiona en tu panel de vendedor.",
+                    "agency": "Este número se gestiona en tu panel de agencia.",
+                    "agent": "Este número se gestiona en la app Wi-Agent."
+                },
+                "manage": {
+                    "vendor": "Abrir el panel de vendedor",
+                    "agency": "Abrir el panel de agencia",
+                    "agent": "Abrir Wi-Agent"
+                }
+            },
+            "withdraw": {
+                "button": "Retirar {amount}",
+                "confirmTitle": "¿Retirar tu saldo?",
+                "confirmBody": "{amount} irán a {destination}. Se retira todo el saldo disponible y nuestro equipo se encarga de la transferencia.",
+                "confirmBodyNoDestination": "Se retirarán {amount}. Se retira todo el saldo disponible y nuestro equipo se encarga de la transferencia.",
+                "confirm": "Retirar",
+                "cancel": "Ahora no",
+                "requested": "Retiro solicitado",
+                "failed": "No hemos podido solicitar tu retiro.",
+                "belowMinimum": "El retiro mínimo es de {amount}.",
+                "blocked": {
+                    "frozen": "Tu saldo está congelado, así que no se puede retirar nada por ahora.",
+                    "inProgress": "Ya se está procesando un retiro.",
+                    "belowMinimum": "Podrás retirar cuando haya {amount} disponibles.",
+                    "noDestination": "Añade un número de dinero móvil para retirar."
+                }
+            },
+            "sheet": {
+                "title": "Número de dinero móvil",
+                "network": "Red",
+                "number": "Número de dinero móvil",
+                "numberHint": "Tus retiros se envían a este número.",
+                "accountName": "Nombre del titular",
+                "accountNameHint": "Tal como está registrado en tu red.",
+                "saved": "Número guardado",
+                "error": "No hemos podido guardar este número.",
+                "phoneInvalid": "Comprueba este número.",
+                "nameInvalid": "Comprueba el nombre del titular.",
+                "switchTo": "Usar {network}"
+            },
+            "history": {
+                "title": "Tu actividad",
+                "referred": "Cuentas referidas",
+                "rewards": "Recompensas",
+                "payouts": "Retiros",
+                "referredEmptyTitle": "Aún no hay cuentas referidas",
+                "referredEmptyBody": "Quienes se registren con tu enlace aparecerán aquí.",
+                "rewardsEmptyTitle": "Aún no hay recompensas",
+                "rewardsEmptyBody": "Las recompensas aparecen aquí cuando Wi-Mall ha recibido su comisión.",
+                "payoutsEmptyTitle": "Aún no hay retiros",
+                "payoutsEmptyBody": "Tus retiros aparecen aquí.",
+                "category": {
+                    "customer": "Cliente",
+                    "vendor": "Vendedor",
+                    "agency": "Agencia",
+                    "agent": "Repartidor"
+                },
+                "referredState": {
+                    "earning": "Activo",
+                    "ended": "Terminado",
+                    "neverEarns": "No genera"
+                },
+                "joined": "Se registró el {date}",
+                "earnsUntil": "Genera hasta el {date}",
+                "endedOn": "Dejó de generar el {date}",
+                "neverEarnsBody": "Las propias entregas de un repartidor no generan nada.",
+                "reward": {
+                    "held": "En espera",
+                    "released": "Liberada",
+                    "reversed": "Reembolsada"
+                },
+                "earnedOn": "Ganada el {date}",
+                "availableFrom": "Se puede retirar desde el {date}",
+                "adjusted": "Reducida por un reembolso",
+                "payout": {
+                    "pending": "Solicitado",
+                    "processing": "En curso",
+                    "paid": "Pagado",
+                    "rejected": "Rechazado",
+                    "failed": "Transferencia fallida"
+                },
+                "requestedOn": "Solicitado el {date}",
+                "resolvedOn": "Cerrado el {date}",
+                "refusedReason": "Motivo: {reason}"
+            }
         }
     },
     "cookieNotice": {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useId, type CSSProperties } from "react";
+import { useCallback, useId } from "react";
 import { useTranslations } from "next-intl";
 import { Icon } from "@/components/shop/ds";
 import { Link } from "@/i18n/navigation";
@@ -88,37 +88,6 @@ export function PartialAmountField({
           {t("cashLater", { amount: formatMoney(limits.total - amount, currency) })}
         </p>
       )}
-    </div>
-  );
-}
-
-/**
- * What is different from plain cash on delivery, where refusing a parcel costs
- * nothing. The brief is explicit that this is said on the payment screen, before
- * the customer pays — so it stays visible while the field is, not behind a link.
- */
-export function PartialPaymentWarning({ style }: { style?: CSSProperties }) {
-  const t = useTranslations("shop.partialPayment");
-  return (
-    <div
-      role="note"
-      style={{
-        display: "flex",
-        gap: 9,
-        alignItems: "flex-start",
-        border: "1px solid var(--border)",
-        background: "var(--warning-bg)",
-        borderRadius: "var(--radius-md)",
-        padding: "11px 13px",
-        ...style,
-      }}
-    >
-      <Icon name="triangle-alert" size={17} style={{ color: "var(--warning)", flexShrink: 0, marginTop: 1 }} />
-      <div style={{ flex: 1, minWidth: 0, fontSize: 12.5, lineHeight: 1.55, color: "var(--text-body)" }}>
-        <p style={{ margin: 0, fontWeight: 700, color: "var(--text-strong)" }}>{t("warningTitle")}</p>
-        <p style={{ margin: "2px 0 0" }}>{t("warningBody")}</p>
-        <p style={{ margin: "4px 0 0" }}>{t("warningReview")}</p>
-      </div>
     </div>
   );
 }

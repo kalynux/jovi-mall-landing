@@ -154,6 +154,7 @@ the payment routes.** Filed as **F-34**.
 |---|---|
 | [`customer/cart.md`](./customer/cart.md) · [`customer/orders.md`](./customer/orders.md) · [`customer/bookings.md`](./customer/bookings.md) | |
 | [`customer/FRONTEND-CHANGELOG-partial-payment.md`](./customer/FRONTEND-CHANGELOG-partial-payment.md) | pay part now, the rest in cash at delivery (2026-11-01) |
+| [`public/FRONTEND-CHANGELOG-referrals.md`](./public/FRONTEND-CHANGELOG-referrals.md) · [`FRONTEND-CHANGELOG-referrals.md`](./FRONTEND-CHANGELOG-referrals.md) · [`me/referrals.md`](./me/referrals.md) | the referral program: `/register?ref=`, `/shop/account/referrals` (2026-11-02) |
 | [`customer/saved-and-viewed.md`](./customer/saved-and-viewed.md) | 🔴 **replaces `localStorage`** |
 | [`customer/reviews.md`](./customer/reviews.md) · [`reviews.md`](./reviews.md) | product **and** delivery |
 | [`customer/profile.md`](./customer/profile.md) · [`customer/payment-methods.md`](./customer/payment-methods.md) | |

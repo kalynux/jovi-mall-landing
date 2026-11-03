@@ -487,6 +487,13 @@
             "body": "Your account doesn't have the {role} role yet. Sign in with your usual role, then add the {role} role from there.",
             "action": "Choose your usual role",
             "pickerSubtitle": "Choose the role you usually sign in with. You can add the {role} role right after."
+        },
+        "referral": {
+            "customerHint": "Send the message that opens without changing it: it's what links your new account to this invitation. On Telegram, tap Start.",
+            "agentLabel": "Your referral code",
+            "agentFormBody": "If you sign up in the Wi-Agent app instead of here, enter this code during sign-up.",
+            "agentAppBody": "Enter this code during sign-up in the Wi-Agent app.",
+            "agentAppLink": "Get the Wi-Agent app"
         }
     },
     "authMe": {
@@ -900,7 +907,18 @@
         "PARTIAL_PAYMENT_AMOUNT_REQUIRED": "Say how much you want to pay online now.",
         "PARTIAL_PAYMENT_AMOUNT_OUT_OF_RANGE": "That amount is outside what can be paid online for this order.",
         "PARTIAL_PAYMENT_NOT_APPLICABLE": "This order is not paid in parts, so an amount cannot be chosen.",
-        "ORDER_CANCEL_REQUIRES_REFUND": "This order has been paid, so it can’t be cancelled here. Contact support to ask for a refund."
+        "ORDER_CANCEL_REQUIRES_REFUND": "This order has been paid, so it can’t be cancelled here. Contact support to ask for a refund.",
+        "REFERRAL_PROGRAM_DISABLED": "The referral program isn't open right now.",
+        "REFERRAL_ALREADY_APPLIED": "You've already applied to the referral program.",
+        "REFERRAL_REAPPLY_NOT_ALLOWED": "You can't apply again at the moment.",
+        "REFERRAL_PARTNER_NOT_FOUND": "You haven't applied to the referral program yet.",
+        "REFERRAL_BALANCE_FROZEN": "Your referral balance is frozen, so nothing can be withdrawn for now.",
+        "REFERRAL_PAYOUT_METHOD_MANAGED_ELSEWHERE": "This payout number is managed in another Wi-Mall app.",
+        "EARNINGS_PAYOUT_METHOD_MISSING": "Add a payout number first.",
+        "EARNINGS_PAYOUT_ALREADY_PENDING": "A withdrawal is already being processed.",
+        "EARNINGS_PAYOUT_NO_AVAILABLE_BALANCE": "Nothing is available to withdraw.",
+        "EARNINGS_PAYOUT_BELOW_MINIMUM": "Your balance is below the minimum withdrawal.",
+        "ACCOUNT_CLOSURE_REFERRAL_BALANCE": "Your referral balance must be withdrawn or settled before this account can be closed."
     },
     "checkout": {
         "errors": {
@@ -2086,7 +2104,8 @@
                 "product": "Product",
                 "store": "Store",
                 "closure": "Closure request",
-                "accountClosed": "Account closed"
+                "accountClosed": "Account closed",
+                "referrals": "Referrals"
             }
         },
         "query": {
@@ -2858,7 +2877,9 @@
                 "seeOrders": "See my orders",
                 "roleNotEligible": "This account is also used as: {roles}. That has to be closed first, and for now only our support team can do it.",
                 "contactSupport": "Contact support",
-                "alreadyClosed": "This account has already been closed."
+                "alreadyClosed": "This account has already been closed.",
+                "referralBalance": "You still have a referral balance. Withdraw or settle it first, then you can close your account.",
+                "seeReferrals": "See my referrals"
             }
         },
         "addresses": {
@@ -3623,9 +3644,6 @@
             "amountHint": "Between {min} and {max}",
             "cashLater": "You then pay {amount} in cash at delivery.",
             "cashAtDelivery": "In cash at delivery",
-            "warningTitle": "Before you pay",
-            "warningBody": "If you refuse the parcel, are absent or cannot be reached and it comes back, the delivery company’s return fee is kept from what you paid, and the rest is refunded minus the payment and transfer fees. If the seller or the delivery company is at fault, you get back everything you paid.",
-            "warningReview": "Every refund is reviewed by a person first, so it is not instant.",
             "unavailable": {
                 "digital_items": "Paying part now is not available for digital products.",
                 "customer_restricted": "Paying part now is not available on your account. Choose another way to pay, or <support>contact support</support>.",
@@ -3655,6 +3673,173 @@
             "amountOutOfRange": "The amount must be between {min} and {max}.",
             "shareText": "Please pay for my Wi-Mall order. The amount is on the page:",
             "shareTextWithReference": "Please pay for order {reference} on Wi-Mall. The amount is on the page:"
+        },
+        "referrals": {
+            "loadError": "We couldn't load your referral page.",
+            "closedTitle": "The referral program isn't open",
+            "closedBody": "You can't apply right now. Check back here later.",
+            "reviewingTitle": "We're reviewing your application",
+            "reviewingBody": "This page shows the decision as soon as it's made.",
+            "reviewingBodyDated": "You applied on {date}. This page shows the decision as soon as it's made.",
+            "pausedNotice": "The program is closed for now, so new sign-ups through your link aren't counted.",
+            "introTitle": "Earn by inviting people to Wi-Mall",
+            "introLead": "Apply to become a partner. Once approved, you get a personal link to share.",
+            "how": {
+                "title": "How it works",
+                "link": "When someone creates a new Wi-Mall account through your link, it is linked to you for a limited time.",
+                "earn": "You earn a percentage of the commission Wi-Mall receives on orders that person takes part in. It comes out of Wi-Mall's commission and is never a percentage of the order's value.",
+                "who": "Vendors, customers and agencies generate rewards. A delivery agent can be referred, but their own deliveries earn nothing.",
+                "when": "A reward is earned when Wi-Mall receives its commission, which comes after delivery, and for cash orders once the cash has reached Wi-Mall. So an order placed before a referral's end date can still earn nothing.",
+                "wait": "{days, plural, =0 {A reward can be withdrawn as soon as it is earned.} one {A reward can be withdrawn # day after it is earned.} other {A reward can be withdrawn # days after it is earned.}}",
+                "refund": "A reward goes down if the order is refunded. Later refunds can leave you owing money, which later rewards pay first.",
+                "minimum": "The minimum withdrawal is {amount}, and the whole available balance is withdrawn.",
+                "rates": "Your rate, and how long each referral earns, appear here once you're approved.",
+                "more": "More details"
+            },
+            "application": {
+                "motivationLabel": "Why do you want to become a partner? (optional)",
+                "motivationPlaceholder": "For example, I know many shops in my town",
+                "termsLabel": "I have read and accept the <terms>Partner Terms</terms>.",
+                "submit": "Apply",
+                "submitting": "Sending…",
+                "sent": "Application sent",
+                "error": "We couldn't send your application."
+            },
+            "status": {
+                "reason": "Reason: {reason}",
+                "canApplyAgain": "You can apply again below.",
+                "rejected": {
+                    "title": "Your application wasn't accepted",
+                    "body": "You don't have a referral link."
+                },
+                "suspended": {
+                    "title": "Your partnership is suspended",
+                    "body": "Your link earns nothing for now: people who use it register normally. Rewards you already earned stay recorded."
+                },
+                "terminated": {
+                    "title": "Your partnership has ended",
+                    "body": "Your link no longer earns anything: people who use it register normally. Rewards you already earned stay recorded."
+                }
+            },
+            "share": {
+                "title": "Your referral link",
+                "code": "Your code",
+                "link": "Link to share",
+                "message": "Join Wi-Mall with my link:",
+                "whatsapp": "Send on WhatsApp",
+                "telegram": "Send on Telegram",
+                "nativeTitle": "Share your referral link",
+                "copyFailed": "We couldn't copy that. Select it and copy it by hand.",
+                "chatTitle": "For people who shop in the chat",
+                "chatBody": "These links open our bot with your code in the first message. If the person deletes it before sending, the referral is lost.",
+                "whatsappLink": "WhatsApp link",
+                "telegramLink": "Telegram link"
+            },
+            "terms": {
+                "title": "What you earn",
+                "vendor": "Vendors you refer",
+                "customer": "Customers you refer",
+                "agency": "Agencies you refer",
+                "line": "{rate} of Wi-Mall's commission for {months, plural, one {# month} other {# months}}"
+            },
+            "balances": {
+                "title": "Your balance",
+                "available": "Available to withdraw",
+                "pending": "Still in the wait",
+                "requested": "Being paid out",
+                "reserve": "Held in reserve",
+                "owes": "You owe {amount} after a refund. Later rewards pay this first, and nothing can be withdrawn until it's cleared."
+            },
+            "destination": {
+                "title": "Where your money goes",
+                "add": "Add a mobile money number",
+                "change": "Change",
+                "managed": {
+                    "vendor": "This number is managed in your vendor dashboard.",
+                    "agency": "This number is managed in your agency dashboard.",
+                    "agent": "This number is managed in the Wi-Agent app."
+                },
+                "manage": {
+                    "vendor": "Open the vendor dashboard",
+                    "agency": "Open the agency dashboard",
+                    "agent": "Open Wi-Agent"
+                }
+            },
+            "withdraw": {
+                "button": "Withdraw {amount}",
+                "confirmTitle": "Withdraw your balance?",
+                "confirmBody": "{amount} will go to {destination}. The whole available balance is withdrawn, and our team handles the transfer.",
+                "confirmBodyNoDestination": "{amount} will be withdrawn. The whole available balance is withdrawn, and our team handles the transfer.",
+                "confirm": "Withdraw",
+                "cancel": "Not now",
+                "requested": "Withdrawal requested",
+                "failed": "We couldn't request your withdrawal.",
+                "belowMinimum": "The minimum withdrawal is {amount}.",
+                "blocked": {
+                    "frozen": "Your balance is frozen, so nothing can be withdrawn for now.",
+                    "inProgress": "A withdrawal is already being processed.",
+                    "belowMinimum": "You can withdraw once {amount} is available.",
+                    "noDestination": "Add a mobile money number to withdraw."
+                }
+            },
+            "sheet": {
+                "title": "Mobile money number",
+                "network": "Network",
+                "number": "Mobile money number",
+                "numberHint": "Your withdrawals are sent to this number.",
+                "accountName": "Name on the account",
+                "accountNameHint": "As registered with your network.",
+                "saved": "Number saved",
+                "error": "We couldn't save this number.",
+                "phoneInvalid": "Check this number.",
+                "nameInvalid": "Check the name on the account.",
+                "switchTo": "Use {network}"
+            },
+            "history": {
+                "title": "Your activity",
+                "referred": "Referred accounts",
+                "rewards": "Rewards",
+                "payouts": "Withdrawals",
+                "referredEmptyTitle": "No referred accounts yet",
+                "referredEmptyBody": "People who register through your link appear here.",
+                "rewardsEmptyTitle": "No rewards yet",
+                "rewardsEmptyBody": "Rewards appear here once Wi-Mall has received its commission.",
+                "payoutsEmptyTitle": "No withdrawals yet",
+                "payoutsEmptyBody": "Your withdrawals appear here.",
+                "category": {
+                    "customer": "Customer",
+                    "vendor": "Vendor",
+                    "agency": "Agency",
+                    "agent": "Delivery agent"
+                },
+                "referredState": {
+                    "earning": "Earning",
+                    "ended": "Ended",
+                    "neverEarns": "Doesn't earn"
+                },
+                "joined": "Joined {date}",
+                "earnsUntil": "Earns until {date}",
+                "endedOn": "Stopped earning on {date}",
+                "neverEarnsBody": "A delivery agent's own deliveries earn nothing.",
+                "reward": {
+                    "held": "Waiting",
+                    "released": "Released",
+                    "reversed": "Refunded"
+                },
+                "earnedOn": "Earned {date}",
+                "availableFrom": "Can be withdrawn from {date}",
+                "adjusted": "Reduced by a refund",
+                "payout": {
+                    "pending": "Requested",
+                    "processing": "In progress",
+                    "paid": "Paid",
+                    "rejected": "Refused",
+                    "failed": "Transfer failed"
+                },
+                "requestedOn": "Requested {date}",
+                "resolvedOn": "Closed {date}",
+                "refusedReason": "Reason: {reason}"
+            }
         }
     },
     "cookieNotice": {

@@ -14,7 +14,7 @@ import {
 import { usePaymentOptions } from "@/components/shop/usePaymentOptions";
 import { useSavedPayment } from "@/components/shop/useSavedPayment";
 import { useChargeRefusal } from "@/components/shop/useChargeRefusal";
-import { PartialAmountField, PartialPaymentWarning, useRefusedAmount } from "@/components/shop/PartialPayment";
+import { PartialAmountField, useRefusedAmount } from "@/components/shop/PartialPayment";
 import { PayLinkShare } from "./PayLinkShare";
 import { translateError } from "@/lib/auth/error-translator";
 import { formatMoney } from "@/lib/shop/format";
@@ -77,9 +77,8 @@ import type { OrderGroup } from "@/lib/shop/customer.types";
  * ── A partial order names its own amount ─────────────────────────────────────
  *
  * Its online part is whatever the shopper chooses between the orders' limits,
- * so this is also where "finish paying" and "try a different amount" happen. The
- * return-fee warning stays on screen above the method. `409 PAYMENT_ORDER_ALREADY_PAID`
- * here means the part went through, so it goes to the success screen. And a charge
+ * so this is also where "finish paying" and "try a different amount" happen.
+ * `409 PAYMENT_ORDER_ALREADY_PAID` here means the part went through, so it goes to the success screen. And a charge
  * still live keeps its amount whatever is sent, which the answer cannot tell us,
  * so the sheet says so up front.
  */
@@ -113,14 +112,14 @@ export function PayGroupSheet({
   const owing = useMemo(() => ordersOwingOnline(group), [group]);
   /** Set on a partial order still owing its online part; `null` on every other. */
   const limits = useMemo(() => (owing.length > 0 ? partialLimitsOfOrders(owing) : null), [owing]);
-  /** What the amount field holds. `null` until edited, so it opens on the minimum. */
+  /** What the amount field holds. `null` until edited, so it opens on the maximum. */
   const [partInput, setPartInput] = useState<string | null>(null);
-  const partValue = partInput ?? String(limits?.minimumAmount ?? "");
+  const partValue = partInput ?? String(limits?.maximumAmount ?? "");
   /** The amount to charge, or `null` while what is typed cannot be. */
   const partAmount = useMemo(() => (limits ? parsePartialAmount(partValue, limits) : null), [limits, partValue]);
 
   const orders = limits ? owing : payableOrders(group);
-  const amount = limits ? (partAmount ?? limits.minimumAmount) : payableTotal(group);
+  const amount = limits ? (partAmount ?? limits.maximumAmount) : payableTotal(group);
   // The payable orders' own currency, not the group's: they are the ones being
   // charged. A group cannot legitimately mix currencies — checkout guarantees
   // it and the server re-checks — so the first is the group's.
@@ -291,7 +290,6 @@ export function PayGroupSheet({
           <p className="muted" style={{ fontSize: 12, lineHeight: 1.5, margin: "6px 0 0" }}>
             {tPartial("liveChargeNote")}
           </p>
-          <PartialPaymentWarning style={{ marginTop: 12 }} />
         </div>
       )}
 

@@ -68,16 +68,15 @@ export async function shareLink(request: ShareRequest): Promise<ShareOutcome> {
 /**
  * Copy to the clipboard — the fallback for a platform with no share sheet.
  *
- * Module-private: `shareLink` is the entry point, and a caller that reached for
- * this directly would be choosing the web behaviour on a device that has the
- * better one. Export it when something genuinely wants a copy button *beside* a
- * share button.
+ * `shareLink` is the entry point: a caller that reached for this directly would
+ * be choosing the web behaviour on a device that has the better one. Exported
+ * for what genuinely wants a copy button *beside* a share button.
  *
  * The Capacitor plugin is preferred on a device because `navigator.clipboard`
  * needs a secure context and a user gesture the WebView does not always agree
  * it had. On the web it is the plugin's own fallback anyway.
  */
-async function copyLink(url: string): Promise<ShareOutcome> {
+export async function copyLink(url: string): Promise<ShareOutcome> {
   const native = await withNative(async () => {
     const { Clipboard } = await import("@capacitor/clipboard");
     await Clipboard.write({ url });

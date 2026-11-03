@@ -19,7 +19,6 @@ import { CodUnavailableNotice } from "@/components/shop/CodUnavailableNotice";
 import {
   PartialAmountField,
   PartialPaymentNotice,
-  PartialPaymentWarning,
   useRefusedAmount,
 } from "@/components/shop/PartialPayment";
 import { DeliveryMinimumNotice, fromShop } from "@/components/shop/DeliveryMinimumNotice";
@@ -196,7 +195,7 @@ export default function CheckoutPage() {
   const [cashToRider, setCashToRider] = useState(false);
   /** The shopper chose "pay part now". Kept through a change of row; in effect on an online one. */
   const [partChosen, setPartChosen] = useState(false);
-  /** What the amount field holds. `null` until edited, so it follows the quote's minimum. */
+  /** What the amount field holds. `null` until edited, so it follows the quote's maximum. */
   const [partInput, setPartInput] = useState<string | null>(null);
   /**
    * A checkout refused as partial. Unlike cash on delivery's this outlives the
@@ -213,7 +212,6 @@ export default function CheckoutPage() {
    * must not clear the refusal the shopper is still reading.
    */
   const keepError = useRef(false);
-  const partPanel = useRef<HTMLDivElement>(null);
 
   const isDigital = productType === "digital";
   const online = usePaymentOptions(status === "authenticated");
@@ -261,7 +259,7 @@ export default function CheckoutPage() {
   const payPart = partChosen && !isCod && partOffer !== null;
   /** The amount to charge, or `null` while what is typed cannot be. */
   const partAmount = useMemo(
-    () => (payPart && partOffer ? parsePartialAmount(partInput ?? String(partOffer.minimumAmount), partOffer) : null),
+    () => (payPart && partOffer ? parsePartialAmount(partInput ?? String(partOffer.maximumAmount), partOffer) : null),
     [payPart, partOffer, partInput]
   );
   /** Said once, to a shopper who had chosen it and lost it. See `PartialPaymentNotice`. */
@@ -603,7 +601,7 @@ export default function CheckoutPage() {
   /** What the pay button charges now: the items only when the fee goes to the rider. */
   const dueNow =
     payPart && partOffer
-      ? (partAmount ?? partOffer.minimumAmount)
+      ? (partAmount ?? partOffer.maximumAmount)
       : payDeliveryInCash && cashOffer
         ? cashOffer.amountDueOnline
         : total;
@@ -801,11 +799,9 @@ export default function CheckoutPage() {
           takes the part paid now. Choosing it rules out cash for the delivery fee. */}
       {partOffer && option && !isCod && (
         <div
-          ref={partPanel}
           style={{
             padding: 13,
             marginBottom: 20,
-            scrollMarginTop: 12,
             borderRadius: "var(--radius-md)",
             background: "var(--surface)",
             border: payPart ? "1.5px solid var(--brand)" : "1.5px solid var(--border)",
@@ -825,11 +821,7 @@ export default function CheckoutPage() {
               disabled={placing}
               onChange={(e) => {
                 setPartChosen(e.target.checked);
-                if (!e.target.checked) return;
-                setCashToRider(false);
-                // The warning opens below the fold on a phone, and the pay button
-                // is sticky: bring it on screen, so it is read before paying.
-                requestAnimationFrame(() => partPanel.current?.scrollIntoView({ block: "start" }));
+                if (e.target.checked) setCashToRider(false);
               }}
               style={{ marginTop: 3, accentColor: "var(--brand)", width: 16, height: 16, flexShrink: 0 }}
             />
@@ -849,12 +841,11 @@ export default function CheckoutPage() {
             <div style={{ marginTop: 12 }}>
               <PartialAmountField
                 limits={partOffer}
-                value={partInput ?? String(partOffer.minimumAmount)}
+                value={partInput ?? String(partOffer.maximumAmount)}
                 onChange={setPartInput}
                 currency={currency}
                 disabled={placing}
               />
-              <PartialPaymentWarning style={{ marginTop: 12 }} />
             </div>
           )}
         </div>

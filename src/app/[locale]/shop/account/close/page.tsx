@@ -56,7 +56,7 @@ const CONSEQUENCES: { icon: IconName; textKey: string }[] = [
 /** A refusal, and where the person can go to do something about it. */
 interface Refusal {
   text: string;
-  next?: { href: string; labelKey: "refused.seeOrders" | "refused.contactSupport" };
+  next?: { href: string; labelKey: "refused.seeOrders" | "refused.seeReferrals" | "refused.contactSupport" };
 }
 
 export default function CloseAccountPage() {
@@ -90,6 +90,13 @@ export default function CloseAccountPage() {
               ? t("refused.ordersInFlight", { count })
               : t("ordersInFlight"),
           next: { href: "/shop/account/orders", labelKey: "refused.seeOrders" },
+        };
+      }
+
+      if (err.code === "ACCOUNT_CLOSURE_REFERRAL_BALANCE") {
+        return {
+          text: t("refused.referralBalance"),
+          next: { href: "/shop/account/referrals", labelKey: "refused.seeReferrals" },
         };
       }
 

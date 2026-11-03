@@ -77,6 +77,7 @@ const EXACT_TITLES: Record<string, string> = {
   "/shop/account/reviews": "shop.nav.titles.reviews",
   "/shop/account/security": "shop.nav.titles.security",
   "/shop/account/bookings": "shop.nav.titles.bookings",
+  "/shop/account/referrals": "shop.nav.titles.referrals",
   "/shop/account/support": "shop.nav.titles.support",
   "/shop/account/support/new": "shop.nav.titles.supportNew",
   "/shop/account/close": "shop.nav.titles.close",

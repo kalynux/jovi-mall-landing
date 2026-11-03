@@ -20,12 +20,15 @@ import { mapApiErrors, parseRootType } from "@/lib/auth/form-errors";
 import { addRoleReturnPath } from "@/lib/auth/auth.redirect";
 import { useLocale } from "@/lib/i18n-provider";
 import { sanitizePayload } from "@/lib/form/sanitize-payload";
+import { useReferralLink } from "@/lib/me/useReferralLink";
+import type { RegisterPayload } from "@/lib/auth/auth.types";
 import AuthSplitShell from "@/components/auth/AuthSplitShell";
 import AuthFormField from "@/components/auth/AuthFormField";
 import { PhoneField } from "@/components/ui/phone";
 import { GlobalError } from "@/components/auth/GlobalError";
 import RolePicker from "@/components/auth/RolePicker";
 import CustomerWhatsAppCta from "@/components/auth/CustomerWhatsAppCta";
+import { AgentReferralCode } from "@/components/apps/AgentReferralCode";
 import { IS_NATIVE_BUILD } from "@/lib/platform";
 import { LegalAgreement, TermsConsentField } from "@/components/legal/LegalLink";
 
@@ -46,6 +49,19 @@ function RegisterFormContent() {
   const { locale } = useLocale();
   const searchParams = useSearchParams();
   const roleParam = searchParams.get("role");
+
+  /**
+   * A partner's link (api-doc/public/FRONTEND-CHANGELOG-referrals.md).
+   *
+   * Read here, above every step, so the picker, `?role=` and "choose a different
+   * role" all keep it: nothing on this page navigates, so the URL never loses it.
+   *
+   * ⚠ Nothing on screen reports on the code, by design. A vendor or agency sees
+   * no sign of it, and a bad one is an ordinary visit. The two exceptions are
+   * instructions rather than verdicts: a customer told to send the chat message
+   * unchanged, and an agent shown the code to type in the app.
+   */
+  const referral = useReferralLink(searchParams.get("ref"));
 
   /**
    * Customer-only entry, on the same rule the sign-in page uses.
@@ -125,6 +141,7 @@ function RegisterFormContent() {
       const payload = sanitizePayload({
         ...data,
         role: selectedRole,
+        referral_code: referral.codeToSend ?? undefined,
       });
 
       // ⚠ THE RULE IS WRONG HERE, PERMANENTLY — see the same note in
@@ -132,7 +149,7 @@ function RegisterFormContent() {
       //   navigation, not a mutation of React state, and the new account's session
       //   must be loaded fresh rather than carried over client-side.
       // eslint-disable-next-line react-hooks/immutability
-      window.location.href = await registerAndGetRedirect(payload as RegisterFormValues);
+      window.location.href = await registerAndGetRedirect(payload as RegisterPayload);
     } catch (err) {
       mapApiErrors(err, setError, tErrors);
     }
@@ -199,6 +216,7 @@ function RegisterFormContent() {
         {step === "customer-wa" && (
           <motion.div key="customer-wa" {...stepMotion}>
             <CustomerWhatsAppCta
+              referral={referral}
               /* The escape hatch back to the picker, absent in the app —
                  there is no other role to register for in a shop bundle. */
               onBack={
@@ -237,6 +255,12 @@ function RegisterFormContent() {
                 {tModal(`roles.${selectedRole}.label` as Parameters<typeof tModal>[0])} ↩
               </button>
             </div>
+
+            {/* An agent may sign up in the app instead of this form, and no link
+                can carry a code into an install, so they have to type it there. */}
+            {selectedRole === "agent" && referral.confirmed?.code && (
+              <AgentReferralCode code={referral.confirmed.code} withAppLink />
+            )}
 
             {/* Hidden role field */}
             <input type="hidden" value={selectedRole} {...register("role")} />

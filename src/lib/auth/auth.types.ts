@@ -180,6 +180,8 @@ export interface RegisterPayload {
     agency_name?: string;
     /** Ticked Terms/Privacy consent. Required by the API for vendor, agency and agent. */
     terms_accepted?: boolean;
+    /** `?ref=` from a partner's link. New accounts only: `AddRolePayload` never takes one. */
+    referral_code?: string;
 }
 
 export interface AddRolePayload {

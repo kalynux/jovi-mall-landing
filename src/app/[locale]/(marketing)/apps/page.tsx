@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
@@ -5,6 +6,7 @@ import JsonLd from "@/components/seo/JsonLd";
 import Breadcrumbs from "@/components/marketing/Breadcrumbs";
 import { CardGrid, PageHeader, Section, StepList } from "@/components/marketing/parts";
 import AppDownloadLinks from "@/components/apps/AppDownloadLinks";
+import { AgentReferralCodeFromUrl } from "@/components/apps/AgentReferralCode";
 import { APP_KEYS, APP_ROLE, APPS, androidVersionForSdk, formatAppSize } from "@/lib/apps/apps";
 import { getAppReleases } from "@/lib/apps/apps.api";
 import { breadcrumbJsonLd, mobileApplicationJsonLd } from "@/lib/seo/jsonld";
@@ -148,6 +150,12 @@ export default async function AppsPage({ params }: PageProps) {
                 )}
 
                 <AppDownloadLinks app={app} release={release} variant="buttons" className="mt-6" />
+
+                {app === "agent" && (
+                  <Suspense fallback={null}>
+                    <AgentReferralCodeFromUrl />
+                  </Suspense>
+                )}
 
                 {release?.sha256 && (
                   <details className="mt-5 text-xs text-[var(--text-muted)]">

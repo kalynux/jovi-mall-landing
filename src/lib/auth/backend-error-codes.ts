@@ -622,6 +622,14 @@ export type BackendErrorCode =
     | "USER_STATUS_CONFLICT"
     | "ACCOUNT_CLOSURE_ROLE_NOT_ELIGIBLE"
     | "ACCOUNT_CLOSURE_ORDERS_IN_FLIGHT"
+    | "ACCOUNT_CLOSURE_REFERRAL_BALANCE"
+    // ─── Referral program (api-doc/me/referrals.md) ────────────────────────────
+    | "REFERRAL_PROGRAM_DISABLED"
+    | "REFERRAL_ALREADY_APPLIED"
+    | "REFERRAL_REAPPLY_NOT_ALLOWED"
+    | "REFERRAL_PARTNER_NOT_FOUND"
+    | "REFERRAL_BALANCE_FROZEN"
+    | "REFERRAL_PAYOUT_METHOD_MANAGED_ELSEWHERE"
     // ─── Role closure requested by an administrator (api-doc/me/role-closure.md)
     /** 404. No pending request for the role signed in. */
     | "ROLE_CLOSURE_REQUEST_NOT_FOUND"

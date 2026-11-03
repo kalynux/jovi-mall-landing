@@ -87,6 +87,7 @@ const MENU: MenuRow[] = [
   { icon: "star", labelKey: "shop.nav.titles.reviews", href: "/shop/account/reviews" },
   { icon: "shield", labelKey: "shop.nav.titles.security", href: "/shop/account/security" },
   { icon: "calendar-clock", labelKey: "shop.nav.titles.bookings", href: "/shop/account/bookings" },
+  { icon: "hand-coins", labelKey: "shop.nav.titles.referrals", href: "/shop/account/referrals" },
   { icon: "life-buoy", labelKey: "shop.nav.titles.support", href: "/shop/account/support" },
   // Where the shop's help shortcut lives now. It used to be a circle floating
   // over every shop page, which on a phone meant a third hovering control

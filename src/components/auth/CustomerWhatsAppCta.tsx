@@ -23,12 +23,25 @@
  * that goes with them — the same line the sign-in dialog uses, for the same
  * reason: what the bot replies with is the next thing on their screen, so
  * narrating it here is telling someone what they are about to read.
+ *
+ * ── A partner's link ─────────────────────────────────────────────────────────
+ *
+ * ⚠ The chat links from `GET /api/public/referral/:code` replace ours, because
+ * the code travels in the first message and that is the only way it reaches the
+ * backend (api-doc/public/FRONTEND-CHANGELOG-referrals.md). So the buttons hold
+ * until the lookup answers, and the `/login` instruction gives way to "send it
+ * as it is": deleting the prefilled text to type a command loses the referral,
+ * with no way to fix it afterwards.
  */
-import { MessageCircle, Send, ExternalLink } from "lucide-react";
+import { Loader2, MessageCircle, Send, ExternalLink } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { BOT_COMMANDS, buildTelegramUrl, buildWhatsAppUrl } from "@/lib/constants";
+import { cn } from "@/lib/utils";
+import type { ReferralLink } from "@/lib/me/useReferralLink";
 
 interface CustomerWhatsAppCtaProps {
+  /** `?ref=` on this visit, when there is one. */
+  referral?: ReferralLink;
   /**
    * Called when the user backs out to the role picker. Omit to hide the control
    * — the app build has no other role to register for.
@@ -38,14 +51,24 @@ interface CustomerWhatsAppCtaProps {
   backLabel?: string;
 }
 
-export default function CustomerWhatsAppCta({ onBack, backLabel }: CustomerWhatsAppCtaProps) {
+export default function CustomerWhatsAppCta({ referral, onBack, backLabel }: CustomerWhatsAppCtaProps) {
   const t = useTranslations("auth");
 
   // `/login` rather than a localised command: the bot matches command strings
   // literally, so a translated one reaches no handler. It is also the command
   // that creates the account — registration happens on first contact.
-  const waUrl = buildWhatsAppUrl(BOT_COMMANDS.login);
-  const telegramUrl = buildTelegramUrl();
+  const waUrl = referral?.confirmed?.whatsappUrl ?? buildWhatsAppUrl(BOT_COMMANDS.login);
+  const telegramUrl = referral?.confirmed?.telegramUrl ?? buildTelegramUrl();
+
+  const pending = !!referral?.pending;
+  const holdProps = pending
+    ? {
+        "aria-disabled": true,
+        tabIndex: -1,
+        onClick: (e: React.MouseEvent) => e.preventDefault(),
+      }
+    : {};
+  const holdClass = pending ? "pointer-events-none opacity-60" : undefined;
 
   return (
     <div className="flex flex-col items-center gap-5 py-2 text-center">
@@ -60,9 +83,14 @@ export default function CustomerWhatsAppCta({ onBack, backLabel }: CustomerWhats
           href={waUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-primary flex w-full items-center justify-center gap-2"
+          className={cn("btn-primary flex w-full items-center justify-center gap-2", holdClass)}
+          {...holdProps}
         >
-          <MessageCircle className="h-4 w-4" aria-hidden="true" />
+          {pending ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <MessageCircle className="h-4 w-4" aria-hidden="true" />
+          )}
           {t("customerWaCta")}
           <ExternalLink className="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
         </a>
@@ -72,7 +100,8 @@ export default function CustomerWhatsAppCta({ onBack, backLabel }: CustomerWhats
             href={telegramUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-secondary flex w-full items-center justify-center gap-2"
+            className={cn("btn-secondary flex w-full items-center justify-center gap-2", holdClass)}
+            {...holdProps}
           >
             <Send className="h-4 w-4" aria-hidden="true" />
             {t("customerSignInTgCta")}
@@ -84,14 +113,16 @@ export default function CustomerWhatsAppCta({ onBack, backLabel }: CustomerWhats
       {/* Telegram cannot pre-fill a message, so the command has to be readable
           and not merely embedded in a link. */}
       <p className="text-xs text-[var(--text-muted)]">
-        {t.rich("customerGetCodeBody", {
-          command: BOT_COMMANDS.login,
-          code: (chunks) => (
-            <code className="rounded bg-[var(--bg-subtle)] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[var(--text-primary)]">
-              {chunks}
-            </code>
-          ),
-          })}
+        {pending || referral?.confirmed
+          ? t("referral.customerHint")
+          : t.rich("customerGetCodeBody", {
+              command: BOT_COMMANDS.login,
+              code: (chunks) => (
+                <code className="rounded bg-[var(--bg-subtle)] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[var(--text-primary)]">
+                  {chunks}
+                </code>
+              ),
+            })}
       </p>
 
       {/* Back */}
