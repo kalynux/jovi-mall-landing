@@ -3686,15 +3686,13 @@
             "introLead": "Candidate-se a parceiro. Depois de aprovado, recebe um link pessoal para partilhar.",
             "how": {
                 "title": "Como funciona",
-                "link": "Quando alguém cria uma nova conta Wi-Mall através do seu link, essa conta fica ligada a si durante um período limitado.",
-                "earn": "Ganha uma percentagem da comissão que a Wi-Mall recebe nas encomendas em que essa pessoa participa. Sai da comissão da Wi-Mall e nunca é uma percentagem do valor da encomenda.",
-                "who": "Os vendedores, os clientes e as agências geram recompensas. Um estafeta pode ser indicado, mas as suas próprias entregas não rendem nada.",
-                "when": "Uma recompensa é ganha quando a Wi-Mall recebe a sua comissão, o que acontece depois da entrega e, nas encomendas em dinheiro, quando o dinheiro chega à Wi-Mall. Por isso, uma encomenda feita antes da data de fim de uma indicação pode não render nada.",
-                "wait": "{days, plural, =0 {Uma recompensa pode ser levantada assim que é ganha.} one {Uma recompensa pode ser levantada # dia depois de ganha.} other {Uma recompensa pode ser levantada # dias depois de ganha.}}",
-                "refund": "Uma recompensa desce se a encomenda for reembolsada. Reembolsos posteriores podem deixá-lo a dever dinheiro, que as recompensas seguintes pagam primeiro.",
-                "minimum": "O levantamento mínimo é de {amount}, e é levantado todo o saldo disponível.",
-                "rates": "A sua taxa, e durante quanto tempo cada indicação rende, aparecem aqui depois de ser aprovado.",
-                "more": "Mais detalhes"
+                "earn": "A sua recompensa sai da comissão da Wi-Mall.",
+                "who": "Os vendedores, os clientes e as agências rendem-lhe recompensas.",
+                "limited": "Cada pessoa rende-lhe recompensas durante um período limitado, a partir do dia em que se regista.",
+                "when": "{days, plural, =0 {Uma recompensa conta quando a Wi-Mall recebe a sua comissão sobre a encomenda. Pode levantá-la de imediato.} one {Uma recompensa conta quando a Wi-Mall recebe a sua comissão sobre a encomenda. Pode levantar uma recompensa # dia depois.} other {Uma recompensa conta quando a Wi-Mall recebe a sua comissão sobre a encomenda. Pode levantar uma recompensa # dias depois.}}",
+                "refund": "Se uma encomenda for reembolsada depois de já ter levantado a sua recompensa, poderá ter de devolver esse montante. As suas próximas recompensas pagam-no automaticamente.",
+                "minimum": "O levantamento mínimo é de <b>{amount}</b>.",
+                "rates": "A sua taxa, e durante quanto tempo cada indicação rende, aparecem aqui depois de ser aprovado."
             },
             "application": {
                 "motivationLabel": "Porque quer ser parceiro? (opcional)",

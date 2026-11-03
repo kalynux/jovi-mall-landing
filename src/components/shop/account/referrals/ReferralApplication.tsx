@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { LegalLink } from "@/components/legal/LegalLink";
 import { Button } from "@/components/shop/ds";
@@ -17,10 +17,9 @@ const MOTIVATION_MAX = 1000;
 /**
  * The program in plain terms.
  *
- * ⚠ These sentences are the owner's rules (api-doc/FRONTEND-CHANGELOG-referrals.md),
- * so rewording one can make a false promise about money. The rate and duration
- * are not here because nothing public carries them: they can differ per partner
- * and arrive only with approval.
+ * ⚠ These sentences are the owner's wording, so rewording one can make a false
+ * promise about money. The rate and duration are not here because nothing public
+ * carries them: they can differ per partner and arrive only with approval.
  */
 export function ReferralHowItWorks({
   program,
@@ -29,36 +28,35 @@ export function ReferralHowItWorks({
 }: {
   program: ReferralProgram;
   currency?: string;
-  /** Shows everything: the partner opened this on purpose. Otherwise the form stays near the top. */
+  /** A partner has their rate on the page already, so the note about it is not for them. */
   approved?: boolean;
 }) {
   const t = useTranslations("shop.referrals.how");
-  const main = [
-    t("link"),
+  const lines = [
     t("earn"),
-    t("wait", { days: program.rewardWaitDays }),
-    t("minimum", { amount: formatMoney(program.minPayoutAmount, currency ?? "") }),
+    t("who"),
+    t("limited"),
+    t("when", { days: program.rewardWaitDays }),
+    t("refund"),
+    t.rich("minimum", {
+      amount: formatMoney(program.minPayoutAmount, currency ?? ""),
+      b: (chunks) => <strong>{chunks}</strong>,
+    }),
   ];
-  const rest = [t("who"), t("when"), t("refund")];
-
-  if (approved) return <RuleList lines={[...main, ...rest]} />;
 
   return (
     <>
-      <RuleList lines={main} />
-      <details style={{ marginTop: 8 }}>
-        <summary style={{ cursor: "pointer", fontSize: 13, fontWeight: 700, color: "var(--text-body)" }}>
-          {t("more")}
-        </summary>
-        <div style={{ marginTop: 6 }}>
-          <RuleList lines={[...rest, t("rates")]} />
-        </div>
-      </details>
+      <RuleList lines={lines} />
+      {!approved && (
+        <p className="muted" style={{ fontSize: 13, lineHeight: 1.55, margin: "8px 0 0" }}>
+          {t("rates")}
+        </p>
+      )}
     </>
   );
 }
 
-function RuleList({ lines }: { lines: string[] }) {
+function RuleList({ lines }: { lines: ReactNode[] }) {
   return (
     <ul
       className="muted"
@@ -72,8 +70,8 @@ function RuleList({ lines }: { lines: string[] }) {
         gap: 6,
       }}
     >
-      {lines.map((line) => (
-        <li key={line}>{line}</li>
+      {lines.map((line, index) => (
+        <li key={index}>{line}</li>
       ))}
     </ul>
   );

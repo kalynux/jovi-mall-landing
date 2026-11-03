@@ -92,16 +92,25 @@ function agentHostOpensApp(): boolean {
 }
 
 /**
- * The Wi-Agent card on /apps — download, install steps, store status — in the
- * language being read. `<html lang>` rather than the pathname: an English page
- * has no prefix to read, and the layout always sets `lang`.
+ * The language being read. `<html lang>` rather than the pathname: an English
+ * page has no prefix to read, and the layout always sets `lang`.
  */
-function agentAppPage(): string {
+function readingLocale(): Locale {
     const lang = typeof document !== "undefined" ? document.documentElement.lang : "";
-    return `${localePath(isLocale(lang) ? lang : DEFAULT_LOCALE, "/apps")}#agent`;
+    return isLocale(lang) ? lang : DEFAULT_LOCALE;
+}
+
+/** The Wi-Agent card on /apps — download, install steps, store status. */
+function agentAppPage(): string {
+    return `${localePath(readingLocale(), "/apps")}#agent`;
 }
 
 export function getRoleUrl(role: Role, path = ""): string {
+    // A customer's dashboard is the shop, not the marketing home at the root of
+    // this same host. Locale-prefixed, because callers assign this to
+    // `window.location.href` and the native export only wrote prefixed paths.
+    if (role === "customer" && !path) return localePath(readingLocale(), "/shop");
+
     // Before the native and dev branches: there is no agent web app on any
     // origin, so anywhere the App Link cannot fire, the agent is sent to get
     // the app rather than to a 404. The native shop app has no /apps page of
@@ -111,7 +120,7 @@ export function getRoleUrl(role: Role, path = ""): string {
     }
 
     if (IS_NATIVE_BUILD) {
-        if (role === "customer") return path || "/shop";
+        if (role === "customer") return path;
         return `https://${ROLE_SUBDOMAIN_MAP[role]}${path || ""}`;
     }
 

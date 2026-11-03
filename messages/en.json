@@ -3686,15 +3686,13 @@
             "introLead": "Apply to become a partner. Once approved, you get a personal link to share.",
             "how": {
                 "title": "How it works",
-                "link": "When someone creates a new Wi-Mall account through your link, it is linked to you for a limited time.",
-                "earn": "You earn a percentage of the commission Wi-Mall receives on orders that person takes part in. It comes out of Wi-Mall's commission and is never a percentage of the order's value.",
-                "who": "Vendors, customers and agencies generate rewards. A delivery agent can be referred, but their own deliveries earn nothing.",
-                "when": "A reward is earned when Wi-Mall receives its commission, which comes after delivery, and for cash orders once the cash has reached Wi-Mall. So an order placed before a referral's end date can still earn nothing.",
-                "wait": "{days, plural, =0 {A reward can be withdrawn as soon as it is earned.} one {A reward can be withdrawn # day after it is earned.} other {A reward can be withdrawn # days after it is earned.}}",
-                "refund": "A reward goes down if the order is refunded. Later refunds can leave you owing money, which later rewards pay first.",
-                "minimum": "The minimum withdrawal is {amount}, and the whole available balance is withdrawn.",
-                "rates": "Your rate, and how long each referral earns, appear here once you're approved.",
-                "more": "More details"
+                "earn": "Your reward comes out of Wi-Mall's commission.",
+                "who": "Vendors, customers and agencies earn you rewards.",
+                "limited": "Each person earns you rewards for a limited time from the day they sign up.",
+                "when": "{days, plural, =0 {A reward counts once Wi-Mall has received its commission on the order. You can withdraw it straight away.} one {A reward counts once Wi-Mall has received its commission on the order. You can withdraw a reward # day after that.} other {A reward counts once Wi-Mall has received its commission on the order. You can withdraw a reward # days after that.}}",
+                "refund": "If an order is refunded after you've already withdrawn its reward, you may owe that amount back. Your next rewards pay it off automatically.",
+                "minimum": "The minimum withdrawal is <b>{amount}</b>.",
+                "rates": "Your rate, and how long each referral earns, appear here once you're approved."
             },
             "application": {
                 "motivationLabel": "Why do you want to become a partner? (optional)",

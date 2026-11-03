@@ -3686,15 +3686,13 @@
             "introLead": "Solicita ser socio. Una vez aprobado, recibes un enlace personal para compartir.",
             "how": {
                 "title": "Cómo funciona",
-                "link": "Cuando alguien crea una cuenta nueva de Wi-Mall con tu enlace, queda vinculada a ti durante un tiempo limitado.",
-                "earn": "Ganas un porcentaje de la comisión que Wi-Mall recibe en los pedidos en los que participa esa persona. Sale de la comisión de Wi-Mall y nunca es un porcentaje del valor del pedido.",
-                "who": "Los vendedores, los clientes y las agencias generan recompensas. Un repartidor puede ser referido, pero sus propias entregas no generan nada.",
-                "when": "Una recompensa se gana cuando Wi-Mall recibe su comisión, lo que ocurre después de la entrega y, en los pedidos en efectivo, cuando el dinero ha llegado a Wi-Mall. Por eso un pedido hecho antes de la fecha de fin de un referido puede no generar nada.",
-                "wait": "{days, plural, =0 {Una recompensa se puede retirar en cuanto se gana.} one {Una recompensa se puede retirar # día después de ganarla.} other {Una recompensa se puede retirar # días después de ganarla.}}",
-                "refund": "Una recompensa baja si el pedido se reembolsa. Los reembolsos posteriores pueden dejarte con una deuda, que las siguientes recompensas pagan primero.",
-                "minimum": "El retiro mínimo es de {amount}, y se retira todo el saldo disponible.",
-                "rates": "Tu tasa, y cuánto tiempo genera cada referido, aparecen aquí cuando te aprueban.",
-                "more": "Más detalles"
+                "earn": "Tu recompensa sale de la comisión de Wi-Mall.",
+                "who": "Los vendedores, los clientes y las agencias te generan recompensas.",
+                "limited": "Cada persona te genera recompensas durante un tiempo limitado, a partir del día en que se registra.",
+                "when": "{days, plural, =0 {Una recompensa cuenta cuando Wi-Mall ha recibido su comisión por el pedido. Puedes retirarla de inmediato.} one {Una recompensa cuenta cuando Wi-Mall ha recibido su comisión por el pedido. Puedes retirar una recompensa # día después.} other {Una recompensa cuenta cuando Wi-Mall ha recibido su comisión por el pedido. Puedes retirar una recompensa # días después.}}",
+                "refund": "Si un pedido se reembolsa después de que ya hayas retirado su recompensa, es posible que debas devolver ese importe. Tus siguientes recompensas lo saldan automáticamente.",
+                "minimum": "El retiro mínimo es de <b>{amount}</b>.",
+                "rates": "Tu tasa, y cuánto tiempo genera cada referido, aparecen aquí cuando te aprueban."
             },
             "application": {
                 "motivationLabel": "¿Por qué quieres ser socio? (opcional)",

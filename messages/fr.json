@@ -3686,15 +3686,13 @@
             "introLead": "Déposez votre candidature pour devenir partenaire. Une fois accepté, vous recevez un lien personnel à partager.",
             "how": {
                 "title": "Comment ça marche",
-                "link": "Quand une personne crée un nouveau compte Wi-Mall via votre lien, ce compte vous est rattaché pour une durée limitée.",
-                "earn": "Vous gagnez un pourcentage de la commission que Wi-Mall perçoit sur les commandes auxquelles cette personne prend part. Il est prélevé sur la commission de Wi-Mall et n'est jamais un pourcentage de la valeur de la commande.",
-                "who": "Les vendeurs, les clients et les agences génèrent des récompenses. Un livreur peut être parrainé, mais ses propres livraisons ne rapportent rien.",
-                "when": "Une récompense est acquise quand Wi-Mall perçoit sa commission, ce qui arrive après la livraison et, pour les commandes en espèces, une fois l'argent parvenu à Wi-Mall. Une commande passée avant la date de fin d'un parrainage peut donc ne rien rapporter.",
-                "wait": "{days, plural, =0 {Une récompense peut être retirée dès qu'elle est acquise.} one {Une récompense peut être retirée # jour après avoir été acquise.} other {Une récompense peut être retirée # jours après avoir été acquise.}}",
-                "refund": "Une récompense diminue si la commande est remboursée. Des remboursements ultérieurs peuvent vous laisser redevable d'une somme, que les récompenses suivantes règlent en priorité.",
-                "minimum": "Le retrait minimum est de {amount}, et la totalité du solde disponible est retirée.",
-                "rates": "Votre taux, et la durée pendant laquelle chaque parrainage rapporte, s'affichent ici une fois votre candidature acceptée.",
-                "more": "Plus de détails"
+                "earn": "Votre récompense est prélevée sur la commission de Wi-Mall.",
+                "who": "Les vendeurs, les clients et les agences vous rapportent des récompenses.",
+                "limited": "Chaque personne vous rapporte des récompenses pendant une durée limitée, à compter du jour de son inscription.",
+                "when": "{days, plural, =0 {Une récompense est comptabilisée une fois que Wi-Mall a reçu sa commission sur la commande. Vous pouvez la retirer aussitôt.} one {Une récompense est comptabilisée une fois que Wi-Mall a reçu sa commission sur la commande. Vous pouvez retirer une récompense # jour plus tard.} other {Une récompense est comptabilisée une fois que Wi-Mall a reçu sa commission sur la commande. Vous pouvez retirer une récompense # jours plus tard.}}",
+                "refund": "Si une commande est remboursée alors que vous avez déjà retiré sa récompense, vous pourriez devoir rembourser ce montant. Vos prochaines récompenses le règlent automatiquement.",
+                "minimum": "Le retrait minimum est de <b>{amount}</b>.",
+                "rates": "Votre taux, et la durée pendant laquelle chaque parrainage rapporte, s'affichent ici une fois votre candidature acceptée."
             },
             "application": {
                 "motivationLabel": "Pourquoi souhaitez-vous devenir partenaire ? (facultatif)",
