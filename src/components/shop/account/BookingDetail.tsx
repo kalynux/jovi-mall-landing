@@ -11,6 +11,13 @@ import { useApiResource } from "@/lib/shop/useApiResource";
 import { formatMoney } from "@/lib/shop/format";
 import { ApiError } from "@/lib/auth/auth.types";
 import {
+  agreedPrice,
+  changedFromPrice,
+  declinedPriceWaivesPolicy,
+  openPriceProposal,
+  settledBalanceOwed,
+} from "@/lib/shop/booking-pricing";
+import {
   BOOKING_PAYMENT_LABEL,
   BOOKING_STATUS_LABEL,
   cancelBooking,
@@ -28,7 +35,8 @@ import {
 import { AccountCard } from "./AccountShell";
 import { BookingPaymentPanel } from "./BookingPaymentPanel";
 import { BookingAccessPanel, BookingPlaceValue, locationIcon } from "./BookingPlace";
-import { BookingProposalPanel } from "./BookingProposalPanel";
+import { BookingPriceProposalPanel, BookingProposalPanel } from "./BookingProposalPanel";
+import { BookingReminderPanel } from "./BookingReminderPanel";
 import { BookingServiceCard, BookingServiceRow } from "./BookingServiceCard";
 import { ProtectionNotice } from "./ProtectionNotice";
 import { RefundPanel } from "./RefundPanel";
@@ -57,6 +65,14 @@ import { ReviewDisclosure } from "./ReviewForm";
  * The mirror case is `creditDue`: the provider settled *below* what was paid.
  * That is **recorded, not refunded** — usually a goodwill discount they intend
  * to hand back themselves — so it says so rather than implying money is coming.
+ *
+ * ── A price difference is not a balance ──────────────────────────────────────
+ *
+ * `pricing.topup` is owed BEFORE the appointment and cancels it if unpaid. It has
+ * its own block in `BookingPaymentPanel`. The balance read adds it to
+ * `outstanding` since 2026-11-03, so the card below reads `settledBalanceOwed`:
+ * it must not tell someone an appointment that has not happened "settled above"
+ * its quote.
  */
 export function BookingDetail({ bookingId }: { bookingId: string }) {
   // ⚠ BOTH TRANSLATORS ARE BOUND HERE, ABOVE THE GUARDS BELOW, AND THAT
@@ -152,7 +168,10 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
   }
 
   const state = BOOKING_STATUS_LABEL[b.status];
-  const pay = BOOKING_PAYMENT_LABEL[b.paymentStatus];
+  // "Paid" beside a difference still owed would say the money is done with.
+  const pay = b.pricing?.topup
+    ? ({ labelKey: "shop.status.bookingPayment.topupDue", tone: "warning" } as const)
+    : BOOKING_PAYMENT_LABEL[b.paymentStatus];
   // A free booking is created `unpaid` and stays so — "Unpaid" on it would
   // read as a debt.
   const showPayBadge = b.requiresPayment || b.paymentStatus !== "unpaid";
@@ -162,7 +181,11 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
   // Declining the vendor's new time opens a full-refund cancel, whatever the policy.
   const fullRefundCancel =
     b.rescheduleProposal?.status === "declined" && b.rescheduleProposal.proposedBy === "vendor";
+  // The same for a declined price, until the vendor confirms.
+  const priceDeclined = declinedPriceWaivesPolicy(b);
   const bal = balance.data;
+  const settledOwed = bal ? settledBalanceOwed(bal) : 0;
+  const bookedAt = changedFromPrice(b);
   const headline = headlineFor(b);
   const note = typeof b.metadata?.notes === "string" && b.metadata.notes ? b.metadata.notes : null;
 
@@ -217,7 +240,9 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
                   <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
                     {state && (
                       <Badge size="sm" tone={state.tone}>
-                        {tKey(state.labelKey)}
+                        {/* `pending` says "awaiting the seller", and an open price
+                            waits on the customer. */}
+                        {openPriceProposal(b) ? t("priceToAnswer") : tKey(state.labelKey)}
                       </Badge>
                     )}
                     {pay && showPayBadge && (
@@ -260,7 +285,17 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
                 <Row
                   icon="banknote"
                   label={t("price")}
-                  value={formatMoney(b.priceSnapshot, b.currency)}
+                  value={
+                    <>
+                      {formatMoney(agreedPrice(b), b.currency)}
+                      {/* Its own line: beside the price it broke inside the amount on a phone. */}
+                      {bookedAt !== null && (
+                        <span className="muted" style={{ display: "block", fontSize: 13 }}>
+                          {t("bookedAt", { amount: formatMoney(bookedAt, b.currency) })}
+                        </span>
+                      )}
+                    </>
+                  }
                 />
                 {/* The reference to quote — the vendor's handle for this booking
                     too. Omitted when null: bookings predate the field, and "#"
@@ -285,7 +320,8 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
             </section>
           </AccountCard>
 
-          {/* Both draw nothing when there is nothing to say. */}
+          {/* All three draw nothing when there is nothing to say. */}
+          <BookingPriceProposalPanel booking={b} onChanged={booking.set} />
           <BookingProposalPanel booking={b} onChanged={booking.set} />
           <BookingAccessPanel booking={b} onRefreshed={booking.set} />
         </div>
@@ -308,14 +344,14 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
               this draws nothing. */}
           <ProtectionNotice protection={b.protection} about="BOOKING" id={b.id} />
 
-          {bal && bal.outstanding > 0 && (
+          {bal && bal.finalPrice !== null && settledOwed > 0 && (
             <AccountCard>
               {/* The amounts go through `formatMoney` and into the message as
                   VALUES. They carry bidi isolate marks, so they survive an
                   Arabic paragraph — which rebuilding the sentence from
                   fragments would not. */}
               <div style={{ fontWeight: 700, fontSize: 14.5, marginBottom: 4 }}>
-                {t("stillToPay", { amount: formatMoney(bal.outstanding, bal.currency) })}
+                {t("stillToPay", { amount: formatMoney(settledOwed, bal.currency) })}
               </div>
               <p className="muted" style={{ fontSize: 13, margin: "0 0 12px" }}>
                 {t("settledAbove", {
@@ -340,6 +376,7 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
 
         {/* ── Actions ──────────────────────────────────────────────────── */}
         <div className="grid gap-2 md:col-start-2">
+          <BookingReminderPanel booking={b} onChanged={booking.set} />
           {movable && (
             <Button
               block
@@ -393,8 +430,12 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
         {b.paymentStatus === "paid"
           ? fullRefundCancel
             ? t("confirmCancelFullRefund")
-            : t("confirmCancelPaid")
-          : t("confirmCancelUnpaid")}
+            : priceDeclined
+              ? t("confirmCancelFullRefundPrice")
+              : t("confirmCancelPaid")
+          : fullRefundCancel || priceDeclined
+            ? t("confirmCancelPolicyWaived")
+            : t("confirmCancelUnpaid")}
       </ConfirmDialog>
     </div>
   );
@@ -416,10 +457,16 @@ function headlineFor(b: Booking): { key: string; icon: IconName; tone: Tone } {
     case "no-show":
       return { key: "detail.headline.noShow", icon: "circle-x", tone: "danger" };
     case "pending":
-      return { key: "detail.headline.awaitingSeller", icon: "hourglass", tone: "warning" };
+      // A proposed price waits on the customer, not on the seller.
+      return openPriceProposal(b)
+        ? { key: "detail.headline.answerPrice", icon: "banknote", tone: "warning" }
+        : { key: "detail.headline.awaitingSeller", icon: "hourglass", tone: "warning" };
   }
   if (b.paymentStatus === "pending") {
     return { key: "detail.headline.checkingPayment", icon: "hourglass", tone: "info" };
+  }
+  if (b.pricing?.topup) {
+    return { key: "detail.headline.payDifference", icon: "wallet", tone: "warning" };
   }
   if (b.requiresPayment && (b.paymentStatus === "unpaid" || b.paymentStatus === "failed")) {
     return { key: "detail.headline.payToKeep", icon: "wallet", tone: "warning" };

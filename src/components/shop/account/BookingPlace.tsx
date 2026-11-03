@@ -5,7 +5,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Button, Icon, type IconName } from "@/components/shop/ds";
 import { openExternal } from "@/lib/native/links";
-import { bookingPayPath } from "@/lib/shop/shop.routes";
+import { bookingBalancePath, bookingPayPath } from "@/lib/shop/shop.routes";
 import {
   getBooking,
   type Booking,
@@ -219,7 +219,13 @@ function LockedAccess({
     const payable =
       booking.requiresPayment &&
       (booking.paymentStatus === "unpaid" || booking.paymentStatus === "failed");
-    body = payable ? (
+    // A price difference locks the link on a booking that reads `paid`. It goes
+    // through its own payment, so the first-payment door would refuse it.
+    body = booking.pricing?.topup ? (
+      <Button block leadingIcon="wallet" onClick={() => router.push(bookingBalancePath(booking.id))}>
+        {t("payDifferenceToUnlock")}
+      </Button>
+    ) : payable ? (
       <Button block leadingIcon="wallet" onClick={() => router.push(bookingPayPath(booking.id))}>
         {t("payToUnlock")}
       </Button>

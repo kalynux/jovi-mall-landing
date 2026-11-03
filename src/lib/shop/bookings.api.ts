@@ -32,6 +32,7 @@ import type { FileDetail, ListMeta } from "./shop.types";
 import type { ChargeRequest, InitiatePaymentResponse } from "./payments.api";
 import type { CustomerProtection } from "./protection";
 import type { CustomerRefund } from "./refund";
+import type { BookingPricing, BookingReminder } from "./booking-pricing";
 
 /**
  * One bookable interval.
@@ -107,7 +108,11 @@ export interface Booking {
   endAt: string;
   status: BookingStatus;
   paymentStatus: BookingPaymentStatus;
-  /** Whole francs. */
+  /**
+   * Whole francs. The AGREED price since 2026-11-03, so it moves when a proposal
+   * is accepted. Show `agreedPrice(b)`, and never work out what is owed from it.
+   * See `lib/shop/booking-pricing.ts`.
+   */
   priceSnapshot: number;
   currency: string;
   requiresPayment: boolean;
@@ -160,6 +165,10 @@ export interface Booking {
   access?: BookingAccess | null;
   /** A new time waiting for an answer, or the last one's outcome (2026-10-26). */
   rescheduleProposal?: RescheduleProposal | null;
+  /** The customer's one reminder to the vendor (2026-11-03). Optional for an older API. */
+  reminder?: BookingReminder | null;
+  /** Agreed price, what was paid, any proposal and anything owed (2026-11-03). */
+  pricing?: BookingPricing | null;
 }
 
 /**
@@ -218,6 +227,9 @@ export interface BookingAccess {
  * ⚠ While it is `open` the booking keeps its ORIGINAL `startAt`/`endAt`. The
  * new time is only `startAt`/`endAt` here. With no answer by `expiresAt` it
  * lapses and the original time stands.
+ *
+ * 🔴 **`price` not null means one answer covers the time AND the price
+ * (2026-11-03)**, so the screen has to show both before the customer answers.
  */
 export interface RescheduleProposal {
   status: "open" | "accepted" | "declined" | "withdrawn" | "lapsed";
@@ -229,6 +241,8 @@ export interface RescheduleProposal {
   proposedAt?: string | null;
   expiresAt: string;
   answeredAt?: string | null;
+  price?: number | null;
+  previousPrice?: number | null;
 }
 
 /** An open proposal, or `null`. */
@@ -575,14 +589,56 @@ export async function withdrawProposal(id: string): Promise<Booking> {
   );
 }
 
+/**
+ * Answer the vendor's proposed price —
+ * `POST /api/customer/bookings/:id/price-proposal/{accept,decline}`, no body.
+ *
+ * Accept confirms the booking at that price. Decline changes nothing, and lets
+ * the customer cancel with a full refund whatever the policy says.
+ * `404 BOOKING_PRICE_PROPOSAL_NOT_FOUND` — nothing open any more;
+ * `409 PAYMENT_BOOKING_IN_PROGRESS` — a charge is still in flight, so the price
+ * cannot move under it.
+ */
+export async function answerPriceProposal(
+  id: string,
+  answer: "accept" | "decline",
+): Promise<Booking> {
+  return normaliseBooking(
+    await apiFetch<Booking>(
+      `/api/customer/bookings/${encodeURIComponent(id)}/price-proposal/${answer}`,
+      { method: "POST" },
+    ),
+  );
+}
+
+/**
+ * `POST /api/customer/bookings/:id/reminder` — this customer's ONE reminder to
+ * the vendor. No body: the platform writes the message, deliberately. It answers
+ * with the block alone, not the booking.
+ *
+ * `409 BOOKING_REMINDER_ALREADY_SENT` (`details.sentAt`) ·
+ * `409 BOOKING_REMINDER_NOT_APPLICABLE` — either way, re-read the booking.
+ */
+export async function sendBookingReminder(id: string): Promise<BookingReminder> {
+  const data = await apiFetch<{ reminder: BookingReminder }>(
+    `/api/customer/bookings/${encodeURIComponent(id)}/reminder`,
+    { method: "POST" },
+  );
+  return data.reminder;
+}
+
 export interface BookingBalance {
   bookingId: string;
   currency: string;
   quotedPrice: number;
-  finalPrice: number;
+  /** `null` until the appointment is settled — which a price difference does not need. */
+  finalPrice: number | null;
   balanceDue: number;
   balancePaid: number;
+  /** A price difference plus any settled balance. See `settledBalanceOwed`. */
   outstanding: number;
+  /** The price difference inside `outstanding` (2026-11-03). Optional for an older API. */
+  topupDue?: number;
   balancePaymentMethod: string | null;
   /**
    * What the provider settled *below* what was already paid.
@@ -615,6 +671,9 @@ export async function getBookingBalance(id: string): Promise<BookingBalance> {
  * POST /api/customer/bookings/:id/pay-balance — the same body and answer as the
  * first payment. The providers on offer may have changed since then, so the
  * screen re-reads `/options` rather than reusing the first payment's choice.
+ *
+ * Since 2026-11-03 this also pays `pricing.topup`, before completion. When both
+ * are owed the difference is charged first.
  */
 export async function payBookingBalance(
   id: string,

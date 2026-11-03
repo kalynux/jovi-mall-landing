@@ -25,8 +25,8 @@ export type PaymentVerdict = "paid" | "failed" | "pending" | "moved";
 type Phase = "code" | "checking" | "slow" | "paid" | "failed";
 
 export interface BookingPaymentCheckProps {
-  /** A first payment, or the balance of a completed appointment. Decides the copy. */
-  kind: "booking" | "balance";
+  /** A first payment, the balance of a completed appointment, or a price difference. Decides the copy. */
+  kind: "booking" | "balance" | "topup";
   bookingId: string;
   /** Formatted with `formatMoney` — it carries its own bidi isolation. */
   amount: string;
@@ -177,9 +177,9 @@ export function BookingPaymentCheck({
         ? t("checkingBody", { phone: isolatedPhone })
         : t("checkingBodyNoPhone")
       : shown === "paid"
-        ? t(kind === "balance" ? "balancePaidBody" : "paidBody")
+        ? t(COPY[kind].paid)
         : shown === "failed"
-          ? t(kind === "balance" ? "balanceFailedBody" : "failedBody")
+          ? t(COPY[kind].failed)
           : t(view.bodyKey);
 
   let instruction: ReactNode = null;
@@ -365,7 +365,7 @@ export function BookingPaymentCheck({
 
         {/* ── What is being paid ─────────────────────────────────────────── */}
         <section
-          aria-label={t(kind === "balance" ? "balanceFor" : "payingFor")}
+          aria-label={t(COPY[kind].summary)}
           className="w-full lg:self-start lg:[grid-area:summary]"
           style={{
             border: "1px solid var(--border)",
@@ -375,7 +375,7 @@ export function BookingPaymentCheck({
           }}
         >
           <p className="ds-overline" style={{ marginBottom: 6 }}>
-            {t(kind === "balance" ? "balanceFor" : "payingFor")}
+            {t(COPY[kind].summary)}
           </p>
           <p
             style={{
@@ -423,7 +423,7 @@ export function BookingPaymentCheck({
           >
             <Icon name="info" size={16} style={{ color: "var(--text-muted)", flexShrink: 0, marginTop: 2 }} />
             <p style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--text-body)", margin: 0 }}>
-              {t(kind === "balance" ? "balanceLeaveNote" : "leaveNote")}
+              {t(COPY[kind].leave)}
             </p>
           </div>
         )}
@@ -453,6 +453,27 @@ function SummaryRow({ label, children }: { label: string; children: ReactNode })
     </div>
   );
 }
+
+/** What depends on what is being paid. Keys are relative to `shop.bookings.payCheck`. */
+const COPY: Record<
+  BookingPaymentCheckProps["kind"],
+  { paid: string; failed: string; summary: string; leave: string }
+> = {
+  booking: { paid: "paidBody", failed: "failedBody", summary: "payingFor", leave: "leaveNote" },
+  balance: {
+    paid: "balancePaidBody",
+    failed: "balanceFailedBody",
+    summary: "balanceFor",
+    leave: "balanceLeaveNote",
+  },
+  // Not "settled": the appointment has usually not happened yet.
+  topup: {
+    paid: "topupPaidBody",
+    failed: "topupFailedBody",
+    summary: "topupFor",
+    leave: "balanceLeaveNote",
+  },
+};
 
 /**
  * The five faces of the wait. Keys are relative to `shop.bookings.payCheck`;

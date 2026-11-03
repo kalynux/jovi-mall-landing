@@ -67,6 +67,11 @@ function iconFor(n: CustomerNotification): IconName {
   // A partial order's online part arrived. Money, though its aggregate is the
   // order; its title and body are the API's, and its button is an order link.
   if (n.type === "order.prepayment.received") return "wallet";
+  // A price to answer, or what is owed for one. The buttons open the booking.
+  if (n.type === "booking.price_proposed" || n.type === "booking.reschedule_price_proposed") {
+    return "banknote";
+  }
+  if (n.type === "booking.price_topup_due") return "wallet";
   return AGGREGATE_ICON[n.aggregateType] ?? "bell";
 }
 

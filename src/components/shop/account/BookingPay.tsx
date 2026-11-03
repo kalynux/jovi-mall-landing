@@ -23,6 +23,7 @@ import { useChargeRefusal } from "@/components/shop/useChargeRefusal";
 import { cardPagePath } from "@/lib/shop/pay-link.api";
 import { isSettledFailure, nextPaymentStep, verifyPayment } from "@/lib/shop/payments.api";
 import { bookingPath } from "@/lib/shop/shop.routes";
+import { agreedPrice } from "@/lib/shop/booking-pricing";
 import {
   getBooking,
   getBookingPaymentStatus,
@@ -225,7 +226,7 @@ export function BookingPay({ bookingId }: { bookingId: string }) {
     );
   }
 
-  const amount = formatMoney(b.priceSnapshot, b.currency);
+  const amount = formatMoney(agreedPrice(b), b.currency);
   const title = b.product?.title ?? t("serviceFallback");
   const when = format.dateTimeRange(new Date(b.startAt), new Date(b.endAt), {
     weekday: "short",

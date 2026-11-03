@@ -9,6 +9,7 @@ import { useAuthGuard } from "@/lib/auth/auth.guard";
 import { useApiResource } from "@/lib/shop/useApiResource";
 import { formatMoney } from "@/lib/shop/format";
 import { bookingPath } from "@/lib/shop/shop.routes";
+import { agreedPrice, openPriceProposal } from "@/lib/shop/booking-pricing";
 import {
   BOOKING_PAYMENT_LABEL,
   BOOKING_STATUS_LABEL,
@@ -97,13 +98,20 @@ function BookingRow({ booking, onOpen }: { booking: Booking; onOpen: () => void 
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, flexWrap: "wrap" }}>
         {state && (
           <Badge size="sm" tone={state.tone}>
-            {tKey(state.labelKey)}
+            {/* `pending` says "awaiting the seller", and an open price waits on the customer. */}
+            {openPriceProposal(booking) ? t("priceToAnswer") : tKey(state.labelKey)}
           </Badge>
         )}
         {/* Payment only matters while it is unresolved or went wrong. */}
         {pay && booking.paymentStatus !== "paid" && (
           <Badge size="sm" tone={pay.tone}>
             {tKey(pay.labelKey)}
+          </Badge>
+        )}
+        {/* "Paid" hides from this row, so a difference still owed has to say so. */}
+        {booking.pricing?.topup && (
+          <Badge size="sm" tone="warning">
+            {tKey("shop.status.bookingPayment.topupDue")}
           </Badge>
         )}
         {booking.refund && <RefundBadge refund={booking.refund} />}
@@ -131,7 +139,7 @@ function BookingRow({ booking, onOpen }: { booking: Booking; onOpen: () => void 
           minute: "2-digit",
         })}
         {" · "}
-        {formatMoney(booking.priceSnapshot, booking.currency)}
+        {formatMoney(agreedPrice(booking), booking.currency)}
       </div>
     </button>
   );

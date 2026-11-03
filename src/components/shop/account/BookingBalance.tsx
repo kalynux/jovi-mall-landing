@@ -20,6 +20,7 @@ import {
 import { usePaymentOptions } from "@/components/shop/usePaymentOptions";
 import { useSavedPayment } from "@/components/shop/useSavedPayment";
 import { useChargeRefusal } from "@/components/shop/useChargeRefusal";
+import { settledBalanceOwed } from "@/lib/shop/booking-pricing";
 import { getBooking, getBookingBalance, payBookingBalance } from "@/lib/shop/bookings.api";
 import { cardPagePath } from "@/lib/shop/pay-link.api";
 import { isSettledFailure, nextPaymentStep, verifyPayment } from "@/lib/shop/payments.api";
@@ -30,6 +31,8 @@ import { BookingPaymentCheck, type PaymentVerdict } from "./BookingPaymentCheck"
 interface Watch {
   transactionId: string;
   amount: string;
+  /** This attempt pays a price difference, not a settled balance. */
+  topup: boolean;
   phone: string | null;
   ussd: string | null;
   note: string | null;
@@ -63,6 +66,14 @@ interface Watch {
  * back to the booking with a toast, so a customer never learned whether the
  * balance went through. Each check asks the gateway, then the balance: once
  * `outstanding` reaches zero, it is paid.
+ *
+ * ── The same route pays a price difference ───────────────────────────────────
+ *
+ * When `pricing.topup` is set the agreed price went up on a booking already paid,
+ * and this page charges that, for `pricing.topup.amount`, usually before the
+ * appointment has happened. Nothing has been settled then and `finalPrice` is
+ * `null`, so it says what is owed and by when instead. A difference is charged
+ * ahead of any settled balance, so it is what the page offers while both exist.
  */
 export function BookingBalance({ bookingId }: { bookingId: string }) {
   // Bound above the guards below — this screen has several render branches, so
@@ -92,6 +103,17 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
   /** Remounts the check screen for each new attempt, so its state starts clean. */
   const [attempt, setAttempt] = useState(0);
 
+  // `pricing.topup` decides, and `topupDue` only stands in when the booking read
+  // failed. The balance read keeps counting a difference on a cancelled booking,
+  // where `pricing.topup` is rightly null.
+  const read = booking.data;
+  const owedTopup = read?.pricing
+    ? (read.pricing.topup?.amount ?? 0)
+    : read
+      ? 0
+      : (balance.data?.topupDue ?? 0);
+  const owed = owedTopup > 0 ? owedTopup : balance.data ? settledBalanceOwed(balance.data) : 0;
+
   const pay = useCallback(async () => {
     const charge = option ? chargeRequest(option, phone) : null;
     const bal = balance.data;
@@ -101,7 +123,8 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
       const payment = await payBookingBalance(bookingId, charge);
       const base = {
         transactionId: payment.transactionId,
-        amount: formatMoney(bal.outstanding, bal.currency),
+        amount: formatMoney(owed, bal.currency),
+        topup: owedTopup > 0,
         phone: phone || null,
         reason: null,
       };
@@ -143,14 +166,17 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
               ? t("balanceSettled")
               : code === "BOOKING_NOT_COMPLETED"
                 ? t("notCompleted")
-                : t("payStartFailed")),
+                : code === "PAYMENT_BOOKING_IN_PROGRESS"
+                  ? t("proposal.paymentInFlight")
+                  : t("payStartFailed")),
       );
     } finally {
       setBusy(false);
     }
-  }, [bookingId, option, phone, flash, router, t, refusal, balance.data]);
+  }, [bookingId, option, phone, flash, router, t, refusal, balance.data, owed, owedTopup]);
 
   const transactionId = watch?.transactionId ?? null;
+  const watchingTopup = watch?.topup ?? false;
   const check = useCallback(async (): Promise<PaymentVerdict> => {
     if (transactionId) {
       try {
@@ -164,19 +190,22 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
     }
     try {
       const now = await getBookingBalance(bookingId);
-      return now.outstanding <= 0 ? "paid" : "pending";
+      // A difference is paid when it is gone, even with a settled balance still open.
+      return (watchingTopup ? (now.topupDue ?? 0) : now.outstanding) <= 0 ? "paid" : "pending";
     } catch (err) {
       // Once settled, the balance read can refuse rather than answer zero.
       const code = err instanceof ApiError ? err.code : undefined;
       if (code === "BOOKING_NO_BALANCE_DUE" || code === "BOOKING_BALANCE_ALREADY_SETTLED") return "paid";
       throw err;
     }
-  }, [bookingId, transactionId]);
+  }, [bookingId, transactionId, watchingTopup]);
 
   if (
     !watch &&
     (status === "loading" ||
       balance.status === "loading" ||
+      // The page's copy and its amount both turn on `pricing.topup`.
+      booking.status === "loading" ||
       (status === "authenticated" && !payForm.ready && !payOptions.failed))
   ) {
     return (
@@ -192,7 +221,7 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
     return (
       <BookingPaymentCheck
         key={attempt}
-        kind="balance"
+        kind={watch.topup ? "topup" : "balance"}
         bookingId={bookingId}
         amount={watch.amount}
         title={b?.product?.title ?? t("serviceFallback")}
@@ -227,7 +256,7 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
   const bal = balance.data;
 
   // `409 BOOKING_NOT_COMPLETED` and `400 BOOKING_NO_BALANCE_DUE` both land here.
-  if (!bal || bal.outstanding <= 0) {
+  if (!bal || owed <= 0) {
     return (
       <div className="mx-auto max-w-[560px] px-4 py-6 sm:px-6">
         <p style={{ fontSize: 14.5 }}>{t("nothingLeftToPay")}</p>
@@ -242,25 +271,53 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
     );
   }
 
+  const topup = b?.pricing?.topup ?? null;
+
   return (
     <div className="mx-auto max-w-[560px] px-4 py-6 sm:px-6">
       <h1 className="sr-only">{tKey("shop.nav.titles.bookingBalance")}</h1>
 
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 26, fontWeight: 800 }}>
-          {formatMoney(bal.outstanding, bal.currency)}
-        </div>
-        {/* Two whole phrases joined by a bullet, not one sentence split across
-            three fragments: the amounts go in as values, and the optional
-            "already paid" clause is a complete phrase of its own. */}
-        <p className="muted" style={{ fontSize: 13, margin: "4px 0 0" }}>
-          {t("quotedSettled", {
-            quoted: formatMoney(bal.quotedPrice, bal.currency),
-            final: formatMoney(bal.finalPrice, bal.currency),
-          })}
-          {bal.balancePaid > 0 &&
-            ` · ${t("alreadyPaid", { amount: formatMoney(bal.balancePaid, bal.currency) })}`}
-        </p>
+        <div style={{ fontSize: 26, fontWeight: 800 }}>{formatMoney(owed, bal.currency)}</div>
+        {owedTopup > 0 ? (
+          <>
+            {b?.pricing && (
+              <p className="muted" style={{ fontSize: 13, margin: "4px 0 0" }}>
+                {t("topup.agreedAndPaid", {
+                  price: formatMoney(b.pricing.currentPrice, bal.currency),
+                  paid: formatMoney(b.pricing.amountPaid, bal.currency),
+                })}
+              </p>
+            )}
+            {topup && (
+              <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text-strong)", margin: "4px 0 0" }}>
+                {t("topup.dueBy", {
+                  time: format.dateTime(new Date(topup.dueAt), {
+                    weekday: "short",
+                    day: "numeric",
+                    month: "short",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }),
+                })}
+              </p>
+            )}
+          </>
+        ) : (
+          bal.finalPrice !== null && (
+            // Two whole phrases joined by a bullet, not one sentence split across
+            // three fragments: the amounts go in as values, and the optional
+            // "already paid" clause is a complete phrase of its own.
+            <p className="muted" style={{ fontSize: 13, margin: "4px 0 0" }}>
+              {t("quotedSettled", {
+                quoted: formatMoney(bal.quotedPrice, bal.currency),
+                final: formatMoney(bal.finalPrice, bal.currency),
+              })}
+              {bal.balancePaid > 0 &&
+                ` · ${t("alreadyPaid", { amount: formatMoney(bal.balancePaid, bal.currency) })}`}
+            </p>
+          )
+        )}
       </div>
 
       {payOptions.failed ? (
@@ -289,9 +346,7 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
             disabled={busy || !paymentReady(option, phone)}
             onClick={() => void pay()}
           >
-            {busy
-              ? t("starting")
-              : t("payAmount", { amount: formatMoney(bal.outstanding, bal.currency) })}
+            {busy ? t("starting") : t("payAmount", { amount: formatMoney(owed, bal.currency) })}
           </Button>
         )}
 

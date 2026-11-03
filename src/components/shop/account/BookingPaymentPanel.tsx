@@ -1,14 +1,15 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Button, Icon } from "@/components/shop/ds";
 import { useToast } from "@/components/shop/providers";
 import { translateError } from "@/lib/auth/error-translator";
+import { agreedPrice, openPriceProposal } from "@/lib/shop/booking-pricing";
 import { formatMoney } from "@/lib/shop/format";
 import { isSettledFailure, verifyPayment } from "@/lib/shop/payments.api";
-import { bookingPayPath } from "@/lib/shop/shop.routes";
+import { bookingBalancePath, bookingPayPath } from "@/lib/shop/shop.routes";
 import { getBooking, getBookingPaymentStatus, type Booking } from "@/lib/shop/bookings.api";
 
 /**
@@ -34,6 +35,14 @@ import { getBooking, getBookingPaymentStatus, type Booking } from "@/lib/shop/bo
  * sentence the shopper deliberately asked for and must still be reading when
  * their thumb is over the Pay button. Only success is a toast, because the
  * block this note lives in unmounts the moment the booking is paid.
+ *
+ * ── A price difference is a different payment ────────────────────────────────
+ *
+ * `pricing.topup` means a booking already paid owes more because the agreed price
+ * went up. It reads `paid` throughout, and it goes through `pay-balance` rather
+ * than `/pay`, so it gets its own block with its own door. Everything in it comes
+ * from `pricing`. The deadline is said plainly: past it the booking is cancelled
+ * and what was paid is refunded.
  */
 export function BookingPaymentPanel({
   booking,
@@ -44,13 +53,14 @@ export function BookingPaymentPanel({
 }) {
   const t = useTranslations("shop.bookings");
   const tErrors = useTranslations("errors");
+  const format = useFormatter();
   const router = useRouter();
   const { flash } = useToast();
   const [checking, setChecking] = useState(false);
   const [checked, setChecked] = useState<{ tone: "info" | "danger"; message: string } | null>(null);
 
   const b = booking;
-  const amount = formatMoney(b.priceSnapshot, b.currency);
+  const amount = formatMoney(agreedPrice(b), b.currency);
   const inFlight = b.paymentStatus === "pending";
   const payable =
     b.requiresPayment && (b.paymentStatus === "unpaid" || b.paymentStatus === "failed");
@@ -101,6 +111,47 @@ export function BookingPaymentPanel({
       setChecking(false);
     }
   }, [b, onRefreshed, flash, t, tErrors]);
+
+  const topup = b.pricing?.topup ?? null;
+  if (topup && !inFlight) {
+    const owed = formatMoney(topup.amount, b.currency);
+    return (
+      <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--border-subtle)" }}>
+        <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-strong)" }}>
+          {t("toPay", { amount: owed })}
+        </div>
+        <p style={{ fontSize: 13, lineHeight: 1.55, color: "var(--text-body)", margin: "4px 0 0" }}>
+          {t("topup.agreedAndPaid", {
+            price: formatMoney(agreedPrice(b), b.currency),
+            paid: formatMoney(b.pricing?.amountPaid ?? 0, b.currency),
+          })}
+        </p>
+        <p style={{ fontSize: 13, lineHeight: 1.55, fontWeight: 600, color: "var(--text-strong)", margin: "4px 0 12px" }}>
+          {t("topup.dueBy", {
+            time: format.dateTime(new Date(topup.dueAt), {
+              weekday: "short",
+              day: "numeric",
+              month: "short",
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          })}
+        </p>
+        <Button
+          block
+          elevated
+          leadingIcon="wallet"
+          onClick={() => router.push(bookingBalancePath(b.id))}
+        >
+          {t("payAmount", { amount: owed })}
+        </Button>
+      </div>
+    );
+  }
+
+  // While a price waits for an answer, a Pay button that cannot be pressed only
+  // stands between the customer and the question. The answer decides what to pay.
+  if (openPriceProposal(b) && !inFlight) return null;
 
   if (!inFlight && !payable) return null;
 

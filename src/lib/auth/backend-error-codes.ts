@@ -781,6 +781,12 @@ export type BackendErrorCode =
     | "BOOKING_PROPOSAL_NOT_FOUND"
     /** 403. Answering your own request, or withdrawing the vendor's. */
     | "BOOKING_PROPOSAL_NOT_YOURS"
+    /** 409. This customer already used their one reminder. `details.sentAt` says when. */
+    | "BOOKING_REMINDER_ALREADY_SENT"
+    /** 409. Not confirmed, or already started: the booking changed since the page loaded. */
+    | "BOOKING_REMINDER_NOT_APPLICABLE"
+    /** 404. No proposed price is open: withdrawn, lapsed, or answered in another tab. */
+    | "BOOKING_PRICE_PROPOSAL_NOT_FOUND"
     // ─── Availability rules (service products) ─────────────────────────────────
     | "AVAILABILITY_PRODUCT_NOT_FOUND"
     | "AVAILABILITY_RULE_NOT_FOUND"
