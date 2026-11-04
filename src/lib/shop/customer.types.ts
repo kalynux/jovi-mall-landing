@@ -16,7 +16,7 @@
  */
 
 import type { FileDetail } from "./shop.types";
-import type { PaymentInstructions } from "./payments.api";
+import type { PaymentInstructions, PaymentProvider } from "./payments.api";
 import type { CustomerProtection } from "./protection";
 import type { CustomerRefund } from "./refund";
 
@@ -1182,6 +1182,8 @@ export interface OrderDeliveryFees {
 export interface DeliveryFeeTopupPayment {
   transactionId: string;
   status: string;
+  /** What this attempt is charged on: the stored one, on a reused live attempt. */
+  provider?: PaymentProvider | null;
   instructions?: PaymentInstructions;
   amount: number;
   currency: string;

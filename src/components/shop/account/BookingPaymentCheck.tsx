@@ -4,14 +4,11 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Button, Icon, type IconName } from "@/components/shop/ds";
-import { PaymentOtpStep, PaymentRedirectPrompt } from "@/components/shop/PaymentSteps";
+import { PaymentHandsetStep, PaymentOtpStep, PaymentRedirectPrompt } from "@/components/shop/PaymentSteps";
 import { useAppResume } from "@/lib/native/useAppResume";
+import { handsetStepOf, nextPollDelay, type HandsetStep } from "@/lib/shop/mobile-money";
 import { BOOKING_LIST, bookingPath } from "@/lib/shop/shop.routes";
 import type { PaymentInstructions } from "@/lib/shop/payments.api";
-
-/** The same window as checkout's success screen: four seconds, one minute. */
-const POLL_MS = 4_000;
-const POLL_LIMIT = 15;
 
 /**
  * What one check found.
@@ -39,6 +36,8 @@ export interface BookingPaymentCheckProps {
   phone?: string | null;
   ussd?: string | null;
   note?: string | null;
+  /** The charge named a payee: this leads the screen, and the wait runs far longer. */
+  handset?: HandsetStep | null;
   redirectUrl?: string | null;
   /** A transaction waiting for the SMS code. Polling holds until it is in. */
   otpFor?: string | null;
@@ -74,7 +73,9 @@ export interface BookingPaymentCheckProps {
  *
  * After one minute the screen stops polling and says so — "still checking" — with
  * a button to check again. Mobile money often lands later than that, and saying
- * "failed" about a payment nobody has refused would be wrong.
+ * "failed" about a payment nobody has refused would be wrong. A charge that names
+ * a payee gets half an hour first, because the customer may have to dial before
+ * anything can happen. See `nextPollDelay`.
  */
 export function BookingPaymentCheck({
   kind,
@@ -86,6 +87,7 @@ export function BookingPaymentCheck({
   phone,
   ussd: initialUssd,
   note: initialNote,
+  handset: initialHandset,
   redirectUrl,
   otpFor,
   initialPhase = "checking",
@@ -94,6 +96,7 @@ export function BookingPaymentCheck({
   onRetry,
 }: BookingPaymentCheckProps) {
   const t = useTranslations("shop.bookings.payCheck");
+  const tProvider = useTranslations("shop.payProvider");
   const router = useRouter();
 
   const [codeFor, setCodeFor] = useState<string | null>(otpFor ?? null);
@@ -101,6 +104,7 @@ export function BookingPaymentCheck({
   const [reason, setReason] = useState<string | null>(initialReason);
   const [ussd, setUssd] = useState<string | null>(initialUssd ?? null);
   const [note, setNote] = useState<string | null>(initialNote ?? null);
+  const [handset, setHandset] = useState<HandsetStep | null>(initialHandset ?? null);
   /** Bumped to start a fresh polling window: "check again", or an app resume. */
   const [round, setRound] = useState(0);
 
@@ -112,6 +116,7 @@ export function BookingPaymentCheck({
   });
 
   const polling = phase === "checking" && !codeFor;
+  const longWait = handset !== null;
 
   useEffect(() => {
     if (!polling) return;
@@ -138,11 +143,12 @@ export function BookingPaymentCheck({
         setPhase(verdict);
         return;
       }
-      if (attempts >= POLL_LIMIT) {
+      const delay = nextPollDelay(attempts, longWait);
+      if (delay === null) {
         setPhase("slow");
         return;
       }
-      timer = setTimeout(() => void tick(), POLL_MS);
+      timer = setTimeout(() => void tick(), delay);
     };
 
     void tick();
@@ -150,7 +156,7 @@ export function BookingPaymentCheck({
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [polling, round, bookingId, router]);
+  }, [polling, longWait, round, bookingId, router]);
 
   const checkAgain = () => {
     setPhase("checking");
@@ -170,12 +176,16 @@ export function BookingPaymentCheck({
   // a phone number has no strong characters, so FSI resolves to the paragraph's
   // direction and an Arabic sentence moves the `+` to the wrong end.
   const isolatedPhone = phone ? `\u2066${phone}\u2069` : null;
+  // The handset step says what to do, and there may be no prompt to approve at all.
+  const onHandset = handset !== null && !redirectUrl && (shown === "checking" || shown === "slow");
 
   const body =
     shown === "checking"
-      ? isolatedPhone
-        ? t("checkingBody", { phone: isolatedPhone })
-        : t("checkingBodyNoPhone")
+      ? onHandset
+        ? tProvider("handsetWaitBody")
+        : isolatedPhone
+          ? t("checkingBody", { phone: isolatedPhone })
+          : t("checkingBodyNoPhone")
       : shown === "paid"
         ? t(COPY[kind].paid)
         : shown === "failed"
@@ -191,6 +201,7 @@ export function BookingPaymentCheck({
           // The code went through; the shopper now approves on the handset.
           setUssd(instructions?.ussdCode ?? null);
           setNote(instructions?.message ?? message ?? null);
+          setHandset(handsetStepOf(instructions, null));
           setCodeFor(null);
         }}
         onRestart={(why) => {
@@ -202,7 +213,9 @@ export function BookingPaymentCheck({
       />
     );
   } else if (shown === "checking" && redirectUrl) {
-    instruction = <PaymentRedirectPrompt url={redirectUrl} />;
+    instruction = <PaymentRedirectPrompt url={redirectUrl} payeeName={handset?.payeeName} />;
+  } else if (onHandset && handset) {
+    instruction = <PaymentHandsetStep step={handset} />;
   } else if ((shown === "checking" || shown === "slow") && (ussd || note)) {
     // What the charge said to do. A push to the handset often carries NO ussd,
     // so the written instruction is the fallback, never a made-up "dial this".
@@ -404,7 +417,7 @@ export function BookingPaymentCheck({
               <span style={{ fontSize: 18, fontWeight: 800, color: "var(--text-strong)" }}>{amount}</span>
             </SummaryRow>
             {phone && (
-              <SummaryRow label={t("promptSentTo")}>
+              <SummaryRow label={handset ? tProvider("payingFrom") : t("promptSentTo")}>
                 <span dir="ltr">{phone}</span>
               </SummaryRow>
             )}

@@ -11,7 +11,12 @@ import {
   chargeRequest,
   paymentReady,
 } from "@/components/shop/PaymentMethodPicker";
-import { PaymentOtpStep, PaymentRedirectPrompt } from "@/components/shop/PaymentSteps";
+import {
+  PaymentHandsetStep,
+  PaymentLimitNote,
+  PaymentOtpStep,
+  PaymentRedirectPrompt,
+} from "@/components/shop/PaymentSteps";
 import { usePaymentOptions } from "@/components/shop/usePaymentOptions";
 import { useSavedPayment } from "@/components/shop/useSavedPayment";
 import { useChargeRefusal } from "@/components/shop/useChargeRefusal";
@@ -39,6 +44,13 @@ import {
 } from "@/lib/shop/fee-proposals";
 import { currencyLabel, formatMoney } from "@/lib/shop/format";
 import { cardPagePath } from "@/lib/shop/pay-link.api";
+import {
+  POLL_MS,
+  amountOutsideLimits,
+  handsetStepOf,
+  nextPollDelay,
+  type HandsetStep,
+} from "@/lib/shop/mobile-money";
 import { isSettledFailure, nextPaymentStep, verifyPayment } from "@/lib/shop/payments.api";
 import { useApiResource } from "@/lib/shop/useApiResource";
 import type { CustomerOrder, DeliveryFeeProposal, OrderDeliveryFees } from "@/lib/shop/customer.types";
@@ -49,10 +61,6 @@ import type { CustomerOrder, DeliveryFeeProposal, OrderDeliveryFees } from "@/li
  * unmounts this card while it does, which would forget a `useState`.
  */
 const cappedParcels = new Set<string>();
-
-/** How long the top-up sheet watches a mobile-money prompt before handing back. */
-const POLL_MS = 4_000;
-const POLL_LIMIT = 15;
 
 /**
  * Changes to this order's delivery fees after checkout (ADR-A11 W-E).
@@ -818,6 +826,7 @@ function TopupSheet({
 }) {
   const t = useTranslations("shop.delivery.topup");
   const tErrors = useTranslations("errors");
+  const tProvider = useTranslations("shop.payProvider");
   const router = useRouter();
   const { flash } = useToast();
   const payOptions = usePaymentOptions(open);
@@ -829,6 +838,9 @@ function TopupSheet({
   const [otpFor, setOtpFor] = useState<string | null>(null);
   const [waitingFor, setWaitingFor] = useState<string | null>(null);
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
+  /** The charge named a payee: this leads the wait, and the wait runs far longer. */
+  const [handset, setHandset] = useState<HandsetStep | null>(null);
+  const longWait = handset !== null;
 
   /*
    * The parent hands over a fresh closure every render; the poll below must not
@@ -864,6 +876,7 @@ function TopupSheet({
         setOtpFor(payment.transactionId);
         return;
       }
+      setHandset(handsetStepOf(payment.instructions, payment.provider ?? charge.provider));
       if (step.kind === "redirect") setRedirectUrl(step.url);
       setWaitingFor(payment.transactionId);
     } catch (err) {
@@ -884,43 +897,46 @@ function TopupSheet({
     if (!waitingFor) return;
     let cancelled = false;
     let attempts = 0;
-    const id = setInterval(async () => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const tick = async () => {
       attempts += 1;
       try {
         const result = await verifyPayment(waitingFor);
         if (cancelled) return;
         if (result.status === "SUCCEEDED") {
-          clearInterval(id);
           flash(t("paid"));
           settledRef.current();
           return;
         }
         if (isSettledFailure(result.status)) {
-          clearInterval(id);
           setWaitingFor(null);
           setRedirectUrl(null);
+          setHandset(null);
           setError(t("refused"));
           return;
         }
       } catch {
         /* keep watching */
       }
-      if (attempts >= POLL_LIMIT) {
-        clearInterval(id);
-        if (!cancelled) {
-          flash(t("stillPending"));
-          settledRef.current();
-        }
+      if (cancelled) return;
+      const delay = nextPollDelay(attempts, longWait);
+      if (delay === null) {
+        flash(t("stillPending"));
+        settledRef.current();
+        return;
       }
-    }, POLL_MS);
+      timer = setTimeout(() => void tick(), delay);
+    };
+    timer = setTimeout(() => void tick(), POLL_MS);
     return () => {
       cancelled = true;
-      clearInterval(id);
+      if (timer) clearTimeout(timer);
     };
-  }, [waitingFor, flash, t]);
+  }, [waitingFor, longWait, flash, t]);
 
   const phoneOk = option !== null && paymentReady(option, phone);
   const formShown = !otpFor && !waitingFor;
+  const outsideLimits = amountOutsideLimits(amount, currency, option?.limits);
 
   return (
     <BottomSheet
@@ -948,7 +964,7 @@ function TopupSheet({
               size="lg"
               elevated
               leadingIcon="lock"
-              disabled={!payForm.ready || !phoneOk || busy}
+              disabled={!payForm.ready || !phoneOk || outsideLimits || busy}
               onClick={() => void pay()}
             >
               {busy ? t("starting") : t("payAmount", { amount: formatMoney(amount, currency) })}
@@ -983,7 +999,8 @@ function TopupSheet({
       {otpFor ? (
         <PaymentOtpStep
           transactionId={otpFor}
-          onAuthorized={() => {
+          onAuthorized={(instructions) => {
+            setHandset(handsetStepOf(instructions, null));
             setWaitingFor(otpFor);
             setOtpFor(null);
           }}
@@ -994,7 +1011,14 @@ function TopupSheet({
         />
       ) : waitingFor ? (
         redirectUrl ? (
-          <PaymentRedirectPrompt url={redirectUrl} />
+          <PaymentRedirectPrompt url={redirectUrl} payeeName={handset?.payeeName} />
+        ) : handset ? (
+          <>
+            <PaymentHandsetStep step={handset} />
+            <p className="muted" style={{ fontSize: 13, lineHeight: 1.55, margin: "12px 0 0" }}>
+              {tProvider("handsetWaitBody")}
+            </p>
+          </>
         ) : (
           <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
             <Icon name="smartphone" size={18} style={{ color: "var(--brand)", flexShrink: 0, marginTop: 1 }} />
@@ -1024,6 +1048,8 @@ function TopupSheet({
       ) : (
         <Skeleton height={180} />
       )}
+
+      {formShown && outsideLimits && option?.limits && <PaymentLimitNote limits={option.limits} />}
     </BottomSheet>
   );
 }

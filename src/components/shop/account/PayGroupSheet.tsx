@@ -21,6 +21,8 @@ import { formatMoney } from "@/lib/shop/format";
 import { cardPagePath } from "@/lib/shop/pay-link.api";
 import { initiatePayment, isSettledFailure, nextPaymentStep } from "@/lib/shop/payments.api";
 import { rememberPaymentAttempt } from "@/lib/shop/payment-attempts";
+import { amountOutsideLimits, handsetStepOf, rememberHandsetStep } from "@/lib/shop/mobile-money";
+import { PaymentLimitNote } from "@/components/shop/PaymentSteps";
 import { payableOrders, payableTotal } from "@/lib/shop/order-status";
 import {
   isAlreadyPaid,
@@ -166,6 +168,11 @@ export function PayGroupSheet({
       // The gateway's own per-action instruction — see the note at the same
       // line in the checkout page.
       if (payment.instructions?.message) params.set("note", payment.instructions.message);
+      // On a reused live attempt the stored provider, not the row just tapped.
+      rememberHandsetStep(
+        payment.transactionId,
+        handsetStepOf(payment.instructions, payment.provider ?? charge.provider),
+      );
       // The gateway refused on this very response. Say so now instead of
       // polling for a minute first — see `isSettledFailure` — and carry the
       // provider's own reason, which on a refusal is the top-level `message`
@@ -194,7 +201,8 @@ export function PayGroupSheet({
   }, [group.cartId, option, phone, partial, partAmount, refusedAmount, router, t, tErrors, refusal]);
 
   const phoneOk = option !== null && paymentReady(option, phone);
-  const canPay = payForm.ready && phoneOk && (!partial || partAmount !== null) && !busy;
+  const outsideLimits = amountOutsideLimits(amount, currency, option?.limits);
+  const canPay = payForm.ready && phoneOk && (!partial || partAmount !== null) && !outsideLimits && !busy;
   const cardListed = payOptions.options?.some((o) => o.provider === "CARD") ?? false;
 
   return (
@@ -314,6 +322,8 @@ export function PayGroupSheet({
       ) : (
         <Skeleton height={180} />
       )}
+
+      {outsideLimits && option?.limits && <PaymentLimitNote limits={option.limits} />}
 
       {/* The other way this order can be paid for, and it belongs here rather
           than on the order card: the shopper is already answering "how do I pay

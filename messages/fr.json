@@ -648,6 +648,7 @@
         "PAYMENT_OTP_INVALID": "Ce code est incorrect. Vérifiez le SMS et réessayez.",
         "PAYMENT_PROVIDER_PHONE_MISMATCH": "Ce numéro est sur un autre réseau que celui choisi. Vérifiez le numéro ou choisissez son réseau — rien n’a été débité.",
         "PAYMENT_PROVIDER_UNAVAILABLE": "Ce moyen de paiement n’est pas disponible pour le moment. Choisissez-en un autre — rien n’a été débité.",
+        "PAYMENT_AMOUNT_OUT_OF_RANGE": "Ce montant ne peut pas être payé de cette façon. Rien n’a été débité.",
         "PAYMENT_PROVIDER_REQUIRED": "Choisissez un moyen de paiement, puis réessayez.",
         "PAYMENT_CART_NOT_FOUND": "Cette commande est introuvable.",
         "PAYMENT_CART_NO_PAYABLE_ORDERS": "Il n’y a plus rien à payer sur cette commande.",
@@ -2478,7 +2479,18 @@
             "otpFailed": "Nous n’avons pas pu vérifier ce code. Veuillez réessayer.",
             "redirectTitle": "Terminez le paiement sur la page de paiement",
             "redirectBody": "Votre paiement se poursuit sur une page sécurisée. Revenez ici une fois terminé.",
-            "redirectOpen": "Ouvrir la page de paiement"
+            "redirectOpen": "Ouvrir la page de paiement",
+            "handsetDialTitle": "Composez ce code pour payer",
+            "handsetDialBody": "Rien ne se passe tant que vous n’avez pas composé le code. Vérifiez que la demande vient de {payee}, puis entrez votre code secret.",
+            "handsetDialAction": "Composer le {code}",
+            "handsetPromptTitle": "Confirmez la demande de {payee}",
+            "handsetPromptBody": "Elle va s’afficher sur votre téléphone. Entrez votre code secret pour la valider.",
+            "handsetPromptFallback": "Rien sur votre téléphone ? Composez le <dial>{code}</dial>.",
+            "handsetWaitBody": "La confirmation de votre opérateur peut prendre quelques minutes. Cette page se met à jour toute seule.",
+            "payingFrom": "Numéro débité",
+            "redirectPayee": "La demande viendra de {payee}.",
+            "amountLimits": "Ce moyen de paiement accepte de {min} à {max}.",
+            "amountRefused": "Ce moyen de paiement accepte de {min} à {max}. Rien n’a été débité."
         },
         "codUnavailable": {
             "customer_restricted": "Le paiement à la livraison n’est pas disponible sur votre compte. Payez en ligne, ou <support>contactez l’assistance</support>.",

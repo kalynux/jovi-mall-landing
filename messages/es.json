@@ -648,6 +648,7 @@
         "PAYMENT_OTP_INVALID": "Ese código no es correcto. Revisa el SMS e inténtalo de nuevo.",
         "PAYMENT_PROVIDER_PHONE_MISMATCH": "Este número es de otra red distinta a la elegida. Revisa el número o elige su red — no se ha cobrado nada.",
         "PAYMENT_PROVIDER_UNAVAILABLE": "Esa forma de pago no está disponible en este momento. Elige otra — no se ha cobrado nada.",
+        "PAYMENT_AMOUNT_OUT_OF_RANGE": "Este importe no se puede pagar de esta forma. No se ha cobrado nada.",
         "PAYMENT_PROVIDER_REQUIRED": "Elige cómo quieres pagar e inténtalo de nuevo.",
         "PAYMENT_CART_NOT_FOUND": "No encontramos este pedido.",
         "PAYMENT_CART_NO_PAYABLE_ORDERS": "Ya no queda nada por pagar en este pedido.",
@@ -2478,7 +2479,18 @@
             "otpFailed": "No hemos podido comprobar ese código. Inténtalo de nuevo.",
             "redirectTitle": "Termina el pago en la página de pago",
             "redirectBody": "Tu pago continúa en una página segura. Vuelve aquí cuando termines.",
-            "redirectOpen": "Abrir la página de pago"
+            "redirectOpen": "Abrir la página de pago",
+            "handsetDialTitle": "Marca este código para pagar",
+            "handsetDialBody": "No pasará nada hasta que lo marques. Comprueba que la solicitud sea de {payee} y luego introduce tu PIN.",
+            "handsetDialAction": "Marcar {code}",
+            "handsetPromptTitle": "Confirma la solicitud de {payee}",
+            "handsetPromptBody": "Aparecerá en tu teléfono. Introduce tu PIN para aprobarla.",
+            "handsetPromptFallback": "¿No aparece nada en tu teléfono? Marca <dial>{code}</dial>.",
+            "handsetWaitBody": "Tu operador puede tardar unos minutos en confirmar. Esta página se actualiza sola.",
+            "payingFrom": "Número de pago",
+            "redirectPayee": "La solicitud vendrá de {payee}.",
+            "amountLimits": "Esta forma de pago acepta de {min} a {max}.",
+            "amountRefused": "Esta forma de pago acepta de {min} a {max}. No se ha cobrado nada."
         },
         "codUnavailable": {
             "customer_restricted": "El pago contra entrega no está disponible en tu cuenta. Paga en línea o <support>contacta con soporte</support>.",

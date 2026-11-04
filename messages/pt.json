@@ -648,6 +648,7 @@
         "PAYMENT_OTP_INVALID": "Esse código não está correto. Verifique o SMS e tente novamente.",
         "PAYMENT_PROVIDER_PHONE_MISMATCH": "Este número é de uma rede diferente da escolhida. Verifique o número ou escolha a rede dele — nada foi cobrado.",
         "PAYMENT_PROVIDER_UNAVAILABLE": "Essa forma de pagamento não está disponível neste momento. Escolha outra — nada foi cobrado.",
+        "PAYMENT_AMOUNT_OUT_OF_RANGE": "Este montante não pode ser pago desta forma. Nada foi cobrado.",
         "PAYMENT_PROVIDER_REQUIRED": "Escolha como quer pagar e tente novamente.",
         "PAYMENT_CART_NOT_FOUND": "Não encontramos este pedido.",
         "PAYMENT_CART_NO_PAYABLE_ORDERS": "Não resta nada a pagar neste pedido.",
@@ -2478,7 +2479,18 @@
             "otpFailed": "Não conseguimos verificar esse código. Tente novamente.",
             "redirectTitle": "Conclua o pagamento na página de pagamento",
             "redirectBody": "O seu pagamento continua numa página segura. Volte aqui quando terminar.",
-            "redirectOpen": "Abrir a página de pagamento"
+            "redirectOpen": "Abrir a página de pagamento",
+            "handsetDialTitle": "Marque este código para pagar",
+            "handsetDialBody": "Nada acontece até marcar o código. Verifique se o pedido é de {payee} e introduza o seu PIN.",
+            "handsetDialAction": "Marcar {code}",
+            "handsetPromptTitle": "Confirme o pedido de {payee}",
+            "handsetPromptBody": "Vai aparecer no seu telefone. Introduza o PIN para o aprovar.",
+            "handsetPromptFallback": "Nada no telefone? Marque <dial>{code}</dial>.",
+            "handsetWaitBody": "A confirmação da sua operadora pode demorar alguns minutos. Esta página atualiza-se sozinha.",
+            "payingFrom": "Número de pagamento",
+            "redirectPayee": "O pedido virá de {payee}.",
+            "amountLimits": "Esta forma de pagamento aceita de {min} a {max}.",
+            "amountRefused": "Esta forma de pagamento aceita de {min} a {max}. Nada foi cobrado."
         },
         "codUnavailable": {
             "customer_restricted": "O pagamento na entrega não está disponível na sua conta. Pague online ou <support>contacte o apoio ao cliente</support>.",

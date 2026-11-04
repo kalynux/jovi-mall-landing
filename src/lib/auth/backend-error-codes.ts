@@ -189,6 +189,7 @@ export type BackendErrorCode =
     | "PAYMENT_PROVIDER_UNAVAILABLE"
     /** 422. `details: { provider, detected, spent: false }` — the number is on `detected`. */
     | "PAYMENT_PROVIDER_PHONE_MISMATCH"
+    | "PAYMENT_AMOUNT_OUT_OF_RANGE"
     // ─── The one-time code step (`POST /payments/:transactionId/authorize`) ────
     /** 422. Wrong code. `details.attemptsRemaining` says how many are left. */
     | "PAYMENT_OTP_INVALID"

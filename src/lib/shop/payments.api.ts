@@ -60,6 +60,14 @@ export interface PaymentProviderOption {
   mayRequireOtp: boolean;
   /** Only on a `CARD_ELEMENT` entry: the Stripe key to load Stripe.js with. */
   publishableKey?: string;
+  /** Only when the route declares them. See `amountOutsideLimits`. */
+  limits?: PaymentLimits;
+}
+
+/** What the active route accepts, in XAF. Never hard-code these: they move with the route. */
+export interface PaymentLimits {
+  min: number;
+  max: number;
 }
 
 /**
@@ -114,6 +122,11 @@ export interface ChargeRequest {
  */
 export interface PaymentInstructions {
   ussdCode?: string;
+  /**
+   * The merchant the customer's phone will name, when that is not Wi-Mall. Its
+   * presence puts the handset step first on the waiting screen. See `handsetStepOf`.
+   */
+  payeeName?: string;
   /** Collect the SMS code and send it to `authorizePayment`. Nothing is charged until then. */
   requiresOtp?: boolean;
   /** Open this page; the payment completes there. Reserved, unused today. */
@@ -243,7 +256,7 @@ export async function authorizePayment(
 }
 
 /**
- * The three refusals a charge can meet before anything is written.
+ * The four refusals a charge can meet before anything is written.
  *
  * Every one of them means nothing was charged, so the form stays as it is and
  * the shopper corrects and presses Pay again.
@@ -258,7 +271,9 @@ export type ProviderRefusal =
    */
   | { code: "PAYMENT_PROVIDER_UNAVAILABLE"; provider: PaymentProvider | null; offered: PaymentProvider[] | null }
   /** Only an old-style body can get this — a bug in the build if it ever shows. */
-  | { code: "PAYMENT_PROVIDER_REQUIRED" };
+  | { code: "PAYMENT_PROVIDER_REQUIRED" }
+  /** The amount is outside the active route's limits. Both figures are in XAF. */
+  | { code: "PAYMENT_AMOUNT_OUT_OF_RANGE"; min: number; max: number };
 
 export function readProviderRefusal(error: unknown): ProviderRefusal | null {
   if (!(error instanceof ApiError)) return null;
@@ -279,6 +294,11 @@ export function readProviderRefusal(error: unknown): ProviderRefusal | null {
     }
     case "PAYMENT_PROVIDER_REQUIRED":
       return { code: error.code };
+    case "PAYMENT_AMOUNT_OUT_OF_RANGE": {
+      const { min, max } = details;
+      // Without the figures, the code's own sentence in `errors` says enough.
+      return typeof min === "number" && typeof max === "number" ? { code: error.code, min, max } : null;
+    }
     default:
       return null;
   }

@@ -5,7 +5,14 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Button, Icon, type IconName } from "@/components/shop/ds";
 import { useShopPageTitle } from "@/components/shop/ShopChrome";
-import { PaymentOtpStep, PaymentRedirectPrompt } from "@/components/shop/PaymentSteps";
+import { PaymentHandsetStep, PaymentOtpStep, PaymentRedirectPrompt } from "@/components/shop/PaymentSteps";
+import {
+  handsetStepOf,
+  nextPollDelay,
+  readHandsetStep,
+  rememberHandsetStep,
+  type HandsetStep,
+} from "@/lib/shop/mobile-money";
 import { verifyPayment, type PaymentInstructions } from "@/lib/shop/payments.api";
 import { orderGroupPath } from "@/lib/shop/shop.routes";
 import { useAppResume } from "@/lib/native/useAppResume";
@@ -41,11 +48,14 @@ import { IS_NATIVE_BUILD } from "@/lib/platform";
  *     for it; polling a charge that cannot move yet would only time out.
  *   - `redirect=<url>` — the payment continues on another page. Polling runs
  *     alongside, and resumes when the app comes back to the foreground.
+ *
+ * ── A charge that names a payee ──────────────────────────────────────────────
+ *
+ * The phone will show a merchant the shopper does not know, and on some networks
+ * shows nothing until they dial. So the step leads the screen, and the poll keeps
+ * going for as long as that can take. It comes from the session, never the query:
+ * see `rememberHandsetStep`.
  */
-
-/** Long enough for a shopper to find their handset and approve, then stop. */
-const POLL_INTERVAL_MS = 4000;
-const POLL_ATTEMPTS = 15;
 
 type Phase = "pending" | "paid" | "failed" | "cod";
 
@@ -53,11 +63,14 @@ export default function SuccessPage() {
   const t = useTranslations("shop.checkout");
   const tDelivery = useTranslations("shop.delivery");
   const tPartial = useTranslations("shop.partialPayment");
+  const tProvider = useTranslations("shop.payProvider");
   const router = useRouter();
   const [group, setGroup] = useState<string | null>(null);
   const [ussd, setUssd] = useState<string | null>(null);
   /** The gateway's own instruction, carried from `initiate`. */
   const [note, setNote] = useState<string | null>(null);
+  /** Set when the charge named a payee. It takes the place of `ussd` and `note`. */
+  const [handset, setHandset] = useState<HandsetStep | null>(null);
   /**
    * Why the gateway refused, in the provider's own words.
    *
@@ -129,6 +142,9 @@ export default function SuccessPage() {
     }
     setCodeFor(null);
 
+    const step = readHandsetStep(transactionId);
+    setHandset(step);
+
     let cancelled = false;
     let attempts = 0;
 
@@ -154,7 +170,8 @@ export default function SuccessPage() {
         // shopper on "pending", which is the honest state.
       }
 
-      if (attempts < POLL_ATTEMPTS) setTimeout(() => void poll(), POLL_INTERVAL_MS);
+      const delay = nextPollDelay(attempts, step !== null);
+      if (delay !== null) setTimeout(() => void poll(), delay);
     };
 
     void poll();
@@ -193,6 +210,8 @@ export default function SuccessPage() {
     if (instructions?.ussdCode) params.set("ussd", instructions.ussdCode);
     const nextNote = instructions?.message ?? message;
     if (nextNote) params.set("note", nextNote);
+    const transactionId = params.get("transaction");
+    if (transactionId) rememberHandsetStep(transactionId, handsetStepOf(instructions, null));
     window.history.replaceState(window.history.state, "", `${window.location.pathname}?${params}`);
     setResumeNonce((n) => n + 1);
   };
@@ -223,6 +242,9 @@ export default function SuccessPage() {
 
   const view = VIEWS[phase];
   const title = t(view.titleKey);
+  /** The handset step is on screen, so it is the main thing and the rest steps back. */
+  const onHandset = phase === "pending" && !codeFor && !redirect && handset !== null;
+  const badgeSize = onHandset ? 56 : 92;
 
   // A payment that failed is not an "order confirmed", which is what the route
   // alone would put in the header bar. The body headline is the honest one.
@@ -233,8 +255,8 @@ export default function SuccessPage() {
       <div
         className="fadein"
         style={{
-          width: 92,
-          height: 92,
+          width: badgeSize,
+          height: badgeSize,
           borderRadius: "50%",
           background: `var(--${view.tone}-bg)`,
           display: "flex",
@@ -243,7 +265,7 @@ export default function SuccessPage() {
           marginBottom: 18,
         }}
       >
-        <Icon name={view.icon} size={44} style={{ color: `var(--${view.tone})` }} />
+        <Icon name={view.icon} size={onHandset ? 27 : 44} style={{ color: `var(--${view.tone})` }} />
       </div>
 
       <h1
@@ -258,8 +280,14 @@ export default function SuccessPage() {
         {title}
       </h1>
       <p className="muted" style={{ maxWidth: 380, lineHeight: 1.55, margin: 0 }}>
-        {t(view.bodyKey)}
+        {onHandset ? tProvider("handsetWaitBody") : t(view.bodyKey)}
       </p>
+
+      {onHandset && handset && (
+        <div style={{ width: "100%", maxWidth: 360, marginTop: 18 }}>
+          <PaymentHandsetStep step={handset} />
+        </div>
+      )}
 
       {/* What the charge said to do, which is not always the same thing. A
           push to the handset often comes with NO ussd — there is nothing to
@@ -311,11 +339,11 @@ export default function SuccessPage() {
 
       {phase === "pending" && !codeFor && redirect && (
         <div style={{ width: "100%", maxWidth: 360, marginTop: 18 }}>
-          <PaymentRedirectPrompt url={redirect} />
+          <PaymentRedirectPrompt url={redirect} payeeName={handset?.payeeName} />
         </div>
       )}
 
-      {phase === "pending" && !codeFor && !redirect && (ussd || note) && (
+      {phase === "pending" && !codeFor && !redirect && !onHandset && (ussd || note) && (
         <div
           style={{
             width: "100%",
@@ -428,6 +456,7 @@ export default function SuccessPage() {
         <Button
           block
           size="lg"
+          variant={onHandset ? "secondary" : "primary"}
           leadingIcon="receipt-text"
           onClick={() => router.push(group ? orderGroupPath(group) : "/shop/account/orders")}
         >

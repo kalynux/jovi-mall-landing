@@ -2,14 +2,15 @@
 
 import { useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { formatMoney } from "@/lib/shop/format";
 import { readProviderRefusal, type PaymentProvider } from "@/lib/shop/payments.api";
 import { NETWORK_NAME } from "./payment-networks";
 
 /**
  * The shopper's sentence for a charge the server refused before writing
- * anything, or `null` when the error is not one of those three.
+ * anything, or `null` when the error is not one of those four.
  *
- * All three mean nothing was charged, so every caller keeps its form exactly as
+ * All four mean nothing was charged, so every caller keeps its form exactly as
  * it is — number, choice, saved wallet — and only says what to change:
  *
  *   - `PAYMENT_PROVIDER_PHONE_MISMATCH` names the number's real network, from
@@ -19,6 +20,8 @@ import { NETWORK_NAME } from "./payment-networks";
  *     "online payment is unavailable".
  *   - `PAYMENT_PROVIDER_REQUIRED` can only come from an old-style body, so if a
  *     current build ever sees it the honest thing is to ask for a choice again.
+ *   - `PAYMENT_AMOUNT_OUT_OF_RANGE` says the route's limits, and re-reads
+ *     `/options`, because the limits the form knew were evidently out of date.
  *
  * The backend's own `message` is English and names raw codes (`ORANGE`), which
  * is why each is keyed on `code` here instead.
@@ -43,6 +46,12 @@ export function useChargeRefusal(applyOffered: (offered: PaymentProvider[] | nul
           return refusal.offered?.length === 0 ? t("onlineUnavailable") : t("providerSwitchedOff");
         case "PAYMENT_PROVIDER_REQUIRED":
           return t("providerRequired");
+        case "PAYMENT_AMOUNT_OUT_OF_RANGE":
+          applyOffered(null);
+          return t("amountRefused", {
+            min: formatMoney(refusal.min, "XAF"),
+            max: formatMoney(refusal.max, "XAF"),
+          });
       }
     },
     [applyOffered, t]

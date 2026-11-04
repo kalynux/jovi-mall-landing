@@ -648,6 +648,7 @@
         "PAYMENT_OTP_INVALID": "الرمز غير صحيح. تحقّق من الرسالة وحاول مرة أخرى.",
         "PAYMENT_PROVIDER_PHONE_MISMATCH": "هذا الرقم تابع لشبكة غير التي اخترتها. تحقّق من الرقم أو اختر شبكته — لم يُخصم أي مبلغ.",
         "PAYMENT_PROVIDER_UNAVAILABLE": "طريقة الدفع هذه غير متاحة حاليًا. اختر طريقة أخرى — لم يُخصم أي مبلغ.",
+        "PAYMENT_AMOUNT_OUT_OF_RANGE": "لا يمكن دفع هذا المبلغ بهذه الطريقة. لم يُخصم أي مبلغ.",
         "PAYMENT_PROVIDER_REQUIRED": "اختر طريقة الدفع، ثم حاول مرة أخرى.",
         "PAYMENT_CART_NOT_FOUND": "لم يتم العثور على هذا الطلب.",
         "PAYMENT_CART_NO_PAYABLE_ORDERS": "لم يعد هناك ما يُدفع في هذا الطلب.",
@@ -2478,7 +2479,18 @@
             "otpFailed": "تعذّر التحقق من هذا الرمز. يُرجى المحاولة مرة أخرى.",
             "redirectTitle": "أكمِل الدفع في صفحة الدفع",
             "redirectBody": "يستمر الدفع في صفحة آمنة. عُد إلى هنا عندما تنتهي.",
-            "redirectOpen": "افتح صفحة الدفع"
+            "redirectOpen": "افتح صفحة الدفع",
+            "handsetDialTitle": "اطلب هذا الرمز للدفع",
+            "handsetDialBody": "لن يحدث شيء حتى تطلب الرمز. تأكّد من أن الطلب وارد من {payee}، ثم أدخِل رقمك السري.",
+            "handsetDialAction": "اطلب {code}",
+            "handsetPromptTitle": "أكّد الطلب الوارد من {payee}",
+            "handsetPromptBody": "سيظهر على هاتفك. أدخِل رقمك السري للموافقة عليه.",
+            "handsetPromptFallback": "لم يظهر شيء على هاتفك؟ اطلب <dial>{code}</dial>.",
+            "handsetWaitBody": "قد يستغرق تأكيد شبكتك بضع دقائق. تتحدّث هذه الصفحة تلقائيًا.",
+            "payingFrom": "رقم الدفع",
+            "redirectPayee": "سيصل الطلب من {payee}.",
+            "amountLimits": "طريقة الدفع هذه تقبل من {min} إلى {max}.",
+            "amountRefused": "طريقة الدفع هذه تقبل من {min} إلى {max}. لم يُخصم أي مبلغ."
         },
         "codUnavailable": {
             "customer_restricted": "الدفع عند الاستلام غير متاح على حسابك. ادفع عبر الإنترنت، أو <support>تواصل مع الدعم</support>.",

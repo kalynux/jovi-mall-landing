@@ -648,6 +648,7 @@
         "PAYMENT_OTP_INVALID": "That code is not right. Check the SMS and try again.",
         "PAYMENT_PROVIDER_PHONE_MISMATCH": "This number is on a different network than the one you chose. Check the number or choose its network — nothing was charged.",
         "PAYMENT_PROVIDER_UNAVAILABLE": "That way to pay is not available right now. Choose another one — nothing was charged.",
+        "PAYMENT_AMOUNT_OUT_OF_RANGE": "This amount can’t be paid this way. Nothing was charged.",
         "PAYMENT_PROVIDER_REQUIRED": "Choose how you want to pay, then try again.",
         "PAYMENT_CART_NOT_FOUND": "We could not find this order.",
         "PAYMENT_CART_NO_PAYABLE_ORDERS": "There is nothing left to pay on this order.",
@@ -2478,7 +2479,18 @@
             "otpFailed": "We couldn’t check that code. Please try again.",
             "redirectTitle": "Finish paying on the payment page",
             "redirectBody": "Your payment continues on a secure page. Come back here when you’re done.",
-            "redirectOpen": "Open the payment page"
+            "redirectOpen": "Open the payment page",
+            "handsetDialTitle": "Dial this code to pay",
+            "handsetDialBody": "Nothing happens until you dial. Check that the request is from {payee}, then enter your PIN.",
+            "handsetDialAction": "Dial {code}",
+            "handsetPromptTitle": "Confirm the request from {payee}",
+            "handsetPromptBody": "It will appear on your phone. Enter your PIN to approve it.",
+            "handsetPromptFallback": "Nothing on your phone? Dial <dial>{code}</dial>.",
+            "handsetWaitBody": "Your operator can take a few minutes to confirm. This page updates by itself.",
+            "payingFrom": "Paying from",
+            "redirectPayee": "The request will come from {payee}.",
+            "amountLimits": "This way to pay takes {min} to {max}.",
+            "amountRefused": "This way to pay takes {min} to {max}. Nothing was charged."
         },
         "codUnavailable": {
             "customer_restricted": "Cash on delivery is not available on your account. Pay online, or <support>contact support</support>.",

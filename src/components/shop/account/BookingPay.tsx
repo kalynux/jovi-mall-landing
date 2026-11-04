@@ -21,6 +21,14 @@ import { usePaymentOptions } from "@/components/shop/usePaymentOptions";
 import { useSavedPayment } from "@/components/shop/useSavedPayment";
 import { useChargeRefusal } from "@/components/shop/useChargeRefusal";
 import { cardPagePath } from "@/lib/shop/pay-link.api";
+import {
+  amountOutsideLimits,
+  handsetStepOf,
+  readHandsetStep,
+  rememberHandsetStep,
+  type HandsetStep,
+} from "@/lib/shop/mobile-money";
+import { PaymentLimitNote } from "@/components/shop/PaymentSteps";
 import { isSettledFailure, nextPaymentStep, verifyPayment } from "@/lib/shop/payments.api";
 import { bookingPath } from "@/lib/shop/shop.routes";
 import { agreedPrice } from "@/lib/shop/booking-pricing";
@@ -39,23 +47,32 @@ interface Watch {
   phone: string | null;
   ussd: string | null;
   note: string | null;
+  handset: HandsetStep | null;
   redirectUrl: string | null;
   otp: boolean;
   initialPhase: "checking" | "failed";
   reason: string | null;
 }
 
-/** An attempt already in flight when the screen opened. */
-const RESUMED: Watch = {
+/**
+ * An attempt already in flight when the screen opened.
+ *
+ * ⚠ `POST .../pay` will not hand back a live attempt's instructions (it refuses
+ * with `PAYMENT_BOOKING_IN_PROGRESS`) and `/payment-status` does not carry them, so
+ * what this tab was told is all there is. Without it, a customer back from the
+ * dialer would be asked to approve a prompt their network never sends.
+ */
+const resumed = (bookingId: string): Watch => ({
   transactionId: null,
   phone: null,
   ussd: null,
   note: null,
+  handset: readHandsetStep(bookingId),
   redirectUrl: null,
   otp: false,
   initialPhase: "checking",
   reason: null,
-};
+});
 
 /** The booking's own word on its money, as the check screen reads it. */
 function verdictOf(status: BookingPaymentStatus): PaymentVerdict {
@@ -139,9 +156,12 @@ export function BookingPay({ bookingId }: { bookingId: string }) {
       if (isSettledFailure(payment.status)) {
         // Refused on the spot — nothing to wait for, and the provider's own
         // reason is worth more than a generic apology.
-        begin({ ...base, ussd: null, note: null, redirectUrl: null, initialPhase: "failed", reason: payment.message ?? null });
+        rememberHandsetStep(bookingId, null);
+        begin({ ...base, ussd: null, note: null, handset: null, redirectUrl: null, initialPhase: "failed", reason: payment.message ?? null });
         return;
       }
+      const handset = handsetStepOf(payment.instructions, payment.provider ?? charge.provider);
+      rememberHandsetStep(bookingId, handset);
       const step = nextPaymentStep(payment.instructions);
       if (step.kind === "card") {
         router.push(await cardPagePath(payment.transactionId));
@@ -151,6 +171,7 @@ export function BookingPay({ bookingId }: { bookingId: string }) {
         ...base,
         ussd: payment.instructions?.ussdCode ?? null,
         note: payment.instructions?.message ?? null,
+        handset,
         redirectUrl: step.kind === "redirect" ? step.url : null,
         otp: step.kind === "otp",
         initialPhase: "checking",
@@ -159,7 +180,7 @@ export function BookingPay({ bookingId }: { bookingId: string }) {
       const code = err instanceof ApiError ? err.code : undefined;
       if (code === "PAYMENT_BOOKING_IN_PROGRESS") {
         // An attempt is already live — check it rather than refuse.
-        begin(RESUMED);
+        begin(resumed(bookingId));
         return;
       }
       if (code === "PAYMENT_BOOKING_ALREADY_PAID") {
@@ -178,7 +199,7 @@ export function BookingPay({ bookingId }: { bookingId: string }) {
 
   const b = booking.data;
   const active: Watch | null =
-    watch && watch !== "form" ? watch : watch === null && b?.paymentStatus === "pending" ? RESUMED : null;
+    watch && watch !== "form" ? watch : watch === null && b?.paymentStatus === "pending" ? resumed(bookingId) : null;
 
   const transactionId = active?.transactionId ?? null;
   const check = useCallback(async (): Promise<PaymentVerdict> => {
@@ -227,6 +248,7 @@ export function BookingPay({ bookingId }: { bookingId: string }) {
   }
 
   const amount = formatMoney(agreedPrice(b), b.currency);
+  const outsideLimits = amountOutsideLimits(agreedPrice(b), b.currency, option?.limits);
   const title = b.product?.title ?? t("serviceFallback");
   const when = format.dateTimeRange(new Date(b.startAt), new Date(b.endAt), {
     weekday: "short",
@@ -257,6 +279,7 @@ export function BookingPay({ bookingId }: { bookingId: string }) {
         phone={active.phone}
         ussd={active.ussd}
         note={active.note}
+        handset={active.handset}
         redirectUrl={active.redirectUrl}
         otpFor={active.otp ? active.transactionId : null}
         initialPhase={active.initialPhase}
@@ -316,12 +339,14 @@ export function BookingPay({ bookingId }: { bookingId: string }) {
             saved={payForm}
           />
 
+          {outsideLimits && option.limits && <PaymentLimitNote limits={option.limits} />}
+
           <div style={{ marginTop: 16 }}>
             <Button
               block
               size="lg"
               elevated
-              disabled={busy || !paymentReady(option, phone)}
+              disabled={busy || outsideLimits || !paymentReady(option, phone)}
               onClick={() => void start()}
             >
               {busy ? t("starting") : t("payAmount", { amount })}

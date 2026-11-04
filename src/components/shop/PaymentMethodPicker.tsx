@@ -10,6 +10,7 @@ import type { SavedPaymentMethod } from "@/lib/shop/customer.types";
 import {
   providerForSavedWallet,
   type ChargeRequest,
+  type PaymentLimits,
   type PaymentProvider,
   type PaymentProviderOption,
 } from "@/lib/shop/payments.api";
@@ -71,6 +72,8 @@ export interface PaymentOption {
   needsPhone: boolean;
   /** `/options` warned that an SMS code may follow. A hint only — the charge's answer decides. */
   mayRequireOtp?: boolean;
+  /** What `/options` says the route accepts. Absent when it declares none. */
+  limits?: PaymentLimits;
   /** Settled at handoff — `initiate` is never called. */
   isCod?: boolean;
 }
@@ -124,6 +127,7 @@ export function optionsFromProviders(entries: PaymentProviderOption[]): PaymentO
       ...PRESENTATION[entry.provider],
       needsPhone: entry.fields.includes("phoneNumber"),
       mayRequireOtp: entry.mayRequireOtp,
+      limits: entry.limits,
     }));
 }
 

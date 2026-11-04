@@ -15,6 +15,7 @@ import {
 import { usePaymentOptions } from "@/components/shop/usePaymentOptions";
 import { useSavedPayment } from "@/components/shop/useSavedPayment";
 import { useChargeRefusal } from "@/components/shop/useChargeRefusal";
+import { PaymentLimitNote } from "@/components/shop/PaymentSteps";
 import { CodUnavailableNotice } from "@/components/shop/CodUnavailableNotice";
 import {
   PartialAmountField,
@@ -53,6 +54,7 @@ import {
 } from "@/lib/shop/payments.api";
 import { cardPagePath } from "@/lib/shop/pay-link.api";
 import { rememberPaymentAttempt } from "@/lib/shop/payment-attempts";
+import { amountOutsideLimits, handsetStepOf, rememberHandsetStep } from "@/lib/shop/mobile-money";
 import { formatMoney } from "@/lib/shop/format";
 import type { CartLine } from "@/lib/shop/shop.types";
 import type {
@@ -441,6 +443,10 @@ export default function CheckoutPage() {
       // NO ussd — so discarding it for our own fixed sentence would guess at a
       // step that varies.
       if (payment.instructions?.message) params.set("note", payment.instructions.message);
+      rememberHandsetStep(
+        payment.transactionId,
+        handsetStepOf(payment.instructions, payment.provider ?? charge.provider),
+      );
       // The gateway refused on this very response — there is nothing to wait
       // for, so say so instead of spending a minute of polling to find out.
       // The orders still exist and are still payable; that is what the failed
@@ -617,7 +623,10 @@ export default function CheckoutPage() {
   const partOk = !payPart || (partAmount !== null && quote?.paymentMethod === "cash_on_delivery");
   // `totalKnown` joins the gate since delivery can cost something: an order is
   // never placed against a total the screen did not show.
-  const canPay = phoneOk && addressOk && totalKnown && !shortOfMinimum && partOk && !placing;
+  // Asked before the order exists: a charge refused after it leaves an order
+  // this route could never take payment for.
+  const outsideLimits = totalKnown && amountOutsideLimits(dueNow, currency, option?.limits);
+  const canPay = phoneOk && addressOk && totalKnown && !shortOfMinimum && partOk && !outsideLimits && !placing;
 
   return (
     <div className="mx-auto max-w-[760px] px-4 py-6 sm:px-6">
@@ -778,6 +787,10 @@ export default function CheckoutPage() {
           disabled={placing}
           saved={payForm}
         />
+      )}
+
+      {outsideLimits && option?.limits && (
+        <PaymentLimitNote limits={option.limits} style={{ margin: "0 0 20px" }} />
       )}
 
       {option?.provider === "CARD" && (

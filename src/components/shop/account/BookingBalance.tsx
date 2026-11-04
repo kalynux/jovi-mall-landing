@@ -23,6 +23,8 @@ import { useChargeRefusal } from "@/components/shop/useChargeRefusal";
 import { settledBalanceOwed } from "@/lib/shop/booking-pricing";
 import { getBooking, getBookingBalance, payBookingBalance } from "@/lib/shop/bookings.api";
 import { cardPagePath } from "@/lib/shop/pay-link.api";
+import { amountOutsideLimits, handsetStepOf, type HandsetStep } from "@/lib/shop/mobile-money";
+import { PaymentLimitNote } from "@/components/shop/PaymentSteps";
 import { isSettledFailure, nextPaymentStep, verifyPayment } from "@/lib/shop/payments.api";
 import { bookingPath } from "@/lib/shop/shop.routes";
 import { BookingPaymentCheck, type PaymentVerdict } from "./BookingPaymentCheck";
@@ -36,6 +38,7 @@ interface Watch {
   phone: string | null;
   ussd: string | null;
   note: string | null;
+  handset: HandsetStep | null;
   redirectUrl: string | null;
   otp: boolean;
   initialPhase: "checking" | "failed";
@@ -134,6 +137,7 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
           ...base,
           ussd: null,
           note: null,
+          handset: null,
           redirectUrl: null,
           otp: false,
           initialPhase: "failed",
@@ -151,6 +155,7 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
         ...base,
         ussd: payment.instructions?.ussdCode ?? null,
         note: payment.instructions?.message ?? null,
+        handset: handsetStepOf(payment.instructions, payment.provider ?? charge.provider),
         redirectUrl: step.kind === "redirect" ? step.url : null,
         otp: step.kind === "otp",
         initialPhase: "checking",
@@ -240,6 +245,7 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
         phone={watch.phone}
         ussd={watch.ussd}
         note={watch.note}
+        handset={watch.handset}
         redirectUrl={watch.redirectUrl}
         otpFor={watch.otp ? watch.transactionId : null}
         initialPhase={watch.initialPhase}
@@ -272,6 +278,7 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
   }
 
   const topup = b?.pricing?.topup ?? null;
+  const outsideLimits = amountOutsideLimits(owed, bal.currency, option?.limits);
 
   return (
     <div className="mx-auto max-w-[560px] px-4 py-6 sm:px-6">
@@ -337,13 +344,15 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
         <OnlinePaymentUnavailable />
       )}
 
+      {outsideLimits && option?.limits && <PaymentLimitNote limits={option.limits} />}
+
       <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
         {option && (
           <Button
             block
             size="lg"
             elevated
-            disabled={busy || !paymentReady(option, phone)}
+            disabled={busy || outsideLimits || !paymentReady(option, phone)}
             onClick={() => void pay()}
           >
             {busy ? t("starting") : t("payAmount", { amount: formatMoney(owed, bal.currency) })}
