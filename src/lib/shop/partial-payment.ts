@@ -99,16 +99,48 @@ export function parsePartialAmount(
   return amount >= limits.minimumAmount && amount <= limits.maximumAmount ? amount : null;
 }
 
+/**
+ * The one limit what is typed breaks, or `null` while it can be charged.
+ *
+ * Only one side at a time, so the field names the figure to move towards
+ * rather than the whole range. An empty or non-numeric entry is "below the
+ * minimum": there is nothing to pay yet, and the minimum is what to type.
+ */
+export function partialAmountBreach(
+  input: string,
+  limits: Pick<PartialLimits, "minimumAmount" | "maximumAmount">,
+): { bound: "min" | "max"; value: number } | null {
+  if (parsePartialAmount(input, limits) !== null) return null;
+  const text = input.replace(/[\s  ]/g, "");
+  if (/^\d+$/.test(text) && Number(text) > limits.maximumAmount) {
+    return { bound: "max", value: limits.maximumAmount };
+  }
+  return { bound: "min", value: limits.minimumAmount };
+}
+
 /** The online part went through. On `initiate` this is good news, never a refusal. */
 export const isAlreadyPaid = (error: unknown): boolean =>
   errorParts(error).code === "PAYMENT_ORDER_ALREADY_PAID";
 
-/** The limits a refused amount carries, for saying what would pass. */
-export function refusedAmountLimits(error: unknown): { minimum: number; maximum: number } | null {
+/**
+ * The limits a refused amount carries, for saying what would pass.
+ *
+ * `requested` is the amount the server refused, when it says so, which tells
+ * the caller which one of the two limits to name.
+ */
+export function refusedAmountLimits(
+  error: unknown,
+): { minimum: number; maximum: number; requested: number | null } | null {
   const { code, details } = errorParts(error);
   if (code !== "PARTIAL_PAYMENT_AMOUNT_OUT_OF_RANGE" && code !== "PARTIAL_PAYMENT_AMOUNT_REQUIRED") return null;
-  const { minimum, maximum } = (details ?? {}) as { minimum?: unknown; maximum?: unknown };
-  return typeof minimum === "number" && typeof maximum === "number" ? { minimum, maximum } : null;
+  const { minimum, maximum, requested } = (details ?? {}) as {
+    minimum?: unknown;
+    maximum?: unknown;
+    requested?: unknown;
+  };
+  return typeof minimum === "number" && typeof maximum === "number"
+    ? { minimum, maximum, requested: typeof requested === "number" ? requested : null }
+    : null;
 }
 
 /**

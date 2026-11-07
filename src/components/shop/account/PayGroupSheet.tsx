@@ -28,6 +28,7 @@ import {
   isAlreadyPaid,
   ordersOwingOnline,
   parsePartialAmount,
+  partialAmountBreach,
   partialLimitsOfOrders,
 } from "@/lib/shop/partial-payment";
 import type { OrderGroup } from "@/lib/shop/customer.types";
@@ -119,6 +120,7 @@ export function PayGroupSheet({
   const partValue = partInput ?? String(limits?.maximumAmount ?? "");
   /** The amount to charge, or `null` while what is typed cannot be. */
   const partAmount = useMemo(() => (limits ? parsePartialAmount(partValue, limits) : null), [limits, partValue]);
+  const partBreach = limits ? partialAmountBreach(partValue, limits) : null;
 
   const orders = limits ? owing : payableOrders(group);
   const amount = limits ? (partAmount ?? limits.maximumAmount) : payableTotal(group);
@@ -237,11 +239,10 @@ export function PayGroupSheet({
             leadingIcon="lock"
             disabled={!canPay}
             title={
-              limits && partAmount === null
-                ? tPartial("amountHint", {
-                    min: formatMoney(limits.minimumAmount, currency),
-                    max: formatMoney(limits.maximumAmount, currency),
-                  })
+              limits && partBreach
+                ? partBreach.bound === "min"
+                  ? tPartial("amountBelowMin", { min: formatMoney(partBreach.value, currency) })
+                  : tPartial("amountAboveMax", { max: formatMoney(partBreach.value, currency) })
                 : option && !phoneOk
                   ? t("enterValidNumber")
                   : undefined
@@ -323,7 +324,7 @@ export function PayGroupSheet({
         <Skeleton height={180} />
       )}
 
-      {outsideLimits && option?.limits && <PaymentLimitNote limits={option.limits} />}
+      {outsideLimits && <PaymentLimitNote amount={amount} currency={currency} limits={option?.limits} />}
 
       {/* The other way this order can be paid for, and it belongs here rather
           than on the order card: the shopper is already answering "how do I pay

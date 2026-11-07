@@ -2489,7 +2489,8 @@
             "handsetWaitBody": "La confirmation de votre opérateur peut prendre quelques minutes. Cette page se met à jour toute seule.",
             "payingFrom": "Numéro débité",
             "redirectPayee": "La demande viendra de {payee}.",
-            "amountLimits": "Ce moyen de paiement accepte de {min} à {max}.",
+            "amountBelowMin": "Ce moyen de paiement demande un montant d'au moins {min}.",
+            "amountAboveMax": "Ce moyen de paiement accepte jusqu'à {max}.",
             "amountRefused": "Ce moyen de paiement accepte de {min} à {max}. Rien n’a été débité."
         },
         "codUnavailable": {
@@ -2584,6 +2585,7 @@
             "chooseAddress": "Choisissez une adresse de livraison",
             "enterValidNumber": "Saisissez un numéro mobile money valide",
             "placing": "Validation…",
+            "requestingBody": "Votre commande est passée. Nous envoyons la demande de paiement sur votre téléphone : gardez cette page ouverte.",
             "placeOrder": "Passer la commande",
             "payAmount": "Payer {amount}",
             "success": {
@@ -3699,7 +3701,8 @@
             "optionTitle": "Payer une partie maintenant",
             "optionBody": "Payez entre {min} et {max} en ligne maintenant, et le reste en espèces à la livraison.",
             "amountLabel": "Montant à payer maintenant ({currency})",
-            "amountHint": "Entre {min} et {max}",
+            "amountBelowMin": "Le montant doit être d'au moins {min}.",
+            "amountAboveMax": "Le montant ne doit pas dépasser {max}.",
             "cashLater": "Vous payez ensuite {amount} en espèces à la livraison.",
             "cashAtDelivery": "En espèces à la livraison",
             "unavailable": {

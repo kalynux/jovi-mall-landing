@@ -7,6 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { currencyLabel, formatMoney } from "@/lib/shop/format";
 import {
   parsePartialAmount,
+  partialAmountBreach,
   refusedAmountLimits,
   type PartialLimits,
   type PartialRefusalReason,
@@ -41,6 +42,7 @@ export function PartialAmountField({
   const t = useTranslations("shop.partialPayment");
   const id = useId();
   const amount = parsePartialAmount(value, limits);
+  const breach = partialAmountBreach(value, limits);
 
   return (
     <div>
@@ -66,23 +68,21 @@ export function PartialAmountField({
         dir="ltr"
         disabled={disabled}
         aria-invalid={amount === null}
-        aria-describedby={`${id}-hint`}
+        aria-describedby={breach ? `${id}-hint` : undefined}
         style={{ fontVariantNumeric: "tabular-nums", fontSize: 16 }}
       />
-      <p
-        id={`${id}-hint`}
-        style={{
-          fontSize: 12.5,
-          lineHeight: 1.5,
-          margin: "6px 0 0",
-          color: amount === null ? "var(--danger)" : "var(--text-muted)",
-        }}
-      >
-        {t("amountHint", {
-          min: formatMoney(limits.minimumAmount, currency),
-          max: formatMoney(limits.maximumAmount, currency),
-        })}
-      </p>
+      {/* Only the limit what is typed breaks, and only while it breaks it. */}
+      {breach && (
+        <p
+          id={`${id}-hint`}
+          role="status"
+          style={{ fontSize: 12.5, lineHeight: 1.5, margin: "6px 0 0", color: "var(--danger)" }}
+        >
+          {breach.bound === "min"
+            ? t("amountBelowMin", { min: formatMoney(breach.value, currency) })
+            : t("amountAboveMax", { max: formatMoney(breach.value, currency) })}
+        </p>
+      )}
       {amount !== null && (
         <p style={{ fontSize: 12.5, lineHeight: 1.5, margin: "2px 0 0", color: "var(--text-body)" }}>
           {t("cashLater", { amount: formatMoney(limits.total - amount, currency) })}
@@ -139,12 +139,19 @@ export function useRefusedAmount(currency: string): (error: unknown) => string |
   return useCallback(
     (error: unknown) => {
       const limits = refusedAmountLimits(error);
-      return limits
-        ? t("amountOutOfRange", {
-            min: formatMoney(limits.minimum, currency),
-            max: formatMoney(limits.maximum, currency),
-          })
-        : null;
+      if (!limits) return null;
+      // The side the refused amount fell on. Both only when the server did not
+      // say what it refused, which is the one case either could be the reason.
+      if (limits.requested !== null && limits.requested > limits.maximum) {
+        return t("amountAboveMax", { max: formatMoney(limits.maximum, currency) });
+      }
+      if (limits.requested !== null && limits.requested < limits.minimum) {
+        return t("amountBelowMin", { min: formatMoney(limits.minimum, currency) });
+      }
+      return t("amountOutOfRange", {
+        min: formatMoney(limits.minimum, currency),
+        max: formatMoney(limits.maximum, currency),
+      });
     },
     [currency, t],
   );

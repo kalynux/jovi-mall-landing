@@ -2489,7 +2489,8 @@
             "handsetWaitBody": "Your operator can take a few minutes to confirm. This page updates by itself.",
             "payingFrom": "Paying from",
             "redirectPayee": "The request will come from {payee}.",
-            "amountLimits": "This way to pay takes {min} to {max}.",
+            "amountBelowMin": "This way to pay needs an amount of at least {min}.",
+            "amountAboveMax": "This way to pay takes amounts up to {max}.",
             "amountRefused": "This way to pay takes {min} to {max}. Nothing was charged."
         },
         "codUnavailable": {
@@ -2584,6 +2585,7 @@
             "chooseAddress": "Choose a delivery address",
             "enterValidNumber": "Enter a valid mobile money number",
             "placing": "Placing…",
+            "requestingBody": "Your order is placed. We're sending the payment request to your phone, so keep this page open.",
             "placeOrder": "Place order",
             "payAmount": "Pay {amount}",
             "success": {
@@ -3699,7 +3701,8 @@
             "optionTitle": "Pay part now",
             "optionBody": "Pay between {min} and {max} online now, and the rest in cash at delivery.",
             "amountLabel": "Amount to pay now ({currency})",
-            "amountHint": "Between {min} and {max}",
+            "amountBelowMin": "The amount must be at least {min}.",
+            "amountAboveMax": "The amount must not be more than {max}.",
             "cashLater": "You then pay {amount} in cash at delivery.",
             "cashAtDelivery": "In cash at delivery",
             "unavailable": {

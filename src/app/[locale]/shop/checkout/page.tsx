@@ -38,6 +38,7 @@ import { checkout } from "@/lib/shop/orders.api";
 import {
   isAlreadyPaid,
   parsePartialAmount,
+  partialAmountBreach,
   partialOfferOf,
   partialRefusalFromError,
   partialRefusalOf,
@@ -185,6 +186,15 @@ export default function CheckoutPage() {
   const [addressId, setAddressId] = useState<string | null>(null);
   const [quote, setQuote] = useState<CartQuote | null>(null);
   const [placing, setPlacing] = useState(false);
+  /**
+   * The orders exist and the charge is being sent to the phone.
+   *
+   * The cart is empty from this moment, so the form below has nothing left to
+   * show — it used to fall through to `return null` and leave a blank page
+   * between the header and the footer for as long as `initiate` took, which on
+   * a slow gateway is most of a minute. This holds the waiting screen instead.
+   */
+  const [charging, setCharging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   /** A checkout refused with `ADDRESS_REGION_INVALID`, and the saved address to fix. */
@@ -264,6 +274,9 @@ export default function CheckoutPage() {
     () => (payPart && partOffer ? parsePartialAmount(partInput ?? String(partOffer.maximumAmount), partOffer) : null),
     [payPart, partOffer, partInput]
   );
+  /** The one limit what is typed breaks, for the pay button's hint. */
+  const partBreach =
+    payPart && partOffer ? partialAmountBreach(partInput ?? String(partOffer.maximumAmount), partOffer) : null;
   /** Said once, to a shopper who had chosen it and lost it. See `PartialPaymentNotice`. */
   const partGone = partChosen && !isCod && !partOffer ? (partRefused ?? partialRefusalOf(quote)) : null;
   /** What the order will be placed as: a partial order is cash on delivery with a prepaid part. */
@@ -400,12 +413,19 @@ export default function CheckoutPage() {
       // The cart is cleared server-side on success; drop the local mirror so the
       // header badge does not keep showing a basket that no longer exists.
       placedGroup = result.cartId;
-      await clear().catch(() => undefined);
 
       if (isCod || !charge) {
+        await clear().catch(() => undefined);
         router.push(`/shop/checkout/success?group=${encodeURIComponent(result.cartId)}&cod=1`);
         return;
       }
+
+      // The waiting screen goes up now, not once the gateway has answered.
+      // The local cart is cleared alongside the charge rather than before it:
+      // it is two round trips the charge does not need, since the server
+      // emptied the cart as part of `checkout`.
+      setCharging(true);
+      void clear().catch(() => undefined);
 
       const payment = await initiatePayment({
         cartId: result.cartId,
@@ -574,6 +594,52 @@ export default function CheckoutPage() {
   // cart being unread is a loading state, and without it this screen fell
   // through to the `return null` below and rendered a blank page until the cart
   // arrived.
+  //
+  // `charging` comes first: by then the cart is empty and the profile may be
+  // re-read, and neither must take this screen away. The same badge and title
+  // as the success screen it hands over to, so the hand-over is not a jump.
+  if (charging) {
+    return (
+      <div className="mx-auto flex max-w-[520px] flex-col items-center px-4 py-16 text-center sm:px-6">
+        <div
+          className="fadein"
+          style={{
+            width: 92,
+            height: 92,
+            borderRadius: "50%",
+            background: "var(--warning-bg)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 18,
+          }}
+        >
+          <Icon name="hourglass" size={44} style={{ color: "var(--warning)" }} />
+        </div>
+        <h1
+          style={{
+            fontSize: 24,
+            fontWeight: 800,
+            letterSpacing: "-0.02em",
+            margin: "0 0 6px",
+            color: "var(--text-strong)",
+          }}
+        >
+          {t("success.pendingTitle")}
+        </h1>
+        <p role="status" className="muted" style={{ maxWidth: 380, lineHeight: 1.55, margin: 0 }}>
+          {t("requestingBody")}
+        </p>
+        <Icon
+          name="loader"
+          size={22}
+          className="animate-spin"
+          style={{ color: "var(--text-muted)", marginTop: 20 }}
+        />
+      </div>
+    );
+  }
+
   if (
     status === "loading" ||
     !hydrated ||
@@ -789,8 +855,8 @@ export default function CheckoutPage() {
         />
       )}
 
-      {outsideLimits && option?.limits && (
-        <PaymentLimitNote limits={option.limits} style={{ margin: "0 0 20px" }} />
+      {outsideLimits && (
+        <PaymentLimitNote amount={dueNow} currency={currency} limits={option?.limits} style={{ margin: "0 0 20px" }} />
       )}
 
       {option?.provider === "CARD" && (
@@ -999,11 +1065,10 @@ export default function CheckoutPage() {
                   ? t("enterValidNumber")
                   : shortOfMinimum
                     ? tMinimum("buttonHint")
-                    : payPart && partOffer && partAmount === null
-                      ? tPartial("amountHint", {
-                          min: formatMoney(partOffer.minimumAmount, currency),
-                          max: formatMoney(partOffer.maximumAmount, currency),
-                        })
+                    : partBreach
+                      ? partBreach.bound === "min"
+                        ? tPartial("amountBelowMin", { min: formatMoney(partBreach.value, currency) })
+                        : tPartial("amountAboveMax", { max: formatMoney(partBreach.value, currency) })
                     : !totalKnown
                       ? tDelivery("calculating")
                       : undefined

@@ -1049,7 +1049,7 @@ function TopupSheet({
         <Skeleton height={180} />
       )}
 
-      {formShown && outsideLimits && option?.limits && <PaymentLimitNote limits={option.limits} />}
+      {formShown && outsideLimits && <PaymentLimitNote amount={amount} currency={currency} limits={option?.limits} />}
     </BottomSheet>
   );
 }

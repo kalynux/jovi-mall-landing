@@ -8,7 +8,7 @@ import { translateError } from "@/lib/auth/error-translator";
 import { openExternal } from "@/lib/native/links";
 import { isolateLtr } from "@/lib/bidi";
 import { formatMoney } from "@/lib/shop/format";
-import { dialHref, type HandsetStep } from "@/lib/shop/mobile-money";
+import { dialHref, limitBreach, type HandsetStep } from "@/lib/shop/mobile-money";
 import { authorizePayment, type PaymentInstructions, type PaymentLimits } from "@/lib/shop/payments.api";
 
 /**
@@ -143,9 +143,28 @@ export function PaymentHandsetStep({ step }: { step: HandsetStep }) {
   );
 }
 
-/** Why the pay button is off: `/options` already says this amount will be refused. */
-export function PaymentLimitNote({ limits, style }: { limits: PaymentLimits; style?: CSSProperties }) {
+/**
+ * Why the pay button is off: `/options` already says this amount will be refused.
+ *
+ * Names only the side the amount breaks, the minimum OR the maximum, and
+ * renders nothing while the amount is chargeable, so callers can mount it
+ * unconditionally.
+ */
+export function PaymentLimitNote({
+  amount,
+  currency,
+  limits,
+  style,
+}: {
+  amount: number;
+  currency: string;
+  limits: PaymentLimits | undefined;
+  style?: CSSProperties;
+}) {
   const t = useTranslations("shop.payProvider");
+  const breach = limitBreach(amount, currency, limits);
+  if (!breach) return null;
+  const figure = formatMoney(breach.value, "XAF");
   return (
     <p
       role="status"
@@ -161,7 +180,7 @@ export function PaymentLimitNote({ limits, style }: { limits: PaymentLimits; sty
       }}
     >
       <Icon name="triangle-alert" size={14} style={{ color: "var(--danger)", flexShrink: 0, marginTop: 2 }} />
-      <span>{t("amountLimits", { min: formatMoney(limits.min, "XAF"), max: formatMoney(limits.max, "XAF") })}</span>
+      <span>{breach.bound === "min" ? t("amountBelowMin", { min: figure }) : t("amountAboveMax", { max: figure })}</span>
     </p>
   );
 }

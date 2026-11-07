@@ -2489,7 +2489,8 @@
             "handsetWaitBody": "قد يستغرق تأكيد شبكتك بضع دقائق. تتحدّث هذه الصفحة تلقائيًا.",
             "payingFrom": "رقم الدفع",
             "redirectPayee": "سيصل الطلب من {payee}.",
-            "amountLimits": "طريقة الدفع هذه تقبل من {min} إلى {max}.",
+            "amountBelowMin": "تتطلّب طريقة الدفع هذه مبلغًا لا يقل عن {min}.",
+            "amountAboveMax": "تقبل طريقة الدفع هذه مبالغ تصل إلى {max}.",
             "amountRefused": "طريقة الدفع هذه تقبل من {min} إلى {max}. لم يُخصم أي مبلغ."
         },
         "codUnavailable": {
@@ -2584,6 +2585,7 @@
             "chooseAddress": "اختر عنوان توصيل",
             "enterValidNumber": "أدخِل رقم محفظة إلكترونية صالحًا",
             "placing": "جارٍ إتمام الطلب…",
+            "requestingBody": "تم تسجيل طلبك. نرسل الآن طلب الدفع إلى هاتفك، فأبقِ هذه الصفحة مفتوحة.",
             "placeOrder": "تأكيد الطلب",
             "payAmount": "ادفع {amount}",
             "success": {
@@ -3699,7 +3701,8 @@
             "optionTitle": "ادفع جزءًا الآن",
             "optionBody": "ادفع ما بين {min} و{max} عبر الإنترنت الآن، والباقي نقدًا عند التسليم.",
             "amountLabel": "المبلغ المراد دفعه الآن ({currency})",
-            "amountHint": "ما بين {min} و{max}",
+            "amountBelowMin": "يجب ألا يقل المبلغ عن {min}.",
+            "amountAboveMax": "يجب ألا يتجاوز المبلغ {max}.",
             "cashLater": "ثم تدفع {amount} نقدًا عند التسليم.",
             "cashAtDelivery": "نقدًا عند التسليم",
             "unavailable": {

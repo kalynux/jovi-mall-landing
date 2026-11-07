@@ -344,7 +344,7 @@ export function BookingBalance({ bookingId }: { bookingId: string }) {
         <OnlinePaymentUnavailable />
       )}
 
-      {outsideLimits && option?.limits && <PaymentLimitNote limits={option.limits} />}
+      {outsideLimits && <PaymentLimitNote amount={owed} currency={bal.currency} limits={option?.limits} />}
 
       <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
         {option && (

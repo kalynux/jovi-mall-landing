@@ -6,6 +6,7 @@ import {
   owesOnlinePart,
   paidOnlinePart,
   parsePartialAmount,
+  partialAmountBreach,
   partialCashOf,
   partialLimitsOfOrders,
   partialOfferOf,
@@ -124,6 +125,16 @@ test("the amount must be a whole number inside the limits", () => {
   assert.equal(parsePartialAmount("abc", limits), null);
 });
 
+test("a typed amount breaks one limit at a time", () => {
+  const limits = { minimumAmount: 6000, maximumAmount: 18000 };
+  assert.equal(partialAmountBreach("6000", limits), null);
+  assert.equal(partialAmountBreach("18 000", limits), null);
+  assert.deepEqual(partialAmountBreach("5999", limits), { bound: "min", value: 6000 });
+  assert.deepEqual(partialAmountBreach("18001", limits), { bound: "max", value: 18000 });
+  assert.deepEqual(partialAmountBreach("", limits), { bound: "min", value: 6000 });
+  assert.deepEqual(partialAmountBreach("abc", limits), { bound: "min", value: 6000 });
+});
+
 test("the charge's own refusals", () => {
   assert.equal(isAlreadyPaid({ code: "PAYMENT_ORDER_ALREADY_PAID" }), true);
   assert.equal(isAlreadyPaid({ code: "PARTIAL_PAYMENT_AMOUNT_REQUIRED" }), false);
@@ -133,11 +144,11 @@ test("the charge's own refusals", () => {
       code: "PARTIAL_PAYMENT_AMOUNT_OUT_OF_RANGE",
       details: { minimum: 6000, maximum: 18000, requested: 500 },
     }),
-    { minimum: 6000, maximum: 18000 },
+    { minimum: 6000, maximum: 18000, requested: 500 },
   );
   assert.deepEqual(
     refusedAmountLimits({ code: "PARTIAL_PAYMENT_AMOUNT_REQUIRED", details: { minimum: 1, maximum: 2 } }),
-    { minimum: 1, maximum: 2 },
+    { minimum: 1, maximum: 2, requested: null },
   );
   // Details are optional on the way out, and not every refusal has limits.
   assert.equal(refusedAmountLimits({ code: "PARTIAL_PAYMENT_AMOUNT_OUT_OF_RANGE" }), null);

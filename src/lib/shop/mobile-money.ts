@@ -85,18 +85,53 @@ export function nextPollDelay(attempts: number, longWait: boolean): number | nul
 }
 
 /**
- * Whether `/options` already says this amount will be refused.
+ * The step the shop rounds a provider's minimum up to.
+ *
+ * NovaSend's floor is 301 XAF, a number that reads like a typo to a shopper.
+ * The shop asks for the next multiple of this instead (301 → 325), so what it
+ * says and what it blocks are the same round figure. Rounding UP only ever
+ * asks for more than the server needs, never less, so nothing the shop lets
+ * through is refused. Still read from `/options`, never hard-coded: a new
+ * floor of 450 becomes 450, one of 451 becomes 475.
+ */
+export const MIN_AMOUNT_STEP = 25;
+
+/** The limits the shop applies: `/options`'s, with the minimum rounded up. */
+export function shopLimits(limits: PaymentLimits): PaymentLimits {
+  return { min: Math.ceil(limits.min / MIN_AMOUNT_STEP) * MIN_AMOUNT_STEP, max: limits.max };
+}
+
+/** Which side of the limits an amount falls on, and the figure it has to meet. */
+export type LimitBreach = { bound: "min" | "max"; value: number };
+
+/**
+ * The limit this amount breaks, or `null` when it is chargeable or nothing is known.
+ *
+ * Only one side at a time: an amount can only be too small or too large, and
+ * the shopper needs the one figure that tells them which way to go.
  *
  * `limits` are in XAF, so another currency is left to the server's own
  * `422 PAYMENT_AMOUNT_OUT_OF_RANGE`. No limits means none are known, not none exist.
  */
+export function limitBreach(
+  amount: number,
+  currency: string,
+  limits: PaymentLimits | undefined,
+): LimitBreach | null {
+  if (!limits || currency !== "XAF") return null;
+  const { min, max } = shopLimits(limits);
+  if (amount < min) return { bound: "min", value: min };
+  if (amount > max) return { bound: "max", value: max };
+  return null;
+}
+
+/** Whether `/options` already says this amount will be refused. See {@link limitBreach}. */
 export function amountOutsideLimits(
   amount: number,
   currency: string,
   limits: PaymentLimits | undefined,
 ): boolean {
-  if (!limits || currency !== "XAF") return false;
-  return amount < limits.min || amount > limits.max;
+  return limitBreach(amount, currency, limits) !== null;
 }
 
 // ─── Surviving a reload ──────────────────────────────────────────────────────

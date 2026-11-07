@@ -31,10 +31,10 @@ export type MenuNode =
       key: string;
       items: MenuItem[];
       /**
-       * Draws a hairline after the item with this key. Used once, to keep
-       * "Company" honest: About/Careers/Contact are about us, FAQ and Cameroon
-       * are not — they just need a home in the header rather than being
-       * reachable only from the footer.
+       * Draws a hairline after the item with this key. Keeps a menu honest:
+       * About/Careers/Contact are about us, FAQ and Cameroon are not; the four
+       * role pages are roles, Apps is not. Those just need a home in the
+       * header rather than being reachable only from the footer.
        */
       dividerAfter?: string;
     };
@@ -54,7 +54,11 @@ export const MAIN_MENU: MenuNode[] = [
       { key: "agencies", href: "/agencies" },
       { key: "agents", href: "/agents" },
       { key: "customers", href: "/customers" },
+      // Not a role page: where every role's app is downloaded. Behind a
+      // hairline for the same reason FAQ and Cameroon are under "Company".
+      { key: "apps", href: "/apps" },
     ],
+    dividerAfter: "customers",
   },
   { kind: "link", key: "pricing", href: "/pricing" },
   // Deliberately top-level and not tucked into a dropdown: articles only earn

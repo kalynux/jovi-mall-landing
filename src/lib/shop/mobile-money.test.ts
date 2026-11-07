@@ -4,9 +4,11 @@ import {
   amountOutsideLimits,
   dialHref,
   handsetStepOf,
+  limitBreach,
   nextPollDelay,
   readHandsetStep,
   rememberHandsetStep,
+  shopLimits,
 } from "./mobile-money";
 
 const ORANGE_ANSWER = {
@@ -73,14 +75,26 @@ test("with a payee the wait runs for half an hour, then stops", () => {
   assert.equal(elapsed, 30 * 60_000);
 });
 
-test("limits are read as given, and only against XAF", () => {
+test("the minimum is rounded up to the next 25, and limits only apply to XAF", () => {
   const limits = { min: 301, max: 500_000 };
-  assert.equal(amountOutsideLimits(300, "XAF", limits), true);
-  assert.equal(amountOutsideLimits(301, "XAF", limits), false);
+  assert.deepEqual(shopLimits(limits), { min: 325, max: 500_000 });
+  assert.deepEqual(shopLimits({ min: 450, max: 1000 }), { min: 450, max: 1000 });
+  assert.deepEqual(shopLimits({ min: 451, max: 1000 }), { min: 475, max: 1000 });
+  assert.equal(amountOutsideLimits(301, "XAF", limits), true);
+  assert.equal(amountOutsideLimits(324, "XAF", limits), true);
+  assert.equal(amountOutsideLimits(325, "XAF", limits), false);
   assert.equal(amountOutsideLimits(500_000, "XAF", limits), false);
   assert.equal(amountOutsideLimits(500_001, "XAF", limits), true);
   assert.equal(amountOutsideLimits(300, "EUR", limits), false);
   assert.equal(amountOutsideLimits(1, "XAF", undefined), false);
+});
+
+test("a breach names only the side it is on", () => {
+  const limits = { min: 301, max: 500_000 };
+  assert.deepEqual(limitBreach(100, "XAF", limits), { bound: "min", value: 325 });
+  assert.deepEqual(limitBreach(500_001, "XAF", limits), { bound: "max", value: 500_000 });
+  assert.equal(limitBreach(10_000, "XAF", limits), null);
+  assert.equal(limitBreach(100, "EUR", limits), null);
 });
 
 test("a step is kept by key, and a new attempt without a payee clears it", () => {

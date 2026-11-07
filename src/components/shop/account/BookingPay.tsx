@@ -339,7 +339,7 @@ export function BookingPay({ bookingId }: { bookingId: string }) {
             saved={payForm}
           />
 
-          {outsideLimits && option.limits && <PaymentLimitNote limits={option.limits} />}
+          {outsideLimits && <PaymentLimitNote amount={agreedPrice(b)} currency={b.currency} limits={option.limits} />}
 
           <div style={{ marginTop: 16 }}>
             <Button

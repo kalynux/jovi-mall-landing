@@ -2489,7 +2489,8 @@
             "handsetWaitBody": "A confirmação da sua operadora pode demorar alguns minutos. Esta página atualiza-se sozinha.",
             "payingFrom": "Número de pagamento",
             "redirectPayee": "O pedido virá de {payee}.",
-            "amountLimits": "Esta forma de pagamento aceita de {min} a {max}.",
+            "amountBelowMin": "Esta forma de pagamento exige um valor de pelo menos {min}.",
+            "amountAboveMax": "Esta forma de pagamento aceita até {max}.",
             "amountRefused": "Esta forma de pagamento aceita de {min} a {max}. Nada foi cobrado."
         },
         "codUnavailable": {
@@ -2584,6 +2585,7 @@
             "chooseAddress": "Escolha um endereço de entrega",
             "enterValidNumber": "Introduza um número de mobile money válido",
             "placing": "A finalizar…",
+            "requestingBody": "O seu pedido está feito. Estamos a enviar o pedido de pagamento para o seu telemóvel, por isso mantenha esta página aberta.",
             "placeOrder": "Fazer o pedido",
             "payAmount": "Pagar {amount}",
             "success": {
@@ -3699,7 +3701,8 @@
             "optionTitle": "Pagar uma parte agora",
             "optionBody": "Pague entre {min} e {max} online agora, e o resto em dinheiro na entrega.",
             "amountLabel": "Valor a pagar agora ({currency})",
-            "amountHint": "Entre {min} e {max}",
+            "amountBelowMin": "O valor tem de ser de pelo menos {min}.",
+            "amountAboveMax": "O valor não pode ultrapassar {max}.",
             "cashLater": "Depois paga {amount} em dinheiro na entrega.",
             "cashAtDelivery": "Em dinheiro na entrega",
             "unavailable": {
