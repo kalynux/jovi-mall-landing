@@ -82,14 +82,95 @@ export function longestRunFrom(daySlots: readonly Slot[], startId: string, cap: 
 }
 
 /**
+ * What a tap on `tapped` does to the current run, when the run's length is
+ * the customer's to choose. `remembered` is what the previous tap returned.
+ *
+ *   1. A LATER time: the run ends there, when every slot between is free.
+ *   2. An EARLIER time: the run starts there and keeps its end, likewise.
+ *   3. A time INSIDE the run: the run ends there (its first slot collapses it
+ *      to that one slot).
+ *   4. The run's END tapped again: the run starts there instead, and ends
+ *      where it ended before rule 3 shortened it. So 9:30–11:00, tap 10:00 →
+ *      9:30–10:15, tap 10:00 again → 10:00–11:00. With nothing remembered, it
+ *      becomes a one-slot run.
+ *   5. The only slot of a one-slot run: nothing is chosen any more.
+ *
+ * Rules 1 and 2 fall back to a new one-slot run at the tap when the slots in
+ * between are not all free, or the run would pass `maxSlots`.
+ *
+ * Double-tapping was considered for rule 4 and rejected: phones do not report
+ * it reliably, waiting for a second tap delays every single one, and nobody
+ * would find it. The calendar's hint names the time to tap instead.
+ *
+ * `remembered` is the run as it was before rule 3 last shortened it, kept
+ * across further shortenings of the same run, and dropped by anything else.
+ */
+export function runAfterFreeTap(
+  daySlots: readonly Slot[],
+  current: readonly string[],
+  tapped: string,
+  maxSlots: number,
+  remembered: readonly string[] | null = null,
+): { run: string[]; remembered: string[] | null } {
+  const ids = daySlots.map((s) => s.id);
+  const tapAt = ids.indexOf(tapped);
+  if (tapAt < 0) return { run: [...current], remembered: remembered ? [...remembered] : null };
+
+  /** The run from slot index `from` to slot index `to`, when it is bookable as one. */
+  const span = (from: number, to: number): string[] | null => {
+    const length = to - from + 1;
+    if (length < 1 || length > maxSlots) return null;
+    const run = runFrom(daySlots, ids[from], length);
+    return run ? run.map((s) => s.id) : null;
+  };
+  const single = (): { run: string[]; remembered: null } => ({
+    run: daySlots[tapAt].available ? [tapped] : [...current],
+    remembered: null,
+  });
+
+  const startAt = current.length > 0 ? ids.indexOf(current[0]) : -1;
+  const endAt = current.length > 0 ? ids.indexOf(current[current.length - 1]) : -1;
+  if (startAt < 0 || endAt < 0) return single();
+
+  // 5. The one chosen slot, tapped again.
+  if (current.length === 1 && tapAt === startAt) return { run: [], remembered: null };
+
+  // 4. The end, tapped again.
+  if (tapAt === endAt) {
+    const before = remembered ? ids.indexOf(remembered[remembered.length - 1]) : -1;
+    const restored = before > tapAt ? span(tapAt, before) : null;
+    return { run: restored ?? [tapped], remembered: null };
+  }
+
+  // 3. Inside the run.
+  if (tapAt >= startAt && tapAt < endAt) {
+    if (tapAt === startAt) return { run: [tapped], remembered: null };
+    // Shortening an already-shortened run keeps the longer original.
+    const keep =
+      remembered && remembered[0] === current[0] && remembered.length > current.length
+        ? [...remembered]
+        : [...current];
+    return { run: current.slice(0, tapAt - startAt + 1), remembered: keep };
+  }
+
+  // 1. Later.
+  if (tapAt > endAt) {
+    const run = span(startAt, tapAt);
+    return run ? { run, remembered: null } : single();
+  }
+
+  // 2. Earlier.
+  const run = span(tapAt, endAt);
+  return run ? { run, remembered: null } : single();
+}
+
+/**
  * What a tap on `tapped` does to the current run.
  *
  * - With a fixed `count` (moving an appointment, which keeps its length): the
  *   run of that count starting at the tap, or the current run unchanged when
  *   the tap cannot start one.
- * - Otherwise, the run is shaped by taps: a later slot reachable without a gap
- *   EXTENDS it to that slot; a slot inside it SHORTENS it to end there (its
- *   first slot collapses it to one); anything else STARTS a new one-slot run.
+ * - Otherwise, {@link runAfterFreeTap} with nothing remembered.
  */
 export function runAfterTap(
   daySlots: readonly Slot[],
@@ -102,25 +183,7 @@ export function runAfterTap(
     const run = runFrom(daySlots, tapped, count);
     return run ? run.map((s) => s.id) : [...current];
   }
-
-  const ids = daySlots.map((s) => s.id);
-  const startAt = current.length > 0 ? ids.indexOf(current[0]) : -1;
-  const tapAt = ids.indexOf(tapped);
-  if (tapAt < 0) return [...current];
-
-  if (startAt >= 0) {
-    const inside = current.indexOf(tapped);
-    if (inside === 0) return [tapped];
-    if (inside > 0) return current.slice(0, inside + 1);
-
-    const length = tapAt - startAt + 1;
-    if (tapAt > startAt && length <= maxSlots) {
-      const run = runFrom(daySlots, current[0], length);
-      if (run) return run.map((s) => s.id);
-    }
-  }
-
-  return daySlots[tapAt].available ? [tapped] : [...current];
+  return runAfterFreeTap(daySlots, current, tapped, maxSlots).run;
 }
 
 /** Where a run of slot ids starts and ends, and how many slots it is — `null` for an empty run. */

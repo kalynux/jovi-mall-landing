@@ -48,6 +48,11 @@ export interface BookingCalendarProps {
   /** A fixed run length (a move keeps the appointment's length), or none. */
   count?: number;
   busy?: boolean;
+  /**
+   * Tapping the run's last time again would start it there and keep its
+   * earlier end (`runAfterFreeTap` rule 4), so the hint names that time.
+   */
+  canStartAtEnd?: boolean;
 }
 
 /**
@@ -80,6 +85,7 @@ export function BookingCalendar({
   maxSlots,
   count,
   busy,
+  canStartAtEnd = false,
 }: BookingCalendarProps) {
   const t = useTranslations("shop.product.booking");
   const format = useFormatter();
@@ -131,6 +137,19 @@ export function BookingCalendar({
 
   const time = (iso: string) =>
     format.dateTime(new Date(iso), { hour: "2-digit", minute: "2-digit" });
+
+  // The hint follows the run, so the rule worth knowing next is the one shown.
+  const lastChosen = daySlots.find((s) => s.id === run[run.length - 1]);
+  const hint =
+    count !== undefined
+      ? t("hintFixedLength")
+      : maxSlots <= 1
+        ? t("hintOne")
+        : canStartAtEnd && run.length > 1 && lastChosen
+          ? t("hintStartHere", { time: time(lastChosen.start) })
+          : run.length > 1
+            ? t("hintAdjust")
+            : t("hintExtend");
 
   return (
     <div className="bk-cal" data-has-day={day ? "true" : "false"}>
@@ -221,7 +240,7 @@ export function BookingCalendar({
                 <span className="ds-overline">{t("chooseTime")}</span>
               </div>
               <p className="bk-hint">
-                {count !== undefined ? t("hintFixedLength") : maxSlots > 1 ? t("hintExtend") : t("hintOne")}
+                {hint}
               </p>
               <div className="bk-timeline" ref={listRef}>
                 {daySlots.map((slot, i) => {

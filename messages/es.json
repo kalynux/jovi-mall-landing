@@ -2153,7 +2153,6 @@
                 "digital": "Digital",
                 "service": "Servicio"
             },
-            "quickAdd": "Añadir rápido",
             "buyNow": "Comprar ahora",
             "book": "Reservar",
             "saveToFavorites": "Guardar",
@@ -2171,8 +2170,6 @@
                 "agent": "Repartidor verificado"
             },
             "bargain": "Negociar",
-            "moreActions": "Precio negociable: más opciones",
-            "closeActions": "Cerrar opciones",
             "actionsTitle": "Opciones",
             "addToCart": "Añadir al carrito",
             "freeDeliveryFrom": "Envío gratis desde {amount}"
@@ -2350,6 +2347,8 @@
                 "pickDateFirst": "Elige una fecha para ver sus horarios.",
                 "dayClosedAria": "{date}, sin horarios libres",
                 "hintExtend": "Toca una hora posterior para alargar la cita.",
+                "hintAdjust": "Toca una hora más tarde o más temprano para ampliarla, o una hora de dentro para que termine ahí.",
+                "hintStartHere": "Toca {time} otra vez para que la cita empiece a esa hora.",
                 "hintOne": "Toca una hora para elegirla.",
                 "hintFixedLength": "Toca dónde debe empezar la cita. Mantiene su duración.",
                 "spotsLeft": "{n, plural, one {Queda # plaza} other {Quedan # plazas}}",

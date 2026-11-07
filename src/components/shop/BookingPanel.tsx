@@ -18,7 +18,7 @@ import {
   durationParts,
   isGroupService,
   longestRunFrom,
-  runAfterTap,
+  runAfterFreeTap,
   runBounds,
   runFrom,
   slotMinutes,
@@ -99,6 +99,8 @@ export function BookingPanel({ product }: { product: Product }) {
   const [slots, setSlots] = useState<Slot[] | null>(null);
   const [day, setDay] = useState<string | null>(null);
   const [run, setRun] = useState<string[]>([]);
+  /** The run before a tap inside it shortened it, for `runAfterFreeTap` rule 4. */
+  const [remembered, setRemembered] = useState<string[] | null>(null);
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const holds = useSlotHolds(signedIn ? product.id : null);
@@ -181,6 +183,7 @@ export function BookingPanel({ product }: { product: Product }) {
   const changeDay = useCallback(
     (next: string | null) => {
       setDay(next);
+      setRemembered(null);
       // A run belongs to its day: a new day starts from nothing, and gives the
       // old day's holds back.
       if (run.length > 0) void choose([]);
@@ -190,10 +193,11 @@ export function BookingPanel({ product }: { product: Product }) {
 
   const tap = useCallback(
     (slot: Slot) => {
-      const next = runAfterTap(daySlots, run, slot.id, { maxSlots });
-      if (next.join() !== run.join()) void choose(next);
+      const next = runAfterFreeTap(daySlots, run, slot.id, maxSlots, remembered);
+      setRemembered(next.remembered);
+      if (next.run.join() !== run.join()) void choose(next.run);
     },
-    [daySlots, run, maxSlots, choose],
+    [daySlots, run, maxSlots, remembered, choose],
   );
 
   const bounds = runBounds(daySlots, run);
@@ -306,6 +310,7 @@ export function BookingPanel({ product }: { product: Product }) {
         onTap={tap}
         maxSlots={maxSlots}
         busy={busy}
+        canStartAtEnd={remembered !== null}
       />
 
       {bounds && (

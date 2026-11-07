@@ -2153,7 +2153,6 @@
                 "digital": "Digital",
                 "service": "Service"
             },
-            "quickAdd": "Quick add",
             "buyNow": "Buy now",
             "book": "Book",
             "saveToFavorites": "Save",
@@ -2171,8 +2170,6 @@
                 "agent": "Verified courier"
             },
             "bargain": "Bargain",
-            "moreActions": "Price negotiable — more options",
-            "closeActions": "Close options",
             "actionsTitle": "Options",
             "addToCart": "Add to cart",
             "freeDeliveryFrom": "Free delivery from {amount}"
@@ -2350,6 +2347,8 @@
                 "pickDateFirst": "Pick a date to see its times.",
                 "dayClosedAria": "{date}, no times free",
                 "hintExtend": "Tap a later time to make the appointment longer.",
+                "hintAdjust": "Tap a later or earlier time to stretch it, or a time inside it to end there.",
+                "hintStartHere": "Tap {time} again to start the appointment there instead.",
                 "hintOne": "Tap a time to choose it.",
                 "hintFixedLength": "Tap where the appointment should start. It keeps its length.",
                 "spotsLeft": "{n, plural, one {# spot left} other {# spots left}}",

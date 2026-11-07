@@ -1,10 +1,16 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 
 import { Rating } from "./Rating";
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent as ReactMouseEvent,
+  type ReactNode,
+} from "react";
 import { useBargain } from "@/components/shop/BargainButton";
 import { Link } from "@/i18n/navigation";
 import type { DeliveryTerms, PriceRange, ProductType } from "@/lib/shop/shop.types";
@@ -69,9 +75,9 @@ export interface ProductCardProps {
   /** Boolean by design — the API publishes no stock count. */
   inStock?: boolean;
   /**
-   * The default variant's price is open to haggling. The corner button then
-   * turns into a handshake that opens two actions — the quick action and
-   * Bargain — and Bargain haggles over that default variant. Drawn only while
+   * The default variant's price is open to haggling. The action row then
+   * leads with Bargain, beside the quick action as an icon, and Bargain
+   * haggles over that default variant. Drawn only while
    * the web bargain feature is switched on (`lib/shop/bargain.ts`), and only
    * with `productId`, which the bot link is built from.
    */
@@ -97,21 +103,14 @@ export interface ProductCardProps {
   shareable?: { slug: string; store: { slug: string } };
 }
 
-/** The verb the hold menu leads with — "Add to cart", where the corner says "+". */
-const menuQuickAction: Record<ProductType, { icon: IconName; labelKey: string }> = {
-  physical: { icon: "shopping-cart", labelKey: "addToCart" },
-  digital: { icon: "zap", labelKey: "buyNow" },
-  service: { icon: "calendar-clock", labelKey: "book" },
-};
-
 /**
- * What the corner button does, per type — and it is three different things, so
- * it says three different things. Digital is a buy-now: it goes to checkout
- * rather than into a cart, and a "+" over that is a lie about where the tap
- * lands.
+ * The card's own action, per type — and it is three different things, so it
+ * says three different things. Digital is a buy-now: it goes to checkout
+ * rather than into a cart, and a cart over that is a lie about where the tap
+ * lands. The action row, the hold menu and the icon's label all read this.
  */
 const quickAction: Record<ProductType, { icon: IconName; labelKey: string }> = {
-  physical: { icon: "plus", labelKey: "quickAdd" },
+  physical: { icon: "shopping-cart", labelKey: "addToCart" },
   digital: { icon: "zap", labelKey: "buyNow" },
   service: { icon: "calendar-clock", labelKey: "book" },
 };
@@ -152,212 +151,193 @@ function FavButton({ favorite, onToggleFavorite }: Pick<ProductCardProps, "favor
 }
 
 /**
- * One round button in the image's corner. `preventDefault` as well as
- * `stopPropagation`, for the reason `FavButton` gives: the card is a link.
+ * The card's action row sits under the price, inside the card's link, so every
+ * button here stops the tap twice: `preventDefault` or the card navigates,
+ * `stopPropagation` or the card's own handlers see it too.
  */
-function CornerButton({
+function stopThen(run: () => void) {
+  return (e: ReactMouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    run();
+  };
+}
+
+/** Wide enough for the handshake and the gap beside it, in px. */
+const BARGAIN_ICON_ROOM = 17 + 6;
+
+type LabelFit = "both" | "text" | "icon";
+
+/**
+ * How much of "handshake + Bargain" fits in the button: both, the word alone,
+ * or the handshake alone.
+ *
+ * Measured, not set by breakpoints, because two things decide it and neither
+ * is the screen: the button's own width (a grid column, a list row, a tablet)
+ * and the word's length in the shopper's language ("Bargain" fits where
+ * "Négocier" does not). A hidden copy of the word gives its natural width; it
+ * is observed as well, so a web font landing after the first paint re-measures.
+ */
+function useLabelFit() {
+  const box = useRef<HTMLButtonElement>(null);
+  const word = useRef<HTMLSpanElement>(null);
+  const [fit, setFit] = useState<LabelFit>("both");
+
+  useEffect(() => {
+    const button = box.current;
+    const measure = word.current;
+    if (!button || !measure || typeof ResizeObserver === "undefined") return;
+    const update = () => {
+      const style = getComputedStyle(button);
+      const room = button.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      const text = measure.offsetWidth;
+      setFit(room >= text + BARGAIN_ICON_ROOM ? "both" : room >= text ? "text" : "icon");
+    };
+    const observer = new ResizeObserver(update);
+    observer.observe(button);
+    observer.observe(measure);
+    update();
+    return () => observer.disconnect();
+  }, []);
+
+  return { box, word, fit };
+}
+
+const actionBase: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 6,
+  minWidth: 0,
+  borderRadius: "var(--radius-button)",
+  fontFamily: "inherit",
+  fontSize: 13,
+  fontWeight: 700,
+  whiteSpace: "nowrap",
+  cursor: "pointer",
+};
+
+/**
+ * Bargain: the soft button that takes whatever width the row has left.
+ *
+ * `busy` while the card is still finding which variant to haggle over (see
+ * `useCardBargain`); the tap is not lost, it lands when the answer does.
+ */
+function BargainAction({ label, busy, height, onPress }: { label: string; busy: boolean; height: number; onPress: () => void }) {
+  const { box, word, fit } = useLabelFit();
+  return (
+    <button
+      ref={box}
+      type="button"
+      aria-label={label}
+      aria-busy={busy || undefined}
+      title={label}
+      className="ds-pop"
+      onClick={stopThen(() => {
+        if (!busy) onPress();
+      })}
+      style={{
+        ...actionBase,
+        position: "relative",
+        overflow: "hidden",
+        flex: "1 1 auto",
+        height,
+        padding: "0 10px",
+        border: "1px solid var(--success-border)",
+        background: "var(--brand-subtle)",
+        color: "var(--brand-hover)",
+        cursor: busy ? "progress" : "pointer",
+      }}
+    >
+      {fit !== "text" && (
+        <Icon
+          name={busy ? "loader" : "handshake"}
+          size={17}
+          className={busy ? "animate-spin" : undefined}
+          style={{ flexShrink: 0 }}
+        />
+      )}
+      {fit !== "icon" && <span>{label}</span>}
+      {/* The word at its natural width, for `useLabelFit` to measure. */}
+      <span
+        ref={word}
+        aria-hidden="true"
+        style={{ position: "absolute", visibility: "hidden", whiteSpace: "nowrap", pointerEvents: "none", insetInlineStart: 0 }}
+      >
+        {label}
+      </span>
+    </button>
+  );
+}
+
+/** The type's own action, solid: an icon beside Bargain, or the whole row with its words when there is no Bargain. */
+function QuickAction({
   label,
   icon,
+  height,
+  wide,
   onPress,
-  size = 34,
-  tone = "brand",
-  expanded,
-  disabled,
 }: {
   label: string;
   icon: IconName;
+  height: number;
+  wide: boolean;
   onPress: () => void;
-  size?: number;
-  /** `brand` is the primary action; `light` the secondary one beside it. */
-  tone?: "brand" | "light";
-  /** Set on a toggle only. */
-  expanded?: boolean;
-  /**
-   * `aria-disabled`, not `disabled`: a disabled button gets no click event, so
-   * its handler could not stop the tap from opening the product behind it.
-   */
-  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
-      aria-label={label}
-      aria-expanded={expanded}
-      aria-disabled={disabled || undefined}
-      title={label}
+      aria-label={wide ? undefined : label}
+      title={wide ? undefined : label}
       className="ds-pop"
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (!disabled) onPress();
-      }}
+      onClick={stopThen(onPress)}
       style={{
-        width: size,
-        height: size,
-        borderRadius: "50%",
+        ...actionBase,
+        flex: wide ? "1 1 auto" : "0 0 auto",
+        width: wide ? undefined : height,
+        height,
+        padding: wide ? "0 10px" : 0,
         border: "none",
-        cursor: disabled ? "progress" : "pointer",
-        opacity: disabled ? 0.75 : 1,
-        background: tone === "brand" ? "var(--brand)" : "#FFFFFF",
-        color: tone === "brand" ? "#fff" : "var(--brand)",
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        boxShadow: "var(--shadow-md)",
+        background: "var(--brand)",
+        color: "var(--brand-on)",
+        boxShadow: "0 4px 10px rgba(6, 133, 84, 0.22)",
+        overflow: "hidden",
       }}
     >
-      <Icon name={icon} size={Math.round(size * 0.53)} className={disabled ? "animate-spin" : undefined} />
+      <Icon name={icon} size={wide ? 17 : 19} style={{ flexShrink: 0 }} />
+      {wide && <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>}
     </button>
   );
 }
 
 /**
- * The corner of a card whose price can be haggled: a handshake where the "+"
- * would be, which opens upward into the quick action and Bargain.
- *
- * The handshake is the signal — a card without one has a plain "+" — so the
- * separate "negotiable" marker this card used to draw is gone. A card with no
- * quick action (the product page's own rows) opens onto Bargain alone.
- *
- * It opens upward on a grid card and leftward on a list card: the list image
- * is 118px square, and a column there lands Bargain on the Save heart.
+ * The card's Bargain, shared by the action row and the press-and-hold sheet —
+ * one lookup and one channel sheet per card, whichever opened it.
  *
  * ── Which variant Bargain names ─────────────────────────────────────────────
  * A list row has no variant ids, and the contract
  * (`api-doc/public/bargain-deep-link.md`) wants one named for any product with
- * more than one. So opening the menu fetches the product — the same request
- * quick-add makes — and Bargain haggles over its default variant, the one the
- * row's `negotiable` describes. Bargain waits, disabled, until that answers:
- * the fetch cannot wait for the tap instead, because a `window.open` after an
- * `await` is a popup the browser blocks. If the lookup fails, or the default
- * variant turns out not negotiable or sold out, Bargain is not offered.
- */
-function BargainCorner({
-  bargain,
-  type,
-  onQuickAdd,
-  direction,
-}: {
-  bargain: CardBargain;
-  type: ProductType;
-  onQuickAdd?: () => void;
-  direction: "up" | "left";
-}) {
-  const t = useTranslations("shop.ds");
-  const reduceMotion = useReducedMotionSafe();
-  const [open, setOpen] = useState(false);
-  const root = useRef<HTMLDivElement>(null);
-  const { start, offered, resolve: resolveVariant } = bargain;
-
-  // A tap anywhere else, or Escape, folds the menu back.
-  useEffect(() => {
-    if (!open) return;
-    const onPointer = (e: PointerEvent) => {
-      if (!root.current?.contains(e.target as Node)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    document.addEventListener("pointerdown", onPointer);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onPointer);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  const actions: {
-    key: string;
-    label: string;
-    icon: IconName;
-    tone: "brand" | "light";
-    run: (() => void) | null;
-  }[] = [];
-  if (offered) {
-    actions.push({
-      key: "bargain",
-      label: t("bargain"),
-      icon: start ? "handshake" : "loader",
-      tone: "light",
-      run: start,
-    });
-  }
-  if (onQuickAdd) {
-    actions.push({
-      key: "quick",
-      label: t(quickAction[type].labelKey),
-      icon: quickAction[type].icon,
-      tone: "brand",
-      run: onQuickAdd,
-    });
-  }
-
-  // 30px actions with a 6px gap: the row (34 + 2 × 36 + 8) fits inside the
-  // 118px image of the list layout.
-  const hidden = reduceMotion
-    ? { opacity: 0 }
-    : { opacity: 0, scale: 0.6, ...(direction === "up" ? { y: 12 } : { x: 12 }) };
-
-  return (
-    <div
-      ref={root}
-      style={{
-        position: "absolute",
-        bottom: 8,
-        right: 8,
-        display: "flex",
-        flexDirection: direction === "up" ? "column" : "row",
-        alignItems: "center",
-        gap: 6,
-      }}
-    >
-      <AnimatePresence>
-        {open &&
-          actions.map((a, i) => (
-            <motion.div
-              key={a.key}
-              initial={hidden}
-              animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-              exit={hidden}
-              transition={{ duration: 0.16, delay: reduceMotion ? 0 : (actions.length - 1 - i) * 0.04 }}
-            >
-              <CornerButton
-                label={a.label}
-                icon={a.icon}
-                tone={a.tone}
-                size={30}
-                disabled={!a.run}
-                onPress={() => {
-                            setOpen(false);
-                  a.run?.();
-                }}
-              />
-            </motion.div>
-          ))}
-      </AnimatePresence>
-      <CornerButton
-        label={t(open ? "closeActions" : "moreActions")}
-        icon={open ? "x" : "handshake"}
-        expanded={open}
-        onPress={() => {
-          if (!open) resolveVariant();
-          setOpen(!open);
-        }}
-      />
-    </div>
-  );
-}
-
-/**
- * The card's Bargain, shared by the corner menu above and the press-and-hold
- * sheet — one lookup and one channel sheet per card, whichever opened it.
+ * more than one. So Bargain fetches the product — the same request quick-add
+ * makes — and haggles over its default variant, the one the row's `negotiable`
+ * describes. If the lookup fails, or the default variant turns out not
+ * negotiable or sold out, Bargain is not offered and the row falls back to the
+ * full-width quick action.
  *
- * `resolve` is the lookup the corner's note explains; call it when a menu
- * opens, never on the Bargain tap itself. `offered` is false once the lookup
- * has said no (or with the feature off); `start` is null until it has said yes.
+ * `resolve` starts the lookup (the hold menu calls it when it opens). `tap` is
+ * the row's button: it starts at once when the lookup has answered, and
+ * otherwise starts the lookup and lands the tap when it answers — `busy` until
+ * then. Landing it late is safe because `start` opens the channel SHEET, not a
+ * window; only with no Telegram bot configured does it go straight to
+ * WhatsApp, where a browser may treat the late `window.open` as a popup.
+ * `offered` is false once the lookup has said no (or with the feature off);
+ * `start` is null until it has said yes.
  */
 interface CardBargain {
   resolve: () => void;
   offered: boolean;
   start: (() => void) | null;
+  tap: () => void;
+  busy: boolean;
   sheet: ReactNode;
 }
 
@@ -393,7 +373,36 @@ function useCardBargain(productId: string | undefined, enabled: boolean): CardBa
       .catch(() => setLookup({ state: "none" }));
   };
 
-  return { resolve, offered: enabled && lookup.state !== "none", start, sheet };
+  /** A tap that arrived before the lookup answered, waiting to land. */
+  const [waiting, setWaiting] = useState(false);
+  useEffect(() => {
+    if (!waiting) return;
+    if (start) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setWaiting(false);
+      start();
+    } else if (lookup.state === "none") {
+      setWaiting(false);
+    }
+  }, [waiting, start, lookup.state]);
+
+  const tap = () => {
+    if (start) {
+      start();
+      return;
+    }
+    setWaiting(true);
+    resolve();
+  };
+
+  return {
+    resolve,
+    offered: enabled && lookup.state !== "none",
+    start,
+    tap,
+    busy: waiting && !start,
+    sheet,
+  };
 }
 
 export function ProductCard(props: ProductCardProps) {
@@ -437,7 +446,7 @@ export function ProductCard(props: ProductCardProps) {
    *
    * Add to cart, Bargain, Share and Save, in that order — each only when this
    * card can actually do it. Every one of them is also reachable without the
-   * gesture (the corner button, the heart, the product page), which is what
+   * gesture (the action row, the heart, the product page), which is what
    * makes a hidden gesture acceptable: it is a shortcut, never the only way.
    */
   const [actionsOpen, setActionsOpen] = useState(false);
@@ -478,8 +487,8 @@ export function ProductCard(props: ProductCardProps) {
   if (inStock && onQuickAdd) {
     menu.push({
       key: "quick",
-      icon: menuQuickAction[type].icon,
-      label: t(menuQuickAction[type].labelKey),
+      icon: quickAction[type].icon,
+      label: t(quickAction[type].labelKey),
       onPress: act(onQuickAdd),
       primary: true,
     });
@@ -565,26 +574,31 @@ export function ProductCard(props: ProductCardProps) {
         </div>
       )}
 
-      {category && (
-        // `ds-ugc`: the name is vendor- or admin-written and never translated.
-        <div
-          className="ds-ugc"
-          style={{
-            fontSize: 11.5,
-            fontWeight: 600,
-            color: "var(--text-muted)",
-            marginBottom: 3,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {category}
-        </div>
-      )}
-      {rating && (
-        <div style={{ marginBottom: 3 }}>
-          <Rating value={rating.average} count={rating.count} size={12} />
+      {/* Category and rating share one line: the name truncates, the rating
+          never does, and with no category the rating keeps to its end. */}
+      {(category || rating) && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+          {/* `ds-ugc`: the name is vendor- or admin-written and never translated. */}
+          <div
+            className="ds-ugc"
+            style={{
+              flex: "1 1 auto",
+              minWidth: 0,
+              fontSize: 11.5,
+              fontWeight: 600,
+              color: "var(--text-muted)",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {category}
+          </div>
+          {rating && (
+            <span style={{ flexShrink: 0, display: "inline-flex" }}>
+              <Rating value={rating.average} count={rating.count} size={11} textSize={11} />
+            </span>
+          )}
         </div>
       )}
       {titleEl}
@@ -660,27 +674,33 @@ export function ProductCard(props: ProductCardProps) {
           </span>
         </div>
       )}
-      {canBargain ? (
-        <BargainCorner
-          bargain={bargain}
-          type={type}
-          onQuickAdd={onQuickAdd}
-          direction={layout === "list" ? "left" : "up"}
-        />
-      ) : (
-        inStock &&
-        onQuickAdd && (
-          <div style={{ position: "absolute", bottom: 8, right: 8 }}>
-            <CornerButton
-              label={t(quickAction[type].labelKey)}
-              icon={quickAction[type].icon}
-              onPress={onQuickAdd}
-            />
-          </div>
-        )
-      )}
     </div>
   );
+
+  /**
+   * ── The action row, under the price ─────────────────────────────────────────
+   *
+   * Negotiable: Bargain takes the free width and the type's action stays an
+   * icon beside it. Fixed price (or a Bargain the lookup turned down): that
+   * action takes the whole row, in words. Unavailable: no row at all, the
+   * image already says why. A card with no quick action (the product page's
+   * own rows) shows Bargain alone.
+   */
+  const actionHeight = layout === "list" ? 36 : 40;
+  const quick = quickAction[type];
+  const showBargain = canBargain && bargain.offered;
+  const actions = !inStock ? null : showBargain ? (
+    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+      <BargainAction label={t("bargain")} busy={bargain.busy} height={actionHeight} onPress={bargain.tap} />
+      {onQuickAdd && (
+        <QuickAction label={t(quick.labelKey)} icon={quick.icon} height={actionHeight} wide={false} onPress={onQuickAdd} />
+      )}
+    </div>
+  ) : onQuickAdd ? (
+    <div style={{ display: "flex" }}>
+      <QuickAction label={t(quick.labelKey)} icon={quick.icon} height={actionHeight} wide onPress={onQuickAdd} />
+    </div>
+  ) : null;
 
   const listShell: CSSProperties = {
     display: "flex",
@@ -712,12 +732,20 @@ export function ProductCard(props: ProductCardProps) {
     layout === "list" ? (
       <>
         {imageBox({ width: 118, height: 118 })}
-        <div style={{ flex: 1, minWidth: 0, padding: "10px 12px 10px 0" }}>{meta}</div>
+        <div style={{ flex: 1, minWidth: 0, padding: "10px 12px 10px 0", display: "flex", flexDirection: "column" }}>
+          {meta}
+          {actions && <div style={{ marginTop: "auto", paddingTop: 8 }}>{actions}</div>}
+        </div>
       </>
     ) : (
       <>
         {imageBox({ width: "100%", aspect: "1 / 1" })}
-        <div style={{ padding: "10px 12px 12px" }}>{meta}</div>
+        {/* A column that fills the card, so the row sits at the bottom and
+            lines up across a grid row whose titles wrap differently. */}
+        <div style={{ padding: "10px 12px 12px", display: "flex", flexDirection: "column", flex: "1 1 auto" }}>
+          {meta}
+          {actions && <div style={{ marginTop: "auto", paddingTop: 10 }}>{actions}</div>}
+        </div>
       </>
     );
 

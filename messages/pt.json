@@ -2153,7 +2153,6 @@
                 "digital": "Digital",
                 "service": "Serviço"
             },
-            "quickAdd": "Adicionar rápido",
             "buyNow": "Comprar agora",
             "book": "Reservar",
             "saveToFavorites": "Guardar",
@@ -2171,8 +2170,6 @@
                 "agent": "Estafeta verificado"
             },
             "bargain": "Negociar",
-            "moreActions": "Preço negociável — mais opções",
-            "closeActions": "Fechar opções",
             "actionsTitle": "Opções",
             "addToCart": "Adicionar ao carrinho",
             "freeDeliveryFrom": "Entrega grátis a partir de {amount}"
@@ -2350,6 +2347,8 @@
                 "pickDateFirst": "Escolha uma data para ver os horários.",
                 "dayClosedAria": "{date}, sem horários livres",
                 "hintExtend": "Toque num horário posterior para prolongar a marcação.",
+                "hintAdjust": "Toque numa hora mais tarde ou mais cedo para a alargar, ou numa hora lá dentro para terminar aí.",
+                "hintStartHere": "Toque de novo em {time} para a marcação começar a essa hora.",
                 "hintOne": "Toque num horário para o escolher.",
                 "hintFixedLength": "Toque onde a marcação deve começar. A duração mantém-se.",
                 "spotsLeft": "{n, plural, one {Resta # vaga} other {Restam # vagas}}",
