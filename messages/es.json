@@ -1159,11 +1159,13 @@
                 "finePrint": "Los planes gratuitos nunca caducan. Los periodos de pago ({paidTerm}) no se renuevan automáticamente."
             },
             "vendorKinds": {
-                "groupLabel": "Tipo de negocio",
                 "seller": "Vender productos",
-                "sellerHint": "Comisión en cada pedido",
+                "sellerHint": "Los clientes piden y pagan en línea",
                 "provider": "Anunciar un servicio",
-                "providerHint": "Pago por contacto de cliente"
+                "providerHint": "Los clientes te llaman o te escriben directamente",
+                "question": "¿Qué quieres hacer en Wi-Mall?",
+                "new": "Nuevo",
+                "lead": "Vende productos en línea o anuncia tu negocio de servicios. Cada opción tiene sus propios planes."
             },
             "provider": {
                 "lead": "Para fontaneros, imprentas, reparadores y cualquier negocio que cobra en persona. Publica un anuncio de servicio que diga qué haces y dónde. Los clientes desbloquean tu contacto con un toque y no pagan nada. Tú pagas en créditos por cada contacto, sin comisión.",

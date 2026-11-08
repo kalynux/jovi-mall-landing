@@ -1159,11 +1159,13 @@
                 "finePrint": "Planos gratuitos nunca expiram. Períodos pagos ({paidTerm}) não se renovam automaticamente."
             },
             "vendorKinds": {
-                "groupLabel": "Tipo de negócio",
                 "seller": "Vender produtos",
-                "sellerHint": "Comissão em cada pedido",
+                "sellerHint": "Os clientes encomendam e pagam online",
                 "provider": "Anunciar um serviço",
-                "providerHint": "Pago por contacto de cliente"
+                "providerHint": "Os clientes ligam-lhe ou escrevem-lhe diretamente",
+                "question": "O que quer fazer na Wi-Mall?",
+                "new": "Novo",
+                "lead": "Venda produtos online ou anuncie o seu negócio de serviços. Cada opção tem os seus próprios planos."
             },
             "provider": {
                 "lead": "Para canalizadores, gráficas, técnicos de reparação e qualquer negócio pago em mão. Publique um anúncio de serviço que diga o que faz e onde. Os clientes desbloqueiam o seu contacto com um toque e não pagam nada. Paga em créditos por cada contacto, sem comissão.",

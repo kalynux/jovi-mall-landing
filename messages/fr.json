@@ -1159,11 +1159,13 @@
                 "finePrint": "Les offres gratuites n'expirent jamais. Les périodes payées ({paidTerm}) ne se renouvellent pas automatiquement."
             },
             "vendorKinds": {
-                "groupLabel": "Type d'activité",
                 "seller": "Vendre des produits",
-                "sellerHint": "Commission sur chaque commande",
+                "sellerHint": "Les clients commandent et paient en ligne",
                 "provider": "Annoncer un service",
-                "providerHint": "Payé par contact client"
+                "providerHint": "Les clients vous appellent ou vous écrivent directement",
+                "question": "Que voulez-vous faire sur Wi-Mall ?",
+                "new": "Nouveau",
+                "lead": "Vendez des produits en ligne, ou faites connaître votre activité de service. Chacun a ses propres forfaits."
             },
             "provider": {
                 "lead": "Pour les plombiers, imprimeurs, réparateurs et toute activité payée en main propre. Publiez une annonce de service qui dit ce que vous faites et où. Les clients débloquent votre contact d'un geste, gratuitement. Vous payez en crédits pour chaque contact, sans commission.",

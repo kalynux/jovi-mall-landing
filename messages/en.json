@@ -1159,11 +1159,13 @@
                 "finePrint": "Free tiers never expire. Paid terms run for {paidTerm} and do not auto-renew."
             },
             "vendorKinds": {
-                "groupLabel": "What kind of business",
                 "seller": "Sell products",
-                "sellerHint": "Commission on each order",
+                "sellerHint": "Customers order and pay online",
                 "provider": "Advertise a service",
-                "providerHint": "Pay per customer contact"
+                "providerHint": "Customers call or message you directly",
+                "question": "What do you want to do on Wi-Mall?",
+                "new": "New",
+                "lead": "Sell products online, or advertise a service business. Each has its own plans."
             },
             "provider": {
                 "lead": "For plumbers, printers, repairers and every business paid in person. Publish a service listing that says what you do and where. Customers unlock your contact with a tap and pay nothing for it. You pay in credits for each contact, and no commission.",

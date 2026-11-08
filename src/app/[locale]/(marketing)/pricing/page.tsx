@@ -214,14 +214,18 @@ export default async function PricingPage({ params }: PageProps) {
               key={role}
               id={anchor}
               title={t("pricing.vendor.title")}
-              lead={t("pricing.vendor.lead", facts)}
+              // Neutral: the section now holds two kinds of vendor, and the
+              // commission sentence is only true of one. It moved into the
+              // seller panel below.
+              lead={t("pricing.vendorKinds.lead")}
               tone={i % 2 === 0 ? "subtle" : "plain"}
             >
               {/* The hash target sits inside the section, so a link to
                   #service-businesses scrolls here and the switch opens it. */}
               <span id={PROVIDER_PLANS_HASH} className="block scroll-mt-28" aria-hidden="true" />
               <VendorKindTabs
-                groupLabel={t("pricing.vendorKinds.groupLabel")}
+                question={t("pricing.vendorKinds.question")}
+                newLabel={t("pricing.vendorKinds.new")}
                 labels={{
                   seller: t("pricing.vendorKinds.seller"),
                   provider: t("pricing.vendorKinds.provider"),
@@ -233,6 +237,9 @@ export default async function PricingPage({ params }: PageProps) {
                 panels={{
                   seller: (
                     <>
+                      <p className="mb-6 max-w-2xl text-[15px] leading-relaxed text-[var(--text-secondary)]">
+                        {t("pricing.vendor.lead", facts)}
+                      </p>
                       {grid}
                       {note}
                     </>
