@@ -494,6 +494,18 @@
             "agentFormBody": "Se se registar na app Wi-Agent em vez de aqui, introduza este código durante o registo.",
             "agentAppBody": "Introduza este código durante o registo na app Wi-Agent.",
             "agentAppLink": "Obter a app Wi-Agent"
+        },
+        "vendorKind": {
+            "question": "O que vai fazer na Wi-Mall?",
+            "seller": {
+                "title": "Vender produtos e serviços",
+                "body": "Os clientes encomendam e pagam na Wi-Mall. Paga uma comissão em cada pedido."
+            },
+            "provider": {
+                "title": "Anunciar um negócio de serviços",
+                "body": "Os clientes encontram-no e desbloqueiam os seus contactos. Paga por contacto, em créditos. Sem pedidos nem comissão."
+            },
+            "permanent": "Não poderá alterar esta escolha mais tarde."
         }
     },
     "authMe": {
@@ -922,7 +934,13 @@
         "EARNINGS_PAYOUT_ALREADY_PENDING": "Já está a ser processado um levantamento.",
         "EARNINGS_PAYOUT_NO_AVAILABLE_BALANCE": "Não há nada disponível para levantar.",
         "EARNINGS_PAYOUT_BELOW_MINIMUM": "O seu saldo está abaixo do levantamento mínimo.",
-        "ACCOUNT_CLOSURE_REFERRAL_BALANCE": "O seu saldo de indicações tem de ser levantado ou regularizado antes de poder fechar esta conta."
+        "ACCOUNT_CLOSURE_REFERRAL_BALANCE": "O seu saldo de indicações tem de ser levantado ou regularizado antes de poder fechar esta conta.",
+        "LISTING_NOT_FOUND": "Este anúncio já não está disponível.",
+        "LISTING_UNREACHABLE": "Não é possível contactar este negócio neste momento.",
+        "LISTING_REVEAL_DAILY_LIMIT": "Atingiu o limite de hoje para este negócio. Tente novamente amanhã.",
+        "LISTING_FIELD_UNAVAILABLE": "Este negócio não indicou esse contacto.",
+        "LISTING_VIDEO_UNAVAILABLE": "Este vídeo já não está disponível.",
+        "LISTING_LEAD_NOT_FOUND": "Só pode responder por um negócio cujo contacto desbloqueou."
     },
     "checkout": {
         "errors": {
@@ -1043,7 +1061,9 @@
                 "commission": "de comissão por pedido pago",
                 "credits": "créditos incluídos",
                 "openShipments": "entregas abertas ao mesmo tempo",
-                "concurrentDeliveries": "entregas por vez"
+                "concurrentDeliveries": "entregas por vez",
+                "listings": "anúncios de serviço ativos",
+                "listingsCount": "{count, plural, one {{n} anúncio de serviço ativo} other {{n} anúncios de serviço ativos}}"
             }
         },
         "facts": {
@@ -1137,6 +1157,18 @@
                 "title": "O plano gratuito não pede meio de pagamento",
                 "body": "Monte seu catálogo, veja o que vende, e só suba de plano quando a conta da comissão disser que vale a pena.",
                 "finePrint": "Planos gratuitos nunca expiram. Períodos pagos ({paidTerm}) não se renovam automaticamente."
+            },
+            "vendorKinds": {
+                "groupLabel": "Tipo de negócio",
+                "seller": "Vender produtos",
+                "sellerHint": "Comissão em cada pedido",
+                "provider": "Anunciar um serviço",
+                "providerHint": "Pago por contacto de cliente"
+            },
+            "provider": {
+                "lead": "Para canalizadores, gráficas, técnicos de reparação e qualquer negócio pago em mão. Publique um anúncio de serviço que diga o que faz e onde. Os clientes desbloqueiam o seu contacto com um toque e não pagam nada. Paga em créditos por cada contacto, sem comissão.",
+                "contactCost": "O primeiro contacto que um cliente desbloqueia consigo custa {first, plural, one {# crédito} other {# créditos}}. Cada contacto adicional que desbloqueie em 30 dias custa {next, plural, one {# crédito} other {# créditos}}, e o mesmo contacto de novo nesses 30 dias é gratuito.",
+                "note": "Os limites contam os anúncios ativos. Os seus anúncios saem do ar enquanto os seus créditos não cobrirem um primeiro contacto e voltam assim que carregar. O tipo de negócio escolhe-se no registo e não pode ser alterado depois."
             }
         },
         "vendors": {
@@ -2110,7 +2142,10 @@
                 "store": "Loja",
                 "closure": "Pedido de encerramento",
                 "accountClosed": "Conta fechada",
-                "referrals": "Indicações"
+                "referrals": "Indicações",
+                "businessMessages": "Negócios que me podem escrever",
+                "listing": "Anúncio de serviço",
+                "listings": "Anúncios de serviço"
             }
         },
         "query": {
@@ -3897,6 +3932,126 @@
                 "requestedOn": "Pedido a {date}",
                 "resolvedOn": "Encerrado a {date}",
                 "refusedReason": "Motivo: {reason}"
+            }
+        },
+        "listings": {
+            "kind": "Anúncio de serviço",
+            "place": "{count, plural, =1 {{first}} other {{first}, {second}}}",
+            "offers": "Contactos disponíveis: {list}",
+            "moreFields": "+{n}",
+            "viewContacts": "Contactos",
+            "shelfHeading": "{n, plural, one {Anúncio de serviço} other {Anúncios de serviço}}",
+            "shelfLead": "Contacte-os diretamente, grátis.",
+            "seeAll": "Ver os {n}",
+            "productsHeading": "Produtos",
+            "noProductsForQuery": "Nenhum produto corresponde a «{query}».",
+            "noProducts": "Não há produtos nesta categoria.",
+            "backToShop": "Voltar à loja",
+            "backToResults": "Voltar aos resultados",
+            "photoAlt": "Foto {n} de {name}",
+            "photoAria": "Mostrar a foto {n}",
+            "share": "Partilhar",
+            "shareDialogTitle": "Partilhar {name}",
+            "linkCopied": "Ligação copiada",
+            "shareFailed": "Não foi possível partilhar este anúncio.",
+            "aboutTitle": "Sobre",
+            "hoursTitle": "Horário",
+            "hours": {
+                "openUntil": "Aberto · até às {time}",
+                "closedNow": "Fechado agora",
+                "closed": "Fechado",
+                "range": "{from} – {to}"
+            },
+            "contactTitle": "Contactar este negócio",
+            "noContacts": "Este negócio ainda não indicou uma forma de o contactar.",
+            "signInToContact": "Inicie sessão para contactar",
+            "show": "Mostrar",
+            "fieldHint": {
+                "whatsapp": "Converse com eles no WhatsApp",
+                "phone": "Ligue-lhes",
+                "email": "Escreva-lhes",
+                "website": "Visite o site",
+                "socials": "Encontre-os nas redes sociais",
+                "location": "Veja onde ficam",
+                "video": "Veja um vídeo do caminho"
+            },
+            "field": {
+                "whatsapp": "WhatsApp",
+                "phone": "Telefone",
+                "email": "E-mail",
+                "website": "Site",
+                "socials": "Redes sociais",
+                "location": "Localização",
+                "video": "Vídeo do caminho"
+            },
+            "privacyNote": "Este negócio verá o seu primeiro nome e parte do seu número.",
+            "revealFailed": "Não foi possível mostrar este contacto. Tente novamente.",
+            "copy": "Copiar: {what}",
+            "copied": "Copiado",
+            "action": {
+                "whatsapp": "Conversar no WhatsApp",
+                "phone": "Ligar",
+                "email": "Enviar um e-mail",
+                "website": "Abrir o site",
+                "location": "Abrir no Mapas",
+                "video": "Ver o vídeo",
+                "videoDrive": "Abrir o vídeo"
+            },
+            "network": {
+                "facebook": "Facebook",
+                "instagram": "Instagram",
+                "tiktok": "TikTok",
+                "x": "X",
+                "linkedin": "LinkedIn",
+                "youtube": "YouTube",
+                "other": "Ligação"
+            },
+            "noSocials": "Não há redes sociais para mostrar.",
+            "videoBroken": "Não é possível abrir esta ligação de vídeo.",
+            "map": {
+                "ariaLabel": "Mapa com a localização de {name}"
+            },
+            "consent": {
+                "question": "{business} pode enviar-lhe mensagens através da Wi-Mall sobre o seu pedido?",
+                "terms": "No máximo 3 mensagens em 30 dias, cada uma com uma ligação para as parar. Pode alterar isto a qualquer momento na sua conta.",
+                "yes": "Sim",
+                "no": "Não",
+                "savedYes": "{business} pode escrever-lhe. <link>Alterar</link>",
+                "savedNo": "{business} não lhe vai escrever. <link>Alterar</link>",
+                "saveFailed": "Não foi possível guardar a sua resposta. Tente novamente."
+            },
+            "consents": {
+                "lead": "Negócios cujo contacto desbloqueou. Ative um para o autorizar a escrever-lhe através da Wi-Mall sobre o seu pedido.",
+                "loadFailed": "Não foi possível carregar esta lista.",
+                "emptyTitle": "Ainda não há negócios",
+                "emptyDescription": "Quando desbloqueia um contacto num anúncio de serviço, o negócio aparece aqui e escolhe se lhe pode escrever.",
+                "emptyAction": "Explorar a loja",
+                "footnote": "Um negócio autorizado pode enviar no máximo 3 mensagens em 30 dias, uma delas um «por favor, ligue-me». Cada mensagem tem uma ligação «Parar estas mensagens», e as respostas vão para o WhatsApp do próprio negócio.",
+                "statusGranted": "{hasDate, select, yes {Pode escrever-lhe desde {date}} other {Pode escrever-lhe}}",
+                "statusRevoked": "{hasDate, select, yes {Parado a {date}} other {Parado}}",
+                "statusNotGranted": "Não lhe pode escrever",
+                "saving": "A guardar…",
+                "saveFailed": "Não foi possível alterar isto. Tente novamente."
+            },
+            "loadFailed": "Não foi possível carregar este anúncio.",
+            "unavailableTitle": "Este anúncio não está disponível",
+            "unavailableDescription": "Pode ter sido retirado, ou a ligação pode estar errada.",
+            "resultsTitle": "Anúncios de serviço",
+            "resultsHeadingQuery": "Anúncios de serviço para «{query}»",
+            "resultsCount": "{n, plural, =0 {Nenhum anúncio} one {# anúncio} other {# anúncios}}",
+            "emptyTitle": "Nenhum anúncio de serviço encontrado",
+            "emptyWithQuery": "Nada corresponde a «{query}». A pesquisa usa palavras inteiras, por isso experimente uma completa.",
+            "emptyDescription": "Ainda não há negócios anunciados aqui.",
+            "pagination": "Paginação",
+            "previous": "Anterior",
+            "next": "Seguinte",
+            "pageOf": "Página {page} de {pages}",
+            "meta": {
+                "title": "{hasWhere, select, yes {{title} · {name}, {where} — Wi-Mall} other {{title} · {name} — Wi-Mall}}",
+                "fallbackDescription": "{hasWhere, select, yes {{name}: {title} em {where}. Contacte-os através da Wi-Mall.} other {{name}: {title}. Contacte-os através da Wi-Mall.}}",
+                "notFound": "Anúncio não encontrado — Wi-Mall",
+                "resultsTitle": "Anúncios de serviço — Wi-Mall",
+                "resultsDescription": "Encontre negócios locais (canalizadores, gráficas, técnicos de reparação e mais) e contacte-os através da Wi-Mall."
             }
         }
     },

@@ -69,6 +69,7 @@ import {
   bookingPayPath,
   bookingReschedulePath,
   CLOSURE_REQUEST_PATH,
+  listingPath,
   orderGroupPath,
   orderPath,
   orderTrackingPath,
@@ -122,6 +123,7 @@ const ROUTES: { pattern: RegExp; to: (...params: string[]) => string }[] = [
   { pattern: /^shop\/stores\/([^/?#]+)\/products\/([^/?#]+)$/, to: productPath },
   { pattern: /^shop\/stores\/([^/?#]+)$/, to: storePath },
   { pattern: /^shop\/p\/([^/?#]+)$/, to: productIdPath },
+  { pattern: /^shop\/listings\/([^/?#]+)$/, to: listingPath },
 
   // ── Legacy: bare nouns, still sitting in inboxes written before that date
   { pattern: /^orders\/([^/?#]+)\/tracking$/, to: orderTrackingPath },

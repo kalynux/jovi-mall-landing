@@ -210,6 +210,36 @@ export function categoryPath(slug: string): string {
 }
 
 /**
+ * ── Service listings ─────────────────────────────────────────────────────────
+ *
+ * A listing's slug is unique on its own (unlike a product's), so it needs no
+ * store segment. Same two shapes as everything above: a nested, indexable path
+ * on the web, a query string on the app's one static file.
+ */
+export const LISTINGS_ROOT = `${SHOP_ROOT}/listings`;
+
+export function listingPath(slug: string): string {
+  if (IS_NATIVE_BUILD) return `${SHOP_ROOT}/listing?s=${encodeURIComponent(slug)}`;
+  return `${LISTINGS_ROOT}/${slug}`;
+}
+
+/**
+ * Every listing matching a search or a category: the "See all" behind the
+ * listings shelf on /shop. A static path with a query on both targets.
+ */
+export function listingsPath(query: { q?: string; category?: string; page?: number } = {}): string {
+  const params = new URLSearchParams();
+  if (query.q) params.set("q", query.q);
+  if (query.category) params.set("category", query.category);
+  if (query.page && query.page > 1) params.set("page", String(query.page));
+  const qs = params.toString();
+  return qs ? `${LISTINGS_ROOT}?${qs}` : LISTINGS_ROOT;
+}
+
+/** Account → "Businesses that may message me". Static, so it is in every build. */
+export const LISTING_CONSENTS_PATH = `${SHOP_ROOT}/account/business-messages`;
+
+/**
  * ── Links meant for someone else ─────────────────────────────────────────────
  *
  * A Share button must hand over the **website's** address, on both targets.
@@ -242,6 +272,10 @@ export function productShareUrl(
 export function storeShareUrl(locale: string, storeSlug: string, type?: string): string {
   const query = type ? `?type=${encodeURIComponent(type)}` : "";
   return publicShopUrl(locale, `${SHOP_ROOT}/stores/${storeSlug}${query}`);
+}
+
+export function listingShareUrl(locale: string, slug: string): string {
+  return publicShopUrl(locale, `${LISTINGS_ROOT}/${slug}`);
 }
 
 /** A product row from any list already carries `store.slug`, so this needs no join. */

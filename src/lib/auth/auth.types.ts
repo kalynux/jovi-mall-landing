@@ -167,6 +167,18 @@ export interface LoginPayload {
     role?: UiRole;
 }
 
+/**
+ * The two kinds of vendor (api-doc/customer/FRONTEND-CHANGELOG-service-listings.md):
+ * a seller sells through orders, a provider advertises a service business and
+ * pays per unlocked contact. Chosen at sign-up and never changeable. Sent ONLY
+ * with `role: "vendor"`; the API refuses it on any other role.
+ */
+export type VendorKind = "seller" | "provider";
+
+export function isVendorKind(value: unknown): value is VendorKind {
+    return value === "seller" || value === "provider";
+}
+
 export interface RegisterPayload {
     phone: string;
     email?: string;
@@ -176,6 +188,8 @@ export interface RegisterPayload {
     role: UiRole;
     /** Vendor only. Seeds `Store.name`, not the vendor profile. 2–100 chars. */
     business_name?: string;
+    /** Vendor only. Absent means seller. Permanent. */
+    vendorKind?: VendorKind;
     /** Agency only. Seeds `Magazin.name`, not the agency profile. 2–100 chars. */
     agency_name?: string;
     /** Ticked Terms/Privacy consent. Required by the API for vendor, agency and agent. */
@@ -190,6 +204,8 @@ export interface AddRolePayload {
     name?: string;
     /** Vendor only. Seeds `Store.name`, not the vendor profile. 2–100 chars. */
     business_name?: string;
+    /** Vendor only. Absent means seller. Permanent. */
+    vendorKind?: VendorKind;
     /** Agency only. Seeds `Magazin.name`, not the agency profile. 2–100 chars. */
     agency_name?: string;
     /** Ticked Terms/Privacy consent. Required by the API for vendor, agency and agent. */

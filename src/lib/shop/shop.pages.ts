@@ -78,6 +78,7 @@ const EXACT_TITLES: Record<string, string> = {
   "/shop/account/security": "shop.nav.titles.security",
   "/shop/account/bookings": "shop.nav.titles.bookings",
   "/shop/account/referrals": "shop.nav.titles.referrals",
+  "/shop/account/business-messages": "shop.nav.titles.businessMessages",
   "/shop/account/support": "shop.nav.titles.support",
   "/shop/account/support/new": "shop.nav.titles.supportNew",
   "/shop/account/close": "shop.nav.titles.close",
@@ -85,6 +86,8 @@ const EXACT_TITLES: Record<string, string> = {
   "/shop/account-closed": "shop.nav.titles.accountClosed",
   "/shop/p": "shop.nav.titles.product",
   "/shop/store": "shop.nav.titles.store",
+  "/shop/listing": "shop.nav.titles.listing",
+  "/shop/listings": "shop.nav.titles.listings",
 };
 
 const PATTERN_TITLES: [RegExp, string][] = [
@@ -97,6 +100,7 @@ const PATTERN_TITLES: [RegExp, string][] = [
   [/^\/shop\/stores\/[^/]+\/products\/[^/]+$/, "shop.nav.titles.product"],
   [/^\/shop\/stores\/[^/]+$/, "shop.nav.titles.store"],
   [/^\/shop\/p\/[^/]+$/, "shop.nav.titles.product"],
+  [/^\/shop\/listings\/[^/]+$/, "shop.nav.titles.listing"],
 ];
 
 /**

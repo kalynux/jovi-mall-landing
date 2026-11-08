@@ -39,6 +39,12 @@ import type {
   StoreListQuery,
   StoreListResponse,
 } from "./shop.types";
+import type {
+  ListingListQuery,
+  ListingListResponse,
+  PublicListingCard,
+  PublicListingDetail,
+} from "./listings";
 
 /** Matches the endpoints' own `Cache-Control: public, max-age=300`. */
 export const CATALOG_REVALIDATE_SECONDS = 300;
@@ -562,4 +568,95 @@ export async function listRelatedProducts(
     items: Array.isArray(result.data) ? result.data : [],
     source: meta?.source === "co_purchase" ? "co_purchase" : "same_category",
   };
+}
+
+/* ─── Service listings ────────────────────────────────────────────────────── */
+/*
+ * Contract: api-doc/customer/service-listings.md § 1. Same transport, same
+ * five-minute cache, same `pages` meta as the product list. Nothing in these
+ * answers is a contact — see lib/shop/listings.ts.
+ */
+
+function listingQuery(query: ListingListQuery): string {
+  const params = new URLSearchParams();
+  if (query.q) params.set("q", query.q);
+  if (query.category) params.set("category", query.category);
+  if (query.country) params.set("country", query.country);
+  if (query.city) params.set("city", query.city);
+  if (query.area) params.set("area", query.area);
+  if (query.page && query.page > 1) params.set("page", String(query.page));
+  if (query.limit) params.set("limit", String(query.limit));
+  const qs = params.toString();
+  return qs ? `?${qs}` : "";
+}
+
+/** `GET /api/public/listings` — search and category pages. */
+export async function listListings(query: ListingListQuery = {}): Promise<ListingListResponse> {
+  return getList(`/api/public/listings${listingQuery(query)}`);
+}
+
+/**
+ * The listings section beside the product grid, which must never take the
+ * grid down with it.
+ *
+ * The products are the page; the listings are a second shelf. So unlike
+ * every other read here, a failure is an empty shelf and a server-log line,
+ * not a thrown error: a listing outage, or an API from before the
+ * service-listings release, leaves /shop exactly as it was.
+ */
+export async function listListingsQuietly(query: ListingListQuery = {}): Promise<ListingListResponse> {
+  try {
+    return await listListings(query);
+  } catch (error) {
+    console.warn("[listings] could not read /api/public/listings:", error instanceof Error ? error.message : error);
+    return { data: [], meta: { total: 0, page: 1, limit: query.limit ?? 0, pages: 0 } };
+  }
+}
+
+/** `GET /api/public/listings/:slug`. `null` is a 404 page, whatever the reason. */
+export async function getListing(slug: string, options?: CatalogReadOptions): Promise<PublicListingDetail | null> {
+  return getJsonOrNull<PublicListingDetail>(`/api/public/listings/${encodeURIComponent(slug)}`, options);
+}
+
+/**
+ * `GET /api/public/listings/by-ids` — cards in the order asked, at most 50
+ * per request (chunked here). A listing that is no longer public is simply
+ * absent: the API answers it in `missing[]`, which this drops.
+ */
+export async function listListingsByIds(ids: readonly string[]): Promise<PublicListingCard[]> {
+  const unique = [...new Set(ids)].filter(Boolean);
+  const out: PublicListingCard[] = [];
+  for (let i = 0; i < unique.length; i += BY_IDS_MAX) {
+    const chunk = unique.slice(i, i + BY_IDS_MAX);
+    const result = await request<PublicListingCard[]>(
+      `/api/public/listings/by-ids?ids=${chunk.map(encodeURIComponent).join(",")}`
+    );
+    if (!result.ok) {
+      throw new CatalogApiError(`${API_BASE}/api/public/listings/by-ids`, `${result.error.code} (${result.error.statusCode})`);
+    }
+    if (Array.isArray(result.data)) out.push(...result.data);
+  }
+  return out;
+}
+
+/**
+ * Every public listing, walked page by page — for `sitemap.ts`. Quiet, like
+ * the shelf: a listing outage must not fail a build that would otherwise
+ * publish every product correctly.
+ */
+export async function listAllListings(cap = 2000): Promise<PublicListingCard[]> {
+  const all: PublicListingCard[] = [];
+  let page = 1;
+  let pages = 1;
+  try {
+    do {
+      const { data, meta } = await listListings({ page, limit: CATALOG_MAX_LIMIT });
+      all.push(...data);
+      pages = meta.pages;
+      page += 1;
+    } while (page <= pages && all.length < cap);
+  } catch (error) {
+    console.warn("[listings] sitemap walk stopped:", error instanceof Error ? error.message : error);
+  }
+  return all.slice(0, cap);
 }

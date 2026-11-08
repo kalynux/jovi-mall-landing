@@ -5,7 +5,13 @@ import { useSearchParams } from "next/navigation";
 import { ShopBrowser } from "./ShopBrowser";
 import { Skeleton } from "@/components/shop/ds";
 import { ResourceError } from "@/components/shop/account/AccountShell";
-import { listCategories, listProducts, resolveVariantBySku } from "@/lib/shop/catalog.api";
+import {
+  listCategories,
+  listListingsQuietly,
+  listProducts,
+  resolveVariantBySku,
+} from "@/lib/shop/catalog.api";
+import { NO_LISTINGS, shelfQuery, type ListingListResponse } from "@/lib/shop/listings";
 import type { VariantBySku } from "@/lib/shop/catalog.api";
 import { parseProductSearchParams } from "@/lib/shop/shop.query";
 import type { CategoryCount, ListMeta, ProductListItem } from "@/lib/shop/shop.types";
@@ -71,6 +77,7 @@ function ShopBrowserResolver() {
         meta: ListMeta;
         categories: CategoryCount[];
         skuMatch: VariantBySku | null;
+        listings: ListingListResponse;
       };
 
   /**
@@ -100,8 +107,13 @@ function ShopBrowserResolver() {
   useEffect(() => {
     let cancelled = false;
 
-    Promise.all([listProducts(query), listCategories()])
-      .then(async ([{ data: products, meta }, categories]) => {
+    const shelf = shelfQuery(query);
+    Promise.all([
+      listProducts(query),
+      listCategories(),
+      shelf ? listListingsQuietly(shelf) : Promise.resolve(NO_LISTINGS),
+    ])
+      .then(async ([{ data: products, meta }, categories, listings]) => {
         // The same product-code fallback the web page runs, so the packaged app
         // does not quietly lose it: `?q=` cannot match a SKU, and a customer
         // reading a code off a package is if anything more likely to be on a
@@ -109,7 +121,7 @@ function ShopBrowserResolver() {
         const skuMatch =
           products.length === 0 && query.q ? await resolveVariantBySku(query.q) : null;
         if (!cancelled) {
-          setSettled({ token, value: { status: "ready", products, meta, categories, skuMatch } });
+          setSettled({ token, value: { status: "ready", products, meta, categories, skuMatch, listings } });
         }
       })
       .catch((error: unknown) => {
@@ -142,6 +154,7 @@ function ShopBrowserResolver() {
       categories={state.categories}
       query={query}
       skuMatch={state.skuMatch}
+      listings={state.listings}
     />
   );
 }

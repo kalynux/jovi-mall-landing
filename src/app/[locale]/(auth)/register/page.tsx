@@ -1,6 +1,6 @@
 "use client";
 import { useState, Suspense } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocalizedResolver } from "@/lib/auth/useLocalizedResolver";
 import { useSearchParams } from "next/navigation";
@@ -15,7 +15,7 @@ import {
   type RegisterFormValues,
 } from "@/lib/auth/auth.schemas";
 import { registerAndGetRedirect } from "@/lib/auth/auth.service";
-import { isUiRole, type UiRole } from "@/lib/auth/auth.types";
+import { isUiRole, isVendorKind, type UiRole } from "@/lib/auth/auth.types";
 import { mapApiErrors, parseRootType } from "@/lib/auth/form-errors";
 import { addRoleReturnPath } from "@/lib/auth/auth.redirect";
 import { useLocale } from "@/lib/i18n-provider";
@@ -27,6 +27,7 @@ import AuthFormField from "@/components/auth/AuthFormField";
 import { PhoneField } from "@/components/ui/phone";
 import { GlobalError } from "@/components/auth/GlobalError";
 import RolePicker from "@/components/auth/RolePicker";
+import VendorKindField from "@/components/auth/VendorKindField";
 import CustomerWhatsAppCta from "@/components/auth/CustomerWhatsAppCta";
 import { AgentReferralCode } from "@/components/apps/AgentReferralCode";
 import { IS_NATIVE_BUILD } from "@/lib/platform";
@@ -101,8 +102,15 @@ function RegisterFormContent() {
     resolver: useLocalizedResolver(zodResolver(RegisterSchema)),
     // `phone` must start as "" rather than undefined — PhoneField is a
     // controlled input and would otherwise flip from uncontrolled on first key.
-    defaultValues: { role: initialRole, phone: "" },
+    defaultValues: {
+      role: initialRole,
+      phone: "",
+      // `?vendorKind=provider` comes from a service-provider plan card on
+      // /pricing; anything else starts on seller, the backend's own default.
+      vendorKind: isVendorKind(searchParams.get("vendorKind")) ? (searchParams.get("vendorKind") as "provider") : "seller",
+    },
   });
+  const vendorKind = useWatch({ control, name: "vendorKind" });
 
   // NOTE: `initialRole` / `initialStep` are useState initialisers, so they run
   // once at mount and never re-read the param. That is fine because there is no
@@ -141,6 +149,9 @@ function RegisterFormContent() {
       const payload = sanitizePayload({
         ...data,
         role: selectedRole,
+        // Only with role vendor: the API refuses `vendorKind` on any other
+        // role, and the form keeps the value if the visitor switches role.
+        vendorKind: selectedRole === "vendor" ? (data.vendorKind ?? "seller") : undefined,
         referral_code: referral.codeToSend ?? undefined,
       });
 
@@ -271,6 +282,16 @@ function RegisterFormContent() {
                 tooltips rather than under each field — so the column no longer
                 runs long enough to be worth splitting. */}
             <div className="flex flex-col gap-4">
+              {/* The first question for a vendor, before any name: it decides
+                  what kind of account this is, and it is permanent. */}
+              {selectedRole === "vendor" && (
+                <VendorKindField
+                  registration={register("vendorKind")}
+                  value={vendorKind}
+                  error={errors.vendorKind?.message}
+                />
+              )}
+
               {/*
                 Personal name — lands on the role profile itself (display_name for
                 vendor/agency, name for agent). Vendors and agencies additionally

@@ -16,7 +16,8 @@ import { absoluteUrl, SITE_URL } from "@/lib/site";
 import { localePath, type Locale } from "@/i18n/routing";
 import type { Product, Store } from "@/lib/shop/shop.types";
 import { publicUrl } from "@/lib/shop/shop.types";
-import { productPath, storePath } from "@/lib/shop/shop.routes";
+import { listingPath, productPath, storePath } from "@/lib/shop/shop.routes";
+import type { PublicListingDetail } from "@/lib/shop/listings";
 
 export type JsonLdNode = Record<string, unknown>;
 
@@ -516,5 +517,59 @@ export function storeJsonLd(locale: Locale, store: Store): JsonLdNode {
         }
       : {}),
     parentOrganization: { "@id": ORG_ID },
+  };
+}
+
+const SCHEMA_DAY: Record<string, string> = {
+  monday: "Monday",
+  tuesday: "Tuesday",
+  wednesday: "Wednesday",
+  thursday: "Thursday",
+  friday: "Friday",
+  saturday: "Saturday",
+  sunday: "Sunday",
+};
+
+/**
+ * A service listing as a `LocalBusiness`.
+ *
+ * ⛔ No `telephone`, `email`, `geo` or `sameAs`, ever. Those are exactly the
+ * details a customer unlocks one at a time and the business pays for; putting
+ * them in markup would publish them to every crawler. The public DTO holds
+ * none of them anyway, and this must not start reading them from anywhere.
+ */
+export function listingJsonLd(locale: Locale, listing: PublicListingDetail): JsonLdNode {
+  const url = localeUrl(locale, listingPath(listing.slug));
+  const image = listing.photos.map((photo) => publicUrl(photo)).find((src): src is string => Boolean(src));
+  const hours = (listing.openingHours ?? []).filter((row) => !row.isClosed);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "@id": `${url}#business`,
+    name: listing.companyName || listing.title,
+    ...(listing.description ? { description: listing.description } : {}),
+    url,
+    ...(image ? { image } : {}),
+    ...(listing.city || listing.country
+      ? {
+          address: {
+            "@type": "PostalAddress",
+            ...(listing.area ? { streetAddress: listing.area } : {}),
+            ...(listing.city ? { addressLocality: listing.city } : {}),
+            ...(listing.country ? { addressCountry: listing.country } : {}),
+          },
+        }
+      : {}),
+    ...(hours.length
+      ? {
+          openingHoursSpecification: hours.map((row) => ({
+            "@type": "OpeningHoursSpecification",
+            dayOfWeek: SCHEMA_DAY[row.day],
+            opens: row.openTime,
+            closes: row.closeTime,
+          })),
+        }
+      : {}),
   };
 }

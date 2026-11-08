@@ -494,6 +494,18 @@
             "agentFormBody": "Si te registras en la app Wi-Agent en lugar de aquí, introduce este código durante el registro.",
             "agentAppBody": "Introduce este código durante el registro en la app Wi-Agent.",
             "agentAppLink": "Obtener la app Wi-Agent"
+        },
+        "vendorKind": {
+            "question": "¿Qué harás en Wi-Mall?",
+            "seller": {
+                "title": "Vender productos y servicios",
+                "body": "Los clientes piden y pagan en Wi-Mall. Pagas una comisión por cada pedido."
+            },
+            "provider": {
+                "title": "Anunciar un negocio de servicios",
+                "body": "Los clientes te encuentran y desbloquean tus contactos. Pagas por contacto, en créditos. Sin pedidos ni comisión."
+            },
+            "permanent": "No podrás cambiar esta elección más adelante."
         }
     },
     "authMe": {
@@ -922,7 +934,13 @@
         "EARNINGS_PAYOUT_ALREADY_PENDING": "Ya se está procesando un retiro.",
         "EARNINGS_PAYOUT_NO_AVAILABLE_BALANCE": "No hay nada disponible para retirar.",
         "EARNINGS_PAYOUT_BELOW_MINIMUM": "Tu saldo está por debajo del retiro mínimo.",
-        "ACCOUNT_CLOSURE_REFERRAL_BALANCE": "Debes retirar o saldar tu saldo de referidos antes de poder cerrar esta cuenta."
+        "ACCOUNT_CLOSURE_REFERRAL_BALANCE": "Debes retirar o saldar tu saldo de referidos antes de poder cerrar esta cuenta.",
+        "LISTING_NOT_FOUND": "Este anuncio ya no está disponible.",
+        "LISTING_UNREACHABLE": "No se puede contactar con este negocio en este momento.",
+        "LISTING_REVEAL_DAILY_LIMIT": "Has alcanzado el límite de hoy para este negocio. Vuelve a intentarlo mañana.",
+        "LISTING_FIELD_UNAVAILABLE": "Este negocio no ha dado ese dato de contacto.",
+        "LISTING_VIDEO_UNAVAILABLE": "Este vídeo ya no está disponible.",
+        "LISTING_LEAD_NOT_FOUND": "Solo puedes responder por un negocio cuyo contacto hayas desbloqueado."
     },
     "checkout": {
         "errors": {
@@ -1043,7 +1061,9 @@
                 "commission": "de comisión por pedido pagado",
                 "credits": "créditos incluidos",
                 "openShipments": "entregas abiertas a la vez",
-                "concurrentDeliveries": "entregas a la vez"
+                "concurrentDeliveries": "entregas a la vez",
+                "listings": "anuncios de servicio activos",
+                "listingsCount": "{count, plural, one {{n} anuncio de servicio activo} other {{n} anuncios de servicio activos}}"
             }
         },
         "facts": {
@@ -1137,6 +1157,18 @@
                 "title": "El plan gratuito no pide método de pago",
                 "body": "Monta tu catálogo, mira qué se vende, y sube de nivel solo cuando la cuenta de la comisión lo aconseje.",
                 "finePrint": "Los planes gratuitos nunca caducan. Los periodos de pago ({paidTerm}) no se renuevan automáticamente."
+            },
+            "vendorKinds": {
+                "groupLabel": "Tipo de negocio",
+                "seller": "Vender productos",
+                "sellerHint": "Comisión en cada pedido",
+                "provider": "Anunciar un servicio",
+                "providerHint": "Pago por contacto de cliente"
+            },
+            "provider": {
+                "lead": "Para fontaneros, imprentas, reparadores y cualquier negocio que cobra en persona. Publica un anuncio de servicio que diga qué haces y dónde. Los clientes desbloquean tu contacto con un toque y no pagan nada. Tú pagas en créditos por cada contacto, sin comisión.",
+                "contactCost": "El primer contacto que un cliente desbloquea contigo cuesta {first, plural, one {# crédito} other {# créditos}}. Cada dato de contacto adicional que desbloquee en 30 días cuesta {next, plural, one {# crédito} other {# créditos}}, y el mismo dato de nuevo en esos 30 días es gratis.",
+                "note": "Los límites cuentan los anuncios activos. Tus anuncios se retiran mientras tus créditos no cubran un primer contacto y vuelven en cuanto recargas. El tipo de negocio se elige al registrarte y no se puede cambiar después."
             }
         },
         "vendors": {
@@ -2110,7 +2142,10 @@
                 "store": "Tienda",
                 "closure": "Solicitud de cierre",
                 "accountClosed": "Cuenta cerrada",
-                "referrals": "Referidos"
+                "referrals": "Referidos",
+                "businessMessages": "Negocios que pueden escribirme",
+                "listing": "Anuncio de servicio",
+                "listings": "Anuncios de servicio"
             }
         },
         "query": {
@@ -3897,6 +3932,126 @@
                 "requestedOn": "Solicitado el {date}",
                 "resolvedOn": "Cerrado el {date}",
                 "refusedReason": "Motivo: {reason}"
+            }
+        },
+        "listings": {
+            "kind": "Anuncio de servicio",
+            "place": "{count, plural, =1 {{first}} other {{first}, {second}}}",
+            "offers": "Contactos disponibles: {list}",
+            "moreFields": "+{n}",
+            "viewContacts": "Contactos",
+            "shelfHeading": "{n, plural, one {Anuncio de servicio} other {Anuncios de servicio}}",
+            "shelfLead": "Contáctalos directamente, gratis.",
+            "seeAll": "Ver los {n}",
+            "productsHeading": "Productos",
+            "noProductsForQuery": "Ningún producto coincide con «{query}».",
+            "noProducts": "No hay productos en esta categoría.",
+            "backToShop": "Volver a la tienda",
+            "backToResults": "Volver a los resultados",
+            "photoAlt": "Foto {n} de {name}",
+            "photoAria": "Ver la foto {n}",
+            "share": "Compartir",
+            "shareDialogTitle": "Compartir {name}",
+            "linkCopied": "Enlace copiado",
+            "shareFailed": "No hemos podido compartir este anuncio.",
+            "aboutTitle": "Acerca de",
+            "hoursTitle": "Horario",
+            "hours": {
+                "openUntil": "Abierto · hasta las {time}",
+                "closedNow": "Cerrado ahora",
+                "closed": "Cerrado",
+                "range": "{from} – {to}"
+            },
+            "contactTitle": "Contactar con este negocio",
+            "noContacts": "Este negocio aún no ha añadido una forma de contactarlo.",
+            "signInToContact": "Inicia sesión para contactar",
+            "show": "Mostrar",
+            "fieldHint": {
+                "whatsapp": "Chatea con ellos por WhatsApp",
+                "phone": "Llámalos",
+                "email": "Escríbeles",
+                "website": "Visita su web",
+                "socials": "Encuéntralos en redes sociales",
+                "location": "Mira dónde están",
+                "video": "Mira un vídeo del camino"
+            },
+            "field": {
+                "whatsapp": "WhatsApp",
+                "phone": "Teléfono",
+                "email": "Correo",
+                "website": "Sitio web",
+                "socials": "Redes sociales",
+                "location": "Ubicación",
+                "video": "Vídeo de cómo llegar"
+            },
+            "privacyNote": "Este negocio verá tu nombre y parte de tu número.",
+            "revealFailed": "No hemos podido mostrar este contacto. Inténtalo de nuevo.",
+            "copy": "Copiar: {what}",
+            "copied": "Copiado",
+            "action": {
+                "whatsapp": "Chatear por WhatsApp",
+                "phone": "Llamar",
+                "email": "Enviar un correo",
+                "website": "Abrir la web",
+                "location": "Abrir en Mapas",
+                "video": "Ver el vídeo",
+                "videoDrive": "Abrir el vídeo"
+            },
+            "network": {
+                "facebook": "Facebook",
+                "instagram": "Instagram",
+                "tiktok": "TikTok",
+                "x": "X",
+                "linkedin": "LinkedIn",
+                "youtube": "YouTube",
+                "other": "Enlace"
+            },
+            "noSocials": "No hay redes sociales que mostrar.",
+            "videoBroken": "Este enlace de vídeo no se puede abrir.",
+            "map": {
+                "ariaLabel": "Mapa con la ubicación de {name}"
+            },
+            "consent": {
+                "question": "¿Puede {business} enviarte mensajes a través de Wi-Mall sobre tu solicitud?",
+                "terms": "Como máximo 3 mensajes en 30 días, cada uno con un enlace para detenerlos. Puedes cambiarlo cuando quieras desde tu cuenta.",
+                "yes": "Sí",
+                "no": "No",
+                "savedYes": "{business} puede escribirte. <link>Cambiar</link>",
+                "savedNo": "{business} no te escribirá. <link>Cambiar</link>",
+                "saveFailed": "No hemos podido guardar tu respuesta. Inténtalo de nuevo."
+            },
+            "consents": {
+                "lead": "Negocios cuyo contacto desbloqueaste. Activa uno para permitirle escribirte a través de Wi-Mall sobre tu solicitud.",
+                "loadFailed": "No hemos podido cargar esta lista.",
+                "emptyTitle": "Aún no hay negocios",
+                "emptyDescription": "Cuando desbloqueas un contacto en un anuncio de servicio, el negocio aparece aquí y eliges si puede escribirte.",
+                "emptyAction": "Explorar la tienda",
+                "footnote": "Un negocio autorizado puede enviar como máximo 3 mensajes en 30 días, uno de ellos un «llámame, por favor». Cada mensaje incluye un enlace «Detener estos mensajes», y las respuestas van al WhatsApp del propio negocio.",
+                "statusGranted": "{hasDate, select, yes {Puede escribirte desde el {date}} other {Puede escribirte}}",
+                "statusRevoked": "{hasDate, select, yes {Detenido el {date}} other {Detenido}}",
+                "statusNotGranted": "No puede escribirte",
+                "saving": "Guardando…",
+                "saveFailed": "No hemos podido cambiarlo. Inténtalo de nuevo."
+            },
+            "loadFailed": "No hemos podido cargar este anuncio.",
+            "unavailableTitle": "Este anuncio no está disponible",
+            "unavailableDescription": "Puede que se haya retirado o que el enlace sea incorrecto.",
+            "resultsTitle": "Anuncios de servicio",
+            "resultsHeadingQuery": "Anuncios de servicio para «{query}»",
+            "resultsCount": "{n, plural, =0 {Ningún anuncio} one {# anuncio} other {# anuncios}}",
+            "emptyTitle": "No se han encontrado anuncios de servicio",
+            "emptyWithQuery": "Nada coincide con «{query}». La búsqueda usa palabras completas, así que prueba con una entera.",
+            "emptyDescription": "Todavía no hay negocios anunciados aquí.",
+            "pagination": "Paginación",
+            "previous": "Anterior",
+            "next": "Siguiente",
+            "pageOf": "Página {page} de {pages}",
+            "meta": {
+                "title": "{hasWhere, select, yes {{title} · {name}, {where} — Wi-Mall} other {{title} · {name} — Wi-Mall}}",
+                "fallbackDescription": "{hasWhere, select, yes {{name}: {title} en {where}. Contáctalos a través de Wi-Mall.} other {{name}: {title}. Contáctalos a través de Wi-Mall.}}",
+                "notFound": "Anuncio no encontrado — Wi-Mall",
+                "resultsTitle": "Anuncios de servicio — Wi-Mall",
+                "resultsDescription": "Encuentra negocios locales (fontaneros, imprentas, reparadores y más) y contáctalos a través de Wi-Mall."
             }
         }
     },

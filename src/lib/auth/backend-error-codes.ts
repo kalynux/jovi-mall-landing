@@ -631,6 +631,19 @@ export type BackendErrorCode =
     | "REFERRAL_PARTNER_NOT_FOUND"
     | "REFERRAL_BALANCE_FROZEN"
     | "REFERRAL_PAYOUT_METHOD_MANAGED_ELSEWHERE"
+    // ─── Service listings (api-doc/customer/service-listings.md) ──────────────
+    /** 404. The listing is not public (draft, suspended, archived, or a wrong slug). */
+    | "LISTING_NOT_FOUND"
+    /** 422. Deliberately one sentence for every reason the business can't be reached. */
+    | "LISTING_UNREACHABLE"
+    /** 422. Today's unlock limit toward this business (the platform day, Africa/Douala). */
+    | "LISTING_REVEAL_DAILY_LIMIT"
+    /** 422. The business has not given that contact detail. */
+    | "LISTING_FIELD_UNAVAILABLE"
+    /** 422. The video link no longer plays. */
+    | "LISTING_VIDEO_UNAVAILABLE"
+    /** 404 from the consent PUT: no unlocked contact from that business. */
+    | "LISTING_LEAD_NOT_FOUND"
     // ─── Role closure requested by an administrator (api-doc/me/role-closure.md)
     /** 404. No pending request for the role signed in. */
     | "ROLE_CLOSURE_REQUEST_NOT_FOUND"

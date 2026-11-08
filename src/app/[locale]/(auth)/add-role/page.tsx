@@ -1,7 +1,7 @@
 "use client";
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocalizedResolver } from "@/lib/auth/useLocalizedResolver";
 import { Loader2, CheckCircle2 } from "lucide-react";
@@ -13,13 +13,14 @@ import {
   type AddRoleFormValues,
 } from "@/lib/auth/auth.schemas";
 import { addRoleAndGetRedirect, redirectToOnboarding } from "@/lib/auth/auth.service";
-import { isUiRole, type UiRole } from "@/lib/auth/auth.types";
+import { isUiRole, isVendorKind, type UiRole } from "@/lib/auth/auth.types";
 import { mapApiErrors, parseRootType } from "@/lib/auth/form-errors";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import AuthCard from "@/components/auth/AuthCard";
 import AuthFormField from "@/components/auth/AuthFormField";
 import { GlobalError } from "@/components/auth/GlobalError";
 import RolePicker from "@/components/auth/RolePicker";
+import VendorKindField from "@/components/auth/VendorKindField";
 import { TermsConsentField } from "@/components/legal/LegalLink";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -32,7 +33,9 @@ function AddRoleContent() {
   const tErrors = useTranslations("errors");
 
   const { user, role, status } = useAuthGuard();
-  const roleParam = useSearchParams().get("role");
+  const searchParams = useSearchParams();
+  const roleParam = searchParams.get("role");
+  const kindParam = searchParams.get("vendorKind");
 
   // Both of these are `null` until the visitor acts, at which point their
   // choice overrides whatever ?role= asked for — see the preselect below.
@@ -44,10 +47,14 @@ function AddRoleContent() {
     register,
     handleSubmit,
     setError,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<AddRoleFormValues>({
     resolver: useLocalizedResolver(zodResolver(AddRoleSchema)),
+    // `?vendorKind=provider` from a service-provider plan card on /pricing.
+    defaultValues: { vendorKind: isVendorKind(kindParam) ? kindParam : "seller" },
   });
+  const vendorKind = useWatch({ control, name: "vendorKind" });
 
   // ── ?role= preselect ───────────────────────────────────────────────────────
   // Role CTAs across the site send signed-in visitors who do not hold a role
@@ -104,6 +111,8 @@ function AddRoleContent() {
       const { newRole, redirectUrl } = await addRoleAndGetRedirect({
         ...data,
         role: selectedRole!,
+        // Only with role vendor — the API refuses it on any other role.
+        vendorKind: selectedRole === "vendor" ? (data.vendorKind ?? "seller") : undefined,
       });
 
       setConfirmState({ newRole: newRole as UiRole, redirectUrl });
@@ -208,6 +217,15 @@ function AddRoleContent() {
                 value={selectedRole}
                 {...register("role")}
               />
+
+              {/* The first question for a vendor: what kind of account, for good. */}
+              {selectedRole === "vendor" && (
+                <VendorKindField
+                  registration={register("vendorKind")}
+                  value={vendorKind}
+                  error={errors.vendorKind?.message}
+                />
+              )}
 
               {/*
                 name — required for vendor, agency, agent. Lands on the new role

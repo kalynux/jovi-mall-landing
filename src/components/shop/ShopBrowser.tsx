@@ -41,6 +41,8 @@ import type {
 } from "@/lib/shop/shop.types";
 import { publicUrl } from "@/lib/shop/shop.types";
 import type { VariantBySku } from "@/lib/shop/catalog.api";
+import type { ListingListResponse } from "@/lib/shop/listings";
+import { ListingsShelf } from "./ListingsShelf";
 
 /**
  * The browse controls. Rendering happens on the server; this owns the inputs.
@@ -101,10 +103,17 @@ interface Props {
    * found nothing.
    */
   skuMatch?: VariantBySku | null;
+  /**
+   * Service listings matching the same search or category, page 1 only.
+   * Drawn as their own shelf above the products; absent or empty means none.
+   */
+  listings?: ListingListResponse;
 }
 
-export function ShopBrowser({ products, meta, categories, query, skuMatch }: Props) {
+export function ShopBrowser({ products, meta, categories, query, skuMatch, listings }: Props) {
   const t = useTranslations("shop.browse");
+  const tListings = useTranslations("shop.listings");
+  const hasListings = Boolean(listings && listings.data.length > 0);
   const tCommon = useTranslations("shop.common");
   // Root-scoped: the lib modules emit absolute keys (`shop.status.…`).
   const tKey = useTranslations();
@@ -481,9 +490,24 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch }: Pro
 
       {/* Results */}
       <div style={{ opacity: busy ? 0.55 : 1, transition: "opacity .15s" }}>
+        {listings && hasListings && (
+          <ListingsShelf listings={listings} query={{ q: query.q, category: query.category }} />
+        )}
+        {/* With a shelf above, the grid needs its own name, or the two read as one list. */}
+        {hasListings && (products.length > 0 || skuMatch) && (
+          <h2 style={{ margin: "0 0 12px", fontSize: 17, fontWeight: 800, letterSpacing: "-0.01em", color: "var(--text-strong)" }}>
+            {tListings("productsHeading")}
+          </h2>
+        )}
         {products.length === 0 ? (
           skuMatch ? (
             <SkuMatchResult match={skuMatch} />
+          ) : hasListings ? (
+            // The search WAS answered, by the listings above. A full-page
+            // "nothing matches" under them would contradict the screen.
+            <p className="muted" style={{ fontSize: 13.5, margin: "4px 0 0" }}>
+              {query.q ? tListings("noProductsForQuery", { query: query.q }) : tListings("noProducts")}
+            </p>
           ) : (
             <EmptyState
               icon="search-x"

@@ -239,6 +239,8 @@ export const RegisterSchema = z
         role: UiRoleSchema,
         /** Seeds Store.name — see refineBusinessName. */
         business_name: z.string().optional(),
+        /** Vendor only: sell, or advertise a service. Stripped for other roles at submit. */
+        vendorKind: z.enum(["seller", "provider"]).optional(),
         /** Seeds Magazin.name — see refineBusinessName. */
         agency_name: z.string().optional(),
         /** The Terms/Privacy checkbox — see refineTermsAccepted. */
@@ -273,6 +275,8 @@ export const AddRoleSchema = z
         name: z.string().optional(),
         /** Seeds Store.name — see refineBusinessName. */
         business_name: z.string().optional(),
+        /** Vendor only: sell, or advertise a service. Stripped for other roles at submit. */
+        vendorKind: z.enum(["seller", "provider"]).optional(),
         /** Seeds Magazin.name — see refineBusinessName. */
         agency_name: z.string().optional(),
         /** The Terms/Privacy checkbox — see refineTermsAccepted. */

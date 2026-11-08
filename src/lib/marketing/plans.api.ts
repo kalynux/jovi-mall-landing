@@ -32,6 +32,15 @@ export const PLAN_REVALIDATE_SECONDS = 300;
 export type PlanRole = "vendor" | "agency" | "agent";
 
 /**
+ * The two kinds of vendor (api-doc/FRONTEND-CHANGELOG-service-listings.md). A
+ * **seller** sells products and pays a commission; a **provider** publishes
+ * service listings, takes no orders, and pays in credits each time a customer
+ * unlocks one of its contacts. Both are `role: "vendor"` and the API returns
+ * their plans in one list, so the split happens here.
+ */
+export type VendorKind = "seller" | "provider";
+
+/**
  * The public projection — not the raw plan document. `_id` is `id`, and the
  * mongo bookkeeping fields are gone. A field added to the plan model backend-side
  * does not appear here until someone deliberately publishes it, so this type can
@@ -60,6 +69,15 @@ export type PublicPlan = {
    */
   max_cod_pool?: number | null;
   live_tracking_enabled: boolean;
+  /**
+   * `"seller"` / `"provider"` on a vendor plan, `null` on agency and agent
+   * plans. camelCase among snake_case siblings on purpose (the backend's own
+   * choice). Read it through `vendorKindOf`, never directly: an API from before
+   * the service-listings release sends no key, and that means seller.
+   */
+  vendorKind?: VendorKind | null;
+  /** Provider plans only: listings live at once. `null` = unlimited there. */
+  maxActiveListings?: number | null;
   is_active: boolean;
   sort_order: number;
 };
@@ -74,7 +92,17 @@ export type CreditPack = {
 export type CreditCatalog = {
   packs: CreditPack[];
   /** Credits charged per metered action. Env-overridable backend-side. */
-  actionCosts: { vectorisation: number; whatsappTemplate: number };
+  actionCosts: {
+    vectorisation: number;
+    whatsappTemplate: number;
+    /**
+     * What a provider pays when a customer unlocks a contact: the first one
+     * from a customer, then each further one within the 30-day window. Optional
+     * because an older API did not send them. Never shown to customers.
+     */
+    listingRevealFirst?: number;
+    listingRevealNext?: number;
+  };
 };
 
 /* ─── Which limits belong to which role ───────────────────────────────────── */
@@ -122,6 +150,27 @@ export const PLAN_LIMITS: Record<PlanRole, LimitSpec[]> = {
     { key: "credits", field: "credit_allowance", format: "count" },
   ],
 };
+
+/**
+ * A provider plan's limits. It is still `role: "vendor"`, but it carries no
+ * products and no commission (both `null`), so `PLAN_LIMITS.vendor` would print
+ * "unlimited active products" on it. Always choose through `limitsFor`.
+ */
+export const PROVIDER_LIMITS: LimitSpec[] = [
+  { key: "listings", field: "maxActiveListings", format: "count" },
+  { key: "storage", field: "max_storage_bytes", format: "bytes" },
+  { key: "credits", field: "credit_allowance", format: "count" },
+];
+
+/** A vendor plan with no `vendorKind` (an older API) is a seller plan. */
+export function vendorKindOf(plan: Pick<PublicPlan, "role" | "vendorKind">): VendorKind | null {
+  if (plan.role !== "vendor") return null;
+  return plan.vendorKind === "provider" ? "provider" : "seller";
+}
+
+export function limitsFor(plan: PublicPlan): LimitSpec[] {
+  return vendorKindOf(plan) === "provider" ? PROVIDER_LIMITS : PLAN_LIMITS[plan.role];
+}
 
 /* ─── Fetching ────────────────────────────────────────────────────────────── */
 
@@ -177,7 +226,15 @@ export async function fetchPlans(options?: {
   return [...plans].sort((a, b) => a.sort_order - b.sort_order);
 }
 
-/** Every role's tiers including the unsold ones, grouped and ordered for display. */
+/**
+ * Every role's tiers including the unsold ones, grouped and ordered for display.
+ *
+ * ⚠ `vendor` holds **seller** plans only. The API returns seller and provider
+ * plans in one list, and every sentence built from this (plan-facts: "vendor
+ * plans from …", the commission range, the paid term) is about selling. Let a
+ * provider plan in and the page would quote a 3 000 FCFA "from" price and a 0%
+ * commission floor. Provider plans come from `fetchProviderPlans`.
+ */
 export async function fetchPlansByRole(): Promise<Record<PlanRole, PublicPlan[]>> {
   const [vendor, agency, agent] = await Promise.all([
     fetchPlans({ role: "vendor", includeInactive: true }),
@@ -185,7 +242,17 @@ export async function fetchPlansByRole(): Promise<Record<PlanRole, PublicPlan[]>
     fetchPlans({ role: "agent", includeInactive: true }),
   ]);
 
-  return { vendor, agency, agent };
+  return { vendor: vendor.filter((plan) => vendorKindOf(plan) === "seller"), agency, agent };
+}
+
+/**
+ * The service-provider tiers, unsold ones included (`PlanGrid` drops those).
+ * The same URL as the vendor call above, so Next's fetch memoisation answers
+ * both from one request.
+ */
+export async function fetchProviderPlans(): Promise<PublicPlan[]> {
+  const vendor = await fetchPlans({ role: "vendor", includeInactive: true });
+  return vendor.filter((plan) => vendorKindOf(plan) === "provider");
 }
 
 export async function fetchCreditCatalog(): Promise<CreditCatalog> {
@@ -210,7 +277,8 @@ export const getPlanFacts = cache(async (locale: Locale): Promise<PlanFacts> => 
     getTranslations({ locale, namespace: "pages.facts" }),
   ]);
 
-  const quoted = new Set(["vectorisation", "whatsappTemplate"]);
+  // The two listing costs are quoted on /pricing's service-business tab.
+  const quoted = new Set(["vectorisation", "whatsappTemplate", "listingRevealFirst", "listingRevealNext"]);
   for (const action of Object.keys(credits.actionCosts)) {
     // The credits prose names two metered actions. A third is not a wrong
     // number, so it must not stop the page; it is a sentence to write.

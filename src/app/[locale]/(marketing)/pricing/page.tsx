@@ -6,6 +6,7 @@ import Breadcrumbs from "@/components/marketing/Breadcrumbs";
 import PricingIllustration from "@/components/illustrations/PricingIllustration.generated";
 import FaqList from "@/components/marketing/FaqList";
 import { formatLimit, PlanGrid, type PlanCopy } from "@/components/marketing/PlanCards";
+import VendorKindTabs, { PROVIDER_PLANS_HASH } from "@/components/marketing/VendorKindTabs";
 import {
   CardGrid,
   CtaBand,
@@ -23,9 +24,10 @@ import { isLocale, localePath } from "@/i18n/routing";
 import {
   fetchCreditCatalog,
   fetchPlansByRole,
+  fetchProviderPlans,
   getPlanFacts,
   highlightCodeFor,
-  PLAN_LIMITS,
+  limitsFor,
   type PlanRole,
   type PublicPlan,
 } from "@/lib/marketing/plans.api";
@@ -83,23 +85,33 @@ export default async function PricingPage({ params }: PageProps) {
   // Both catalogs come off the public API — nothing on this page restates a
   // price the backend did not just give us. Revalidation is set per-fetch to
   // match the endpoint's own five-minute cache; see plans.api.ts.
-  const [plansByRole, credits, facts] = await Promise.all([
+  const [plansByRole, providerPlans, credits, facts] = await Promise.all([
     fetchPlansByRole(),
+    fetchProviderPlans(),
     fetchCreditCatalog(),
     // The sentences around the cards, filled from the same catalogue. They
     // carry no numbers of their own, so an edit reaches them and the cards
     // together. See plan-facts.ts.
     getPlanFacts(locale),
   ]);
-  const allPlans = Object.values(plansByRole).flat();
+  const allPlans = [...Object.values(plansByRole).flat(), ...providerPlans];
+  // The switch appears only once a provider tier is on sale. Before that the
+  // vendor section is exactly what it always was.
+  const showProviders = providerPlans.some((plan) => plan.is_active);
+  const revealFirst = credits.actionCosts.listingRevealFirst;
+  const revealNext = credits.actionCosts.listingRevealNext;
 
   const copy: PlanCopy = {
     free: t("plans.free"),
     perTerm: (days: number) => t("plans.perTerm", { days }),
     cta: t("plans.cta"),
     unlimited: t("plans.unlimited"),
+    countPhrases: {
+      listings: (n: string, count: number) => t("plans.limits.listingsCount", { n, count }),
+    },
     limitLabels: {
       products: t("plans.limits.products"),
+      listings: t("plans.limits.listings"),
       storage: t("plans.limits.storage"),
       commission: t("plans.limits.commission"),
       credits: t("plans.limits.credits"),
@@ -179,6 +191,80 @@ export default async function PricingPage({ params }: PageProps) {
       {ROLE_SECTIONS.map(({ role, anchor, accent }, i) => {
         const plans = plansByRole[role];
 
+        const grid = (
+          <div className={accent}>
+            <PlanGrid
+              plans={plans}
+              copy={copy}
+              formatNumber={num}
+              formatPrice={price}
+              highlightCode={highlightCodeFor(plans)}
+            />
+          </div>
+        );
+        const note = (
+          <div className="mt-6 max-w-2xl space-y-2 text-sm leading-relaxed text-[var(--text-muted)]">
+            <p>{t(`pricing.${role}.note`)}</p>
+          </div>
+        );
+
+        if (role === "vendor" && showProviders) {
+          return (
+            <Section
+              key={role}
+              id={anchor}
+              title={t("pricing.vendor.title")}
+              lead={t("pricing.vendor.lead", facts)}
+              tone={i % 2 === 0 ? "subtle" : "plain"}
+            >
+              {/* The hash target sits inside the section, so a link to
+                  #service-businesses scrolls here and the switch opens it. */}
+              <span id={PROVIDER_PLANS_HASH} className="block scroll-mt-28" aria-hidden="true" />
+              <VendorKindTabs
+                groupLabel={t("pricing.vendorKinds.groupLabel")}
+                labels={{
+                  seller: t("pricing.vendorKinds.seller"),
+                  provider: t("pricing.vendorKinds.provider"),
+                }}
+                hints={{
+                  seller: t("pricing.vendorKinds.sellerHint"),
+                  provider: t("pricing.vendorKinds.providerHint"),
+                }}
+                panels={{
+                  seller: (
+                    <>
+                      {grid}
+                      {note}
+                    </>
+                  ),
+                  provider: (
+                    <>
+                      <p className="mb-6 max-w-2xl text-[15px] leading-relaxed text-[var(--text-secondary)]">
+                        {t("pricing.provider.lead")}
+                      </p>
+                      <div className={accent}>
+                        <PlanGrid
+                          plans={providerPlans}
+                          copy={copy}
+                          formatNumber={num}
+                          formatPrice={price}
+                          highlightCode={highlightCodeFor(providerPlans)}
+                        />
+                      </div>
+                      <div className="mt-6 max-w-2xl space-y-2 text-sm leading-relaxed text-[var(--text-muted)]">
+                        {typeof revealFirst === "number" && typeof revealNext === "number" && (
+                          <p>{t("pricing.provider.contactCost", { first: revealFirst, next: revealNext })}</p>
+                        )}
+                        <p>{t("pricing.provider.note")}</p>
+                      </div>
+                    </>
+                  ),
+                }}
+              />
+            </Section>
+          );
+        }
+
         return (
           <Section
             key={role}
@@ -187,18 +273,8 @@ export default async function PricingPage({ params }: PageProps) {
             lead={t(`pricing.${role}.lead`, facts)}
             tone={i % 2 === 0 ? "subtle" : "plain"}
           >
-            <div className={accent}>
-              <PlanGrid
-                plans={plans}
-                copy={copy}
-                formatNumber={num}
-                formatPrice={price}
-                highlightCode={highlightCodeFor(plans)}
-              />
-            </div>
-            <div className="mt-6 max-w-2xl space-y-2 text-sm leading-relaxed text-[var(--text-muted)]">
-              <p>{t(`pricing.${role}.note`)}</p>
-            </div>
+            {grid}
+            {note}
           </Section>
         );
       })}
@@ -271,7 +347,7 @@ function describeLimits(
   copy: PlanCopy,
   num: (value: number) => string
 ): string {
-  return PLAN_LIMITS[plan.role]
+  return limitsFor(plan)
     .map((spec) => stripBidiIsolates(formatLimit(plan, spec, copy, num)))
     .join(", ");
 }

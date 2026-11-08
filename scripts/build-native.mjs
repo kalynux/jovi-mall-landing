@@ -100,6 +100,8 @@ const EXCLUDED_TREES = [
   join(APP, "pay"),
   join(APP, "shop", "stores"),
   join(APP, "shop", "p", "[productId]"),
+  // A service listing: `/shop/listing?s=<slug>` is its static app twin.
+  join(APP, "shop", "listings", "[slug]"),
   join(APP, "shop", "account", "orders", "[cartId]"),
   join(APP, "shop", "account", "orders", "detail"),
   join(APP, "shop", "account", "bookings", "[bookingId]"),

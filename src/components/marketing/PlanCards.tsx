@@ -1,7 +1,7 @@
 import RoleCtaButton from "@/components/ui/RoleCtaButton";
 import { cn } from "@/lib/utils";
 import { bytesToGb } from "@/lib/marketing/format";
-import { PLAN_LIMITS, type LimitSpec, type PublicPlan } from "@/lib/marketing/plans.api";
+import { limitsFor, vendorKindOf, type LimitSpec, type PublicPlan } from "@/lib/marketing/plans.api";
 
 /**
  * One role's tier cards, rendered straight from the public catalog.
@@ -9,7 +9,8 @@ import { PLAN_LIMITS, type LimitSpec, type PublicPlan } from "@/lib/marketing/pl
  * Two rules carry the weight here.
  *
  * Which limits appear, and what `null` means in them, both come from
- * `PLAN_LIMITS` — see its comment. The projection is flat, so a role that does
+ * `limitsFor` (`PLAN_LIMITS`, or `PROVIDER_LIMITS` for a service-provider
+ * plan) — see its comment. The projection is flat, so a role that does
  * not use a field still carries it as `null`, and reading that as "unlimited"
  * would print "unlimited commission" on every agency card.
  *
@@ -31,6 +32,13 @@ export type PlanCopy = {
   perTerm: (days: number) => string;
   cta: string;
   unlimited: string;
+  /**
+   * Whole-line phrases for limits whose noun must agree with the count, keyed
+   * like `limitLabels`. "1 annonces" is what "number + label" produced for the
+   * one-listing free provider tier; the products and credits lines never
+   * show 1, so only the listings line needs this today.
+   */
+  countPhrases?: Record<string, (formatted: string, count: number) => string>;
 };
 
 /**
@@ -52,6 +60,9 @@ export function formatLimit(
   // Safe here, and only here: this field is on its own role's list, so an absent
   // value can only mean unbounded.
   if (value === null) return `${copy.unlimited} ${label}`;
+
+  const phrase = copy.countPhrases?.[spec.key];
+  if (phrase && spec.format === "count") return phrase(formatNumber(value), value);
 
   switch (spec.format) {
     case "bytes":
@@ -77,7 +88,7 @@ export function PlanCard({
   highlight?: boolean;
 }) {
   const isFree = plan.price === 0;
-  const limits = PLAN_LIMITS[plan.role].map((spec) => ({
+  const limits = limitsFor(plan).map((spec) => ({
     spec,
     text: formatLimit(plan, spec, copy, formatNumber),
   }));
@@ -158,6 +169,9 @@ export function PlanCard({
         size="sm"
         className="mt-7"
         dataAttrs={{ "data-plan-role": plan.role, "data-plan-code": plan.code }}
+        // A provider plan's button must open sign-up on "advertise a service";
+        // the kind is fixed at registration and cannot be changed afterwards.
+        hrefQuery={vendorKindOf(plan) === "provider" ? "vendorKind=provider" : undefined}
       />
     </div>
   );

@@ -50,6 +50,12 @@ interface RoleCtaButtonProps {
     className?: string;
     /** Extra attributes for analytics-style hooks on the marketing plan cards. */
     dataAttrs?: Record<string, string>;
+    /**
+     * Appended to the register / add-role link, e.g. `vendorKind=provider` from
+     * a service-provider plan card so the form opens on that choice. Ignored on
+     * the dashboard states: an existing vendor's kind is already fixed.
+     */
+    hrefQuery?: string;
 }
 
 export default function RoleCtaButton({
@@ -60,6 +66,7 @@ export default function RoleCtaButton({
     showArrow = false,
     className,
     dataAttrs,
+    hrefQuery,
 }: RoleCtaButtonProps) {
     const t = useTranslations("roleCta");
     const cta = useRoleCta(role);
@@ -132,7 +139,7 @@ export default function RoleCtaButton({
         // locale-aware Link or an /fr visitor lands on the English page.
         button = (
             <LinkButton
-                href={cta.href ?? `/register?role=${role}`}
+                href={withQuery(cta.href ?? `/register?role=${role}`, hrefQuery)}
                 variant={variant}
                 size={size}
                 showArrow={showArrow}
@@ -162,4 +169,9 @@ export default function RoleCtaButton({
             )}
         </div>
     );
+}
+
+function withQuery(href: string, query: string | undefined): string {
+    if (!query) return href;
+    return `${href}${href.includes("?") ? "&" : "?"}${query}`;
 }

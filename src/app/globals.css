@@ -98,6 +98,8 @@
   --type-physical:     var(--green-700);  --type-physical-bg: var(--green-50);
   --type-digital:      var(--indigo-600); --type-digital-bg:  var(--indigo-50);
   --type-service:      var(--amber-700);  --type-service-bg:  var(--amber-50);
+  /* A service listing: a business you contact, not a thing you buy or book. */
+  --type-listing:      var(--blue-600);   --type-listing-bg:  var(--blue-50);
 
   --whatsapp: #25D366;
 
@@ -224,6 +226,7 @@ html.dark,
   --type-physical-bg: color-mix(in srgb, var(--green-500) 16%, var(--surface));
   --type-digital-bg:  color-mix(in srgb, var(--indigo-500) 18%, var(--surface));
   --type-service-bg:  color-mix(in srgb, var(--amber-500) 16%, var(--surface));
+  --type-listing-bg:  color-mix(in srgb, var(--blue-500) 16%, var(--surface));
   --star-empty: #33322A;
 
   --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.4);
@@ -541,6 +544,103 @@ html.dark,
   @media (min-width: 1024px) { .pgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; } }
   @media (min-width: 1280px) { .pgrid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
   .plist { display: flex; flex-direction: column; gap: 10px; }
+
+  /* The "Service listing" mark on a listing card or page: a business to
+     contact, never the amber "Service" of a bookable product. Not `.tag`,
+     which inherits the role colour; this one is always the listing blue. */
+  .listing-mark {
+    display: inline-flex; align-items: center; gap: 4px;
+    height: 22px; padding: 0 8px; border-radius: 999px;
+    background: var(--type-listing); color: #fff;
+    font-size: 11px; font-weight: 700; line-height: 1; white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+  }
+  /* Directional glyphs (chevrons, arrows) that should point the reading way. */
+  [dir="rtl"] .rtl-flip { transform: scaleX(-1); }
+
+  /* ── A listing's contact rows ─────────────────────────────────────────── */
+  /* 56px: reached by the thumb. A row is the button; the whole row is the target. */
+  .listing-contact-row {
+    width: 100%; min-height: 56px; display: flex; align-items: center; gap: 12px;
+    padding: 8px 12px 8px 8px; text-align: start; cursor: pointer;
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-md);
+    font: inherit; color: inherit;
+    transition: border-color .15s, background-color .15s, transform .15s var(--ease-out, ease-out);
+  }
+  [dir="rtl"] .listing-contact-row { padding: 8px 8px 8px 12px; }
+  .listing-contact-row:hover { border-color: color-mix(in srgb, var(--type-listing) 45%, var(--border)); }
+  .listing-contact-row:active { transform: scale(0.99); }
+  .listing-contact-row:focus-visible { outline: none; border-color: var(--type-listing); box-shadow: var(--focus-ring); }
+  .listing-contact-row:disabled { cursor: progress; opacity: .75; }
+  .listing-contact-row__icon {
+    width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center;
+    border-radius: 10px; background: var(--type-listing-bg); color: var(--type-listing);
+  }
+  .listing-contact-row__action {
+    flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px;
+    font-size: 13px; font-weight: 700; color: var(--type-listing);
+  }
+  .listing-contact-row__error {
+    display: flex; gap: 6px; margin: 6px 2px 0; font-size: 13px; line-height: 1.45; color: var(--danger);
+  }
+  .listing-revealed {
+    padding: 12px; border-radius: var(--radius-md);
+    background: var(--type-listing-bg);
+    border: 1.5px solid color-mix(in srgb, var(--type-listing) 30%, transparent);
+  }
+  .listing-copy {
+    width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center; cursor: pointer;
+    border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text-body);
+  }
+  .listing-copy:focus-visible, .listing-social:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .listing-social {
+    width: 100%; min-height: 48px; display: flex; align-items: center; gap: 10px; padding: 0 12px;
+    border-radius: 10px; border: 1px solid var(--border); background: var(--surface);
+    font: inherit; font-size: 14px; color: var(--text-strong); cursor: pointer; text-align: start;
+  }
+  /* An on/off switch. Logical insets, so it mirrors in Arabic; the ::before
+     grows the 48×28 track to a 44px-tall touch target without moving it. */
+  .consent-switch {
+    position: relative; width: 48px; height: 28px; flex-shrink: 0; padding: 0;
+    border: none; border-radius: 999px; cursor: pointer;
+    background: var(--gray-300); transition: background-color .18s;
+  }
+  .consent-switch::before { content: ""; position: absolute; inset: -8px -4px; }
+  .consent-switch[aria-checked="true"] { background: var(--brand); }
+  .consent-switch:disabled { cursor: progress; opacity: .7; }
+  .consent-switch:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .consent-switch__thumb {
+    position: absolute; top: 3px; inset-inline-start: 3px; width: 22px; height: 22px;
+    border-radius: 50%; background: #fff; box-shadow: var(--shadow-sm);
+    transition: inset-inline-start .18s var(--ease-out, ease-out);
+  }
+  .consent-switch[aria-checked="true"] .consent-switch__thumb { inset-inline-start: 23px; }
+  @media (prefers-reduced-motion: reduce) { .consent-switch, .consent-switch__thumb { transition: none; } }
+  .listing-consent {
+    margin-top: 14px; padding: 14px; border-radius: var(--radius-md);
+    background: var(--surface-2); border: 1px solid var(--border);
+  }
+  /* The swipeable listings row: snaps a card to the gutter on a phone. */
+  .listing-rail {
+    display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
+    scroll-padding-inline: 16px; padding: 2px 16px 6px; margin: 0 -16px;
+    scrollbar-width: none; overscroll-behavior-x: contain;
+  }
+  .listing-rail::-webkit-scrollbar { display: none; }
+  .listing-card__photo { aspect-ratio: 4 / 3; }
+  /* In the phone row the photo is shorter, so the shelf costs less of the
+     screen before the products; the grid from 768px goes back to 4:3. */
+  .listing-rail .listing-card__photo { aspect-ratio: 16 / 9; }
+  .listing-rail > * { width: min(72vw, 248px); flex-shrink: 0; scroll-snap-align: start; }
+  @media (min-width: 640px) { .listing-rail { scroll-padding-inline: 24px; padding-inline: 24px; margin: 0 -24px; } }
+  /* Tablet up: there is room for the row to be a grid, and a grid is scannable. */
+  @media (min-width: 768px) {
+    .listing-rail { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; overflow: visible; padding: 0; margin: 0; }
+    .listing-rail > * { width: auto; }
+    .listing-rail .listing-card__photo { aspect-ratio: 4 / 3; }
+  }
+  /* Six cards (the shelf's page): 3×2 on a tablet, one row on a wide screen. */
+  @media (min-width: 1280px) { .listing-rail { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; } }
 
   /* ---- Mobile app shell (shop) ----
      Below `md` the shop is laid out like an installed app rather than a

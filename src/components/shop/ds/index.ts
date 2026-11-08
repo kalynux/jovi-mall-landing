@@ -24,3 +24,4 @@ export { ProductCard } from "./ProductCard";
 export { VendorCard } from "./VendorCard";
 export { VerifiedBadge } from "./VerifiedBadge";
 export type { VerifiedKind } from "./VerifiedBadge";
+export { ListingCard } from "./ListingCard";

@@ -494,6 +494,18 @@
             "agentFormBody": "إذا سجّلت في تطبيق Wi-Agent بدلًا من هنا، فأدخل هذا الرمز أثناء التسجيل.",
             "agentAppBody": "أدخل هذا الرمز أثناء التسجيل في تطبيق Wi-Agent.",
             "agentAppLink": "احصل على تطبيق Wi-Agent"
+        },
+        "vendorKind": {
+            "question": "ماذا ستفعل على Wi-Mall؟",
+            "seller": {
+                "title": "بيع المنتجات والخدمات",
+                "body": "يطلب العملاء ويدفعون على Wi-Mall. تدفع عمولة على كل طلب."
+            },
+            "provider": {
+                "title": "الإعلان عن نشاط خدمي",
+                "body": "يجدك العملاء ويكشفون وسائل التواصل معك. تدفع عن كل تواصل بالأرصدة. لا طلبات ولا عمولة."
+            },
+            "permanent": "لا يمكنك تغيير هذا الاختيار لاحقًا."
         }
     },
     "authMe": {
@@ -922,7 +934,13 @@
         "EARNINGS_PAYOUT_ALREADY_PENDING": "هناك عملية سحب قيد المعالجة بالفعل.",
         "EARNINGS_PAYOUT_NO_AVAILABLE_BALANCE": "لا يوجد مبلغ متاح للسحب.",
         "EARNINGS_PAYOUT_BELOW_MINIMUM": "رصيدك أقل من الحد الأدنى للسحب.",
-        "ACCOUNT_CLOSURE_REFERRAL_BALANCE": "يجب سحب رصيد الإحالة أو تسويته قبل إغلاق هذا الحساب."
+        "ACCOUNT_CLOSURE_REFERRAL_BALANCE": "يجب سحب رصيد الإحالة أو تسويته قبل إغلاق هذا الحساب.",
+        "LISTING_NOT_FOUND": "هذا الإعلان لم يعد متاحًا.",
+        "LISTING_UNREACHABLE": "لا يمكن التواصل مع هذا النشاط في الوقت الحالي.",
+        "LISTING_REVEAL_DAILY_LIMIT": "لقد بلغت حد اليوم لهذا النشاط. حاول مجددًا غدًا.",
+        "LISTING_FIELD_UNAVAILABLE": "لم يقدّم هذا النشاط وسيلة التواصل هذه.",
+        "LISTING_VIDEO_UNAVAILABLE": "هذا الفيديو لم يعد متاحًا.",
+        "LISTING_LEAD_NOT_FOUND": "لا يمكنك الإجابة إلا عن نشاط كشفت إحدى وسائل التواصل معه."
     },
     "checkout": {
         "errors": {
@@ -1043,7 +1061,9 @@
                 "commission": "عمولة على كل طلب مدفوع",
                 "credits": "رصيدًا مشمولًا",
                 "openShipments": "شحنة مفتوحة في وقت واحد",
-                "concurrentDeliveries": "توصيلة في وقت واحد"
+                "concurrentDeliveries": "توصيلة في وقت واحد",
+                "listings": "إعلانات خدمات منشورة",
+                "listingsCount": "{count, plural, one {إعلان خدمة منشور واحد} two {إعلانا خدمة منشوران} few {{n} إعلانات خدمات منشورة} many {{n} إعلان خدمة منشورًا} other {{n} إعلان خدمة منشور}}"
             }
         },
         "facts": {
@@ -1137,6 +1157,18 @@
                 "title": "الباقة المجانية لا تطلب وسيلة دفع",
                 "body": "جهّز كتالوجك، وانظر ما الذي يُباع، ولا ترفع باقتك إلا حين تقول حسبة العمولة إن ذلك يستحق.",
                 "finePrint": "الباقات المجانية لا تنتهي. المدد المدفوعة ({paidTerm}) لا تتجدد تلقائيًا."
+            },
+            "vendorKinds": {
+                "groupLabel": "نوع النشاط",
+                "seller": "بيع المنتجات",
+                "sellerHint": "عمولة على كل طلب",
+                "provider": "الإعلان عن خدمة",
+                "providerHint": "دفع مقابل كل تواصل مع عميل"
+            },
+            "provider": {
+                "lead": "للسبّاكين والمطابع والمصلّحين وكل نشاط يتقاضى أجره وجهًا لوجه. انشر إعلان خدمة يوضح ما تقدّمه وأين. يكشف العملاء وسيلة التواصل معك بلمسة واحدة دون أن يدفعوا شيئًا. أنت تدفع بالأرصدة عن كل تواصل، دون أي عمولة.",
+                "contactCost": "أول وسيلة تواصل يكشفها عميل لديك تكلّفك {first, plural, one {رصيدًا واحدًا} two {رصيدين} few {# أرصدة} many {# رصيدًا} other {# رصيد}}. وكل وسيلة إضافية يكشفها خلال 30 يومًا تكلّف {next, plural, one {رصيدًا واحدًا} two {رصيدين} few {# أرصدة} many {# رصيدًا} other {# رصيد}}، وكشف الوسيلة نفسها مجددًا خلال هذه الأيام الثلاثين مجاني.",
+                "note": "تُحتسب الحدود على الإعلانات المنشورة. تتوقف إعلاناتك ما دامت أرصدتك لا تكفي لأول تواصل، وتعود فور إعادة الشحن. يُختار نوع النشاط عند التسجيل ولا يمكن تغييره لاحقًا."
             }
         },
         "vendors": {
@@ -2110,7 +2142,10 @@
                 "store": "المتجر",
                 "closure": "طلب إغلاق الحساب",
                 "accountClosed": "الحساب مغلق",
-                "referrals": "الإحالات"
+                "referrals": "الإحالات",
+                "businessMessages": "الأنشطة المسموح لها بمراسلتي",
+                "listing": "إعلان خدمة",
+                "listings": "إعلانات الخدمات"
             }
         },
         "query": {
@@ -3897,6 +3932,126 @@
                 "requestedOn": "طُلب في {date}",
                 "resolvedOn": "أُغلق في {date}",
                 "refusedReason": "السبب: {reason}"
+            }
+        },
+        "listings": {
+            "kind": "إعلان خدمة",
+            "place": "{count, plural, =1 {{first}} other {{first}، {second}}}",
+            "offers": "وسائل التواصل المتاحة: {list}",
+            "moreFields": "+{n}",
+            "viewContacts": "التواصل",
+            "shelfHeading": "{n, plural, one {إعلان خدمة} other {إعلانات الخدمات}}",
+            "shelfLead": "تواصل معهم مباشرة ومجانًا.",
+            "seeAll": "عرض الكل ({n})",
+            "productsHeading": "المنتجات",
+            "noProductsForQuery": "لا توجد منتجات تطابق «{query}».",
+            "noProducts": "لا توجد منتجات في هذه الفئة.",
+            "backToShop": "العودة إلى المتجر",
+            "backToResults": "العودة إلى النتائج",
+            "photoAlt": "الصورة {n} من {name}",
+            "photoAria": "عرض الصورة {n}",
+            "share": "مشاركة",
+            "shareDialogTitle": "مشاركة {name}",
+            "linkCopied": "تم نسخ الرابط",
+            "shareFailed": "تعذّرت مشاركة هذا الإعلان.",
+            "aboutTitle": "نبذة",
+            "hoursTitle": "ساعات العمل",
+            "hours": {
+                "openUntil": "مفتوح الآن · حتى {time}",
+                "closedNow": "مغلق الآن",
+                "closed": "مغلق",
+                "range": "{from} – {to}"
+            },
+            "contactTitle": "التواصل مع هذا النشاط",
+            "noContacts": "لم يضف هذا النشاط وسيلة للتواصل معه بعد.",
+            "signInToContact": "سجّل الدخول للتواصل",
+            "show": "إظهار",
+            "fieldHint": {
+                "whatsapp": "راسلهم على واتساب",
+                "phone": "اتصل بهم",
+                "email": "اكتب لهم",
+                "website": "زُر موقعهم",
+                "socials": "تابعهم على مواقع التواصل",
+                "location": "اعرف مكانهم",
+                "video": "شاهد فيديو للطريق إليهم"
+            },
+            "field": {
+                "whatsapp": "واتساب",
+                "phone": "الهاتف",
+                "email": "البريد الإلكتروني",
+                "website": "الموقع الإلكتروني",
+                "socials": "مواقع التواصل",
+                "location": "الموقع",
+                "video": "فيديو الطريق"
+            },
+            "privacyNote": "سيرى هذا النشاط اسمك الأول وجزءًا من رقمك.",
+            "revealFailed": "تعذّر إظهار وسيلة التواصل هذه. حاول مجددًا.",
+            "copy": "نسخ: {what}",
+            "copied": "تم النسخ",
+            "action": {
+                "whatsapp": "المراسلة على واتساب",
+                "phone": "اتصال",
+                "email": "إرسال بريد إلكتروني",
+                "website": "فتح الموقع",
+                "location": "فتح في الخرائط",
+                "video": "مشاهدة الفيديو",
+                "videoDrive": "فتح الفيديو"
+            },
+            "network": {
+                "facebook": "فيسبوك",
+                "instagram": "إنستغرام",
+                "tiktok": "تيك توك",
+                "x": "X",
+                "linkedin": "لينكدإن",
+                "youtube": "يوتيوب",
+                "other": "رابط"
+            },
+            "noSocials": "لا توجد روابط تواصل اجتماعي لعرضها.",
+            "videoBroken": "لا يمكن فتح رابط الفيديو هذا.",
+            "map": {
+                "ariaLabel": "خريطة تُظهر مكان {name}"
+            },
+            "consent": {
+                "question": "هل تسمح لـ{business} بمراسلتك عبر Wi-Mall بشأن طلبك؟",
+                "terms": "3 رسائل كحد أقصى خلال 30 يومًا، وفي كل منها رابط لإيقافها. يمكنك تغيير ذلك في أي وقت من حسابك.",
+                "yes": "نعم",
+                "no": "لا",
+                "savedYes": "يمكن لـ{business} مراسلتك. <link>تغيير</link>",
+                "savedNo": "لن يراسلك {business}. <link>تغيير</link>",
+                "saveFailed": "تعذّر حفظ إجابتك. حاول مجددًا."
+            },
+            "consents": {
+                "lead": "الأنشطة التي كشفت إحدى وسائل التواصل معها. فعّل نشاطًا للسماح له بمراسلتك عبر Wi-Mall بشأن طلبك.",
+                "loadFailed": "تعذّر تحميل هذه القائمة.",
+                "emptyTitle": "لا توجد أنشطة بعد",
+                "emptyDescription": "عندما تكشف وسيلة تواصل في إعلان خدمة، يظهر النشاط هنا وتختار إن كان يمكنه مراسلتك.",
+                "emptyAction": "تصفّح المتجر",
+                "footnote": "يمكن للنشاط المسموح له إرسال 3 رسائل كحد أقصى خلال 30 يومًا، إحداها «يرجى الاتصال بي». تحتوي كل رسالة على رابط «إيقاف هذه الرسائل»، وتصل الردود إلى واتساب النشاط نفسه.",
+                "statusGranted": "{hasDate, select, yes {يمكنه مراسلتك منذ {date}} other {يمكنه مراسلتك}}",
+                "statusRevoked": "{hasDate, select, yes {أُوقف في {date}} other {أُوقف}}",
+                "statusNotGranted": "لا يمكنه مراسلتك",
+                "saving": "جارٍ الحفظ…",
+                "saveFailed": "تعذّر تغيير هذا الإعداد. حاول مجددًا."
+            },
+            "loadFailed": "تعذّر تحميل هذا الإعلان.",
+            "unavailableTitle": "هذا الإعلان غير متاح",
+            "unavailableDescription": "ربما أُزيل، أو ربما الرابط غير صحيح.",
+            "resultsTitle": "إعلانات الخدمات",
+            "resultsHeadingQuery": "إعلانات الخدمات لـ«{query}»",
+            "resultsCount": "{n, plural, =0 {لا إعلانات} one {إعلان واحد} two {إعلانان} few {# إعلانات} many {# إعلانًا} other {# إعلان}}",
+            "emptyTitle": "لم يُعثر على إعلانات خدمات",
+            "emptyWithQuery": "لا شيء يطابق «{query}». يبحث المتجر عن كلمات كاملة، فجرّب كلمة كاملة.",
+            "emptyDescription": "لا توجد أنشطة معلن عنها هنا بعد.",
+            "pagination": "التنقل بين الصفحات",
+            "previous": "السابق",
+            "next": "التالي",
+            "pageOf": "الصفحة {page} من {pages}",
+            "meta": {
+                "title": "{hasWhere, select, yes {{title} · {name}، {where} — Wi-Mall} other {{title} · {name} — Wi-Mall}}",
+                "fallbackDescription": "{hasWhere, select, yes {{name}: {title} في {where}. تواصل معهم عبر Wi-Mall.} other {{name}: {title}. تواصل معهم عبر Wi-Mall.}}",
+                "notFound": "الإعلان غير موجود — Wi-Mall",
+                "resultsTitle": "إعلانات الخدمات — Wi-Mall",
+                "resultsDescription": "اعثر على أنشطة محلية (سبّاكون ومطابع ومصلّحون وغيرهم) وتواصل معهم عبر Wi-Mall."
             }
         }
     },

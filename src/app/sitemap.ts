@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
-import { listAllProducts, listAllStores } from "@/lib/shop/catalog.api";
-import { productPath, storePath } from "@/lib/shop/shop.routes";
+import { listAllListings, listAllProducts, listAllStores } from "@/lib/shop/catalog.api";
+import { listingPath, productPath, storePath } from "@/lib/shop/shop.routes";
 import { blogSitemapEntries } from "@/lib/blog/blog.api";
 import { absoluteUrl } from "@/lib/site";
 import { DEFAULT_LOCALE, LOCALE_CODES, localePath, type Locale } from "@/i18n/routing";
@@ -83,7 +83,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
    * API excludes empty ones from the directory on purpose — submitting a
    * storefront with nothing for sale asks Google to index a soft-404.
    */
-  const [products, stores] = await Promise.all([listAllProducts(), listAllStores()]);
+  // Listings are walked quietly: an outage there drops them from this
+  // sitemap rather than failing a build that publishes every product.
+  const [products, stores, listings] = await Promise.all([
+    listAllProducts(),
+    listAllStores(),
+    listAllListings(),
+  ]);
 
   // Empty while the blog is unlaunched — see BLOG_IS_PLACEHOLDER.
   const blog = await blogSitemapEntries();
@@ -110,5 +116,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...products.map((product) =>
       entry(productPath(product.store.slug, product.slug), "weekly", 0.7, product.updatedAt)
     ),
+    ...listings.map((listing) => entry(listingPath(listing.slug), "weekly", 0.6)),
   ];
 }

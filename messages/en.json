@@ -494,6 +494,18 @@
             "agentFormBody": "If you sign up in the Wi-Agent app instead of here, enter this code during sign-up.",
             "agentAppBody": "Enter this code during sign-up in the Wi-Agent app.",
             "agentAppLink": "Get the Wi-Agent app"
+        },
+        "vendorKind": {
+            "question": "What will you do on Wi-Mall?",
+            "seller": {
+                "title": "Sell products and services",
+                "body": "Customers order and pay on Wi-Mall. You pay a commission on each order."
+            },
+            "provider": {
+                "title": "Advertise a service business",
+                "body": "Customers find you and unlock your contacts. You pay per contact, in credits. No orders, no commission."
+            },
+            "permanent": "You can’t change this choice later."
         }
     },
     "authMe": {
@@ -922,7 +934,13 @@
         "EARNINGS_PAYOUT_ALREADY_PENDING": "A withdrawal is already being processed.",
         "EARNINGS_PAYOUT_NO_AVAILABLE_BALANCE": "Nothing is available to withdraw.",
         "EARNINGS_PAYOUT_BELOW_MINIMUM": "Your balance is below the minimum withdrawal.",
-        "ACCOUNT_CLOSURE_REFERRAL_BALANCE": "Your referral balance must be withdrawn or settled before this account can be closed."
+        "ACCOUNT_CLOSURE_REFERRAL_BALANCE": "Your referral balance must be withdrawn or settled before this account can be closed.",
+        "LISTING_NOT_FOUND": "This listing is no longer available.",
+        "LISTING_UNREACHABLE": "This business can’t be reached right now.",
+        "LISTING_REVEAL_DAILY_LIMIT": "You’ve reached today’s limit for this business. Try again tomorrow.",
+        "LISTING_FIELD_UNAVAILABLE": "This business hasn’t given that contact detail.",
+        "LISTING_VIDEO_UNAVAILABLE": "This video is no longer available.",
+        "LISTING_LEAD_NOT_FOUND": "You can only answer for a business whose contact you unlocked."
     },
     "checkout": {
         "errors": {
@@ -1043,7 +1061,9 @@
                 "commission": "commission per paid order",
                 "credits": "credits included",
                 "openShipments": "deliveries open at once",
-                "concurrentDeliveries": "deliveries at a time"
+                "concurrentDeliveries": "deliveries at a time",
+                "listings": "live service listings",
+                "listingsCount": "{count, plural, one {{n} live service listing} other {{n} live service listings}}"
             }
         },
         "facts": {
@@ -1137,6 +1157,18 @@
                 "title": "The free tier needs no payment method",
                 "body": "Set your catalogue up, see what sells, and move up a tier only when the commission maths says you should.",
                 "finePrint": "Free tiers never expire. Paid terms run for {paidTerm} and do not auto-renew."
+            },
+            "vendorKinds": {
+                "groupLabel": "What kind of business",
+                "seller": "Sell products",
+                "sellerHint": "Commission on each order",
+                "provider": "Advertise a service",
+                "providerHint": "Pay per customer contact"
+            },
+            "provider": {
+                "lead": "For plumbers, printers, repairers and every business paid in person. Publish a service listing that says what you do and where. Customers unlock your contact with a tap and pay nothing for it. You pay in credits for each contact, and no commission.",
+                "contactCost": "The first contact a customer unlocks from you costs {first, plural, one {# credit} other {# credits}}. Each further contact detail they unlock within 30 days costs {next, plural, one {# credit} other {# credits}}, and the same detail again within those 30 days is free.",
+                "note": "Limits count live listings. Your listings go offline while your credits cannot pay for a first contact and come back as soon as you top up. The kind of business is chosen at sign-up and cannot be changed later."
             }
         },
         "vendors": {
@@ -2110,7 +2142,10 @@
                 "store": "Store",
                 "closure": "Closure request",
                 "accountClosed": "Account closed",
-                "referrals": "Referrals"
+                "referrals": "Referrals",
+                "businessMessages": "Businesses that may message me",
+                "listing": "Service listing",
+                "listings": "Service listings"
             }
         },
         "query": {
@@ -3897,6 +3932,126 @@
                 "requestedOn": "Requested {date}",
                 "resolvedOn": "Closed {date}",
                 "refusedReason": "Reason: {reason}"
+            }
+        },
+        "listings": {
+            "kind": "Service listing",
+            "place": "{count, plural, =1 {{first}} other {{first}, {second}}}",
+            "offers": "Contacts available: {list}",
+            "moreFields": "+{n}",
+            "viewContacts": "Contacts",
+            "shelfHeading": "{n, plural, one {Service listing} other {Service listings}}",
+            "shelfLead": "Contact them directly, for free.",
+            "seeAll": "See all {n}",
+            "productsHeading": "Products",
+            "noProductsForQuery": "No products match “{query}”.",
+            "noProducts": "No products in this category.",
+            "backToShop": "Back to shop",
+            "backToResults": "Back to results",
+            "photoAlt": "Photo {n} of {name}",
+            "photoAria": "Show photo {n}",
+            "share": "Share",
+            "shareDialogTitle": "Share {name}",
+            "linkCopied": "Link copied",
+            "shareFailed": "We couldn’t share this listing.",
+            "aboutTitle": "About",
+            "hoursTitle": "Opening hours",
+            "hours": {
+                "openUntil": "Open now · until {time}",
+                "closedNow": "Closed now",
+                "closed": "Closed",
+                "range": "{from} – {to}"
+            },
+            "contactTitle": "Contact this business",
+            "noContacts": "This business hasn’t added a way to reach it yet.",
+            "signInToContact": "Sign in to contact",
+            "show": "Show",
+            "fieldHint": {
+                "whatsapp": "Chat with them on WhatsApp",
+                "phone": "Call them",
+                "email": "Write to them",
+                "website": "Visit their website",
+                "socials": "Find them on social media",
+                "location": "See where they are",
+                "video": "Watch a video of the way there"
+            },
+            "field": {
+                "whatsapp": "WhatsApp",
+                "phone": "Phone",
+                "email": "Email",
+                "website": "Website",
+                "socials": "Social media",
+                "location": "Location",
+                "video": "Directions video"
+            },
+            "privacyNote": "This business will see your first name and part of your number.",
+            "revealFailed": "We couldn’t show this contact. Please try again.",
+            "copy": "Copy {what}",
+            "copied": "Copied",
+            "action": {
+                "whatsapp": "Chat on WhatsApp",
+                "phone": "Call",
+                "email": "Send an email",
+                "website": "Open website",
+                "location": "Open in Maps",
+                "video": "Watch the video",
+                "videoDrive": "Open the video"
+            },
+            "network": {
+                "facebook": "Facebook",
+                "instagram": "Instagram",
+                "tiktok": "TikTok",
+                "x": "X",
+                "linkedin": "LinkedIn",
+                "youtube": "YouTube",
+                "other": "Link"
+            },
+            "noSocials": "No social media links to show.",
+            "videoBroken": "This video link can’t be opened.",
+            "map": {
+                "ariaLabel": "Map showing where {name} is"
+            },
+            "consent": {
+                "question": "May {business} send you messages through Wi-Mall about your request?",
+                "terms": "At most 3 messages in 30 days, each with a link to stop them. You can change this any time in your account.",
+                "yes": "Yes",
+                "no": "No",
+                "savedYes": "{business} may message you. <link>Change this</link>",
+                "savedNo": "{business} won’t message you. <link>Change this</link>",
+                "saveFailed": "We couldn’t save your answer. Please try again."
+            },
+            "consents": {
+                "lead": "Businesses whose contact you unlocked. Turn one on to let it message you through Wi-Mall about your request.",
+                "loadFailed": "We couldn’t load this list.",
+                "emptyTitle": "No businesses yet",
+                "emptyDescription": "When you unlock a contact on a service listing, the business appears here and you choose whether it may message you.",
+                "emptyAction": "Browse the shop",
+                "footnote": "A business you allow can send at most 3 messages in 30 days, one of them a “please call me”. Every message has a “Stop these messages” link, and replies go to the business’s own WhatsApp.",
+                "statusGranted": "{hasDate, select, yes {Can message you since {date}} other {Can message you}}",
+                "statusRevoked": "{hasDate, select, yes {Stopped on {date}} other {Stopped}}",
+                "statusNotGranted": "Can’t message you",
+                "saving": "Saving…",
+                "saveFailed": "We couldn’t change this. Please try again."
+            },
+            "loadFailed": "We couldn’t load this listing.",
+            "unavailableTitle": "This listing isn’t available",
+            "unavailableDescription": "It may have been taken down, or the link may be wrong.",
+            "resultsTitle": "Service listings",
+            "resultsHeadingQuery": "Service listings for “{query}”",
+            "resultsCount": "{n, plural, =0 {No listings} one {# listing} other {# listings}}",
+            "emptyTitle": "No service listings found",
+            "emptyWithQuery": "Nothing matches “{query}”. Search matches whole words, so try a complete one.",
+            "emptyDescription": "No businesses are listed here yet.",
+            "pagination": "Pagination",
+            "previous": "Previous",
+            "next": "Next",
+            "pageOf": "Page {page} of {pages}",
+            "meta": {
+                "title": "{hasWhere, select, yes {{title} · {name}, {where} — Wi-Mall} other {{title} · {name} — Wi-Mall}}",
+                "fallbackDescription": "{hasWhere, select, yes {{name}: {title} in {where}. Contact them through Wi-Mall.} other {{name}: {title}. Contact them through Wi-Mall.}}",
+                "notFound": "Listing not found — Wi-Mall",
+                "resultsTitle": "Service listings — Wi-Mall",
+                "resultsDescription": "Find local businesses (plumbers, printers, repairers and more) and contact them through Wi-Mall."
             }
         }
     },
