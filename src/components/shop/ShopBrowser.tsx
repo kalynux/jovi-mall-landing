@@ -19,7 +19,7 @@ import {
 import { ShopSearchRow } from "@/components/shop/ShopSearch";
 import { ShopProductCard, useSyncFavorites } from "@/components/shop/ShopProductCard";
 import { formatMoney, formatXAF } from "@/lib/shop/format";
-import { productIdPath, storePath } from "@/lib/shop/shop.routes";
+import { listingsPath, productIdPath, storePath } from "@/lib/shop/shop.routes";
 import { rememberSearch } from "@/lib/shop/recent-searches";
 import {
   activeFilterCount,
@@ -209,6 +209,17 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch, listi
       <Chip selected={!query.category} onClick={() => go({ category: undefined })}>
         {tCommon("all")}
       </Chip>
+      {/* Not a category: a way out to every service listing. Listing
+          categories have no products, so they never appear in this rail, and
+          without this the listings were reachable only by a search. Second
+          place, in the listing colour, so it reads as its own thing. */}
+      <Chip
+        href={listingsPath()}
+        icon="megaphone"
+        style={{ color: "var(--type-listing)", borderColor: "color-mix(in srgb, var(--type-listing) 45%, transparent)" }}
+      >
+        {tListings("servicesChip")}
+      </Chip>
       {categories.map((c) => (
         <Chip
           key={c.id}
@@ -394,9 +405,13 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch, listi
           ) : hasListings ? (
             // The search WAS answered, by the listings above. A full-page
             // "nothing matches" under them would contradict the screen.
-            <p className="muted" style={{ fontSize: 13.5, margin: "4px 0 0" }}>
-              {query.q ? tListings("noProductsForQuery", { query: query.q }) : tListings("noProducts")}
-            </p>
+            // Plain /shop with no products says nothing: there is no search or
+            // category for a "no products" line to be about.
+            query.q || query.category ? (
+              <p className="muted" style={{ fontSize: 13.5, margin: "4px 0 0" }}>
+                {query.q ? tListings("noProductsForQuery", { query: query.q }) : tListings("noProducts")}
+              </p>
+            ) : null
           ) : (
             <EmptyState
               icon="search-x"

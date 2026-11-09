@@ -70,8 +70,9 @@ test("the place line uses whichever of area and city exist", () => {
   assert.deepEqual(placeParts({ area: "", city: "" }), []);
 });
 
-test("the shelf is asked for only on a search or category, and only on page 1", () => {
-  assert.equal(shelfQuery({}), null);
+test("the shelf is asked for on page 1 only, plain /shop included", () => {
+  assert.deepEqual(shelfQuery({}), { q: undefined, category: undefined, limit: 6 });
+  assert.equal(shelfQuery({ page: 2 }), null);
   assert.equal(shelfQuery({ q: "plombier", page: 2 }), null);
   assert.deepEqual(shelfQuery({ q: "plombier" }), { q: "plombier", category: undefined, limit: 6 });
   assert.deepEqual(shelfQuery({ category: "plumbing", page: 1 }), { q: undefined, category: "plumbing", limit: 6 });

@@ -8,7 +8,8 @@ import { listingsPath } from "@/lib/shop/shop.routes";
 import { useListingSaves } from "./useListingSaves";
 
 /**
- * The service listings that match a search or a category, above the products.
+ * Service listings above the products: the ones matching a search or a
+ * category, or on plain /shop the newest ones.
  *
  * Its own section rather than cards mixed into the grid: the API pages
  * listings and products separately, so any interleaving would be an order we

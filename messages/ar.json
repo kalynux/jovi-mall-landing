@@ -3962,6 +3962,7 @@
             "viewContacts": "التواصل",
             "shelfHeading": "{n, plural, one {إعلان خدمة} other {إعلانات الخدمات}}",
             "shelfLead": "تواصل معهم مباشرة ومجانًا.",
+            "servicesChip": "الإعلانات",
             "seeAll": "عرض الكل ({n})",
             "productsHeading": "المنتجات",
             "noProductsForQuery": "لا توجد منتجات تطابق «{query}».",

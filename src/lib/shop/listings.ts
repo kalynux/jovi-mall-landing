@@ -122,12 +122,16 @@ export const LISTING_SHELF_SIZE = 6;
 export const NO_LISTINGS: ListingListResponse = { data: [], meta: { total: 0, page: 1, limit: 0, pages: 0 } };
 
 /**
- * The shelf's query, or `null` when there is no shelf to draw: only for a
- * search or a category, and only on the first page of products (page 3 of a
- * product search is not where the listings belong).
+ * The shelf's query, or `null` when there is no shelf to draw: only on the
+ * first page of products (page 3 of a product search is not where the listings
+ * belong).
+ *
+ * Plain /shop gets a shelf too (the newest listings, unfiltered). It used to
+ * need a search or a category, which left listings unreachable from the
+ * default view: their categories have no products, so they never become a
+ * chip, and nobody searches for a business they have never seen.
  */
 export function shelfQuery(query: { q?: string; category?: string; page?: number }): ListingListQuery | null {
-  if (!query.q && !query.category) return null;
   if (query.page && query.page > 1) return null;
   return { q: query.q, category: query.category, limit: LISTING_SHELF_SIZE };
 }

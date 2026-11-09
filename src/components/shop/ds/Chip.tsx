@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import type { CSSProperties, ReactNode } from "react";
+import { Link } from "@/i18n/navigation";
 import { Icon, type IconName } from "./Icon";
 
 export interface ChipProps {
@@ -13,6 +14,8 @@ export interface ChipProps {
   onRemove?: () => void;
   icon?: IconName;
   onClick?: () => void;
+  /** Renders a real link instead of a button, for a chip that goes to another page. */
+  href?: string;
   /**
    * Rendered but not selectable — an option value with no sellable variant
    * behind it. Disabled rather than hidden: the vendor lists the option, and
@@ -31,6 +34,7 @@ export function Chip({
   onRemove,
   icon,
   onClick,
+  href,
   disabled,
   style,
 }: ChipProps) {
@@ -49,12 +53,7 @@ export function Chip({
     border = "var(--brand)";
   }
 
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      style={{
+  const chipStyle: CSSProperties = {
         display: "inline-flex",
         alignItems: "center",
         gap: 6,
@@ -73,8 +72,19 @@ export function Chip({
         whiteSpace: "nowrap",
         transition: "var(--transition-colors)",
         ...style,
-      }}
-    >
+  };
+
+  if (href) {
+    return (
+      <Link href={href} onClick={onClick} style={{ ...chipStyle, textDecoration: "none" }}>
+        {icon && <Icon name={icon} size={size === "sm" ? 13 : 15} />}
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" onClick={onClick} disabled={disabled} style={chipStyle}>
       {icon && <Icon name={icon} size={size === "sm" ? 13 : 15} />}
       {children}
       {removable && (
