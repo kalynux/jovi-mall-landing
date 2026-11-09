@@ -36,7 +36,8 @@ import type {
 } from "@/lib/shop/shop.types";
 import type { VariantBySku } from "@/lib/shop/catalog.api";
 import type { ListingListResponse } from "@/lib/shop/listings";
-import { ListingsShelf } from "./ListingsShelf";
+import { ListingsPullTab, ListingsSideRail } from "./drawer/ShopDrawers";
+import { DrawerColumns } from "./drawer/SideRail";
 
 /**
  * The browse controls. Rendering happens on the server; this owns the inputs.
@@ -98,8 +99,8 @@ interface Props {
    */
   skuMatch?: VariantBySku | null;
   /**
-   * Service listings matching the same search or category, page 1 only.
-   * Drawn as their own shelf above the products; absent or empty means none.
+   * Service listings matching the same search or category (else the newest),
+   * advertised by the pull tab and the side rail; absent or empty means none.
    */
   listings?: ListingListResponse;
 }
@@ -209,17 +210,6 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch, listi
       <Chip selected={!query.category} onClick={() => go({ category: undefined })}>
         {tCommon("all")}
       </Chip>
-      {/* Not a category: a way out to every service listing. Listing
-          categories have no products, so they never appear in this rail, and
-          without this the listings were reachable only by a search. Second
-          place, in the listing colour, so it reads as its own thing. */}
-      <Chip
-        href={listingsPath()}
-        icon="megaphone"
-        style={{ color: "var(--type-listing)", borderColor: "color-mix(in srgb, var(--type-listing) 45%, transparent)" }}
-      >
-        {tListings("servicesChip")}
-      </Chip>
       {categories.map((c) => (
         <Chip
           key={c.id}
@@ -234,7 +224,21 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch, listi
     </>
   );
 
+  /* The listings this shop advertises: a pull tab under the search on phones
+     and tablets, a rail down the inline-end edge from `lg`. Both pull the
+     listings page in like a drawer. Listing categories have no products, so
+     they never become a chip — this is how a shopper finds them at all. */
+  const teaserListings = listings?.data ?? [];
+  const listingsHref = listingsPath({ q: query.q, category: query.category });
+
   return (
+    <DrawerColumns
+      rail={
+        teaserListings.length > 0 ? (
+          <ListingsSideRail listings={teaserListings} products={products} href={listingsHref} />
+        ) : null
+      }
+    >
     <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-6">
       {/* ── Heading ─────────────────────────────────────────────────────────
           The phone gets one line at the weight of body text — enough to say
@@ -305,6 +309,8 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch, listi
           placeholder={t("searchPlaceholder")}
         />
       </form>
+
+      <ListingsPullTab listings={teaserListings} products={products} href={listingsHref} />
 
       {/* ── Category rail ───────────────────────────────────────────────────
           Phone: Grouped/All pinned at the head, the chips scrolling between it
@@ -390,15 +396,6 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch, listi
 
       {/* Results */}
       <div style={{ opacity: busy ? 0.55 : 1, transition: "opacity .15s" }}>
-        {listings && hasListings && (
-          <ListingsShelf listings={listings} query={{ q: query.q, category: query.category }} />
-        )}
-        {/* With a shelf above, the grid needs its own name, or the two read as one list. */}
-        {hasListings && (products.length > 0 || skuMatch) && (
-          <h2 style={{ margin: "0 0 12px", fontSize: 17, fontWeight: 800, letterSpacing: "-0.01em", color: "var(--text-strong)" }}>
-            {tListings("productsHeading")}
-          </h2>
-        )}
         {products.length === 0 ? (
           skuMatch ? (
             <SkuMatchResult match={skuMatch} />
@@ -508,6 +505,7 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch, listi
         />
       </BottomSheet>
     </div>
+    </DrawerColumns>
   );
 }
 

@@ -3962,7 +3962,6 @@
             "viewContacts": "التواصل",
             "shelfHeading": "{n, plural, one {إعلان خدمة} other {إعلانات الخدمات}}",
             "shelfLead": "تواصل معهم مباشرة ومجانًا.",
-            "servicesChip": "الإعلانات",
             "seeAll": "عرض الكل ({n})",
             "productsHeading": "المنتجات",
             "noProductsForQuery": "لا توجد منتجات تطابق «{query}».",
@@ -4087,6 +4086,17 @@
                 "unlockFirst": "اكشف إحدى وسائل التواصل معه لتتمكن من تقييم هذا النشاط."
             },
             "kindShort": "إعلان"
+        },
+        "drawer": {
+            "viewListings": "عرض الإعلانات",
+            "viewProducts": "عرض المنتجات",
+            "openListings": "إعلانات الخدمات — اسحب أو انقر للفتح",
+            "openProducts": "المنتجات — اسحب أو انقر للفتح",
+            "lidListings": "الإعلانات",
+            "lidProducts": "المنتجات",
+            "productsLead": "اشترِ وادفع عبر المحفظة الإلكترونية.",
+            "seeAllListings": "عرض كل الإعلانات",
+            "seeAllProducts": "عرض كل المنتجات"
         }
     },
     "cookieNotice": {

@@ -254,6 +254,23 @@ export async function listProducts(query: ProductListQuery = {}): Promise<Produc
   return getList(`/api/public/products${productQuery(query)}`);
 }
 
+/** How many products the listings page's pull tab and side rail rotate through. */
+export const PRODUCT_TEASER_SIZE = 10;
+
+/**
+ * The newest products, for the teaser on /shop/listings that leads back to the
+ * shop. Quiet like `listListingsQuietly`: an outage is no tab, never a broken
+ * listings page.
+ */
+export async function listProductTeaserQuietly(): Promise<ProductListItem[]> {
+  try {
+    return (await listProducts({ limit: PRODUCT_TEASER_SIZE, sort: "newest" })).data;
+  } catch (error) {
+    console.warn("[products] could not read the teaser:", error instanceof Error ? error.message : error);
+    return [];
+  }
+}
+
 /**
  * `GET /api/public/stores/:storeSlug/products/:productSlug` — **the canonical
  * product read.**

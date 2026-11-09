@@ -25,7 +25,7 @@ import {
   listProducts,
   resolveVariantBySku,
 } from "@/lib/shop/catalog.api";
-import { NO_LISTINGS, shelfQuery } from "@/lib/shop/listings";
+import { listingTeaserQuery } from "@/lib/shop/listings";
 import { parseProductSearchParams } from "@/lib/shop/shop.query";
 import { ShopBrowser } from "@/components/shop/ShopBrowser";
 import { ShopBrowserClient } from "@/components/shop/ShopBrowserClient";
@@ -88,13 +88,12 @@ export default async function CatalogPage({
   // One round trip each, both cached for 300s by the API's own Cache-Control.
   // The categories call is the second of the two the public rate-limit bucket
   // was sized for.
-  // The listings shelf is a third read, made only for a search or a category,
-  // and quiet: an outage there is an empty shelf, never a broken shop.
-  const shelf = shelfQuery(query);
+  // The listings teaser (pull tab on a phone, side rail on a desktop) is a
+  // third read, and quiet: an outage there is no tab, never a broken shop.
   const [{ data: products, meta }, categories, listings] = await Promise.all([
     listProducts(query),
     listCategories(),
-    shelf ? listListingsQuietly(shelf) : Promise.resolve(NO_LISTINGS),
+    listListingsQuietly(listingTeaserQuery(query)),
   ]);
 
   /*

@@ -3962,7 +3962,6 @@
             "viewContacts": "Contacts",
             "shelfHeading": "{n, plural, one {Service listing} other {Service listings}}",
             "shelfLead": "Contact them directly, for free.",
-            "servicesChip": "Listings",
             "seeAll": "See all {n}",
             "productsHeading": "Products",
             "noProductsForQuery": "No products match “{query}”.",
@@ -4087,6 +4086,17 @@
                 "unlockFirst": "Unlock one of its contacts to rate this business."
             },
             "kindShort": "Listing"
+        },
+        "drawer": {
+            "viewListings": "View listings",
+            "viewProducts": "View products",
+            "openListings": "Service listings — swipe or tap to open",
+            "openProducts": "Products — swipe or tap to open",
+            "lidListings": "Listings",
+            "lidProducts": "Products",
+            "productsLead": "Buy and pay with mobile money.",
+            "seeAllListings": "See all listings",
+            "seeAllProducts": "See all products"
         }
     },
     "cookieNotice": {

@@ -3962,7 +3962,6 @@
             "viewContacts": "Contactos",
             "shelfHeading": "{n, plural, one {Anúncio de serviço} other {Anúncios de serviço}}",
             "shelfLead": "Contacte-os diretamente, grátis.",
-            "servicesChip": "Anúncios",
             "seeAll": "Ver os {n}",
             "productsHeading": "Produtos",
             "noProductsForQuery": "Nenhum produto corresponde a «{query}».",
@@ -4087,6 +4086,17 @@
                 "unlockFirst": "Desbloqueie um dos seus contactos para avaliar este negócio."
             },
             "kindShort": "Anúncio"
+        },
+        "drawer": {
+            "viewListings": "Ver anúncios",
+            "viewProducts": "Ver produtos",
+            "openListings": "Anúncios de serviço — deslize ou toque para abrir",
+            "openProducts": "Produtos — deslize ou toque para abrir",
+            "lidListings": "Anúncios",
+            "lidProducts": "Produtos",
+            "productsLead": "Compre e pague com mobile money.",
+            "seeAllListings": "Ver todos os anúncios",
+            "seeAllProducts": "Ver todos os produtos"
         }
     },
     "cookieNotice": {

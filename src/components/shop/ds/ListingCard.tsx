@@ -27,8 +27,7 @@ import { Rating } from "./Rating";
  * ⛔ No price and no credit cost, ever. The customer pays nothing, and what
  * the business pays is not the customer's business.
  *
- * Its width comes from the container: `.listing-rail` (a swipeable row on a
- * phone, a grid from 768px) or a `.pgrid` cell.
+ * Its width comes from the container: a `.pgrid` cell.
  */
 export function ListingCard({
   listing,

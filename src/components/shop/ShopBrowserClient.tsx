@@ -11,7 +11,7 @@ import {
   listProducts,
   resolveVariantBySku,
 } from "@/lib/shop/catalog.api";
-import { NO_LISTINGS, shelfQuery, type ListingListResponse } from "@/lib/shop/listings";
+import { listingTeaserQuery, type ListingListResponse } from "@/lib/shop/listings";
 import type { VariantBySku } from "@/lib/shop/catalog.api";
 import { parseProductSearchParams } from "@/lib/shop/shop.query";
 import type { CategoryCount, ListMeta, ProductListItem } from "@/lib/shop/shop.types";
@@ -107,11 +107,10 @@ function ShopBrowserResolver() {
   useEffect(() => {
     let cancelled = false;
 
-    const shelf = shelfQuery(query);
     Promise.all([
       listProducts(query),
       listCategories(),
-      shelf ? listListingsQuietly(shelf) : Promise.resolve(NO_LISTINGS),
+      listListingsQuietly(listingTeaserQuery(query)),
     ])
       .then(async ([{ data: products, meta }, categories, listings]) => {
         // The same product-code fallback the web page runs, so the packaged app

@@ -648,13 +648,6 @@ html.dark,
     margin-top: 14px; padding: 14px; border-radius: var(--radius-md);
     background: var(--surface-2); border: 1px solid var(--border);
   }
-  /* The swipeable listings row: snaps a card to the gutter on a phone. */
-  .listing-rail {
-    display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
-    scroll-padding-inline: 16px; padding: 2px 16px 6px; margin: 0 -16px;
-    scrollbar-width: none; overscroll-behavior-x: contain;
-  }
-  .listing-rail::-webkit-scrollbar { display: none; }
   /* The card is a size container: in a narrow card (a two-column phone grid)
      the "Service listing" mark shortens to one word so it clears the heart. */
   .listing-card { container-type: inline-size; }
@@ -666,19 +659,42 @@ html.dark,
     .listing-card__cta-label { display: none; }
   }
   .listing-card__photo { aspect-ratio: 4 / 3; }
-  /* In the phone row the photo is shorter, so the shelf costs less of the
-     screen before the products; the grid from 768px goes back to 4:3. */
-  .listing-rail .listing-card__photo { aspect-ratio: 16 / 9; }
-  .listing-rail > * { width: min(72vw, 248px); flex-shrink: 0; scroll-snap-align: start; }
-  @media (min-width: 640px) { .listing-rail { scroll-padding-inline: 24px; padding-inline: 24px; margin: 0 -24px; } }
-  /* Tablet up: there is room for the row to be a grid, and a grid is scannable. */
-  @media (min-width: 768px) {
-    .listing-rail { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; overflow: visible; padding: 0; margin: 0; }
-    .listing-rail > * { width: auto; }
-    .listing-rail .listing-card__photo { aspect-ratio: 4 / 3; }
+
+  /* ---- Shop ⇄ listings drawers ----
+     The pull tab (phone, tablet) and the side rail's lid (desktop) nudge
+     toward the inline start every few seconds: the hint that they pull out.
+     The drawer itself is driven inline by components/shop/drawer. */
+  @keyframes pull-nudge {
+    0%, 58%, 100% { transform: translateX(0); }
+    68% { transform: translateX(-14px); }
+    78% { transform: translateX(0); }
+    86% { transform: translateX(-6px); }
+    93% { transform: translateX(0); }
   }
-  /* Six cards (the shelf's page): 3×2 on a tablet, one row on a wide screen. */
-  @media (min-width: 1280px) { .listing-rail { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; } }
+  @keyframes pull-nudge-rtl {
+    0%, 58%, 100% { transform: translateX(0); }
+    68% { transform: translateX(14px); }
+    78% { transform: translateX(0); }
+    86% { transform: translateX(6px); }
+    93% { transform: translateX(0); }
+  }
+  @keyframes pull-chev { 0%, 100% { opacity: .25; } 45% { opacity: 1; } }
+  .pull-nudge { animation: pull-nudge 3.2s ease-in-out infinite; }
+  [dir="rtl"] .pull-nudge { animation-name: pull-nudge-rtl; }
+  .pull-nudge[data-dragging="true"], .pull-nudge:focus-visible { animation: none; }
+  .pull-chev { animation: pull-chev 1.3s ease-in-out infinite; }
+  .pull-chev:nth-child(1) { animation-delay: .3s; }
+  .pull-chev:nth-child(2) { animation-delay: .15s; }
+  .teaser-face { transition: opacity .5s ease; }
+  @media (prefers-reduced-motion: reduce) {
+    .pull-nudge, .pull-chev { animation: none; }
+    .teaser-face { transition: none; }
+  }
+  /* Beside the 320px rail the content column is that much narrower, so the
+     grid drops a column against the plain /shop breakpoints. */
+  @media (min-width: 1024px) { .drawer-main .pgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (min-width: 1280px) { .drawer-main .pgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  @media (min-width: 1600px) { .drawer-main .pgrid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 
   /* ---- Mobile app shell (shop) ----
      Below `md` the shop is laid out like an installed app rather than a

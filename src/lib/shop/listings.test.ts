@@ -11,7 +11,7 @@ import {
   phoneNumbers,
   placeParts,
   safeHttpUrl,
-  shelfQuery,
+  listingTeaserQuery,
   sortedHours,
   telHref,
   todayIn,
@@ -70,12 +70,10 @@ test("the place line uses whichever of area and city exist", () => {
   assert.deepEqual(placeParts({ area: "", city: "" }), []);
 });
 
-test("the shelf is asked for on page 1 only, plain /shop included", () => {
-  assert.deepEqual(shelfQuery({}), { q: undefined, category: undefined, limit: 6 });
-  assert.equal(shelfQuery({ page: 2 }), null);
-  assert.equal(shelfQuery({ q: "plombier", page: 2 }), null);
-  assert.deepEqual(shelfQuery({ q: "plombier" }), { q: "plombier", category: undefined, limit: 6 });
-  assert.deepEqual(shelfQuery({ category: "plumbing", page: 1 }), { q: undefined, category: "plumbing", limit: 6 });
+test("the teaser follows the search or category on screen, else the newest", () => {
+  assert.deepEqual(listingTeaserQuery({}), { q: undefined, category: undefined, limit: 10 });
+  assert.deepEqual(listingTeaserQuery({ q: "plombier" }), { q: "plombier", category: undefined, limit: 10 });
+  assert.deepEqual(listingTeaserQuery({ category: "plumbing" }), { q: undefined, category: "plumbing", limit: 10 });
 });
 
 test("the See-all page bounds what it reads off the URL", () => {

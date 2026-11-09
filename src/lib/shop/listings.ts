@@ -116,24 +116,20 @@ export interface ListingListResponse {
   meta: ListMeta;
 }
 
-/** How many listings the shelf above the products shows (3×2, or 6 in a row). */
-export const LISTING_SHELF_SIZE = 6;
+/** How many listings the pull tab and the side rail on /shop rotate through. */
+export const LISTING_TEASER_SIZE = 10;
 
 export const NO_LISTINGS: ListingListResponse = { data: [], meta: { total: 0, page: 1, limit: 0, pages: 0 } };
 
 /**
- * The shelf's query, or `null` when there is no shelf to draw: only on the
- * first page of products (page 3 of a product search is not where the listings
- * belong).
- *
- * Plain /shop gets a shelf too (the newest listings, unfiltered). It used to
- * need a search or a category, which left listings unreachable from the
- * default view: their categories have no products, so they never become a
- * chip, and nobody searches for a business they have never seen.
+ * The listings that /shop advertises in its pull tab (phone) and side rail
+ * (desktop): the ones matching the search or category on screen, else the
+ * newest. Asked for on every page of products, because the tab is how a
+ * shopper gets to the listings at all: listing categories have no products,
+ * so they never become a chip.
  */
-export function shelfQuery(query: { q?: string; category?: string; page?: number }): ListingListQuery | null {
-  if (query.page && query.page > 1) return null;
-  return { q: query.q, category: query.category, limit: LISTING_SHELF_SIZE };
+export function listingTeaserQuery(query: { q?: string; category?: string }): ListingListQuery {
+  return { q: query.q, category: query.category, limit: LISTING_TEASER_SIZE };
 }
 
 /* ─── The reveal ──────────────────────────────────────────────────────────── */
