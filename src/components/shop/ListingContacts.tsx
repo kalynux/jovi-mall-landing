@@ -21,6 +21,7 @@ import {
   fieldLabelKey,
   hasPin,
   mapHref,
+  phoneNumbers,
   safeHttpUrl,
   telHref,
   whatsappHref,
@@ -79,7 +80,14 @@ type ConsentState = {
   error?: string;
 };
 
-export function ListingContacts({ listing }: { listing: PublicListingDetail }) {
+export function ListingContacts({
+  listing,
+  onRevealed,
+}: {
+  listing: PublicListingDetail;
+  /** Told after every successful unlock: it is what makes a review possible. */
+  onRevealed?: () => void;
+}) {
   const t = useTranslations("shop.listings");
   const tKey = useTranslations();
   const tErrors = useTranslations("errors");
@@ -98,6 +106,7 @@ export function ListingContacts({ listing }: { listing: PublicListingDetail }) {
       try {
         const result = await revealListingContact(listing.id, field);
         setStates((prev) => ({ ...prev, [field]: { status: "revealed", result } }));
+        onRevealed?.();
         if (result.askConsent && result.consentVendorId) {
           setConsent((prev) => prev ?? { vendorId: result.consentVendorId!, status: "asking" });
         }
@@ -108,7 +117,7 @@ export function ListingContacts({ listing }: { listing: PublicListingDetail }) {
         }));
       }
     },
-    [listing.id, t, tErrors]
+    [listing.id, t, tErrors, onRevealed]
   );
 
   const answer = useCallback(
@@ -324,16 +333,38 @@ function RevealedRow({ result, label, business }: { result: RevealResult; label:
       );
       break;
     }
-    case "phone":
+    case "phone": {
+      // One tap unlocked every number the business gave (two since
+      // 2026-11-08, e.g. MTN and Orange): all of them, one result block, each
+      // with its own Call. Nothing here says the second one cost anything.
+      const numbers = phoneNumbers(result.value);
       body = (
-        <>
-          {valueLine(result.value.number)}
-          <Button block leadingIcon="phone" onClick={() => void openApp(telHref(result.value.number))}>
-            {t("action.phone")}
-          </Button>
-        </>
+        <div style={{ display: "grid", gap: 12 }}>
+          {numbers.map((number, i) => (
+            <div
+              key={number}
+              style={{
+                display: "grid",
+                gap: 10,
+                ...(i > 0 ? { paddingTop: 12, borderTop: "1px solid color-mix(in srgb, var(--type-listing) 22%, transparent)" } : {}),
+              }}
+            >
+              {valueLine(number)}
+              <Button
+                block
+                leadingIcon="phone"
+                onClick={() => void openApp(telHref(number))}
+                // Two buttons both reading "Call" must still say which line.
+                aria-label={numbers.length > 1 ? t("action.phoneNumber", { number }) : undefined}
+              >
+                {t("action.phone")}
+              </Button>
+            </div>
+          ))}
+        </div>
       );
       break;
+    }
     case "email":
       body = (
         <>

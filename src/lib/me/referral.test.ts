@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import {
   balanceRows,
   cleanReferralCode,
+  knownCategory,
   maskedPayout,
   payoutProviderName,
   payoutStatusOf,
@@ -220,4 +221,10 @@ test("share intents go to a contact, not to the bot", () => {
   const { whatsapp, telegram } = shareIntents("https://wi-mall.com/register?ref=A1B2", "Join:");
   assert.equal(whatsapp, "https://wa.me/?text=Join%3A%20https%3A%2F%2Fwi-mall.com%2Fregister%3Fref%3DA1B2");
   assert.ok(telegram.startsWith("https://t.me/share/url?url=https%3A%2F%2Fwi-mall.com"));
+});
+
+test("a referred service provider has a label, an unknown category none", () => {
+  assert.equal(knownCategory("provider"), "provider");
+  assert.equal(knownCategory("vendor"), "vendor");
+  assert.equal(knownCategory("something_new"), null);
 });

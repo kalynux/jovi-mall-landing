@@ -561,6 +561,18 @@ export function listingJsonLd(locale: Locale, listing: PublicListingDetail): Jso
           },
         }
       : {}),
+    // Customers' published reviews (2026-11-08); only when there are some.
+    ...(listing.rating && listing.rating.count > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: Number(listing.rating.average.toFixed(1)),
+            reviewCount: listing.rating.count,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
     ...(hours.length
       ? {
           openingHoursSpecification: hours.map((row) => ({

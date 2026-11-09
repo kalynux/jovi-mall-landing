@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { Chip, Icon, IconButton } from "@/components/shop/ds";
+import { Chip, Icon, IconButton, Rating } from "@/components/shop/ds";
 import { useShopPageTitle } from "@/components/shop/ShopChrome";
 import { useToast } from "@/components/shop/providers";
 import { useHydrated } from "@/lib/use-hydrated";
@@ -19,6 +19,8 @@ import {
   type PublicListingDetail,
 } from "@/lib/shop/listings";
 import { ListingContacts } from "./ListingContacts";
+import { ListingReviewSection } from "./ListingReviewSection";
+import { useListingSaves } from "./useListingSaves";
 
 /**
  * A service listing's page.
@@ -50,6 +52,11 @@ export function ListingDetail({ listing }: { listing: PublicListingDetail }) {
   const current = photos[Math.min(index, Math.max(photos.length - 1, 0))];
   const place = placeParts(listing);
   const hours = sortedHours(listing.openingHours);
+  const saves = useListingSaves([listing.id]);
+  const saved = saves.isSaved(listing.id);
+  // Bumped on every unlock, so the review section re-asks whether this
+  // customer may now rate the business.
+  const [revealCount, setRevealCount] = useState(0);
 
   const share = () => {
     void shareLink({
@@ -147,7 +154,14 @@ export function ListingDetail({ listing }: { listing: PublicListingDetail }) {
               <Icon name="megaphone" size={12} strokeWidth={2.4} />
               {t("kind")}
             </span>
-            <span style={{ marginInlineStart: "auto" }}>
+            <span style={{ marginInlineStart: "auto", display: "inline-flex", gap: 8 }}>
+              <IconButton
+                icon="heart"
+                variant="fav"
+                active={saved}
+                label={t(saved ? "unsave" : "save")}
+                onClick={() => saves.toggle(listing.id)}
+              />
               <IconButton icon="share-2" variant="surface" label={t("share")} onClick={share} />
             </span>
           </div>
@@ -166,6 +180,17 @@ export function ListingDetail({ listing }: { listing: PublicListingDetail }) {
           >
             {listing.title}
           </h1>
+
+          {/* Only when someone reviewed it; a tap goes to what they said. */}
+          {listing.rating && listing.rating.count > 0 && (
+            <a
+              href="#listing-reviews"
+              aria-label={t("ratingAria", { average: listing.rating.average.toFixed(1), count: listing.rating.count })}
+              style={{ display: "inline-flex", marginBottom: 8, textDecoration: "none", color: "inherit" }}
+            >
+              <Rating value={listing.rating.average} count={listing.rating.count} />
+            </a>
+          )}
 
           <div style={{ display: "grid", gap: 6, marginBottom: 12 }}>
             {listing.companyName && (
@@ -197,7 +222,7 @@ export function ListingDetail({ listing }: { listing: PublicListingDetail }) {
             </div>
           )}
 
-          <ListingContacts listing={listing} />
+          <ListingContacts listing={listing} onRevealed={() => setRevealCount((n) => n + 1)} />
         </div>
 
         {/* ── About ───────────────────────────────────────────────────────── */}
@@ -217,6 +242,7 @@ export function ListingDetail({ listing }: { listing: PublicListingDetail }) {
               <HoursTable hours={hours} />
             </Card>
           )}
+          <ListingReviewSection listing={listing} revealCount={revealCount} />
         </div>
       </div>
     </div>

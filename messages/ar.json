@@ -2650,7 +2650,7 @@
             "signInTitle": "سجّل الدخول لترى ما تصفّحته",
             "signInDescription": "سجل تصفّحك مرتبط بحسابك، لا بهذا الجهاز.",
             "emptyTitle": "لا مفضّلات بعد",
-            "emptyDescription": "اضغط على القلب في أي منتج لحفظه هنا.",
+            "emptyDescription": "اضغط على القلب في منتج أو خدمة لحفظها هنا.",
             "browseProducts": "تصفّح المنتجات",
             "viewedEmptyTitle": "لم تشاهد شيئًا بعد",
             "viewedEmptyDescription": "ستظهر هنا المنتجات التي تفتحها.",
@@ -2660,7 +2660,13 @@
             "unavailable": "لم يعد هذا المنتج متاحًا.",
             "addedToCart": "أُضيف إلى السلة",
             "addFailed": "تعذّرت إضافة ذلك إلى سلتك. يُرجى المحاولة مرة أخرى.",
-            "itemUnavailable": "لم يعد هذا المنتج متاحًا."
+            "itemUnavailable": "لم يعد هذا المنتج متاحًا.",
+            "filterLabel": "عرض",
+            "filter": {
+                "all": "الكل",
+                "product": "المنتجات",
+                "listing": "الخدمات"
+            }
         },
         "pay": {
             "link": {
@@ -3202,11 +3208,10 @@
         },
         "reviews": {
             "emptyTitle": "لا توجد تقييمات بعد",
-            "emptyDescription": "قيّم منتجًا أو عملية توصيل من أحد طلباتك المكتملة.",
+            "emptyDescription": "قيّم منتجًا أو توصيلًا من طلب مكتمل، أو نشاطًا كشفت إحدى وسائل التواصل معه.",
             "deliveryFeedback": "تقييم التوصيل",
             "published": "منشور",
-            "notPublished": "غير منشور",
-            "beingChecked": "قيد المراجعة",
+            "notPublished": "غير منشورة",
             "ratingLabel": "التقييم",
             "starLabel": "{n, plural, one {نجمة واحدة} two {نجمتان} few {# نجوم} many {# نجمة} other {# نجمة}}",
             "rateProduct": "قيّم {label}",
@@ -3215,13 +3220,19 @@
             "rateTheDelivery": "قيّم التوصيل",
             "titlePlaceholder": "العنوان (اختياري)",
             "bodyPlaceholder": "أخبر الآخرين عن تجربتك (اختياري)",
-            "textChecked": "تُراجَع التقييمات المكتوبة قبل نشرها.",
             "alreadyReviewed": "لقد قيّمت هذا من قبل.",
             "notYetProduct": "يمكنك التقييم بعد اكتمال طلبك.",
             "notYetDelivery": "يمكنك تقييم هذا التوصيل بعد وصوله.",
-            "thanksPublished": "شكرًا — تقييمك منشور الآن.",
-            "thanksPending": "شكرًا — سيظهر تقييمك بعد مراجعته.",
-            "submitFailed": "لم نتمكّن من إرسال تقييمك. حاول مرة أخرى."
+            "thanksPublished": "شكرًا — تم نشر مراجعتك.",
+            "submitFailed": "لم نتمكّن من إرسال تقييمك. حاول مرة أخرى.",
+            "notYetListing": "يمكنك تقييم هذا النشاط بعد أن تكشف إحدى وسائل التواصل معه.",
+            "rateThisBusiness": "قيّم هذا النشاط",
+            "publicNote": "تصبح مراجعتك، بما فيها ما تكتبه، عامة فور إرسالها. لا يظهر اسمك.",
+            "deliveryPrivateNote": "تقييمات التوصيل لا تُنشر أبدًا. تساعدنا على العناية بالتوصيل.",
+            "thanksDelivery": "شكرًا — تم تسجيل تقييمك.",
+            "subjectProduct": "منتج",
+            "subjectListing": "إعلان خدمة",
+            "subjectAria": "{kind}: {title}"
         },
         "bookings": {
             "emptyTitle": "لا توجد حجوزات بعد",
@@ -3835,7 +3846,9 @@
                 "vendor": "البائعون الذين تحيلهم",
                 "customer": "العملاء الذين تحيلهم",
                 "agency": "الوكالات التي تحيلها",
-                "line": "{rate} من عمولة Wi-Mall لمدة {months, plural, one {شهر واحد} two {شهرين} few {# أشهر} many {# شهرًا} other {# شهر}}"
+                "line": "{rate} من عمولة Wi-Mall لمدة {months, plural, one {شهر واحد} two {شهرين} few {# أشهر} many {# شهرًا} other {# شهر}}",
+                "provider": "مزوّدو الخدمات الذين تحيلهم",
+                "lineProvider": "{rate} مما يدفعونه لـWi-Mall مقابل الباقات والأرصدة، لمدة {months, plural, one {شهر واحد} two {شهرين} few {# أشهر} many {# شهرًا} other {# شهر}}"
             },
             "balances": {
                 "title": "رصيدك",
@@ -3905,7 +3918,8 @@
                     "customer": "عميل",
                     "vendor": "بائع",
                     "agency": "وكالة",
-                    "agent": "مندوب توصيل"
+                    "agent": "مندوب توصيل",
+                    "provider": "مزوّد خدمات"
                 },
                 "referredState": {
                     "earning": "نشطة",
@@ -3933,7 +3947,11 @@
                 },
                 "requestedOn": "طُلب في {date}",
                 "resolvedOn": "أُغلق في {date}",
-                "refusedReason": "السبب: {reason}"
+                "refusedReason": "السبب: {reason}",
+                "paidFor": {
+                    "plan": "من دفعة باقة",
+                    "credits": "من شراء أرصدة"
+                }
             }
         },
         "listings": {
@@ -3997,7 +4015,8 @@
                 "website": "فتح الموقع",
                 "location": "فتح في الخرائط",
                 "video": "مشاهدة الفيديو",
-                "videoDrive": "فتح الفيديو"
+                "videoDrive": "فتح الفيديو",
+                "phoneNumber": "اتصال بالرقم {number}"
             },
             "network": {
                 "facebook": "فيسبوك",
@@ -4054,7 +4073,19 @@
                 "notFound": "الإعلان غير موجود — Wi-Mall",
                 "resultsTitle": "إعلانات الخدمات — Wi-Mall",
                 "resultsDescription": "اعثر على أنشطة محلية (سبّاكون ومطابع ومصلّحون وغيرهم) وتواصل معهم عبر Wi-Mall."
-            }
+            },
+            "save": "حفظ هذا النشاط",
+            "unsave": "إزالة من المحفوظات",
+            "savedToast": "تم الحفظ. لا يُبلَّغ النشاط بذلك.",
+            "unsaved": "أُزيل من المحفوظات",
+            "ratingAria": "التقييم {average} من 5 بناءً على {count, plural, one {مراجعة واحدة} two {مراجعتين} few {# مراجعات} many {# مراجعة} other {# مراجعة}}. عرض المراجعات.",
+            "reviews": {
+                "title": "المراجعات",
+                "rate": "قيّم هذا النشاط",
+                "already": "لقد قيّمت هذا النشاط بالفعل.",
+                "unlockFirst": "اكشف إحدى وسائل التواصل معه لتتمكن من تقييم هذا النشاط."
+            },
+            "kindShort": "إعلان"
         }
     },
     "cookieNotice": {

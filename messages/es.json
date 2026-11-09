@@ -2650,7 +2650,7 @@
             "signInTitle": "Inicia sesión para ver lo que has visto",
             "signInDescription": "Tu historial de navegación sigue a tu cuenta, no a este dispositivo.",
             "emptyTitle": "Aún no tienes favoritos",
-            "emptyDescription": "Toca el corazón en cualquier producto para guardarlo aquí.",
+            "emptyDescription": "Toca el corazón de un producto o un servicio para guardarlo aquí.",
             "browseProducts": "Explorar productos",
             "viewedEmptyTitle": "Aún no has visto nada",
             "viewedEmptyDescription": "Los productos que abras aparecerán aquí.",
@@ -2660,7 +2660,13 @@
             "unavailable": "Ese producto ya no está disponible.",
             "addedToCart": "Añadido al carrito",
             "addFailed": "No se ha podido añadir eso a tu carrito. Inténtalo de nuevo.",
-            "itemUnavailable": "Este artículo ya no está disponible."
+            "itemUnavailable": "Este artículo ya no está disponible.",
+            "filterLabel": "Mostrar",
+            "filter": {
+                "all": "Todo",
+                "product": "Productos",
+                "listing": "Servicios"
+            }
         },
         "pay": {
             "link": {
@@ -3202,11 +3208,10 @@
         },
         "reviews": {
             "emptyTitle": "Todavía no hay reseñas",
-            "emptyDescription": "Valora un producto o una entrega de uno de tus pedidos completados.",
+            "emptyDescription": "Valora un producto o una entrega de un pedido completado, o un negocio cuyo contacto desbloqueaste.",
             "deliveryFeedback": "Valoración de la entrega",
             "published": "Publicada",
-            "notPublished": "No publicada",
-            "beingChecked": "En revisión",
+            "notPublished": "No pública",
             "ratingLabel": "Valoración",
             "starLabel": "{n, plural, one {# estrella} other {# estrellas}}",
             "rateProduct": "Valorar {label}",
@@ -3215,13 +3220,19 @@
             "rateTheDelivery": "Valorar la entrega",
             "titlePlaceholder": "Título (opcional)",
             "bodyPlaceholder": "Cuéntaselo a los demás (opcional)",
-            "textChecked": "Las reseñas con texto se revisan antes de aparecer.",
             "alreadyReviewed": "Ya has valorado esto.",
             "notYetProduct": "Podrás valorarlo cuando tu pedido esté completado.",
             "notYetDelivery": "Podrás valorar esta entrega cuando haya llegado.",
-            "thanksPublished": "Gracias: tu valoración ya está publicada.",
-            "thanksPending": "Gracias: tu reseña aparecerá después de revisarla.",
-            "submitFailed": "No se pudo enviar tu reseña. Inténtalo de nuevo."
+            "thanksPublished": "Gracias — tu reseña está publicada.",
+            "submitFailed": "No se pudo enviar tu reseña. Inténtalo de nuevo.",
+            "notYetListing": "Podrás valorar este negocio cuando hayas desbloqueado uno de sus contactos.",
+            "rateThisBusiness": "Valorar este negocio",
+            "publicNote": "Tu reseña, incluido lo que escribas, es pública en cuanto la envías. Tu nombre no se muestra.",
+            "deliveryPrivateNote": "Las valoraciones de entrega nunca se publican. Nos ayudan a cuidar las entregas.",
+            "thanksDelivery": "Gracias — hemos registrado tu valoración.",
+            "subjectProduct": "Producto",
+            "subjectListing": "Anuncio de servicio",
+            "subjectAria": "{kind}: {title}"
         },
         "bookings": {
             "emptyTitle": "Todavía no hay reservas",
@@ -3835,7 +3846,9 @@
                 "vendor": "Vendedores referidos",
                 "customer": "Clientes referidos",
                 "agency": "Agencias referidas",
-                "line": "{rate} de la comisión de Wi-Mall durante {months, plural, one {# mes} other {# meses}}"
+                "line": "{rate} de la comisión de Wi-Mall durante {months, plural, one {# mes} other {# meses}}",
+                "provider": "Proveedores de servicios que recomiendas",
+                "lineProvider": "{rate} de lo que pagan a Wi-Mall por planes y créditos, durante {months, plural, one {# mes} other {# meses}}"
             },
             "balances": {
                 "title": "Tu saldo",
@@ -3905,7 +3918,8 @@
                     "customer": "Cliente",
                     "vendor": "Vendedor",
                     "agency": "Agencia",
-                    "agent": "Repartidor"
+                    "agent": "Repartidor",
+                    "provider": "Proveedor de servicios"
                 },
                 "referredState": {
                     "earning": "Activo",
@@ -3933,7 +3947,11 @@
                 },
                 "requestedOn": "Solicitado el {date}",
                 "resolvedOn": "Cerrado el {date}",
-                "refusedReason": "Motivo: {reason}"
+                "refusedReason": "Motivo: {reason}",
+                "paidFor": {
+                    "plan": "Por el pago de un plan",
+                    "credits": "Por una compra de créditos"
+                }
             }
         },
         "listings": {
@@ -3997,7 +4015,8 @@
                 "website": "Abrir la web",
                 "location": "Abrir en Mapas",
                 "video": "Ver el vídeo",
-                "videoDrive": "Abrir el vídeo"
+                "videoDrive": "Abrir el vídeo",
+                "phoneNumber": "Llamar al {number}"
             },
             "network": {
                 "facebook": "Facebook",
@@ -4054,7 +4073,19 @@
                 "notFound": "Anuncio no encontrado — Wi-Mall",
                 "resultsTitle": "Anuncios de servicio — Wi-Mall",
                 "resultsDescription": "Encuentra negocios locales (fontaneros, imprentas, reparadores y más) y contáctalos a través de Wi-Mall."
-            }
+            },
+            "save": "Guardar este negocio",
+            "unsave": "Quitar de guardados",
+            "savedToast": "Guardado. El negocio no recibe ningún aviso.",
+            "unsaved": "Quitado de guardados",
+            "ratingAria": "Valorado con {average} de 5 en {count, plural, one {# reseña} other {# reseñas}}. Ver las reseñas.",
+            "reviews": {
+                "title": "Reseñas",
+                "rate": "Valorar este negocio",
+                "already": "Ya has valorado este negocio.",
+                "unlockFirst": "Desbloquea uno de sus contactos para valorar este negocio."
+            },
+            "kindShort": "Anuncio"
         }
     },
     "cookieNotice": {

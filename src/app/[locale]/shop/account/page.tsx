@@ -60,6 +60,14 @@ const MENU_ROW_STYLE = {
   textDecoration: "none",
 } as const;
 
+/** One settings group's card — the same box the Legal list below sits in. */
+const MENU_CARD_STYLE = {
+  border: "1px solid var(--border)",
+  borderRadius: "var(--radius-lg)",
+  overflow: "hidden",
+  background: "var(--surface)",
+} as const;
+
 /*
  * Notifications is deliberately NOT a row here.
  *
@@ -69,35 +77,51 @@ const MENU_ROW_STYLE = {
  * thing the row had that the bell does not, an unread count, the bell shows as
  * a dot on the icon itself.
  */
-const MENU: MenuRow[] = [
-  { icon: "package", labelKey: "shop.nav.titles.orders", href: "/shop/account/orders" },
-  {
-    icon: "map-pin",
-    labelKey: "shop.nav.titles.addresses",
-    href: "/shop/account/addresses",
-    count: { key: "addressCount", of: (p) => p.savedAddresses.length },
-  },
-  {
-    icon: "wallet",
-    labelKey: "shop.nav.titles.paymentMethods",
-    href: "/shop/account/payment-methods",
-    count: { key: "paymentMethodCount", of: (p) => p.savedPaymentMethods.length },
-  },
-  { icon: "download", labelKey: "shop.nav.titles.downloads", href: "/shop/account/downloads" },
-  { icon: "star", labelKey: "shop.nav.titles.reviews", href: "/shop/account/reviews" },
-  { icon: "shield", labelKey: "shop.nav.titles.security", href: "/shop/account/security" },
-  { icon: "calendar-clock", labelKey: "shop.nav.titles.bookings", href: "/shop/account/bookings" },
-  { icon: "hand-coins", labelKey: "shop.nav.titles.referrals", href: "/shop/account/referrals" },
-  // Opt-ins given to service listings (api-doc/customer/service-listings.md § 3).
-  { icon: "megaphone", labelKey: "shop.nav.titles.businessMessages", href: "/shop/account/business-messages" },
-  { icon: "life-buoy", labelKey: "shop.nav.titles.support", href: "/shop/account/support" },
-  // Where the shop's help shortcut lives now. It used to be a circle floating
-  // over every shop page, which on a phone meant a third hovering control
-  // competing with the tab bar and the cards' quick-add buttons — and a
-  // settings row is where someone looks for it anyway.
-  // `/faq` is a marketing route, not a shop one, so its name is the one row
-  // here that `shop.nav` does not already carry.
-  { icon: "circle-help", labelKey: "shop.account.helpFaq", href: "/faq", offBundle: true },
+/*
+ * Three cards, in this order, each its own bordered box like the Legal list:
+ *   1. what you have bought or booked, and who may contact you about it;
+ *   2. what the account holds — addresses, wallets, reviews, sign-in, referrals;
+ *   3. help and the app's own settings. Language and Dark mode are not rows of
+ *      this table (one opens a sheet, the other is a switch), so the render
+ *      appends them to the end of this last card.
+ * No headings: the groups read on their own, and each one would be a new
+ * string in five catalogues for no new information.
+ */
+const MENU_GROUPS: readonly MenuRow[][] = [
+  [
+    { icon: "package", labelKey: "shop.nav.titles.orders", href: "/shop/account/orders" },
+    { icon: "download", labelKey: "shop.nav.titles.downloads", href: "/shop/account/downloads" },
+    { icon: "calendar-clock", labelKey: "shop.nav.titles.bookings", href: "/shop/account/bookings" },
+    // Opt-ins given to service listings (api-doc/customer/service-listings.md § 3).
+    { icon: "megaphone", labelKey: "shop.nav.titles.businessMessages", href: "/shop/account/business-messages" },
+  ],
+  [
+    {
+      icon: "map-pin",
+      labelKey: "shop.nav.titles.addresses",
+      href: "/shop/account/addresses",
+      count: { key: "addressCount", of: (p) => p.savedAddresses.length },
+    },
+    {
+      icon: "wallet",
+      labelKey: "shop.nav.titles.paymentMethods",
+      href: "/shop/account/payment-methods",
+      count: { key: "paymentMethodCount", of: (p) => p.savedPaymentMethods.length },
+    },
+    { icon: "star", labelKey: "shop.nav.titles.reviews", href: "/shop/account/reviews" },
+    { icon: "shield", labelKey: "shop.nav.titles.security", href: "/shop/account/security" },
+    { icon: "hand-coins", labelKey: "shop.nav.titles.referrals", href: "/shop/account/referrals" },
+  ],
+  [
+    { icon: "life-buoy", labelKey: "shop.nav.titles.support", href: "/shop/account/support" },
+    // Where the shop's help shortcut lives now. It used to be a circle floating
+    // over every shop page, which on a phone meant a third hovering control
+    // competing with the tab bar and the cards' quick-add buttons — and a
+    // settings row is where someone looks for it anyway.
+    // `/faq` is a marketing route, not a shop one, so its name is the one row
+    // here that `shop.nav` does not already carry.
+    { icon: "circle-help", labelKey: "shop.account.helpFaq", href: "/faq", offBundle: true },
+  ],
 ];
 
 export default function AccountPage() {
@@ -119,6 +143,74 @@ export default function AccountPage() {
 
   const loading = authStatus === "loading" || profile.status === "loading";
   const p = profile.data;
+
+  /** `last` drops the row's rule so it does not double the card's own border. */
+  const renderRow = (row: MenuRow, last: boolean) => {
+    const value = p && row.count ? t(row.count.key, { n: row.count.of(p) }) : "";
+    const rowStyle = last ? { ...MENU_ROW_STYLE, borderBottom: "none" } : MENU_ROW_STYLE;
+
+    const body = (
+      <>
+        <Icon name={row.icon} size={19} style={{ color: "var(--text-muted)" }} />
+        <span
+          style={{
+            flex: 1,
+            textAlign: "left",
+            fontSize: 14.5,
+            fontWeight: 600,
+            color: "var(--text-strong)",
+          }}
+        >
+          {tKey(row.labelKey)}
+        </span>
+        {value && (
+          <span className="muted" style={{ fontSize: 12.5 }}>
+            {value}
+          </span>
+        )}
+        <Icon
+          name={row.offBundle && IS_NATIVE_BUILD ? "external-link" : "chevron-right"}
+          size={17}
+          style={{ color: "var(--text-subtle)" }}
+        />
+      </>
+    );
+
+    /**
+     * "Help & FAQ" points at `/faq`, which is a MARKETING route — and the
+     * app bundle is `/shop/**` plus the auth pages and nothing else. A
+     * `<Link>` to it inside the app navigates to a file the export never
+     * wrote, so the row 404s on a device while working perfectly on the
+     * web.
+     *
+     * So on the native target it opens the real site in the in-app
+     * browser instead: a Custom Tab on Android, `SFSafariViewController`
+     * on iOS, both with a Done button that comes back. The chevron
+     * becomes an external-link glyph so the row says where it goes
+     * before it is tapped.
+     *
+     * `IS_NATIVE_BUILD` is compile-time, so the web build keeps the plain
+     * `<Link>` and never loads the browser plugin.
+     */
+    if (row.offBundle && IS_NATIVE_BUILD) {
+      return (
+        <button
+          key={row.href}
+          type="button"
+          onClick={() => void openExternal(absoluteUrl(row.href))}
+          style={{ ...rowStyle, border: "none", cursor: "pointer" }}
+        >
+          {body}
+        </button>
+      );
+    }
+
+    return (
+      <Link key={row.href} href={row.href} style={rowStyle}>
+        {body}
+      </Link>
+    );
+  };
 
   return (
     <div className="mx-auto max-w-[600px] px-4 py-6 sm:px-6">
@@ -173,152 +265,105 @@ export default function AccountPage() {
           fallback={tError("UNKNOWN_ERROR")}
         />
       ) : (
-        <div
-          style={{
-            border: "1px solid var(--border)",
-            borderRadius: "var(--radius-lg)",
-            overflow: "hidden",
-            background: "var(--surface)",
-          }}
-        >
-          {MENU.map((row) => {
-            const value = p && row.count ? t(row.count.key, { n: row.count.of(p) }) : "";
-
-            const body = (
-              <>
-                <Icon name={row.icon} size={19} style={{ color: "var(--text-muted)" }} />
-                <span
-                  style={{
-                    flex: 1,
-                    textAlign: "left",
-                    fontSize: 14.5,
-                    fontWeight: 600,
-                    color: "var(--text-strong)",
-                  }}
-                >
-                  {tKey(row.labelKey)}
-                </span>
-                {value && (
-                  <span className="muted" style={{ fontSize: 12.5 }}>
-                    {value}
-                  </span>
-                )}
-                <Icon
-                  name={row.offBundle && IS_NATIVE_BUILD ? "external-link" : "chevron-right"}
-                  size={17}
-                  style={{ color: "var(--text-subtle)" }}
-                />
-              </>
-            );
-
-            /**
-             * "Help & FAQ" points at `/faq`, which is a MARKETING route — and the
-             * app bundle is `/shop/**` plus the auth pages and nothing else. A
-             * `<Link>` to it inside the app navigates to a file the export never
-             * wrote, so the row 404s on a device while working perfectly on the
-             * web.
-             *
-             * So on the native target it opens the real site in the in-app
-             * browser instead: a Custom Tab on Android, `SFSafariViewController`
-             * on iOS, both with a Done button that comes back. The chevron
-             * becomes an external-link glyph so the row says where it goes
-             * before it is tapped.
-             *
-             * `IS_NATIVE_BUILD` is compile-time, so the web build keeps the plain
-             * `<Link>` and never loads the browser plugin.
-             */
-            if (row.offBundle && IS_NATIVE_BUILD) {
-              return (
-                <button
-                  key={row.href}
-                  type="button"
-                  onClick={() => void openExternal(absoluteUrl(row.href))}
-                  style={{ ...MENU_ROW_STYLE, border: "none", cursor: "pointer" }}
-                >
-                  {body}
-                </button>
-              );
-            }
-
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {MENU_GROUPS.map((group, g) => {
+            // The last group carries the Language and Dark mode rows after its
+            // table rows, so only the other groups end on a table row.
+            const settings = g === MENU_GROUPS.length - 1;
             return (
-              <Link key={row.href} href={row.href} style={MENU_ROW_STYLE}>
-                {body}
-              </Link>
+              <div key={group[0].href} style={MENU_CARD_STYLE}>
+                {group.map((row, i) => renderRow(row, !settings && i === group.length - 1))}
+                {settings && (
+                  <>
+                    {/* Language.
+
+                        This row used to only *display* the active language and
+                        leave the switch to the marketing navbar — which the app
+                        bundle does not contain, so in the app it named a setting
+                        no shipped screen could change. It opens the picker now. */}
+                    <button
+                      type="button"
+                      onClick={() => setLangOpen(true)}
+                      aria-haspopup="dialog"
+                      aria-expanded={langOpen}
+                      style={{ ...MENU_ROW_STYLE, border: "none", cursor: "pointer" }}
+                    >
+                      <Icon name="globe" size={19} style={{ color: "var(--text-muted)" }} />
+                      <span
+                        style={{
+                          flex: 1,
+                          textAlign: "left",
+                          fontSize: 14.5,
+                          fontWeight: 600,
+                          color: "var(--text-strong)",
+                        }}
+                      >
+                        {t("language")}
+                      </span>
+                      <span className="muted" style={{ fontSize: 12.5 }}>
+                        {currentLang}
+                      </span>
+                      <Icon
+                        name="chevron-right"
+                        size={17}
+                        style={{ color: "var(--text-subtle)" }}
+                      />
+                    </button>
+
+                    {/* Dark mode — reuses the app-wide ThemeProvider.
+
+                        The only control for it that ships, now that the header's
+                        toggle is gone: a switch that restyles the whole app
+                        belongs with the other settings, not one mis-tap away on
+                        every screen. */}
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px" }}
+                    >
+                      <Icon name="moon" size={19} style={{ color: "var(--text-muted)" }} />
+                      <span
+                        style={{
+                          flex: 1,
+                          fontSize: 14.5,
+                          fontWeight: 600,
+                          color: "var(--text-strong)",
+                        }}
+                      >
+                        {t("darkMode")}
+                      </span>
+                      <button
+                        onClick={toggle}
+                        aria-pressed={dark}
+                        aria-label={t("toggleDarkMode")}
+                        style={{
+                          width: 44,
+                          height: 26,
+                          borderRadius: 999,
+                          border: "none",
+                          cursor: "pointer",
+                          background: dark ? "var(--brand)" : "var(--gray-300)",
+                          position: "relative",
+                        }}
+                      >
+                        <span
+                          style={{
+                            position: "absolute",
+                            top: 3,
+                            left: dark ? 21 : 3,
+                            width: 20,
+                            height: 20,
+                            borderRadius: "50%",
+                            background: "#fff",
+                            transition: "left .15s",
+                            boxShadow: "var(--shadow-sm)",
+                          }}
+                        />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             );
           })}
-
-          {/* Language.
-
-              This row used to only *display* the active language and leave the
-              switch to the marketing navbar — which the app bundle does not
-              contain, so in the app it named a setting no shipped screen could
-              change. It opens the picker now. */}
-          <button
-            type="button"
-            onClick={() => setLangOpen(true)}
-            aria-haspopup="dialog"
-            aria-expanded={langOpen}
-            style={{ ...MENU_ROW_STYLE, border: "none", cursor: "pointer" }}
-          >
-            <Icon name="globe" size={19} style={{ color: "var(--text-muted)" }} />
-            <span
-              style={{
-                flex: 1,
-                textAlign: "left",
-                fontSize: 14.5,
-                fontWeight: 600,
-                color: "var(--text-strong)",
-              }}
-            >
-              {t("language")}
-            </span>
-            <span className="muted" style={{ fontSize: 12.5 }}>
-              {currentLang}
-            </span>
-            <Icon name="chevron-right" size={17} style={{ color: "var(--text-subtle)" }} />
-          </button>
-
-          {/* Dark mode — reuses the app-wide ThemeProvider.
-
-              The only control for it that ships, now that the header's toggle is
-              gone: a switch that restyles the whole app belongs with the other
-              settings, not one mis-tap away on every screen. */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px" }}>
-            <Icon name="moon" size={19} style={{ color: "var(--text-muted)" }} />
-            <span
-              style={{ flex: 1, fontSize: 14.5, fontWeight: 600, color: "var(--text-strong)" }}
-            >
-              {t("darkMode")}
-            </span>
-            <button
-              onClick={toggle}
-              aria-pressed={dark}
-              aria-label={t("toggleDarkMode")}
-              style={{
-                width: 44,
-                height: 26,
-                borderRadius: 999,
-                border: "none",
-                cursor: "pointer",
-                background: dark ? "var(--brand)" : "var(--gray-300)",
-                position: "relative",
-              }}
-            >
-              <span
-                style={{
-                  position: "absolute",
-                  top: 3,
-                  left: dark ? 21 : 3,
-                  width: 20,
-                  height: 20,
-                  borderRadius: "50%",
-                  background: "#fff",
-                  transition: "left .15s",
-                  boxShadow: "var(--shadow-sm)",
-                }}
-              />
-            </button>
-          </div>
         </div>
       )}
 

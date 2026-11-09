@@ -123,11 +123,13 @@ type Envelope<T> = {
   success?: boolean;
   data?: T;
   meta?: Partial<ListMeta>;
+  /** `/api/public/listings/by-ids` puts its `missing[]` here, beside `data`. */
+  missing?: unknown;
   error?: ApiError;
 };
 
 type Result<T> =
-  | { ok: true; data: T; meta?: Partial<ListMeta> }
+  | { ok: true; data: T; meta?: Partial<ListMeta>; missing?: unknown }
   | { ok: false; error: ApiError };
 
 async function request<T>(path: string, options: CatalogReadOptions = {}): Promise<Result<T>> {
@@ -155,7 +157,7 @@ async function request<T>(path: string, options: CatalogReadOptions = {}): Promi
   }
 
   if (body.success === true && body.data !== undefined) {
-    return { ok: true, data: body.data, meta: body.meta };
+    return { ok: true, data: body.data, meta: body.meta, missing: body.missing };
   }
   if (body.success === false && body.error) return { ok: false, error: body.error };
 
@@ -620,23 +622,31 @@ export async function getListing(slug: string, options?: CatalogReadOptions): Pr
 
 /**
  * `GET /api/public/listings/by-ids` — cards in the order asked, at most 50
- * per request (chunked here). A listing that is no longer public is simply
- * absent: the API answers it in `missing[]`, which this drops.
+ * per request (chunked here). A listing that is no longer public is not a card
+ * but an id in `missing`, which the caller may prune (a signed-out Saved list
+ * does) or ignore (labelling "My reviews" does).
  */
-export async function listListingsByIds(ids: readonly string[]): Promise<PublicListingCard[]> {
+export async function listListingsByIds(
+  ids: readonly string[],
+): Promise<{ listings: PublicListingCard[]; missing: string[] }> {
   const unique = [...new Set(ids)].filter(Boolean);
   const out: PublicListingCard[] = [];
+  const missing: string[] = [];
   for (let i = 0; i < unique.length; i += BY_IDS_MAX) {
     const chunk = unique.slice(i, i + BY_IDS_MAX);
     const result = await request<PublicListingCard[]>(
-      `/api/public/listings/by-ids?ids=${chunk.map(encodeURIComponent).join(",")}`
+      `/api/public/listings/by-ids?ids=${chunk.map(encodeURIComponent).join(",")}`,
+      { fresh: true }
     );
     if (!result.ok) {
       throw new CatalogApiError(`${API_BASE}/api/public/listings/by-ids`, `${result.error.code} (${result.error.statusCode})`);
     }
     if (Array.isArray(result.data)) out.push(...result.data);
+    // `missing` sits beside `data` in this envelope, outside `meta`.
+    const gone = result.missing;
+    if (Array.isArray(gone)) missing.push(...gone.filter((id): id is string => typeof id === "string"));
   }
-  return out;
+  return { listings: out, missing };
 }
 
 /**

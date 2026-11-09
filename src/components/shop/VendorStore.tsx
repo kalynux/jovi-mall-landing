@@ -283,8 +283,9 @@ export function VendorStore({ store, products, meta, activeType }: Props) {
               /**
                * The toast has to be written from what actually happened.
                *
-               * On the web this copies and says "Store link copied", which is
-               * true. On a phone it opens the system share sheet, after which
+               * Where there is no share sheet (no Web Share API, outside the
+               * app) this copies and says "Store link copied", which is true.
+               * Elsewhere it opens the system share sheet, after which
                * "copied" is simply false — nothing was copied, and the shopper
                * has already sent the link to someone. And a share sheet the
                * shopper backs out of deserves silence, not a success message

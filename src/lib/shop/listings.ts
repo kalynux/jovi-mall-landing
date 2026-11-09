@@ -146,7 +146,13 @@ export type ListingSocialNetwork =
 /** `value` by field, exactly as the contract lists them. */
 export interface ListingRevealValues {
   whatsapp: { number: string; link: string };
-  phone: { number: string };
+  /**
+   * Since 2026-11-08 a business may give TWO numbers (e.g. MTN and Orange),
+   * unlocked by one tap for one charge. `numbers` is every number, first
+   * first; `number` is always `numbers[0]`. Read through `phoneNumbers()`.
+   * Optional only because an API from before that change sends `number` alone.
+   */
+  phone: { number: string; numbers?: string[] };
   email: { address: string };
   website: { url: string };
   socials: { links: { network: ListingSocialNetwork; url: string }[] };
@@ -230,6 +236,24 @@ export function safeHttpUrl(raw: string | null | undefined): string | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Every number an unlocked phone carries, in the business's order: `numbers`
+ * when the API sent a usable list, else the lone `number`. Blank and
+ * duplicate entries are dropped, so one number is never drawn twice.
+ */
+export function phoneNumbers(value: ListingRevealValues["phone"]): string[] {
+  const list = Array.isArray(value.numbers) && value.numbers.length > 0 ? value.numbers : [value.number];
+  const seen = new Set<string>();
+  return list
+    .filter((n): n is string => typeof n === "string" && n.trim() !== "")
+    .filter((n) => {
+      const key = n.replace(/[^\d+]/g, "");
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 }
 
 /** `tel:` keeps the leading + and the digits, and nothing a dialler would trip on. */

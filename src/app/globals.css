@@ -545,6 +545,34 @@ html.dark,
   @media (min-width: 1280px) { .pgrid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
   .plist { display: flex; flex-direction: column; gap: 10px; }
 
+  /* A horizontal row of the same cards (the product page's strips). Each
+     column is exactly a `.pgrid` column at the same breakpoint — same count,
+     same gap, measured against the same content width — so a card here is the
+     size it is on /shop. The row bleeds into the page gutter (px-4, sm:px-6)
+     so it scrolls to the screen edge and the next card shows there; the block
+     padding is room for the `.lift` hover rise and shadow, which an overflow
+     box would otherwise clip. */
+  .pstrip {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: calc((100% - 12px) / 2);
+    gap: 12px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    margin: -4px -16px 0;
+    padding: 4px 16px 12px;
+    scroll-padding-inline: 16px;
+  }
+  .pstrip::-webkit-scrollbar { display: none; }
+  .pstrip > * { min-width: 0; scroll-snap-align: start; }
+  @media (min-width: 640px) {
+    .pstrip { grid-auto-columns: calc((100% - 32px) / 3); gap: 16px; margin-inline: -24px; padding-inline: 24px; scroll-padding-inline: 24px; }
+  }
+  @media (min-width: 1024px) { .pstrip { grid-auto-columns: calc((100% - 60px) / 4); gap: 20px; } }
+  @media (min-width: 1280px) { .pstrip { grid-auto-columns: calc((100% - 80px) / 5); } }
+
   /* The "Service listing" mark on a listing card or page: a business to
      contact, never the amber "Service" of a bookable product. Not `.tag`,
      which inherits the role colour; this one is always the listing blue. */
@@ -627,6 +655,16 @@ html.dark,
     scrollbar-width: none; overscroll-behavior-x: contain;
   }
   .listing-rail::-webkit-scrollbar { display: none; }
+  /* The card is a size container: in a narrow card (a two-column phone grid)
+     the "Service listing" mark shortens to one word so it clears the heart. */
+  .listing-card { container-type: inline-size; }
+  .listing-mark__short { display: none; }
+  @container (max-width: 215px) {
+    .listing-mark__long { display: none; }
+    .listing-mark__short { display: inline; }
+    /* The card is the link; in a narrow card the word yields to the icons. */
+    .listing-card__cta-label { display: none; }
+  }
   .listing-card__photo { aspect-ratio: 4 / 3; }
   /* In the phone row the photo is shorter, so the shelf costs less of the
      screen before the products; the grid from 768px goes back to 4:3. */

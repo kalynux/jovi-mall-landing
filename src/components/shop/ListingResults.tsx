@@ -15,6 +15,7 @@ import {
   type ListingResultsQuery,
 } from "@/lib/shop/listings";
 import { listingsPath } from "@/lib/shop/shop.routes";
+import { useListingSaves } from "./useListingSaves";
 
 /**
  * Every service listing for a search or a category: the page behind the
@@ -24,6 +25,7 @@ export function ListingResults({ listings, query }: { listings: ListingListRespo
   const t = useTranslations("shop.listings");
   useShopPageTitle(t("resultsTitle"));
   const { data, meta } = listings;
+  const saves = useListingSaves(data.map((l) => l.id));
   const backHref = (() => {
     const params = new URLSearchParams();
     if (query.q) params.set("q", query.q);
@@ -60,7 +62,7 @@ export function ListingResults({ listings, query }: { listings: ListingListRespo
       ) : (
         <div className="pgrid">
           {data.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} />
+            <ListingCard key={listing.id} listing={listing} {...saves.cardProps(listing.id)} />
           ))}
         </div>
       )}

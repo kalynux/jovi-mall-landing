@@ -683,8 +683,7 @@ export function ProductCard(props: ProductCardProps) {
    * Negotiable: Bargain takes the free width and the type's action stays an
    * icon beside it. Fixed price (or a Bargain the lookup turned down): that
    * action takes the whole row, in words. Unavailable: no row at all, the
-   * image already says why. A card with no quick action (the product page's
-   * own rows) shows Bargain alone.
+   * image already says why. A card with no quick action shows Bargain alone.
    */
   const actionHeight = layout === "list" ? 36 : 40;
   const quick = quickAction[type];

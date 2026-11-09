@@ -2650,7 +2650,7 @@
             "signInTitle": "Sign in to see what you’ve viewed",
             "signInDescription": "Your browsing history follows your account, not this device.",
             "emptyTitle": "No favorites yet",
-            "emptyDescription": "Tap the heart on any product to save it here.",
+            "emptyDescription": "Tap the heart on a product or a service to keep it here.",
             "browseProducts": "Browse products",
             "viewedEmptyTitle": "Nothing viewed yet",
             "viewedEmptyDescription": "Products you open will show up here.",
@@ -2660,7 +2660,13 @@
             "unavailable": "That product is no longer available.",
             "addedToCart": "Added to cart",
             "addFailed": "Could not add that to your cart. Please try again.",
-            "itemUnavailable": "This item is no longer available."
+            "itemUnavailable": "This item is no longer available.",
+            "filterLabel": "Show",
+            "filter": {
+                "all": "All",
+                "product": "Products",
+                "listing": "Services"
+            }
         },
         "pay": {
             "link": {
@@ -3202,11 +3208,10 @@
         },
         "reviews": {
             "emptyTitle": "No reviews yet",
-            "emptyDescription": "Rate a product or a delivery from one of your completed orders.",
+            "emptyDescription": "Rate a product or a delivery from a completed order, or a business whose contact you unlocked.",
             "deliveryFeedback": "Delivery feedback",
             "published": "Published",
-            "notPublished": "Not published",
-            "beingChecked": "Being checked",
+            "notPublished": "Not public",
             "ratingLabel": "Rating",
             "starLabel": "{n, plural, one {# star} other {# stars}}",
             "rateProduct": "Rate {label}",
@@ -3215,13 +3220,19 @@
             "rateTheDelivery": "Rate the delivery",
             "titlePlaceholder": "Title (optional)",
             "bodyPlaceholder": "Tell others about it (optional)",
-            "textChecked": "Reviews with text are checked before they appear.",
             "alreadyReviewed": "You have already reviewed this.",
             "notYetProduct": "You can review this once your order is complete.",
             "notYetDelivery": "You can rate this delivery once it has arrived.",
-            "thanksPublished": "Thanks — your rating is live.",
-            "thanksPending": "Thanks — your review will appear once it has been checked.",
-            "submitFailed": "Could not send your review. Please try again."
+            "thanksPublished": "Thanks — your review is published.",
+            "submitFailed": "Could not send your review. Please try again.",
+            "notYetListing": "You can rate this business once you’ve unlocked one of its contacts.",
+            "rateThisBusiness": "Rate this business",
+            "publicNote": "Your review, including anything you write, is public as soon as you send it. Your name isn’t shown.",
+            "deliveryPrivateNote": "Delivery ratings are never published. They help us look after deliveries.",
+            "thanksDelivery": "Thanks — your rating has been recorded.",
+            "subjectProduct": "Product",
+            "subjectListing": "Service listing",
+            "subjectAria": "{kind}: {title}"
         },
         "bookings": {
             "emptyTitle": "No bookings yet",
@@ -3835,7 +3846,9 @@
                 "vendor": "Vendors you refer",
                 "customer": "Customers you refer",
                 "agency": "Agencies you refer",
-                "line": "{rate} of Wi-Mall's commission for {months, plural, one {# month} other {# months}}"
+                "line": "{rate} of Wi-Mall's commission for {months, plural, one {# month} other {# months}}",
+                "provider": "Service providers you refer",
+                "lineProvider": "{rate} of what they pay Wi-Mall for plans and credits, for {months, plural, one {# month} other {# months}}"
             },
             "balances": {
                 "title": "Your balance",
@@ -3905,7 +3918,8 @@
                     "customer": "Customer",
                     "vendor": "Vendor",
                     "agency": "Agency",
-                    "agent": "Delivery agent"
+                    "agent": "Delivery agent",
+                    "provider": "Service provider"
                 },
                 "referredState": {
                     "earning": "Earning",
@@ -3933,7 +3947,11 @@
                 },
                 "requestedOn": "Requested {date}",
                 "resolvedOn": "Closed {date}",
-                "refusedReason": "Reason: {reason}"
+                "refusedReason": "Reason: {reason}",
+                "paidFor": {
+                    "plan": "From a plan payment",
+                    "credits": "From a credits purchase"
+                }
             }
         },
         "listings": {
@@ -3997,7 +4015,8 @@
                 "website": "Open website",
                 "location": "Open in Maps",
                 "video": "Watch the video",
-                "videoDrive": "Open the video"
+                "videoDrive": "Open the video",
+                "phoneNumber": "Call {number}"
             },
             "network": {
                 "facebook": "Facebook",
@@ -4054,7 +4073,19 @@
                 "notFound": "Listing not found — Wi-Mall",
                 "resultsTitle": "Service listings — Wi-Mall",
                 "resultsDescription": "Find local businesses (plumbers, printers, repairers and more) and contact them through Wi-Mall."
-            }
+            },
+            "save": "Save this business",
+            "unsave": "Remove from saved",
+            "savedToast": "Saved. The business isn’t told.",
+            "unsaved": "Removed from saved",
+            "ratingAria": "Rated {average} out of 5 from {count, plural, one {# review} other {# reviews}}. See the reviews.",
+            "reviews": {
+                "title": "Reviews",
+                "rate": "Rate this business",
+                "already": "You’ve reviewed this business.",
+                "unlockFirst": "Unlock one of its contacts to rate this business."
+            },
+            "kindShort": "Listing"
         }
     },
     "cookieNotice": {

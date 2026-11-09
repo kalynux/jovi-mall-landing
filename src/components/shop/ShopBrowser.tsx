@@ -3,7 +3,6 @@
 import { useTranslations } from "next-intl";
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
-import { isNetworkError } from "@/lib/errors/is-network-error";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
   BottomSheet,
@@ -12,19 +11,15 @@ import {
   EmptyState,
   Icon,
   IconButton,
-  ProductCard,
   SearchBar,
   Select,
   VendorCard,
   type IconName,
 } from "@/components/shop/ds";
 import { ShopSearchRow } from "@/components/shop/ShopSearch";
-import { useCart, useFavorites, useToast } from "@/components/shop/providers";
-import { CART_OFFLINE_MESSAGE_KEY } from "@/lib/shop/cart-errors";
-import { deliveryTermsOf } from "@/lib/shop/delivery";
+import { ShopProductCard, useSyncFavorites } from "@/components/shop/ShopProductCard";
 import { formatMoney, formatXAF } from "@/lib/shop/format";
-import { productIdPath, productPathFor, storePath } from "@/lib/shop/shop.routes";
-import { resolveQuickAdd } from "@/lib/shop/quick-add";
+import { productIdPath, storePath } from "@/lib/shop/shop.routes";
 import { rememberSearch } from "@/lib/shop/recent-searches";
 import {
   activeFilterCount,
@@ -39,7 +34,6 @@ import type {
   ProductType,
   SortKey,
 } from "@/lib/shop/shop.types";
-import { publicUrl } from "@/lib/shop/shop.types";
 import type { VariantBySku } from "@/lib/shop/catalog.api";
 import type { ListingListResponse } from "@/lib/shop/listings";
 import { ListingsShelf } from "./ListingsShelf";
@@ -125,9 +119,6 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch, listi
     label: tKey(o.labelKey),
   }));
   const router = useRouter();
-  const { addItem } = useCart();
-  const { isFavorite, toggle, syncGrid } = useFavorites();
-  const { flash } = useToast();
 
   const [pending, startTransition] = useTransition();
   const [list, setList] = useState(false);
@@ -139,17 +130,8 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch, listi
   const [draft, setDraft] = useState<ProductListQuery>(query);
   const [search, setSearch] = useState(query.q ?? "");
 
-  /**
-   * Fill the hearts for this page of results.
-   *
-   * One `saved-among` call for the whole grid — the endpoint exists for exactly
-   * this, and it is why a card does not have to ask on its own. Keyed on the
-   * rendered ids so paging or refiltering re-asks and scrolling does not.
-   */
-  const renderedIds = products.map((p) => p.id).join(",");
-  useEffect(() => {
-    if (renderedIds) syncGrid(renderedIds.split(","));
-  }, [renderedIds, syncGrid]);
+  // Fill the hearts for this page of results — one `saved-among` call.
+  useSyncFavorites(products);
 
   // The URL is authoritative: a back/forward step or a link with different
   // params must move the controls, not just the grid.
@@ -200,101 +182,8 @@ export function ShopBrowser({ products, meta, categories, query, skuMatch, listi
   const filterCount = activeFilterCount(query);
   const busy = pending;
 
-  /* ── Actions on a card ───────────────────────────────────────────────────── */
-
-  /**
-   * A list row has no variant, so this resolves the product before it can add
-   * anything. Anything with a choice to make goes to the product page instead of
-   * guessing which size the shopper meant.
-   */
-  const quickAdd = useCallback(
-    async (product: ProductListItem) => {
-      try {
-        const resolved = await resolveQuickAdd(product.id);
-
-        if (resolved.kind === "unavailable") {
-          flash(t("noLongerAvailable"));
-          return;
-        }
-        if (resolved.kind === "choose") {
-          router.push(productPathFor(product));
-          return;
-        }
-
-        const outcome = await addItem(resolved.product, resolved.variant);
-        switch (outcome.kind) {
-          case "added":
-            // Digital is a buy-now, not an add — one product, quantity one,
-            // nothing to deliver — so it goes where the card's ⚡ promises it
-            // goes: payment.
-            if (resolved.product.type === "digital") {
-              router.push("/shop/checkout");
-              break;
-            }
-            flash(t("addedToCart", { product: resolved.product.title }));
-            break;
-          case "type_conflict":
-            // The replace prompt belongs on the product page, where the shopper
-            // can see what they are about to lose.
-            router.push(productPathFor(product));
-            break;
-          case "digital_limit":
-            flash(t("digitalLimit"));
-            break;
-          case "service_not_allowed":
-            router.push(productPathFor(product));
-            break;
-          case "offline":
-            flash(tKey(CART_OFFLINE_MESSAGE_KEY));
-            break;
-          case "error":
-            flash(outcome.message ?? tKey(outcome.messageKey));
-            break;
-        }
-      } catch (err) {
-        /**
-         * This catch covers `resolveQuickAdd` — a catalogue read — and NOT the
-         * add itself, which returns its failures. Both can fail with no signal
-         * and both must say so, which is why the sentence is shared with the
-         * `offline` case above rather than living only here.
-         *
-         * The distinction is not academic: the resolve is usually served from
-         * the HTTP cache, so on a dead connection this branch tends not to fire
-         * while the add behind it does. That is why an offline add went on
-         * reporting a raw engine string long after this looked fixed.
-         */
-        flash(isNetworkError(err) ? tKey(CART_OFFLINE_MESSAGE_KEY) : t("addFailed"));
-      }
-    },
-    [addItem, flash, router, tKey, t]
-  );
-
   const card = (product: ProductListItem, showVendor: boolean) => (
-    <ProductCard
-      key={product.id}
-      layout={list ? "list" : "grid"}
-      title={product.title}
-      image={publicUrl(product.image)}
-      type={product.type}
-      price={product.price}
-      compareAt={product.compareAtPrice}
-      currency={product.currency}
-      priceRange={product.priceRange}
-      rating={product.rating}
-      vendorName={product.store.name}
-      vendorVerified={product.store.verified}
-      showVendor={showVendor}
-      category={product.categories[0]?.name}
-      deliveryTerms={deliveryTermsOf(product)}
-      favorite={isFavorite(product.id)}
-      onToggleFavorite={() => toggle(product.id)}
-      inStock={product.inStock}
-      negotiable={product.negotiable}
-      productId={product.id}
-      onQuickAdd={() => void quickAdd(product)}
-      href={productPathFor(product)}
-      shareable={product}
-    />
+    <ShopProductCard key={product.id} product={product} showVendor={showVendor} layout={list ? "list" : "grid"} />
   );
 
   /** Groups the current page only — the API paginates, so this is a layout, not a filter. */

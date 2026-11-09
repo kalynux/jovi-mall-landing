@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { Icon, ListingCard } from "@/components/shop/ds";
 import type { ListingListResponse } from "@/lib/shop/listings";
 import { listingsPath } from "@/lib/shop/shop.routes";
+import { useListingSaves } from "./useListingSaves";
 
 /**
  * The service listings that match a search or a category, above the products.
@@ -26,6 +27,7 @@ export function ListingsShelf({
   query: { q?: string; category?: string };
 }) {
   const t = useTranslations("shop.listings");
+  const saves = useListingSaves(listings.data.map((l) => l.id));
   if (listings.data.length === 0) return null;
 
   const total = Math.max(listings.meta.total, listings.data.length);
@@ -66,7 +68,7 @@ export function ListingsShelf({
 
       <div className="listing-rail">
         {listings.data.map((listing) => (
-          <ListingCard key={listing.id} listing={listing} />
+          <ListingCard key={listing.id} listing={listing} {...saves.cardProps(listing.id)} />
         ))}
       </div>
     </section>

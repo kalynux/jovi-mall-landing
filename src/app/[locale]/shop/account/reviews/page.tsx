@@ -3,18 +3,27 @@
 import { useFormatter, useTranslations } from "next-intl";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "@/i18n/navigation";
-import { Badge, EmptyState, Rating, Skeleton } from "@/components/shop/ds";
+import { Link, useRouter } from "@/i18n/navigation";
+import { Badge, EmptyState, Icon, Rating, Skeleton } from "@/components/shop/ds";
 import { useAuthGuard } from "@/lib/auth/auth.guard";
 import { listMyReviews, type Review } from "@/lib/shop/reviews.api";
+import { listListingsByIds, listProductsByIds } from "@/lib/shop/catalog.api";
+import { listingPath, productPathFor } from "@/lib/shop/shop.routes";
+
+/** What a review is about, as this page can name it. */
+type Subject = { title: string; href: string; kind: "product" | "listing" };
 
 /**
  * The customer's own reviews.
  *
- * `GET /api/customer/reviews` returns **every status**, including `pending` rows
- * that are not yet visible to anyone else — which is the entire reason this page
- * can exist. A shopper who wrote a review and cannot find it on the product page
- * would otherwise have no way to learn it is simply waiting to be checked.
+ * `GET /api/customer/reviews` returns both statuses: `published`, and
+ * `unpublished` when an administrator took one down (the author sees only that,
+ * never why). Since 2026-10-05 nothing is ever "waiting to be checked".
+ *
+ * Each row names what it reviewed. The rows carry only ids, so the titles come
+ * from one `by-ids` read per kind (products, and since 2026-11-08 service
+ * listings), as the changelog asks. A subject that no longer resolves keeps its
+ * review row, unnamed.
  *
  * Delivery reviews appear here too. They are **never published** — they are an
  * internal quality signal — so their row says so rather than showing a status
@@ -29,13 +38,30 @@ export default function MyReviewsPage() {
   const router = useRouter();
   const { status } = useAuthGuard();
   const [reviews, setReviews] = useState<Review[] | null>(null);
+  const [subjects, setSubjects] = useState<Map<string, Subject>>(new Map());
 
   useEffect(() => {
     if (status !== "authenticated") return;
     let cancelled = false;
     listMyReviews({ limit: 50 })
-      .then(({ data }) => {
-        if (!cancelled) setReviews(data);
+      .then(async ({ data }) => {
+        if (cancelled) return;
+        setReviews(data);
+        // Names are a nicety: a failed lookup leaves the rows as they are.
+        const productIds = data.filter((r) => r.subjectType === "product").map((r) => r.subjectId);
+        const listingIds = data.filter((r) => r.subjectType === "listing").map((r) => r.subjectId);
+        const [products, listings] = await Promise.all([
+          productIds.length ? listProductsByIds(productIds).catch(() => null) : null,
+          listingIds.length ? listListingsByIds(listingIds).catch(() => null) : null,
+        ]);
+        const map = new Map<string, Subject>();
+        for (const p of products?.products ?? []) {
+          map.set(`product:${p.id}`, { title: p.title, href: productPathFor(p), kind: "product" });
+        }
+        for (const l of listings?.listings ?? []) {
+          map.set(`listing:${l.id}`, { title: l.title, href: listingPath(l.slug), kind: "listing" });
+        }
+        if (!cancelled) setSubjects(map);
       })
       .catch(() => {
         if (!cancelled) setReviews([]);
@@ -89,11 +115,13 @@ export default function MyReviewsPage() {
                 </span>
               </div>
 
+              <SubjectLine review={review} subject={subjects.get(`${review.subjectType}:${review.subjectId}`)} />
+
               {review.title && (
-                <div style={{ fontWeight: 700, fontSize: 14.5 }}>{review.title}</div>
+                <div className="ds-ugc" style={{ fontWeight: 700, fontSize: 14.5 }}>{review.title}</div>
               )}
               {review.body && (
-                <p style={{ margin: "4px 0 0", fontSize: 14, lineHeight: 1.5 }}>{review.body}</p>
+                <p className="ds-ugc" style={{ margin: "4px 0 0", fontSize: 14, lineHeight: 1.5 }}>{review.body}</p>
               )}
             </div>
           ))}
@@ -124,17 +152,40 @@ function StatusBadge({ review }: { review: Review }) {
     );
   }
 
-  if (review.status === "rejected") {
-    return (
-      <Badge size="sm" tone="danger" icon="circle-x">
-        {t("notPublished")}
-      </Badge>
-    );
-  }
+  // `unpublished`: an administrator took it down. No reason is shown, by
+  // owner decision; the author only learns it is no longer public.
+  return (
+    <Badge size="sm" tone="neutral" icon="circle-slash">
+      {t("notPublished")}
+    </Badge>
+  );
+}
+
+/** "Product · Blue shirt", linked; or just the kind while the name loads or is gone. */
+function SubjectLine({ review, subject }: { review: Review; subject: Subject | undefined }) {
+  const t = useTranslations("shop.reviews");
+  if (review.subjectType === "delivery") return null;
+  const kindLabel = review.subjectType === "listing" ? t("subjectListing") : t("subjectProduct");
 
   return (
-    <Badge size="sm" tone="warning" icon="clock">
-      {t("beingChecked")}
-    </Badge>
+    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, fontSize: 13, minWidth: 0 }}>
+      <Icon
+        name={review.subjectType === "listing" ? "megaphone" : "package"}
+        size={14}
+        style={{ color: review.subjectType === "listing" ? "var(--type-listing)" : "var(--text-muted)", flexShrink: 0 }}
+      />
+      {subject ? (
+        <Link
+          href={subject.href}
+          className="ds-ugc"
+          aria-label={t("subjectAria", { kind: kindLabel, title: subject.title })}
+          style={{ fontWeight: 600, color: "var(--text-strong)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+        >
+          {subject.title}
+        </Link>
+      ) : (
+        <span className="muted">{kindLabel}</span>
+      )}
+    </div>
   );
 }

@@ -1,21 +1,32 @@
 "use client";
 
-import { withNative } from "@/lib/platform";
+import { isNative, withNative } from "@/lib/platform";
 
 /**
  * Sharing a link, and the honest report of what happened.
  *
+ * ── Three paths, in order ────────────────────────────────────────────────────
+ *
+ * 1. Inside the Capacitor app: the `@capacitor/share` plugin's system sheet.
+ * 2. In a browser with the Web Share API (`navigator.share` — every phone
+ *    browser that matters, and Chrome/Edge/Safari on desktop): the same system
+ *    sheet, opened by the browser.
+ * 3. Neither: copy the URL to the clipboard and let the caller say so.
+ *
+ * Until 2026-11 path 2 did not exist — the web went straight to the copy — so a
+ * shopper on a phone browser tapping Share on a store or product got "Link
+ * copied" instead of the sheet they expected.
+ *
  * ── Why the return value matters ─────────────────────────────────────────────
  *
- * The web has no share sheet worth relying on, so the store page copies the URL
- * to the clipboard and toasts "Link copied". A device does have one, and after
- * it the toast is wrong — nothing was copied, and the shopper has already sent
- * the link to their sister. Two different things happened, so this returns which
- * one, and the caller words its toast from that rather than assuming.
+ * After a share sheet a "Link copied" toast is wrong — nothing was copied, and
+ * the shopper has already sent the link to their sister. Two different things
+ * happened, so this returns which one, and the caller words its toast from that
+ * rather than assuming.
  *
  * `"dismissed"` is a third outcome and not a failure: a shopper who opens the
  * share sheet and changes their mind should get silence, not "Link copied" and
- * not an error.
+ * not an error — and not a copy either.
  */
 
 export type ShareOutcome = "shared" | "copied" | "dismissed" | "failed";
@@ -30,6 +41,10 @@ export interface ShareRequest {
 }
 
 export async function shareLink(request: ShareRequest): Promise<ShareOutcome> {
+  // Not behind an `await`: on the web the share sheet needs the tap's user
+  // activation, so `navigator.share` is called in the same task as the click.
+  if (!isNative()) return shareOnWeb(request);
+
   const native = await withNative(async () => {
     const { Share } = await import("@capacitor/share");
 
@@ -60,8 +75,44 @@ export async function shareLink(request: ShareRequest): Promise<ShareOutcome> {
 
   if (native === "shared" || native === "dismissed") return native;
 
-  // Web, or a device with no sheet: copy instead, which is what the store page
-  // has always done.
+  // A device with no sheet, or a plugin that failed: copy instead.
+  return copyLink(request.url);
+}
+
+/**
+ * The browser's own share sheet, falling back to a copy only when there is no
+ * sheet to open.
+ *
+ * - `AbortError` is the shopper closing the sheet: silent, and no copy.
+ * - `InvalidStateError` is a second tap while a sheet is already open: the
+ *   first sheet is still there, so also silent.
+ * - Anything else (`NotAllowedError` when the tap's activation has lapsed —
+ *   e.g. a caller that awaited the network first — or a permissions policy in
+ *   an iframe; `TypeError` for data the platform refuses) means no sheet was
+ *   shown, which is "unavailable", so it copies as before.
+ */
+async function shareOnWeb(request: ShareRequest): Promise<ShareOutcome> {
+  const data: ShareData = { url: request.url };
+  if (request.title) data.title = request.title;
+  if (request.text) data.text = request.text;
+
+  const canShare =
+    typeof navigator !== "undefined" &&
+    typeof navigator.share === "function" &&
+    (typeof navigator.canShare !== "function" || navigator.canShare(data));
+
+  if (canShare) {
+    try {
+      await navigator.share(data);
+      return "shared";
+    } catch (err) {
+      // A DOMException; read `name` structurally rather than trusting its
+      // prototype chain in every WebView.
+      const name = (err as { name?: unknown } | null)?.name;
+      if (name === "AbortError" || name === "InvalidStateError") return "dismissed";
+    }
+  }
+
   return copyLink(request.url);
 }
 

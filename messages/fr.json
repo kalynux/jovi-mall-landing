@@ -2650,7 +2650,7 @@
             "signInTitle": "Connectez-vous pour voir ce que vous avez consulté",
             "signInDescription": "Votre historique de navigation suit votre compte, pas cet appareil.",
             "emptyTitle": "Aucun favori pour le moment",
-            "emptyDescription": "Touchez le cœur sur un produit pour l'enregistrer ici.",
+            "emptyDescription": "Touchez le cœur d’un produit ou d’un service pour le garder ici.",
             "browseProducts": "Parcourir les produits",
             "viewedEmptyTitle": "Rien de consulté pour le moment",
             "viewedEmptyDescription": "Les produits que vous ouvrez apparaîtront ici.",
@@ -2660,7 +2660,13 @@
             "unavailable": "Ce produit n'est plus disponible.",
             "addedToCart": "Ajouté au panier",
             "addFailed": "Impossible d'ajouter cela à votre panier. Veuillez réessayer.",
-            "itemUnavailable": "Cet article n'est plus disponible."
+            "itemUnavailable": "Cet article n'est plus disponible.",
+            "filterLabel": "Afficher",
+            "filter": {
+                "all": "Tout",
+                "product": "Produits",
+                "listing": "Services"
+            }
         },
         "pay": {
             "link": {
@@ -3202,11 +3208,10 @@
         },
         "reviews": {
             "emptyTitle": "Aucun avis pour l'instant",
-            "emptyDescription": "Notez un produit ou une livraison à partir d'une de vos commandes terminées.",
+            "emptyDescription": "Notez un produit ou une livraison d’une commande terminée, ou une entreprise dont vous avez débloqué un contact.",
             "deliveryFeedback": "Avis sur la livraison",
             "published": "Publié",
-            "notPublished": "Non publié",
-            "beingChecked": "En cours de vérification",
+            "notPublished": "Non public",
             "ratingLabel": "Note",
             "starLabel": "{n, plural, one {# étoile} other {# étoiles}}",
             "rateProduct": "Noter {label}",
@@ -3215,13 +3220,19 @@
             "rateTheDelivery": "Noter la livraison",
             "titlePlaceholder": "Titre (facultatif)",
             "bodyPlaceholder": "Dites-en plus aux autres (facultatif)",
-            "textChecked": "Les avis accompagnés d'un texte sont vérifiés avant publication.",
             "alreadyReviewed": "Vous avez déjà donné votre avis.",
             "notYetProduct": "Vous pourrez donner votre avis une fois la commande terminée.",
             "notYetDelivery": "Vous pourrez noter cette livraison une fois qu'elle sera arrivée.",
-            "thanksPublished": "Merci — votre note est en ligne.",
-            "thanksPending": "Merci — votre avis apparaîtra après vérification.",
-            "submitFailed": "Impossible d'envoyer votre avis. Veuillez réessayer."
+            "thanksPublished": "Merci — votre avis est publié.",
+            "submitFailed": "Impossible d'envoyer votre avis. Veuillez réessayer.",
+            "notYetListing": "Vous pourrez noter cette entreprise après avoir débloqué l’un de ses contacts.",
+            "rateThisBusiness": "Noter cette entreprise",
+            "publicNote": "Votre avis, y compris ce que vous écrivez, est public dès son envoi. Votre nom n’est pas affiché.",
+            "deliveryPrivateNote": "Les notes de livraison ne sont jamais publiées. Elles nous aident à suivre la qualité des livraisons.",
+            "thanksDelivery": "Merci — votre note a bien été enregistrée.",
+            "subjectProduct": "Produit",
+            "subjectListing": "Annonce de service",
+            "subjectAria": "{kind} : {title}"
         },
         "bookings": {
             "emptyTitle": "Aucune réservation pour l'instant",
@@ -3835,7 +3846,9 @@
                 "vendor": "Vendeurs parrainés",
                 "customer": "Clients parrainés",
                 "agency": "Agences parrainées",
-                "line": "{rate} de la commission de Wi-Mall pendant {months, plural, one {# mois} other {# mois}}"
+                "line": "{rate} de la commission de Wi-Mall pendant {months, plural, one {# mois} other {# mois}}",
+                "provider": "Prestataires de services que vous parrainez",
+                "lineProvider": "{rate} de ce qu’ils paient à Wi-Mall en forfaits et crédits, pendant {months, plural, one {# mois} other {# mois}}"
             },
             "balances": {
                 "title": "Votre solde",
@@ -3905,7 +3918,8 @@
                     "customer": "Client",
                     "vendor": "Vendeur",
                     "agency": "Agence",
-                    "agent": "Livreur"
+                    "agent": "Livreur",
+                    "provider": "Prestataire de services"
                 },
                 "referredState": {
                     "earning": "Actif",
@@ -3933,7 +3947,11 @@
                 },
                 "requestedOn": "Demandé le {date}",
                 "resolvedOn": "Clôturé le {date}",
-                "refusedReason": "Motif : {reason}"
+                "refusedReason": "Motif : {reason}",
+                "paidFor": {
+                    "plan": "Sur un paiement de forfait",
+                    "credits": "Sur un achat de crédits"
+                }
             }
         },
         "listings": {
@@ -3997,7 +4015,8 @@
                 "website": "Ouvrir le site",
                 "location": "Ouvrir dans Maps",
                 "video": "Regarder la vidéo",
-                "videoDrive": "Ouvrir la vidéo"
+                "videoDrive": "Ouvrir la vidéo",
+                "phoneNumber": "Appeler le {number}"
             },
             "network": {
                 "facebook": "Facebook",
@@ -4054,7 +4073,19 @@
                 "notFound": "Annonce introuvable — Wi-Mall",
                 "resultsTitle": "Annonces de service — Wi-Mall",
                 "resultsDescription": "Trouvez des entreprises près de chez vous (plombiers, imprimeurs, réparateurs et plus) et contactez-les via Wi-Mall."
-            }
+            },
+            "save": "Enregistrer cette entreprise",
+            "unsave": "Retirer des favoris",
+            "savedToast": "Enregistré. L’entreprise n’en est pas informée.",
+            "unsaved": "Retiré des favoris",
+            "ratingAria": "Noté {average} sur 5 d’après {count, plural, one {# avis} other {# avis}}. Voir les avis.",
+            "reviews": {
+                "title": "Avis",
+                "rate": "Noter cette entreprise",
+                "already": "Vous avez déjà noté cette entreprise.",
+                "unlockFirst": "Débloquez l’un de ses contacts pour noter cette entreprise."
+            },
+            "kindShort": "Annonce"
         }
     },
     "cookieNotice": {

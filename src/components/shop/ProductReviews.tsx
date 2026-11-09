@@ -3,7 +3,7 @@
 import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { Button, Rating, Skeleton } from "@/components/shop/ds";
-import { listProductReviews, type PublicReview } from "@/lib/shop/reviews.api";
+import { listListingReviews, listProductReviews, type PublicReview } from "@/lib/shop/reviews.api";
 import type { ProductRating } from "@/lib/shop/shop.types";
 
 const PAGE_SIZE = 10;
@@ -35,24 +35,68 @@ export function ProductReviews({
   /** The aggregate from the product detail body. `null` when unreviewed. */
   rating: ProductRating | null;
 }) {
+  const fetchPage = useCallback(
+    (page: number) => listProductReviews(productId, { page, limit: PAGE_SIZE }),
+    [productId],
+  );
+  return <PublishedReviews fetchPage={fetchPage} rating={rating} />;
+}
+
+/**
+ * A service listing's published reviews (2026-11-08) — the same list, no
+ * reply slot (the business cannot answer, owner RS-8), no author.
+ *
+ * The card's `rating` has no distribution, so the histogram comes from the
+ * first page's `meta.rating`, which carries one. `reloadKey` re-reads after
+ * the customer posts their own review on this page.
+ */
+export function ListingReviews({
+  listingId,
+  rating,
+  reloadKey,
+}: {
+  listingId: string;
+  rating: ProductRating | null;
+  reloadKey?: number;
+}) {
+  const fetchPage = useCallback(
+    (page: number) => listListingReviews(listingId, { page, limit: PAGE_SIZE }),
+    // `reloadKey` is part of the identity on purpose: a new key, a new first page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [listingId, reloadKey],
+  );
+  return <PublishedReviews fetchPage={fetchPage} rating={rating} alwaysAsk={Boolean(reloadKey)} />;
+}
+
+function PublishedReviews({
+  fetchPage,
+  rating: initialRating,
+  alwaysAsk = false,
+}: {
+  fetchPage: (page: number) => Promise<{ data: PublicReview[]; meta: { pages: number }; rating: ProductRating | null }>;
+  rating: ProductRating | null;
+  /** Ask even when the aggregate says nothing is published (it may be stale). */
+  alwaysAsk?: boolean;
+}) {
   const t = useTranslations("shop.product.reviews");
   const tCommon = useTranslations("shop.common");
   const [reviews, setReviews] = useState<PublicReview[]>([]);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(false);
+  // The response's aggregate wins once it arrives: fresher, and with a histogram.
+  const [fetchedRating, setFetchedRating] = useState<ProductRating | null | undefined>(undefined);
+  const rating = fetchedRating !== undefined && fetchedRating !== null ? fetchedRating : initialRating;
 
   const load = useCallback(
     async (next: number) => {
       setLoading(true);
       try {
-        const { data, meta } = await listProductReviews(productId, {
-          page: next,
-          limit: PAGE_SIZE,
-        });
+        const { data, meta, rating: fresh } = await fetchPage(next);
         setReviews((prev) => (next === 1 ? data : [...prev, ...data]));
         setPages(meta.pages);
         setPage(next);
+        if (next === 1) setFetchedRating(fresh);
       } catch {
         // A failed read leaves whatever is already rendered. The aggregate above
         // still stands — it came with the product body, not from here.
@@ -60,15 +104,16 @@ export function ProductReviews({
         setLoading(false);
       }
     },
-    [productId],
+    [fetchPage],
   );
 
   // Only worth asking when the aggregate says something is published. An
   // unreviewed product answers an empty page rather than a 404, so this is an
   // optimisation, not a guard.
+  const hasAny = Boolean(initialRating && initialRating.count > 0);
   useEffect(() => {
-    if (rating && rating.count > 0) void load(1);
-  }, [rating, load]);
+    if (hasAny || alwaysAsk) void load(1);
+  }, [hasAny, alwaysAsk, load]);
 
   if (!rating || rating.count === 0) {
     return (
@@ -166,11 +211,13 @@ function ReviewRow({ review }: { review: PublicReview }) {
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <Rating value={review.rating} showValue={false} size={13} />
         {review.title && (
-          <span style={{ fontWeight: 600, fontSize: 14.5 }}>{review.title}</span>
+          // `ds-ugc`: the reviewer's own words, in any script. In an RTL page a
+          // French sentence otherwise has its full stop moved to the front.
+          <span className="ds-ugc" style={{ fontWeight: 600, fontSize: 14.5 }}>{review.title}</span>
         )}
       </div>
       {review.body && (
-        <p style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.5 }}>{review.body}</p>
+        <p className="ds-ugc" style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.5 }}>{review.body}</p>
       )}
       <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
         {format.dateTime(new Date(review.publishedAt), { dateStyle: "medium" })}

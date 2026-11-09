@@ -16,7 +16,12 @@
  */
 
 export type ReferralStatus = "none" | "pending" | "active" | "rejected" | "suspended" | "terminated";
-export type EarningCategory = "vendor" | "customer" | "agency";
+/**
+ * `provider` (2026-11-08): a service provider, who pays Wi-Mall for plans and
+ * credits rather than commission on sales. A seller referred as `vendor` still
+ * earns on sales only.
+ */
+export type EarningCategory = "vendor" | "customer" | "agency" | "provider";
 export type ReferredCategory = EarningCategory | "agent";
 /** Where a destination was read from. `referral` is the one saved on this page. */
 export type PayoutSource = "vendor" | "agency" | "agent" | "referral";
@@ -102,6 +107,12 @@ export interface ReferralReward {
   availableFrom: string;
   /** A refund reduced it. */
   adjusted: boolean;
+  /**
+   * On a **provider** reward, what the provider paid for (2026-11-08). `null`
+   * on every other reward. ⛔ The amount the provider paid is never published
+   * and must never be asked for (owner RS-7).
+   */
+  paymentKind?: "plan" | "credits" | null;
 }
 
 export interface ReferralPayout {
@@ -252,7 +263,7 @@ export function payoutStatusOf(status: string): PayoutStatus {
     : "pending";
 }
 
-const CATEGORIES: readonly string[] = ["customer", "vendor", "agency", "agent"];
+const CATEGORIES: readonly string[] = ["customer", "vendor", "provider", "agency", "agent"];
 export function knownCategory(category: string): ReferredCategory | null {
   return CATEGORIES.includes(category) ? (category as ReferredCategory) : null;
 }

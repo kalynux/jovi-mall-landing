@@ -13,6 +13,7 @@ import {
 import { listingPath } from "@/lib/shop/shop.routes";
 import { publicUrl } from "@/lib/shop/shop.types";
 import { Icon } from "./Icon";
+import { Rating } from "./Rating";
 
 /**
  * A service listing in a list of results.
@@ -29,7 +30,16 @@ import { Icon } from "./Icon";
  * Its width comes from the container: `.listing-rail` (a swipeable row on a
  * phone, a grid from 768px) or a `.pgrid` cell.
  */
-export function ListingCard({ listing }: { listing: PublicListingCard }) {
+export function ListingCard({
+  listing,
+  saved,
+  onToggleSave,
+}: {
+  listing: PublicListingCard;
+  /** Drawn only with `onToggleSave`. Saving unlocks nothing and tells the business nothing. */
+  saved?: boolean;
+  onToggleSave?: () => void;
+}) {
   const t = useTranslations("shop.listings");
   const tKey = useTranslations();
   const image = publicUrl(listing.photo);
@@ -49,7 +59,7 @@ export function ListingCard({ listing }: { listing: PublicListingCard }) {
   };
 
   return (
-    <Link href={listingPath(listing.slug)} className="fadein lift ds-card" style={shell} data-kind="listing">
+    <Link href={listingPath(listing.slug)} className="fadein lift ds-card listing-card" style={shell} data-kind="listing">
       <div className="listing-card__photo" style={{ position: "relative", background: "var(--type-listing-bg)" }}>
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -78,8 +88,44 @@ export function ListingCard({ listing }: { listing: PublicListingCard }) {
         )}
         <span className="listing-mark" style={{ position: "absolute", top: 8, insetInlineStart: 8 }}>
           <Icon name="megaphone" size={12} strokeWidth={2.4} />
-          {t("kind")}
+          {/* Both labels are in the DOM; the card's width picks one (see
+              .listing-card in globals.css), so a two-column phone grid never
+              runs the mark under the heart. */}
+          <span className="listing-mark__long">{t("kind")}</span>
+          <span className="listing-mark__short">{t("kindShort")}</span>
         </span>
+        {onToggleSave && (
+          <button
+            type="button"
+            aria-label={t(saved ? "unsave" : "save")}
+            aria-pressed={Boolean(saved)}
+            className="ds-pop"
+            onClick={(e) => {
+              // The card is a link: without both, saving would also open it.
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleSave();
+            }}
+            style={{
+              position: "absolute",
+              top: 6,
+              insetInlineEnd: 6,
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              border: "none",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "#FFFFFF",
+              color: saved ? "var(--danger)" : "var(--gray-600)",
+              boxShadow: "var(--shadow-sm)",
+            }}
+          >
+            <Icon name="heart" size={17} style={saved ? { fill: "currentColor" } : undefined} />
+          </button>
+        )}
       </div>
 
       <div style={{ padding: "10px 12px 12px", display: "flex", flexDirection: "column", gap: 4, flex: "1 1 auto" }}>
@@ -99,6 +145,11 @@ export function ListingCard({ listing }: { listing: PublicListingCard }) {
         >
           {listing.title}
         </div>
+        {/* Stars only when somebody reviewed it: `null` draws nothing, never
+            "0 reviews" or five empty stars (the product card's rule). */}
+        {listing.rating && listing.rating.count > 0 && (
+          <Rating value={listing.rating.average} count={listing.rating.count} size={11} textSize={11} />
+        )}
         {listing.companyName && (
           <div
             className="ds-ugc"
@@ -169,7 +220,7 @@ export function ListingCard({ listing }: { listing: PublicListingCard }) {
                 gap: 2,
               }}
             >
-              {t("viewContacts")}
+              <span className="listing-card__cta-label">{t("viewContacts")}</span>
               <Icon name="chevron-right" size={14} className="rtl-flip" />
             </span>
           </div>

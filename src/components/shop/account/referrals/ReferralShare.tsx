@@ -212,7 +212,7 @@ export function ReferralCodeCard({ overview: o }: { overview: ReferralOverview }
   );
 }
 
-const TERM_CATEGORIES: EarningCategory[] = ["vendor", "customer", "agency"];
+const TERM_CATEGORIES: EarningCategory[] = ["vendor", "provider", "customer", "agency"];
 
 /** This partner's own terms, which can differ from anyone else's. */
 export function ReferralTerms({ overview: o }: { overview: ReferralOverview }) {
@@ -233,7 +233,8 @@ export function ReferralTerms({ overview: o }: { overview: ReferralOverview }) {
             >
               <span style={{ fontWeight: 600, color: "var(--text-strong)" }}>{t(category)}</span>
               <span className="muted">
-                {t("line", {
+                {/* A provider pays for plans and credits, not commission. */}
+                {t(category === "provider" ? "lineProvider" : "line", {
                   rate: format.number(term.ratePercent / 100, { style: "percent", maximumFractionDigits: 2 }),
                   months: term.durationMonths,
                 })}

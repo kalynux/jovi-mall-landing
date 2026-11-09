@@ -1,12 +1,23 @@
 # Reviews & ratings
 
-**Verified against source on 2026-09-08** — the route census across the four surfaces, and the
-two corrections now carried in § 2 (the eligibility endpoint's `404 REVIEW_SUBJECT_NOT_FOUND`
-branch, and the six `.strict()` query schemas), against
-`jovi-mall/src/modules/reviews/routes/*.ts`,
-`src/modules/reviews/domain/services/review-eligibility.service.ts` and
-`src/modules/reviews/validators/review.validator.ts`. **Both corrections were missing from this
-copy** and are the kind a client hits on its first request.
+**Verified against source on 2026-09-07** — every claim on this page was checked against
+`jovi-mall/src/`, including the whole inherited defect list that `vendor-dash` carried for it
+(DOC-PROGRAM § 24–28). Corrections are marked inline with ⚠ and a source citation.
+
+> ⚠ **CHANGED 2026-10-05 — every review now publishes on submission, prose included** (owner
+> decision). There is no held state any more: `pending` and `rejected` are gone, statuses are
+> `published` · `unpublished`, and an administrator can **unpublish**, **republish** or
+> **delete** any review afterwards. § 3 below is the current rule. The 2026-09-08 note that
+> follows describes the old one and is kept as history. Cross-dashboard summary:
+> [FRONTEND-CHANGELOG-reviews-publish-directly.md](./FRONTEND-CHANGELOG-reviews-publish-directly.md).
+
+**Verified against source on 2026-09-08** (a re-check of the 2026-09-07 pass above) — the ten-route census (three authoring routes each
+on `/customer`, `/vendor`, `/agency`, the one public read, four moderation routes), the
+prose-holds-it moderation rule (`domain/review-targets.ts` `initialStatusOf`, called at
+`services/review.service.ts:121`), the `.strict()` bodies and the `rating` integer 1–5 with
+`title` ≤ 120 / `body` ≤ 2000 (`validators/review.validator.ts:23-27`), and the public
+`meta.rating`-or-`null` shape (`controllers/public-review.controller.ts:44-62`). No corrections
+were needed.
 
 > **Cross-role.** One module, two subjects, three author roles, four HTTP surfaces.
 > Built 2026-08-21 (Phase 6 · 6.E.4). Moderation lives in wi-admin —
@@ -21,7 +32,7 @@ eligibility table. Each role's endpoints are listed under [Endpoints](#4--endpoi
 ## 1 · What a review is
 
 A **rating (1–5)**, optionally some **prose**, by one identified person, about one
-identified thing, moderated once.
+identified thing. Public the moment it is written; an administrator may take it down later.
 
 There are two kinds of thing, told apart by `subjectType`:
 
@@ -111,7 +122,7 @@ so one copy table serves both. Present on `/customer`, `/vendor` and `/agency`.
 >
 > So a client must handle **both** shapes: `200 { eligible: false, reason }` for every
 > *business* refusal, and `404 REVIEW_SUBJECT_NOT_FOUND` for "no such subject, or not yours".
-> This page implied the first was the only outcome until 2026-09-08.
+> This page implied the first was the only outcome until 2026-09-07.
 >
 > ⚠ **Both query schemas are `.strict()`** (`reviews/validators`, six schemas, all strict), so an
 > **unknown query parameter is a `400 VALIDATION_ERROR`** — not ignored. A client appending its
@@ -122,27 +133,31 @@ so one copy table serves both. Present on `/customer`, `/vendor` and `/agency`.
 
 ## 3 · Moderation, and where a review lands
 
-`pending` → `published` → (or) `rejected`.
+**Every review publishes the moment it is written — stars and prose alike** (owner decision,
+2026-10-05). `POST` always answers `status: "published"`, and the review's star counts at once.
 
-**A review carrying free text is held for a moderator. A bare star rating publishes
-immediately.**
+Moderation happens **afterwards**, in wi-admin. Two statuses, plus delete:
 
-That is the rule, and both halves are deliberate. A number cannot be abusive, defamatory or
-a link to somewhere else, and the eligibility gate has already established that the author
-bought the item or received the parcel — so there is nothing for a human to decide. Prose is
-where the risk is, and it gets one. Holding everything would put the moderation queue in
-front of a signal that moves an agent's cash limit.
+| What an administrator did | `status` the author sees | Public? | Star counts? | Author may write another? |
+|---|---|---|---|---|
+| nothing | `published` | product reviews: yes · delivery reviews: never | yes | no (one per subject) |
+| **unpublished** it | `unpublished` | no | no | **no** |
+| **republished** it | `published` | as above | yes | no |
+| **deleted** it | — (gone from their list) | no | no | **yes** |
 
-The response to `POST` says which happened, in `status`. Clients should render "published"
-and "submitted for review" differently.
+**An unpublished or deleted review counts for nothing — its star included.** Aggregates are
+recomputed over published, live rows only. The administrator's reason is **never** shown to
+the author or the public: an author sees only that their review is `unpublished`, with no
+message (owner decision).
 
-**A rejected review counts for nothing — its star included.** Aggregates are recomputed over
-published rows only, so exclusion is a property of the query rather than of a subtraction
-somebody has to remember. The rejection reason is the moderator's record and is **never**
-shown to the author or the public.
+There is no edit verb for authors. One live review per author per subject, enforced by a
+unique index partial on `deletedAt: null`; a second attempt is `409 REVIEW_ALREADY_EXISTS`.
+A deleted review no longer counts toward that limit, which is why its author may write again.
 
-There is no edit verb and no delete verb. One review per author per subject, enforced by a
-unique index; a second attempt is `409 REVIEW_ALREADY_EXISTS`.
+⚠ **Before 2026-10-05** a review carrying a title or body was written `pending` and waited for a
+moderator who never came (no admin screen existed); `rejected` meant a moderator refused it.
+Both statuses are gone. `migrate:reviews-publish-all` published every held review and renamed
+`rejected` to `unpublished`.
 
 ---
 
@@ -157,7 +172,7 @@ never from the body — there is no `authorRole` field to send.
 |---|---|
 | `POST /` | submit. `201`. |
 | `GET /eligibility?subjectType=&subjectId=` | may I write one? |
-| `GET /?page=&limit=&status=` | my own reviews, **every status** — you can see your held row |
+| `GET /?page=&limit=&status=` | my own reviews, **both statuses** — you can see one an administrator hid. `status` filter: `published` \| `unpublished` |
 
 `POST` body:
 
@@ -166,7 +181,7 @@ never from the body — there is no `authorRole` field to send.
   "subjectType": "delivery",
   "subjectId": "507f1f77bcf86cd799439077",
   "rating": 5,
-  "title": "Right on time",          // optional, ≤120 — presence holds it for moderation
+  "title": "Right on time",          // optional, ≤120 — published at once, like everything else
   "body": "Called ahead, very careful with the box."  // optional, ≤2000
 }
 ```
@@ -189,8 +204,8 @@ Author response shape:
     "rating": 5,
     "title": "Right on time",
     "body": "Called ahead…",
-    "status": "pending",
-    "publishedAt": null,
+    "status": "published",
+    "publishedAt": "2026-08-21T09:00:00.000Z",
     "createdAt": "2026-08-21T09:00:00.000Z"
   }
 }
@@ -225,9 +240,36 @@ max-age=300` like the rest of `/api/public`.
   said about this id" is a truthful answer, and a 404 would make the route an existence
   oracle for draft products.
 
+### 🆕 Service listings — `subjectType: 'listing'` (2026-11-08)
+
+A customer may review a **service listing** (a business paid in person, not through Wi-Mall) once
+they have **unlocked at least one of its contacts** (owner L-27). Saving or viewing it earns nothing.
+`subjectId` is the listing id. Only `/api/customer/reviews` takes it; from a vendor or an agency it
+is `400 REVIEW_ROLE_NOT_ALLOWED`. One live review per customer per listing, as everywhere.
+
+| Case | Answer |
+|---|---|
+| The listing does not exist, or was never published | `404 REVIEW_SUBJECT_NOT_FOUND` |
+| Live or paused, but this customer unlocked no contact | `422 REVIEW_NOT_ELIGIBLE` |
+| Archived (the provider removed it or closed their account) | `422 REVIEW_SUBJECT_NOT_REVIEWABLE`, `details.reason: "listing_archived"`. Its existing reviews stay |
+
+Like every review it publishes at once, text included, and moves the listing's public rating. The
+provider is notified of each one (in the dashboard, by email, and on WhatsApp only inside the
+24-hour window — no template, owner RS-11) and **cannot reply** (RS-8).
+
+**Public:** `GET /api/public/listings/:listingId/reviews` — the same body and rules as the product
+route above, `meta.rating` included. A listing the public cannot see (paused, archived) answers the
+**empty page**. The listing card's `rating` (`{ average, count }` or `null`) now comes from the same
+aggregate, on `/api/public/listings*` and in the bot.
+
+**The provider's own:** `GET /api/vendor/listings/:id/reviews` — provider session only. Their own
+listing in **any** status, paused and archived included (RS-12); another vendor's listing is
+`404 LISTING_NOT_FOUND`. The same anonymous rows the public sees: what was said, never who said it.
+
 ### Moderation — `/api/internal/admin/reviews`
 
-wi-admin only, behind the service token. See admin/reviews.md (`backend/jovi-mall/api-doc/admin/reviews.md` — not mirrored in this repository).
+wi-admin only, behind the service token. See admin/reviews.md (`backend/jovi-mall/api-doc/admin/reviews.md` — not mirrored in this repository). The
+`subjectType` filter accepts `listing` (2026-11-08).
 
 ---
 
@@ -241,7 +283,7 @@ wi-admin only, behind the service token. See admin/reviews.md (`backend/jovi-mal
 | `REVIEW_SUBJECT_NOT_REVIEWABLE` | 422 | a delivered shipment with no agent bound to it |
 | `REVIEW_ROLE_NOT_ALLOWED` | 400 | e.g. a vendor posting a product review |
 | `REVIEW_NOT_FOUND` | 404 | moderation only |
-| `REVIEW_NOT_PENDING` | 409 | moderation only — another moderator decided first |
+| `REVIEW_STATUS_CONFLICT` | 409 | moderation only — already hidden / already visible (replaced `REVIEW_NOT_PENDING`, 2026-10-05) |
 
 The 404-vs-422 split is load-bearing: 404 hides whether an id exists, 422 is only ever
 returned to somebody who already knows it does.

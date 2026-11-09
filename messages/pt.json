@@ -2650,7 +2650,7 @@
             "signInTitle": "Entre para ver o que já viu",
             "signInDescription": "O seu histórico de navegação segue a sua conta, não este dispositivo.",
             "emptyTitle": "Ainda não tem favoritos",
-            "emptyDescription": "Toque no coração de qualquer produto para o guardar aqui.",
+            "emptyDescription": "Toque no coração de um produto ou de um serviço para o guardar aqui.",
             "browseProducts": "Ver produtos",
             "viewedEmptyTitle": "Ainda não viu nada",
             "viewedEmptyDescription": "Os produtos que abrir aparecem aqui.",
@@ -2660,7 +2660,13 @@
             "unavailable": "Esse produto já não está disponível.",
             "addedToCart": "Adicionado ao carrinho",
             "addFailed": "Não foi possível adicionar isso ao seu carrinho. Tente novamente.",
-            "itemUnavailable": "Este artigo já não está disponível."
+            "itemUnavailable": "Este artigo já não está disponível.",
+            "filterLabel": "Mostrar",
+            "filter": {
+                "all": "Tudo",
+                "product": "Produtos",
+                "listing": "Serviços"
+            }
         },
         "pay": {
             "link": {
@@ -3202,11 +3208,10 @@
         },
         "reviews": {
             "emptyTitle": "Ainda sem avaliações",
-            "emptyDescription": "Avalie um produto ou uma entrega de um dos seus pedidos concluídos.",
+            "emptyDescription": "Avalie um produto ou uma entrega de um pedido concluído, ou um negócio cujo contacto desbloqueou.",
             "deliveryFeedback": "Avaliação da entrega",
             "published": "Publicada",
-            "notPublished": "Não publicada",
-            "beingChecked": "Em análise",
+            "notPublished": "Não pública",
             "ratingLabel": "Avaliação",
             "starLabel": "{n, plural, one {# estrela} other {# estrelas}}",
             "rateProduct": "Avaliar {label}",
@@ -3215,13 +3220,19 @@
             "rateTheDelivery": "Avaliar a entrega",
             "titlePlaceholder": "Título (opcional)",
             "bodyPlaceholder": "Conte aos outros como foi (opcional)",
-            "textChecked": "As avaliações com texto são verificadas antes de aparecerem.",
             "alreadyReviewed": "Já avaliou isto.",
             "notYetProduct": "Pode avaliar quando o seu pedido estiver concluído.",
             "notYetDelivery": "Pode avaliar esta entrega depois de ela chegar.",
-            "thanksPublished": "Obrigado — a sua avaliação já está publicada.",
-            "thanksPending": "Obrigado — a sua avaliação aparece depois de ser verificada.",
-            "submitFailed": "Não foi possível enviar a sua avaliação. Tente novamente."
+            "thanksPublished": "Obrigado — a sua avaliação está publicada.",
+            "submitFailed": "Não foi possível enviar a sua avaliação. Tente novamente.",
+            "notYetListing": "Pode avaliar este negócio depois de desbloquear um dos seus contactos.",
+            "rateThisBusiness": "Avaliar este negócio",
+            "publicNote": "A sua avaliação, incluindo o que escrever, é pública assim que a enviar. O seu nome não é mostrado.",
+            "deliveryPrivateNote": "As avaliações de entrega nunca são publicadas. Ajudam-nos a cuidar das entregas.",
+            "thanksDelivery": "Obrigado — a sua avaliação foi registada.",
+            "subjectProduct": "Produto",
+            "subjectListing": "Anúncio de serviço",
+            "subjectAria": "{kind}: {title}"
         },
         "bookings": {
             "emptyTitle": "Ainda sem reservas",
@@ -3835,7 +3846,9 @@
                 "vendor": "Vendedores indicados",
                 "customer": "Clientes indicados",
                 "agency": "Agências indicadas",
-                "line": "{rate} da comissão da Wi-Mall durante {months, plural, one {# mês} other {# meses}}"
+                "line": "{rate} da comissão da Wi-Mall durante {months, plural, one {# mês} other {# meses}}",
+                "provider": "Prestadores de serviços que indicar",
+                "lineProvider": "{rate} do que pagam à Wi-Mall por planos e créditos, durante {months, plural, one {# mês} other {# meses}}"
             },
             "balances": {
                 "title": "O seu saldo",
@@ -3905,7 +3918,8 @@
                     "customer": "Cliente",
                     "vendor": "Vendedor",
                     "agency": "Agência",
-                    "agent": "Estafeta"
+                    "agent": "Estafeta",
+                    "provider": "Prestador de serviços"
                 },
                 "referredState": {
                     "earning": "Ativa",
@@ -3933,7 +3947,11 @@
                 },
                 "requestedOn": "Pedido a {date}",
                 "resolvedOn": "Encerrado a {date}",
-                "refusedReason": "Motivo: {reason}"
+                "refusedReason": "Motivo: {reason}",
+                "paidFor": {
+                    "plan": "De um pagamento de plano",
+                    "credits": "De uma compra de créditos"
+                }
             }
         },
         "listings": {
@@ -3997,7 +4015,8 @@
                 "website": "Abrir o site",
                 "location": "Abrir no Mapas",
                 "video": "Ver o vídeo",
-                "videoDrive": "Abrir o vídeo"
+                "videoDrive": "Abrir o vídeo",
+                "phoneNumber": "Ligar para {number}"
             },
             "network": {
                 "facebook": "Facebook",
@@ -4054,7 +4073,19 @@
                 "notFound": "Anúncio não encontrado — Wi-Mall",
                 "resultsTitle": "Anúncios de serviço — Wi-Mall",
                 "resultsDescription": "Encontre negócios locais (canalizadores, gráficas, técnicos de reparação e mais) e contacte-os através da Wi-Mall."
-            }
+            },
+            "save": "Guardar este negócio",
+            "unsave": "Remover dos guardados",
+            "savedToast": "Guardado. O negócio não é avisado.",
+            "unsaved": "Removido dos guardados",
+            "ratingAria": "Avaliado com {average} em 5 a partir de {count, plural, one {# avaliação} other {# avaliações}}. Ver as avaliações.",
+            "reviews": {
+                "title": "Avaliações",
+                "rate": "Avaliar este negócio",
+                "already": "Já avaliou este negócio.",
+                "unlockFirst": "Desbloqueie um dos seus contactos para avaliar este negócio."
+            },
+            "kindShort": "Anúncio"
         }
     },
     "cookieNotice": {

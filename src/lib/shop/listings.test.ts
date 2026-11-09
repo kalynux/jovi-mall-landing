@@ -8,6 +8,7 @@ import {
   drawableFields,
   mapHref,
   parseListingSearchParams,
+  phoneNumbers,
   placeParts,
   safeHttpUrl,
   shelfQuery,
@@ -35,6 +36,21 @@ test("the WhatsApp link falls back to wa.me when the API's link is unusable", ()
   assert.equal(whatsappHref({ number: "+237671234531", link: "https://wa.me/237671234531" }), "https://wa.me/237671234531");
   assert.equal(whatsappHref({ number: "+237 671 23 45 31", link: "javascript:x" }), "https://wa.me/237671234531");
   assert.equal(whatsappHref({ number: "", link: "" }), null);
+});
+
+test("an unlocked phone shows every number the business gave", () => {
+  assert.deepEqual(
+    phoneNumbers({ number: "+237671234531", numbers: ["+237671234531", "+237699000111"] }),
+    ["+237671234531", "+237699000111"]
+  );
+  // An API from before 2026-11-08 sends `number` alone.
+  assert.deepEqual(phoneNumbers({ number: "+237671234531" }), ["+237671234531"]);
+  assert.deepEqual(phoneNumbers({ number: "+237671234531", numbers: [] }), ["+237671234531"]);
+  // Blanks and the same line written twice are drawn once.
+  assert.deepEqual(
+    phoneNumbers({ number: "+237 671 23 45 31", numbers: ["+237 671 23 45 31", " ", "+237671234531"] }),
+    ["+237 671 23 45 31"]
+  );
 });
 
 test("a dialler link keeps the + and the digits", () => {

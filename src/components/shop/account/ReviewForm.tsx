@@ -15,7 +15,19 @@ const MAX_TITLE = 120;
 const MAX_BODY = 2000;
 
 /**
- * Write a review of a product or a delivery.
+ * Write a review of a product, a delivery, or a service listing.
+ *
+ * ── Public at once ───────────────────────────────────────────────────────────
+ *
+ * Since 2026-10-05 every review publishes the moment it is sent, text included
+ * (owner decision), so the form says so BEFORE sending, always, not only once
+ * the customer starts typing. (It used to say text was "checked first", which
+ * stopped being true that day.) A delivery review never publishes; it is an
+ * internal signal.
+ *
+ * A listing can be reviewed once the customer unlocked one of its contacts.
+ * `refreshKey` re-asks eligibility, so unlocking a contact on the same page
+ * makes the form appear without a reload.
  *
  * ── Eligibility is checked before anything is drawn ──────────────────────────
  *
@@ -42,13 +54,16 @@ export function ReviewForm({
   subjectId,
   label,
   onDone,
+  refreshKey,
 }: {
   subjectType: ReviewSubjectType;
-  /** Product id for `product`; **shipment** id for `delivery`. */
+  /** Product id for `product`; **shipment** id for `delivery`; listing id for `listing`. */
   subjectId: string;
   /** What is being rated, for the heading. Never an agent's name. */
   label: string;
   onDone?: () => void;
+  /** Changing it re-checks eligibility (a listing after a contact unlock). */
+  refreshKey?: number;
 }) {
   // Bound before the branches below — this component returns early five
   // different ways, so a hook further down would change the hook order.
@@ -61,7 +76,7 @@ export function ReviewForm({
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [outcome, setOutcome] = useState<"published" | "pending" | null>(null);
+  const [outcome, setOutcome] = useState<"sent" | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,28 +87,21 @@ export function ReviewForm({
     return () => {
       cancelled = true;
     };
-  }, [subjectType, subjectId]);
+  }, [subjectType, subjectId, refreshKey]);
 
   const submit = useCallback(async () => {
     if (rating < 1) return;
     setBusy(true);
     setError(null);
     try {
-      const review = await submitReview({ subjectType, subjectId, rating, title, body });
-      /**
-       * 🔴 Branch on the returned `status`, not on what we sent.
-       *
-       * Text present holds the review for moderation; a bare rating publishes at
-       * once. Saying "your review is live" in both cases is wrong half the time,
-       * and the response is the only thing that actually knows.
-       */
-      setOutcome(review.status === "published" ? "published" : "pending");
+      await submitReview({ subjectType, subjectId, rating, title, body });
+      setOutcome("sent");
       onDone?.();
     } catch (err) {
       const code = (err as { code?: string })?.code;
       if (code === "REVIEW_ALREADY_EXISTS") {
         // Terminal — there is no edit. Reflect it rather than inviting a retry.
-        setEligibility({ kind: "already" });
+        setEligibility({ kind: "already", existingReviewId: null });
       } else {
         setError(t("submitFailed"));
       }
@@ -105,7 +113,7 @@ export function ReviewForm({
   if (outcome) {
     return (
       <p className="muted" style={{ margin: 0, fontSize: 14 }}>
-        {outcome === "published" ? t("thanksPublished") : t("thanksPending")}
+        {subjectType === "delivery" ? t("thanksDelivery") : t("thanksPublished")}
       </p>
     );
   }
@@ -113,6 +121,9 @@ export function ReviewForm({
   // Still asking, or the subject is not ours to know about. Both render nothing.
   if (!eligibility || eligibility.kind === "notFound" || eligibility.kind === "unknown") return null;
   if (eligibility.kind === "roleNotAllowed") return null;
+  // A listing its business archived takes no new reviews; there is nothing to
+  // explain to someone who may not even know that happened.
+  if (eligibility.kind === "notReviewable" && subjectType === "listing") return null;
 
   if (eligibility.kind === "already") {
     return (
@@ -122,10 +133,14 @@ export function ReviewForm({
     );
   }
 
-  if (eligibility.kind === "notYet") {
+  if (eligibility.kind === "notYet" || eligibility.kind === "notReviewable") {
     return (
       <p className="muted" style={{ margin: 0, fontSize: 14 }}>
-        {subjectType === "product" ? t("notYetProduct") : t("notYetDelivery")}
+        {subjectType === "product"
+          ? t("notYetProduct")
+          : subjectType === "listing"
+            ? t("notYetListing")
+            : t("notYetDelivery")}
       </p>
     );
   }
@@ -133,7 +148,7 @@ export function ReviewForm({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ fontWeight: 600, fontSize: 14.5 }}>
-        {subjectType === "product" ? t("rateProduct", { label }) : t("rateDelivery")}
+        {subjectType === "delivery" ? t("rateDelivery") : t("rateProduct", { label })}
       </div>
 
       {/* Integer 1–5. There is no half-star: the trust composite reads this
@@ -177,13 +192,10 @@ export function ReviewForm({
         onChange={(e) => setBody(e.target.value)}
       />
 
-      {/* Said before they write, not after: whether text is attached is what
-          decides between publishing now and waiting for moderation. */}
-      {(title.trim() || body.trim()) && (
-        <p className="muted" style={{ margin: 0, fontSize: 12.5 }}>
-          {t("textChecked")}
-        </p>
-      )}
+      {/* Said before they send, always: it is public the moment it is sent. */}
+      <p className="muted" style={{ margin: 0, fontSize: 12.5, lineHeight: 1.45 }}>
+        {subjectType === "delivery" ? t("deliveryPrivateNote") : t("publicNote")}
+      </p>
 
       {error && (
         <p style={{ margin: 0, fontSize: 13, color: "var(--danger)" }}>{error}</p>
@@ -209,10 +221,14 @@ export function ReviewDisclosure({
   subjectType,
   subjectId,
   label,
+  onDone,
+  refreshKey,
 }: {
   subjectType: ReviewSubjectType;
   subjectId: string;
   label: string;
+  onDone?: () => void;
+  refreshKey?: number;
 }) {
   const t = useTranslations("shop.reviews");
   const [open, setOpen] = useState(false);
@@ -220,10 +236,22 @@ export function ReviewDisclosure({
   if (!open) {
     return (
       <Button variant="ghost" size="sm" leadingIcon="star" onClick={() => setOpen(true)}>
-        {subjectType === "product" ? t("rateThis") : t("rateTheDelivery")}
+        {subjectType === "product"
+          ? t("rateThis")
+          : subjectType === "listing"
+            ? t("rateThisBusiness")
+            : t("rateTheDelivery")}
       </Button>
     );
   }
 
-  return <ReviewForm subjectType={subjectType} subjectId={subjectId} label={label} />;
+  return (
+    <ReviewForm
+      subjectType={subjectType}
+      subjectId={subjectId}
+      label={label}
+      onDone={onDone}
+      refreshKey={refreshKey}
+    />
+  );
 }

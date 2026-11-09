@@ -252,6 +252,8 @@ function RewardRow({ row }: { row: ReferralReward }) {
         <>
           <CategoryLabel category={row.category} /> · {t("earnedOn", { date: date(row.earnedAt) })}
         </>,
+        // What a provider paid for, never how much (owner RS-7).
+        ...(row.paymentKind === "plan" || row.paymentKind === "credits" ? [t(`paidFor.${row.paymentKind}`)] : []),
         ...(status === "held" ? [t("availableFrom", { date: date(row.availableFrom) })] : []),
         ...(row.adjusted && status !== "reversed" ? [t("adjusted")] : []),
       ]}

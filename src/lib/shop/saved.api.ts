@@ -16,6 +16,9 @@
  */
 import { apiFetch, apiFetchList } from "@/lib/api/client";
 import type { ListMeta, ProductListItem } from "./shop.types";
+import { normaliseWishlistEntry, type WishlistEntry, type WishlistKind } from "./wishlist-entry";
+
+export type { WishlistEntry, WishlistKind } from "./wishlist-entry";
 
 /**
  * One row of either list.
@@ -60,11 +63,39 @@ function listQuery(query: CatalogListQuery = {}): string {
 
 /* ── Wishlist ─────────────────────────────────────────────────────────────── */
 
-/** GET /api/customer/wishlist — newest save first. */
+/**
+ * GET /api/customer/wishlist — products and listings, newest save first.
+ * `kind` narrows it to one of the two (`?kind=product|listing`).
+ */
 export async function listWishlist(
-  query: CatalogListQuery = {},
-): Promise<{ data: CustomerCatalogEntry[]; meta: ListMeta }> {
-  return apiFetchList<CustomerCatalogEntry>(`/api/customer/wishlist${listQuery(query)}`);
+  query: CatalogListQuery & { kind?: WishlistKind } = {},
+): Promise<{ data: WishlistEntry[]; meta: ListMeta }> {
+  const { kind, ...paging } = query;
+  const base = listQuery(paging);
+  const qs = kind ? `${base}${base ? "&" : "?"}kind=${kind}` : base;
+  const { data, meta } = await apiFetchList<Record<string, unknown>>(`/api/customer/wishlist${qs}`);
+  return { data: data.map(normaliseWishlistEntry).filter((e): e is WishlistEntry => e !== null), meta };
+}
+
+/**
+ * POST /api/customer/wishlist `{ listingId }` — save a service listing.
+ *
+ * Idempotent and `200`, like a product. It unlocks nothing, costs nothing, and
+ * **the business is never told** (RS-2). A listing the public cannot see is
+ * `404 LISTING_NOT_FOUND`.
+ */
+export async function saveListing(listingId: string): Promise<void> {
+  await apiFetch<unknown>("/api/customer/wishlist", {
+    method: "POST",
+    body: JSON.stringify({ listingId }),
+  });
+}
+
+/** DELETE /api/customer/wishlist/listings/:listingId — `404` when not on your list. */
+export async function unsaveListing(listingId: string): Promise<void> {
+  await apiFetch<unknown>(`/api/customer/wishlist/listings/${encodeURIComponent(listingId)}`, {
+    method: "DELETE",
+  });
 }
 
 /**
@@ -108,6 +139,24 @@ export async function savedAmong(productIds: string[]): Promise<string[]> {
 
 /** The validator's ceiling. More than this in one body is a `400`. */
 const SAVED_AMONG_MAX_IDS = 100;
+
+/**
+ * `saved-among` for listings, chunked like `savedAmongAll`. The route takes
+ * `listingIds` on its own (2026-11-08) and always answers both arrays; an empty
+ * list is a `400`, so an empty grid asks nothing.
+ */
+export async function savedListingsAmongAll(listingIds: string[]): Promise<string[]> {
+  const unique = [...new Set(listingIds)];
+  const out: string[] = [];
+  for (let i = 0; i < unique.length; i += SAVED_AMONG_MAX_IDS) {
+    const data = await apiFetch<{ savedListingIds?: string[] }>("/api/customer/wishlist/saved-among", {
+      method: "POST",
+      body: JSON.stringify({ listingIds: unique.slice(i, i + SAVED_AMONG_MAX_IDS) }),
+    });
+    if (Array.isArray(data?.savedListingIds)) out.push(...data.savedListingIds);
+  }
+  return out;
+}
 
 /**
  * `savedAmong` for any number of ids, chunked to the validator's limit.

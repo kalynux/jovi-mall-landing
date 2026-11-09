@@ -4,16 +4,16 @@ import { useTranslations } from "next-intl";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
-import { Button, ConfirmDialog, EmptyState, ProductCard, Skeleton, Tabs } from "@/components/shop/ds";
+import { Button, Chip, ConfirmDialog, EmptyState, ListingCard, ProductCard, Skeleton, Tabs } from "@/components/shop/ds";
 import { useCart, useFavorites, useToast } from "@/components/shop/providers";
 import { CART_OFFLINE_MESSAGE_KEY } from "@/lib/shop/cart-errors";
 import { deliveryTermsOf } from "@/lib/shop/delivery";
-import { listProductsByIds } from "@/lib/shop/catalog.api";
+import { listListingsByIds, listProductsByIds } from "@/lib/shop/catalog.api";
 import {
   clearRecentlyViewed,
   listRecentlyViewed,
   listWishlist,
-  type CustomerCatalogEntry,
+  type WishlistEntry,
 } from "@/lib/shop/saved.api";
 import { resolveQuickAdd } from "@/lib/shop/quick-add";
 import { productPathFor } from "@/lib/shop/shop.routes";
@@ -23,9 +23,20 @@ import { CustomerOnlyNotice } from "@/components/shop/CustomerOnlyNotice";
 import { publicUrl } from "@/lib/shop/shop.types";
 
 type Tab = "saved" | "viewed";
+/** Which kinds the saved list shows. Offered only when both kinds are saved. */
+type KindFilter = "all" | "product" | "listing";
 
 /**
- * Saved products, and recently viewed.
+ * Saved products and service listings, and recently viewed.
+ *
+ * ── One "Saved" place, two kinds (2026-11-08, owner RS-1) ────────────────────
+ *
+ * The wishlist holds listings beside products, and every row says which in
+ * `kind`. ⚠ The page branches on `kind`, never on which id is present: the
+ * bot could save listings before this page drew them. A listing row is the
+ * listing card (its heart removes it); `listing: null` is the same tombstone a
+ * product gets. "All · Products · Services" chips appear only when both kinds
+ * are saved, since a filter with one option is noise.
  *
  * ── Both lists live on the server now ────────────────────────────────────────
  *
@@ -71,7 +82,7 @@ export default function SavedPage() {
      offering a sign-in they already did. */
   const signedIn = isCustomerSession(status, role);
   const businessSession = isBusinessSession(status, role);
-  const { favorites, toggle } = useFavorites();
+  const { favorites, toggle, savedListingIds, toggleListing } = useFavorites();
 
   /*
      `toggle` closes over the favourites set, so its identity changes whenever
@@ -81,21 +92,25 @@ export default function SavedPage() {
      without making it a trigger. */
   const toggleRef = useRef(toggle);
   toggleRef.current = toggle;
+  const toggleListingRef = useRef(toggleListing);
+  toggleListingRef.current = toggleListing;
   const { addItem } = useCart();
   const { flash } = useToast();
 
   const [tab, setTab] = useState<Tab>("saved");
 
-  const [saved, setSaved] = useState<CustomerCatalogEntry[]>([]);
+  const [saved, setSaved] = useState<WishlistEntry[]>([]);
+  const [kindFilter, setKindFilter] = useState<KindFilter>("all");
   const [savedLoading, setSavedLoading] = useState(true);
 
-  const [viewed, setViewed] = useState<CustomerCatalogEntry[]>([]);
+  const [viewed, setViewed] = useState<WishlistEntry[]>([]);
   const [viewedLoading, setViewedLoading] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
 
   // `favorites` is a Set and a new instance each render, so the anonymous
   // effect keys on a stable string of its contents rather than the set itself.
   const localIds = Array.from(favorites).sort().join(",");
+  const localListingIds = Array.from(savedListingIds).sort().join(",");
 
   useEffect(() => {
     if (status === "loading") return;
@@ -119,7 +134,8 @@ export default function SavedPage() {
 
       // Signed out: the local ids are all there is, and they need hydrating.
       const list = localIds ? localIds.split(",") : [];
-      if (list.length === 0) {
+      const listingList = localListingIds ? localListingIds.split(",") : [];
+      if (list.length === 0 && listingList.length === 0) {
         if (!cancelled) {
           setSaved([]);
           setSavedLoading(false);
@@ -142,8 +158,18 @@ export default function SavedPage() {
          archived, suspended or deleted, and the per-id version could not tell
          that apart from a failed request — so a withdrawn product sat in the
          list forever as an empty card. Now it is named, and pruned. */
-      const { products, missing } = await listProductsByIds(list, { fresh: true });
+      const [{ products, missing }, listingResult] = await Promise.all([
+        list.length ? listProductsByIds(list, { fresh: true }) : Promise.resolve({ products: [], missing: [] as string[] }),
+        listingList.length
+          ? listListingsByIds(listingList).catch(() => ({ listings: [], missing: [] as string[] }))
+          : Promise.resolve({ listings: [], missing: [] as string[] }),
+      ]);
       if (cancelled) return;
+
+      // The same prune for listings: only ids the server says are gone.
+      const listingById = new Map(listingResult.listings.map((listing) => [listing.id, listing]));
+      const listingGone = new Set(listingResult.missing);
+      for (const id of listingGone) toggleListingRef.current(id);
 
       const byId = new Map(products.map((product) => [product.id, product]));
       const gone = new Set(missing);
@@ -161,16 +187,14 @@ export default function SavedPage() {
          withdrawn. */
       for (const id of gone) toggleRef.current(id);
 
-      const resolved = list
-        .filter((id) => !gone.has(id))
-        .map(
-          (id) =>
-            ({
-              productId: id,
-              at: "",
-              product: byId.get(id) ?? null,
-            }) satisfies CustomerCatalogEntry,
-        );
+      const resolved: WishlistEntry[] = [
+        ...list
+          .filter((id) => !gone.has(id))
+          .map((id) => ({ kind: "product" as const, productId: id, at: "", product: byId.get(id) ?? null })),
+        ...listingList
+          .filter((id) => !listingGone.has(id))
+          .map((id) => ({ kind: "listing" as const, listingId: id, at: "", listing: listingById.get(id) ?? null })),
+      ];
 
       if (!cancelled) {
         setSaved(resolved);
@@ -181,7 +205,7 @@ export default function SavedPage() {
     return () => {
       cancelled = true;
     };
-  }, [signedIn, status, localIds]);
+  }, [signedIn, status, localIds, localListingIds]);
 
   // Recently viewed is fetched when its tab is first opened — it is the
   // secondary list, and the cap means there is never more than one page of it.
@@ -193,7 +217,8 @@ export default function SavedPage() {
       setViewedLoading(true);
       try {
         const { data } = await listRecentlyViewed({ limit: 100 });
-        if (!cancelled) setViewed(data);
+        // History is products only; tagged so one renderer serves both tabs.
+        if (!cancelled) setViewed(data.map((entry) => ({ ...entry, kind: "product" as const })));
       } catch {
         if (!cancelled) setViewed([]);
       } finally {
@@ -240,10 +265,21 @@ export default function SavedPage() {
   const removeSaved = useCallback(
     (productId: string) => {
       toggle(productId);
-      setSaved((prev) => prev.filter((e) => e.productId !== productId));
+      setSaved((prev) => prev.filter((e) => !(e.kind === "product" && e.productId === productId)));
     },
     [toggle],
   );
+
+  const removeSavedListing = useCallback(
+    (listingId: string) => {
+      toggleListing(listingId);
+      setSaved((prev) => prev.filter((e) => !(e.kind === "listing" && e.listingId === listingId)));
+    },
+    [toggleListing],
+  );
+
+  const hasBothKinds = saved.some((e) => e.kind === "product") && saved.some((e) => e.kind === "listing");
+  const shownSaved = hasBothKinds && kindFilter !== "all" ? saved.filter((e) => e.kind === kindFilter) : saved;
 
   const clearHistory = useCallback(async () => {
     setConfirmClear(false);
@@ -257,7 +293,7 @@ export default function SavedPage() {
     }
   }, [viewed, flash, t]);
 
-  const entries = tab === "saved" ? saved : viewed;
+  const entries = tab === "saved" ? shownSaved : viewed;
   const loading = tab === "saved" ? savedLoading : viewedLoading;
 
   return (
@@ -279,6 +315,16 @@ export default function SavedPage() {
           ]}
         />
       </div>
+
+      {tab === "saved" && hasBothKinds && !savedLoading && (
+        <div className="row-chips" style={{ marginBottom: 12 }} role="group" aria-label={t("filterLabel")}>
+          {(["all", "product", "listing"] as const).map((kind) => (
+            <Chip key={kind} size="sm" selected={kindFilter === kind} onClick={() => setKindFilter(kind)}>
+              {t(`filter.${kind}`)}
+            </Chip>
+          ))}
+        </div>
+      )}
 
       <div
         style={{
@@ -340,7 +386,18 @@ export default function SavedPage() {
       ) : (
         <div className="pgrid">
           {entries.map((entry) =>
-            entry.product ? (
+            entry.kind === "listing" ? (
+              entry.listing ? (
+                <ListingCard
+                  key={`l-${entry.listingId}`}
+                  listing={entry.listing}
+                  saved
+                  onToggleSave={() => removeSavedListing(entry.listingId)}
+                />
+              ) : (
+                <UnavailableEntry key={`l-${entry.listingId}`} onRemove={() => removeSavedListing(entry.listingId)} />
+              )
+            ) : entry.product ? (
               <ProductCard
                 key={entry.productId}
                 title={entry.product.title}

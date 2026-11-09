@@ -6,8 +6,11 @@ import { useAuth } from "@/lib/auth/useAuth";
 import { isCustomerSession } from "@/lib/shop/customer-session";
 import {
   listWishlist,
+  saveListing,
   saveProduct,
   savedAmongAll,
+  savedListingsAmongAll,
+  unsaveListing,
   unsaveProduct,
 } from "@/lib/shop/saved.api";
 
@@ -30,10 +33,24 @@ interface FavoritesContextValue {
    * where `localStorage` already holds every id.
    */
   syncGrid: (productIds: string[]) => void;
+
+  /**
+   * Saved service listings (2026-11-08): the same three verbs, a separate set.
+   * A listing id and a product id are both ObjectIds, so one set would let a
+   * listing's heart light a product's. Signed out, they live on the device
+   * under their own key and are replayed at sign-in, like products.
+   */
+  isListingSaved: (listingId: string) => boolean;
+  /** Every saved listing id — what a signed-out Saved page resolves. */
+  savedListingIds: Set<string>;
+  toggleListing: (listingId: string) => void;
+  syncListings: (listingIds: string[]) => void;
 }
 
 const FavoritesContext = createContext<FavoritesContextValue | null>(null);
 const STORAGE_KEY = "wi-mall-shop-favorites";
+/** Saved listings on a signed-out device. Never cleared, like the product key. */
+const LISTING_STORAGE_KEY = "wi-mall-shop-saved-listings";
 /** The key from before the brand became `wi-mall`. Carried over once, then retired. */
 const PRE_RENAME_STORAGE_KEY = "wimall-shop-favorites";
 
@@ -72,8 +89,18 @@ function readLocal(): Set<string> {
   return new Set();
 }
 
+function readLocalListings(): Set<string> {
+  try {
+    const raw = localStorage.getItem(LISTING_STORAGE_KEY);
+    if (raw) return new Set((JSON.parse(raw) as unknown[]).filter((id): id is string => typeof id === "string"));
+  } catch {
+    /* ignore */
+  }
+  return new Set();
+}
+
 /**
- * The shopper's saved products, anonymous or signed in.
+ * The shopper's saved products and listings, anonymous or signed in.
  *
  * ── Why there are two stores and not one ─────────────────────────────────────
  *
@@ -105,6 +132,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   const signedIn = isCustomerSession(status, role);
 
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [savedListings, setSavedListings] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
 
   /**
@@ -117,6 +145,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
   /** Grids already hydrated, so scrolling back up does not re-ask. */
   const syncedIds = useRef<Set<string>>(new Set());
+  const syncedListingIds = useRef<Set<string>>(new Set());
 
   const persistLocal = useCallback((next: Set<string>) => {
     try {
@@ -126,12 +155,22 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Anonymous: the local set is the whole truth, read once on mount.
+  const persistLocalListings = useCallback((next: Set<string>) => {
+    try {
+      localStorage.setItem(LISTING_STORAGE_KEY, JSON.stringify([...next]));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  // Anonymous: the local sets are the whole truth, read once on mount.
   useEffect(() => {
     if (signedIn) return;
     replayed.current = false;
     syncedIds.current = new Set();
+    syncedListingIds.current = new Set();
     setFavorites(readLocal());
+    setSavedListings(readLocalListings());
   }, [signedIn]);
 
   // Signed in: replay whatever the anonymous session saved, then read back.
@@ -145,6 +184,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       try {
         const local = readLocal();
+        const localListings = readLocalListings();
 
         /**
          * Replay first, read second — in that order, so the read reflects the
@@ -154,18 +194,30 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
          * A `404` means the product is gone; the contract says drop it, and
          * `allSettled` does exactly that without taking the rest down with it.
          */
-        if (local.size > 0) {
-          await Promise.allSettled([...local].map((id) => saveProduct(id)));
+        if (local.size > 0 || localListings.size > 0) {
+          await Promise.allSettled([
+            ...[...local].map((id) => saveProduct(id)),
+            ...[...localListings].map((id) => saveListing(id)),
+          ]);
         }
 
+        // ⚠ Branch on `kind`: the list holds listings too, which carry no
+        // `productId` (reading it blindly put `undefined` in the heart set).
         const ids = new Set<string>();
+        const listingIds = new Set<string>();
         for (let page = 1; page <= MAX_PAGES; page += 1) {
           const { data, meta } = await listWishlist({ page, limit: PAGE_LIMIT });
-          for (const entry of data) ids.add(entry.productId);
+          for (const entry of data) {
+            if (entry.kind === "product") ids.add(entry.productId);
+            else listingIds.add(entry.listingId);
+          }
           if (page >= meta.pages || data.length === 0) break;
         }
 
-        if (!cancelled) setFavorites(ids);
+        if (!cancelled) {
+          setFavorites(ids);
+          setSavedListings(listingIds);
+        }
       } catch {
         /**
          * The read failed — a dropped request, a deploy blip. Fall back to the
@@ -173,7 +225,10 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
          * as "my saves are gone". `replayed` stays true so this does not spin;
          * a reload retries.
          */
-        if (!cancelled) setFavorites(readLocal());
+        if (!cancelled) {
+          setFavorites(readLocal());
+          setSavedListings(readLocalListings());
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -250,16 +305,74 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     [signedIn],
   );
 
+  const toggleListing = useCallback(
+    (listingId: string) => {
+      const wasSaved = savedListings.has(listingId);
+      setSavedListings((prev) => {
+        const next = new Set(prev);
+        if (wasSaved) next.delete(listingId);
+        else next.add(listingId);
+        if (!signedIn) persistLocalListings(next);
+        return next;
+      });
+      if (!signedIn) return;
+      void (async () => {
+        try {
+          if (wasSaved) await unsaveListing(listingId);
+          else await saveListing(listingId);
+        } catch {
+          setSavedListings((prev) => {
+            const next = new Set(prev);
+            if (wasSaved) next.add(listingId);
+            else next.delete(listingId);
+            return next;
+          });
+        }
+      })();
+    },
+    [savedListings, persistLocalListings, signedIn],
+  );
+
+  const syncListings = useCallback(
+    (listingIds: string[]) => {
+      if (!signedIn) return;
+      const unknown = listingIds.filter((id) => !syncedListingIds.current.has(id));
+      if (unknown.length === 0) return;
+      for (const id of unknown) syncedListingIds.current.add(id);
+      void (async () => {
+        try {
+          const saved = new Set(await savedListingsAmongAll(unknown));
+          setSavedListings((prev) => {
+            const next = new Set(prev);
+            for (const id of unknown) {
+              if (saved.has(id)) next.add(id);
+              else next.delete(id);
+            }
+            return next;
+          });
+        } catch {
+          for (const id of unknown) syncedListingIds.current.delete(id);
+        }
+      })();
+    },
+    [signedIn],
+  );
+
   const value = useMemo<FavoritesContextValue>(
     () => ({
       favorites,
       isFavorite: (id: string) => favorites.has(id),
       toggle,
-      count: favorites.size,
+      // The Saved badge counts everything saved, products and listings.
+      count: favorites.size + savedListings.size,
       loading,
       syncGrid,
+      isListingSaved: (id: string) => savedListings.has(id),
+      savedListingIds: savedListings,
+      toggleListing,
+      syncListings,
     }),
-    [favorites, toggle, loading, syncGrid],
+    [favorites, toggle, loading, syncGrid, savedListings, toggleListing, syncListings],
   );
 
   return <FavoritesContext.Provider value={value}>{children}</FavoritesContext.Provider>;

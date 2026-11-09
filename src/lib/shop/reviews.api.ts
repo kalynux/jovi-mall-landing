@@ -1,14 +1,22 @@
 /**
- * Reviews — `/api/customer/reviews` and `/api/public/products/:id/reviews`.
+ * Reviews — `/api/customer/reviews`, `/api/public/products/:id/reviews` and
+ * `/api/public/listings/:id/reviews`.
  *
- * A customer reviews two different things and they behave differently: a
- * **product** they bought, and a **delivery** they received. Only the first is
- * ever published.
+ * A customer reviews three different things: a **product** they bought, a
+ * **delivery** they received, and (since 2026-11-08) a **service listing** whose
+ * contact they unlocked. Products and listings publish; a delivery never does.
+ *
+ * ⚠ **Since 2026-10-05 every review publishes the moment it is written, text
+ * included** (owner decision). There is no held state: statuses are
+ * `published` and `unpublished` (an administrator took it down afterwards).
  *
  * See api-doc/customer/reviews.md and api-doc/reviews.md.
  */
 import { apiFetch, apiFetchList } from "@/lib/api/client";
 import type { ListMeta, ProductRating } from "./shop.types";
+import { eligibilityFrom, eligibilityFromCode, type ReviewEligibility } from "./review-eligibility";
+
+export type { ReviewEligibility } from "./review-eligibility";
 
 /**
  * What is being reviewed.
@@ -23,10 +31,16 @@ import type { ListMeta, ProductRating } from "./shop.types";
  * A delivery rating also moves real money: it feeds the agent's trust composite,
  * which scales their COD cash limit.
  */
-export type ReviewSubjectType = "product" | "delivery";
+export type ReviewSubjectType = "product" | "delivery" | "listing";
 
-/** `product` → the product id. `delivery` → the **shipment** id, not the order. */
-export type ReviewStatus = "pending" | "published" | "rejected";
+/**
+ * `product` → the product id. `delivery` → the **shipment** id, not the order.
+ * `listing` → the listing id.
+ *
+ * `unpublished`: an administrator took it down. The author sees only that, never
+ * why (owner decision). It counts for nothing and blocks a second review.
+ */
+export type ReviewStatus = "published" | "unpublished";
 
 export interface Review {
   id: string;
@@ -54,26 +68,17 @@ export interface SubmitReviewInput {
   subjectId: string;
   /** Integer 1–5. There is no half-star — the trust composite reads this. */
   rating: number;
-  /** Optional, 1–120 chars. **Its presence holds the review for moderation.** */
+  /** Optional, 1–120 chars. Public at once. */
   title?: string;
-  /** Optional, 1–2000 chars. **Its presence holds the review for moderation.** */
+  /** Optional, 1–2000 chars. Public at once. */
   body?: string;
 }
 
 /**
  * POST /api/customer/reviews
  *
- * 🔴 **Whether you send text decides whether it publishes immediately.**
- *
- * ```
- * title or body present  ->  status: "pending"    (held for moderation)
- * neither present        ->  status: "published"  (live now)
- * ```
- *
- * The response says which happened, in `status`. **Branch on it** — a bare five
- * stars appears on the product page at once; the same five stars with a sentence
- * attached does not, and a UI that says "your review is live" in both cases is
- * wrong half the time.
+ * **Public the moment it is written, text included** (since 2026-10-05), so the
+ * form must say so BEFORE the customer sends it. No author name is published.
  *
  * A second review of the same subject is `409 REVIEW_ALREADY_EXISTS`, enforced
  * by a unique index rather than a pre-check, so a double-tap cannot create two.
@@ -101,37 +106,16 @@ export async function submitReview(input: SubmitReviewInput): Promise<Review> {
 }
 
 /**
- * Why a review form should not be shown.
- *
- * The 404-vs-422 split is load-bearing, so these are kept apart rather than
- * flattened into "cannot review":
- *
- * `notFound`  — the subject does not exist **or** it is not yours. Deliberately
- *               the same answer for both, so probing ids cannot confirm which.
- *               Show nothing, and no message naming the subject.
- * `notYet`    — it *is* yours but has not reached a reviewable state. Safe to be
- *               specific about: it tells the caller nothing they did not know.
- * `already`   — there is already a review; show it instead of a form.
- */
-export type ReviewEligibility =
-  | { kind: "eligible" }
-  | { kind: "notFound" }
-  | { kind: "notYet" }
-  | { kind: "already" }
-  | { kind: "roleNotAllowed" }
-  | { kind: "unknown" };
-
-/** The error codes the eligibility read answers with. */
-const ELIGIBILITY_CODES: Record<string, ReviewEligibility["kind"]> = {
-  REVIEW_SUBJECT_NOT_FOUND: "notFound",
-  REVIEW_NOT_ELIGIBLE: "notYet",
-  REVIEW_SUBJECT_NOT_REVIEWABLE: "notYet",
-  REVIEW_ALREADY_EXISTS: "already",
-  REVIEW_ROLE_NOT_ALLOWED: "roleNotAllowed",
-};
-
-/**
  * GET /api/customer/reviews/eligibility
+ *
+ * 🔴 **A refusal is a `200`, not a thrown error:** `{ eligible: false, reason }`,
+ * `reason` being the code the write would have raised. Until 2026-11-09 this
+ * function returned "eligible" for every `200`, so the form was offered to
+ * customers who could not review and their submit then failed. Only a subject
+ * that does not exist still arrives as a thrown `404 REVIEW_SUBJECT_NOT_FOUND`.
+ *
+ * A **listing** is eligible once the customer unlocked at least one of its
+ * contacts (owner L-27); saving or viewing it earns nothing.
  *
  * **Call this before rendering a review form.** Eligibility for a product means
  * a *completed* order of this customer containing it — completion being
@@ -149,20 +133,19 @@ export async function checkReviewEligibility(
 ): Promise<ReviewEligibility> {
   const qs = new URLSearchParams({ subjectType, subjectId });
   try {
-    await apiFetch<unknown>(`/api/customer/reviews/eligibility?${qs}`);
-    return { kind: "eligible" };
+    const verdict = await apiFetch<{ eligible?: boolean; reason?: string | null; existingReviewId?: string | null }>(
+      `/api/customer/reviews/eligibility?${qs}`,
+    );
+    return eligibilityFrom(verdict);
   } catch (err) {
-    const code = (err as { code?: string })?.code;
-    if (code && code in ELIGIBILITY_CODES) return { kind: ELIGIBILITY_CODES[code] };
-    return { kind: "unknown" };
+    return eligibilityFromCode((err as { code?: string })?.code, null);
   }
 }
 
 /**
- * GET /api/customer/reviews — this customer's own reviews, **every status**.
- *
- * Including `pending` rows not yet visible to anyone else, which is what lets an
- * account page show "awaiting moderation".
+ * GET /api/customer/reviews — this customer's own reviews, both statuses,
+ * including one an administrator hid (`unpublished`). Since 2026-11-08 it has
+ * `subjectType: "listing"` rows too.
  */
 export async function listMyReviews(
   query: { page?: number; limit?: number; status?: ReviewStatus } = {},
@@ -213,6 +196,30 @@ export async function listProductReviews(
 
   const { data, meta } = await apiFetchList<PublicReview, { rating?: ProductRating | null }>(
     `/api/public/products/${encodeURIComponent(productId)}/reviews${s ? `?${s}` : ""}`,
+  );
+
+  return { data, meta, rating: meta.rating ?? null };
+}
+
+/**
+ * GET /api/public/listings/:listingId/reviews — unauthenticated, 2026-11-08.
+ *
+ * The same body and rules as the product route above: no author identity, the
+ * 10/50 paging, `totalPages`, `meta.rating` (with its distribution) or `null`.
+ * A listing the public cannot see answers an empty page, not a 404. There is no
+ * reply from the business (owner RS-8), so there is nothing to draw for one.
+ */
+export async function listListingReviews(
+  listingId: string,
+  query: { page?: number; limit?: number } = {},
+): Promise<{ data: PublicReview[]; meta: ListMeta; rating: ProductRating | null }> {
+  const qs = new URLSearchParams();
+  if (query.page !== undefined) qs.set("page", String(query.page));
+  if (query.limit !== undefined) qs.set("limit", String(query.limit));
+  const s = qs.toString();
+
+  const { data, meta } = await apiFetchList<PublicReview, { rating?: ProductRating | null }>(
+    `/api/public/listings/${encodeURIComponent(listingId)}/reviews${s ? `?${s}` : ""}`,
   );
 
   return { data, meta, rating: meta.rating ?? null };

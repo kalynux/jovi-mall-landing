@@ -14,7 +14,6 @@ import {
   Icon,
   IconButton,
   PriceDisplay,
-  ProductCard,
   QtyStepper,
   Rating,
   Tabs,
@@ -28,12 +27,13 @@ import { useShopPageTitle } from "@/components/shop/ShopChrome";
 import { availabilityLabelKey, unavailableLabelKey } from "@/lib/shop/availability";
 import { discountPct, formatMoney } from "@/lib/shop/format";
 import { tapFeedback } from "@/lib/native/haptics";
-import { categoryPath, productPathFor, storePath } from "@/lib/shop/shop.routes";
+import { categoryPath, storePath } from "@/lib/shop/shop.routes";
 import { useProductShare } from "@/components/shop/useProductShare";
 import { recordView } from "@/lib/shop/saved.api";
 import { ProductReviews } from "@/components/shop/ProductReviews";
 import { BookingPanel } from "@/components/shop/BookingPanel";
 import { BargainButton } from "@/components/shop/BargainButton";
+import { ProductStrip } from "@/components/shop/ShopProductCard";
 import { LegalLink } from "@/components/legal/LegalLink";
 import { ProtectionLine } from "@/components/shop/ProtectionLine";
 import { BARGAIN_ENABLED } from "@/lib/shop/bargain";
@@ -808,34 +808,8 @@ export function ProductDetail({
               ? t("relatedCoPurchase")
               : t("relatedSameCategory")}
           </p>
-          <div style={{ display: "flex", gap: 16, overflowX: "auto", paddingBottom: 8, scrollbarWidth: "none" }}>
-            {relatedItems.map((item) => (
-              <div key={item.id} style={{ width: 190, flexShrink: 0 }}>
-                <ProductCard
-                  title={item.title}
-                  image={publicUrl(item.image)}
-                  rating={item.rating}
-                  type={item.type}
-                  price={item.price}
-                  compareAt={item.compareAtPrice}
-                  currency={item.currency}
-                  priceRange={item.priceRange}
-                  category={item.categories[0]?.name}
-                  deliveryTerms={deliveryTermsOf(item)}
-                  vendorName={item.store.name}
-                  vendorVerified={item.store.verified}
-                  showVendor
-                  favorite={isFavorite(item.id)}
-                  onToggleFavorite={() => toggle(item.id)}
-                  inStock={item.inStock}
-                  negotiable={item.negotiable}
-                  productId={item.id}
-                  href={productPathFor(item)}
-                  shareable={item}
-                />
-              </div>
-            ))}
-          </div>
+          {/* Mixed stores, so each card names its seller — the browse grid's "All" view. */}
+          <ProductStrip items={relatedItems} showVendor />
         </div>
       )}
 
@@ -845,30 +819,9 @@ export function ProductDetail({
           <p className="ds-overline" style={{ marginBottom: 12 }}>
             {t("moreFromStore", { store: store.name })}
           </p>
-          <div style={{ display: "flex", gap: 16, overflowX: "auto", paddingBottom: 8, scrollbarWidth: "none" }}>
-            {moreFromStore.map((item) => (
-              <div key={item.id} style={{ width: 190, flexShrink: 0 }}>
-                <ProductCard
-                  title={item.title}
-                  image={publicUrl(item.image)}
-                  rating={item.rating}
-                  type={item.type}
-                  price={item.price}
-                  compareAt={item.compareAtPrice}
-                  currency={item.currency}
-                  priceRange={item.priceRange}
-                  deliveryTerms={deliveryTermsOf(item)}
-                  favorite={isFavorite(item.id)}
-                  onToggleFavorite={() => toggle(item.id)}
-                  inStock={item.inStock}
-                  negotiable={item.negotiable}
-                  productId={item.id}
-                  href={productPathFor(item)}
-                  shareable={item}
-                />
-              </div>
-            ))}
-          </div>
+          {/* The heading names the store, so the cards do not — the browse grid's
+              grouped view, where the store header does the same job. */}
+          <ProductStrip items={moreFromStore} showVendor={false} />
         </div>
       )}
 

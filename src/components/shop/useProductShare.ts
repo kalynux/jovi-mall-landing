@@ -7,7 +7,8 @@ import { shareLink } from "@/lib/native/share";
 import { productShareUrl } from "@/lib/shop/shop.routes";
 
 /**
- * Share one product: the share sheet on a phone, a copy on the web.
+ * Share one product: the system share sheet (in the app, or a browser with
+ * the Web Share API), a copy where there is none.
  *
  * The toast is worded from what actually happened — "copied" only when
  * something was copied, silence when the shopper dismissed the sheet — the

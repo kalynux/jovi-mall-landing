@@ -28,6 +28,7 @@ phone. This is the same list, kept on the server.
 | `POST` | `/api/customer/wishlist` | save a product — **idempotent, 200** |
 | `POST` | `/api/customer/wishlist/saved-among` | which of these ids are saved (one call per grid) |
 | `DELETE` | `/api/customer/wishlist/:productId` | remove a save |
+| `DELETE` | `/api/customer/wishlist/listings/:listingId` | 🆕 2026-11-08 — remove a saved **listing** |
 | `GET` | `/api/customer/recently-viewed` | **most recently opened first** |
 | `POST` | `/api/customer/recently-viewed` | record that a product was opened |
 | `DELETE` | `/api/customer/recently-viewed` | forget everything |
@@ -84,6 +85,31 @@ Three consequences a client must handle:
 ---
 
 ## 3 · Wishlist
+
+> 🆕 **2026-11-08 — the saved list holds service listings too** (backend
+> LISTING-REVIEWS-SAVES-REFERRALS-PLAN § 3.2, owner RS-1 — not mirrored in this repository). One
+> "Saved" place, products and listings side by side. Saving a listing reveals no contact, costs
+> nothing, and the business is never told (no count, no notification — RS-2). Closing the account
+> deletes both kinds (RS-10). Ported here from the backend's copy of this page, whose layout
+> differs; the rules below are the backend's.
+>
+> - **Every entry carries `kind`**: `"product"` (the shape in § 2) or `"listing"`:
+>   `{ "kind": "listing", "listingId": "…", "at": "…", "listing": { } | null }`. `listing` is the
+>   public listing card (`service-listings.md`), or **`null`** when it is no longer visible (paused,
+>   archived or taken down): render it like `product: null`, "no longer available" with a working
+>   remove, never why.
+> - ⚠ **Branch on `kind`, not on which id is present.** The bot can save listings, so a client
+>   written for products only meets listing rows (no `productId`).
+> - `GET /api/customer/wishlist?kind=product|listing` narrows to one kind; without it both kinds
+>   come back interleaved, newest save first.
+> - `POST /api/customer/wishlist` takes **exactly one** of `productId` / `listingId`
+>   (`{ "listingId": "…" }`); both or neither is `400 VALIDATION_ERROR`. A listing must be publicly
+>   visible to be saved, otherwise `404 LISTING_NOT_FOUND`. Idempotent, `200`, answers the entry.
+> - `DELETE /api/customer/wishlist/listings/:listingId` removes one; `404 WISHLIST_ITEM_NOT_FOUND`
+>   when it is not on **your** list.
+> - `POST /api/customer/wishlist/saved-among` takes `productIds`, `listingIds`, or both (1–100 per
+>   list; an empty list is a `400`) and always answers both `savedProductIds` and `savedListingIds`.
+
 
 ### `POST /api/customer/wishlist`
 
